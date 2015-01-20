@@ -1,0 +1,14 @@
+kconf hardware kernel_boot.cfg
+kconf hardware kernel_connectivity.cfg
+kconf hardware kernel_ethernet.cfg
+kconf hardware kernel_firmware.cfg
+kconf hardware kernel_graphics.cfg
+kconf hardware kernel_io.cfg
+kconf hardware kernel_io_debug.cfg
+kconf hardware kernel_ipu.cfg
+kconf hardware kernel_ish.cfg
+kconf hardware kernel_otc.cfg
+kconf hardware kernel_stack.cfg
+kconf hardware kernel_tpm.cfg
+kconf hardware kernel_txe.cfg
+kconf hardware kernel_USB.cfg

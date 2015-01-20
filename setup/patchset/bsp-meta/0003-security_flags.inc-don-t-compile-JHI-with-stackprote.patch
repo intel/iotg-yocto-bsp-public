@@ -1,0 +1,25 @@
+From f9b287d86ffe9d18bb2bd5ddfa758ec1586007ec Mon Sep 17 00:00:00 2001
+From: Anuj Mittal <anujx.mittal@intel.com>
+Date: Fri, 22 Apr 2016 11:16:45 +0800
+Subject: [PATCH] security_flags.inc: don't compile JHI with stackprotector
+
+Signed-off-by: Anuj Mittal <anujx.mittal@intel.com>
+---
+ meta/conf/distro/include/security_flags.inc | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/meta/conf/distro/include/security_flags.inc b/meta/conf/distro/include/security_flags.inc
+index a94d910..f654be3 100644
+--- a/meta/conf/distro/include/security_flags.inc
++++ b/meta/conf/distro/include/security_flags.inc
+@@ -88,6 +88,7 @@ SECURITY_CFLAGS_pn-valgrind = "${SECURITY_NO_PIE_CFLAGS}"
+ SECURITY_CFLAGS_pn-zlib = "${SECURITY_NO_PIE_CFLAGS}"
+ SECURITY_CFLAGS_pn-mraa = "${SECURITY_NO_PIE_CFLAGS}"
+ SECURITY_CFLAGS_pn-efivar = "${SECURITY_NO_PIE_CFLAGS}"
++SECURITY_CFLAGS_pn-jhi = ""
+ 
+ # These 2 have text relco errors with the pie options enabled
+ SECURITY_CFLAGS_pn-ltp = "${SECURITY_NO_PIE_CFLAGS}"
+-- 
+1.9.1
+

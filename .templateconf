@@ -1,0 +1,7 @@
+# Template settings
+#
+# Notes:
+# By default, the template will provide configurations for
+# Sato SDK image build.
+#
+TEMPLATECONF=${TEMPLATECONF:-setup/bsp-conf}

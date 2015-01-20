@@ -1,0 +1,6 @@
+#exec twm
+exec xterm
+#exec matchbox-session
+#exec gnome-session
+#exec enlightenment_start
+#exec startxfce4

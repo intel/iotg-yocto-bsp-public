@@ -1,0 +1,45 @@
+From a50157b98920852bac5b4d084a726f42bb8d9750 Mon Sep 17 00:00:00 2001
+From: Anuj Mittal <anujx.mittal@intel.com>
+Date: Thu, 21 Jan 2016 20:37:42 +0800
+Subject: [PATCH] default.pa: Use the custom settings for APL
+
+Signed-off-by: Anuj Mittal <anujx.mittal@intel.com>
+---
+ src/daemon/default.pa.in | 14 +-------------
+ 1 file changed, 1 insertion(+), 13 deletions(-)
+
+diff --git a/src/daemon/default.pa.in b/src/daemon/default.pa.in
+index 5ec4641..e790faf 100755
+--- a/src/daemon/default.pa.in
++++ b/src/daemon/default.pa.in
+@@ -50,7 +50,7 @@ load-module module-switch-on-port-available
+ ### (it's probably better to not load these drivers manually, but instead
+ ### use module-udev-detect -- see below -- for doing this automatically)
+ ifelse(@HAVE_ALSA@, 1, [dnl
+-#load-module module-alsa-sink
++load-module module-alsa-sink device=hw:0,3
+ #load-module module-alsa-source device=hw:1,0
+ ])dnl
+ ifelse(@HAVE_OSS_OUTPUT@, 1, [dnl
+@@ -65,18 +65,6 @@ ifelse(@HAVE_MKFIFO@, 1, [dnl
+ #load-module module-pipe-sink
+ ])dnl
+ 
+-### Automatically load driver modules depending on the hardware available
+-ifelse(@HAVE_UDEV@, 1, [dnl
+-.ifexists module-udev-detect@PA_SOEXT@
+-load-module module-udev-detect
+-.else
+-], [dnl
+-.ifexists module-detect@PA_SOEXT@
+-])dnl
+-### Use the static hardware detection module (for systems that lack udev support)
+-load-module module-detect
+-.endif
+-
+ ### Automatically connect sink and source if JACK server is present
+ .ifexists module-jackdbus-detect@PA_SOEXT@
+ .nofail
+-- 
+1.9.1
+

@@ -1,0 +1,6 @@
+Supported target:
+	core-image-sato
+	core-image-sato-dev
+	core-image-sato-sdk
+
+Note: The output is at build/tmp/deploy/images/intel-corei7-64/

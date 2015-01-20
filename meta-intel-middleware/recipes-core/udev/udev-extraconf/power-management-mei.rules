@@ -1,0 +1,1 @@
+ACTION=="add", SUBSYSTEM=="mei", TEST=="../../power/control", ATTR{../../power/control}="auto"

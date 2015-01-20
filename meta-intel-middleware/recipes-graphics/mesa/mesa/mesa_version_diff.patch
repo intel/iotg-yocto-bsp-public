@@ -1,0 +1,716 @@
+diff -x .git -x .gitignore -Naur mesa/configure.ac isg_gms-mesa/configure.ac
+--- mesa/configure.ac	2016-05-31 03:41:55.347307693 +0800
++++ isg_gms-mesa/configure.ac	2016-05-31 03:38:42.400075469 +0800
+@@ -704,8 +704,10 @@
+ if test "x$enable_asm" = xyes -a "x$cross_compiling" = xyes; then
+     case "$host_cpu" in
+     i?86 | x86_64 | amd64)
+-        enable_asm=no
+-        AC_MSG_RESULT([no, cross compiling])
++        if test "x$host_cpu" != "x$target_cpu"; then
++            enable_asm=no
++            AC_MSG_RESULT([no, cross compiling])
++        fi
+         ;;
+     esac
+ fi
+diff -x .git -x .gitignore -Naur mesa/gms-integration isg_gms-mesa/gms-integration
+--- mesa/gms-integration	1970-01-01 07:30:00.000000000 +0730
++++ isg_gms-mesa/gms-integration	2016-05-31 03:38:42.416075738 +0800
+@@ -0,0 +1,13 @@
++###
++### GMS integration
++###
++upstream 79b0e13913b5189bb8629e80439fea746f99fe79
++	docs: update the sha256 checksums for 11.2.1
++topic/bxt-enablement 6a62cbc353d54af690d6be769e1c5c4a94b70420
++	i965/bxt: Add new APL (aka Broxton) device ID
++topic/vpg_ufo_patches d8030dfb186b6080ea8d09b7971279d74a061683
++	wayland/egl: Assigning window size to window surface size property
++topic/reusable_sync 1cfc1f1f0b0317a8d452d95c893489a99755bd31
++	egl: 'ret' shouldn't be used for pthread error-check
++topic/xcompile 751b9278c39229e6be9432745a42570006abc018
++	configure.ac: enable_asm=yes when x-compiling across same arch (v2)
+diff -x .git -x .gitignore -Naur mesa/include/pci_ids/i965_pci_ids.h isg_gms-mesa/include/pci_ids/i965_pci_ids.h
+--- mesa/include/pci_ids/i965_pci_ids.h	2016-05-31 03:41:55.355307827 +0800
++++ isg_gms-mesa/include/pci_ids/i965_pci_ids.h	2016-05-31 03:38:42.428075937 +0800
+@@ -162,4 +162,5 @@
+ CHIPSET(0x22B3, chv,     "Intel(R) HD Graphics (Cherryview)")
+ CHIPSET(0x0A84, bxt,     "Intel(R) HD Graphics (Broxton)")
+ CHIPSET(0x1A84, bxt,     "Intel(R) HD Graphics (Broxton)")
+-CHIPSET(0x5A84, bxt,     "Intel(R) HD Graphics (Broxton)")
++CHIPSET(0x5A84, bxt,     "Intel(R) HD Graphics 505 (APL)")
++CHIPSET(0x5A85, bxt,     "Intel(R) HD Graphics 500 (APL)")
+diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2.c isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.c
+--- mesa/src/egl/drivers/dri2/egl_dri2.c	2016-05-31 03:41:55.379308230 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.c	2016-05-31 03:38:42.464076539 +0800
+@@ -38,6 +38,8 @@
+ #include <fcntl.h>
+ #include <errno.h>
+ #include <unistd.h>
++#include <pthread.h>
++#include <time.h>
+ #ifdef HAVE_LIBDRM
+ #include <xf86drm.h>
+ #include <drm_fourcc.h>
+@@ -224,15 +226,6 @@
+          dri_masks[3] = value;
+          break;
+ 
+-      case __DRI_ATTRIB_ACCUM_RED_SIZE:
+-      case __DRI_ATTRIB_ACCUM_GREEN_SIZE:
+-      case __DRI_ATTRIB_ACCUM_BLUE_SIZE:
+-      case __DRI_ATTRIB_ACCUM_ALPHA_SIZE:
+-         /* Don't expose visuals with the accumulation buffer. */
+-         if (value > 0)
+-            return NULL;
+-         break;
+-
+       case __DRI_ATTRIB_FRAMEBUFFER_SRGB_CAPABLE:
+          srgb = value != 0;
+          if (!disp->Extensions.KHR_gl_colorspace && srgb)
+@@ -623,6 +616,8 @@
+          disp->Extensions.KHR_cl_event2 = EGL_TRUE;
+    }
+ 
++   disp->Extensions.KHR_reusable_sync = EGL_TRUE;
++
+    if (dri2_dpy->image) {
+       if (dri2_dpy->image->base.version >= 10 &&
+           dri2_dpy->image->getCapabilities != NULL) {
+@@ -1182,6 +1177,10 @@
+    __DRIdrawable *ddraw, *rdraw;
+    __DRIcontext *cctx;
+ 
++   /* check display */
++   if (!dri2_dpy)
++      return _eglError(EGL_BAD_DISPLAY, "eglMakeCurrent");
++
+    /* make new bindings */
+    if (!_eglBindContext(ctx, dsurf, rsurf, &old_ctx, &old_dsurf, &old_rsurf))
+       return EGL_FALSE;
+@@ -2389,14 +2388,33 @@
+    p_atomic_inc(&sync->refcount);
+ }
+ 
+-static void
++static EGLint
+ dri2_egl_unref_sync(struct dri2_egl_display *dri2_dpy,
+                     struct dri2_egl_sync *dri2_sync)
+ {
++   EGLint ret;
++
+    if (p_atomic_dec_zero(&dri2_sync->refcount)) {
+-      dri2_dpy->fence->destroy_fence(dri2_dpy->dri_screen, dri2_sync->fence);
++      /* mutex and cond should be freed if not freed yet. */
++      if (dri2_sync->mutex)
++         free(dri2_sync->mutex);
++
++      if (dri2_sync->cond) {
++         ret = pthread_cond_destroy(dri2_sync->cond);
++
++         if (ret)
++            return EGL_FALSE;
++
++         free(dri2_sync->cond);
++      }
++
++      if (dri2_sync->fence)
++         dri2_dpy->fence->destroy_fence(dri2_dpy->dri_screen, dri2_sync->fence);
++
+       free(dri2_sync);
+    }
++
++   return EGL_TRUE;
+ }
+ 
+ static _EGLSync *
+@@ -2408,6 +2426,7 @@
+    struct dri2_egl_display *dri2_dpy = dri2_egl_display(dpy);
+    struct dri2_egl_context *dri2_ctx = dri2_egl_context(ctx);
+    struct dri2_egl_sync *dri2_sync;
++   EGLint ret;
+ 
+    dri2_sync = calloc(1, sizeof(struct dri2_egl_sync));
+    if (!dri2_sync) {
+@@ -2450,6 +2469,23 @@
+                                             dri2_sync->fence, 0, 0))
+          dri2_sync->base.SyncStatus = EGL_SIGNALED_KHR;
+       break;
++
++   case EGL_SYNC_REUSABLE_KHR:
++      dri2_sync->cond = calloc(1, sizeof(pthread_cond_t));
++      dri2_sync->mutex = calloc(1, sizeof(pthread_mutex_t));
++      ret = pthread_cond_init(dri2_sync->cond, NULL);
++
++      if (ret) {
++         _eglError(EGL_BAD_PARAMETER, "eglCreateSyncKHR");
++         free(dri2_sync->cond);
++         free(dri2_sync->mutex);
++         free(dri2_sync);
++         return NULL;
++      }
++
++      /* initial status of reusable sync must be "unsignaled" */
++      dri2_sync->base.SyncStatus = EGL_UNSIGNALED_KHR;
++      break;
+    }
+ 
+    p_atomic_set(&dri2_sync->refcount, 1);
+@@ -2461,9 +2497,33 @@
+ {
+    struct dri2_egl_display *dri2_dpy = dri2_egl_display(dpy);
+    struct dri2_egl_sync *dri2_sync = dri2_egl_sync(sync);
++   EGLint ret = EGL_TRUE;
++   EGLint err;
+ 
+-   dri2_egl_unref_sync(dri2_dpy, dri2_sync);
+-   return EGL_TRUE;
++   /* if type of sync is EGL_SYNC_REUSABLE_KHR and it is not signaled yet,
++    * then unlock all threads possibly blocked by this reusable sync before
++    * destroy it.
++    */
++   if (dri2_sync->base.Type == EGL_SYNC_REUSABLE_KHR &&
++       dri2_sync->base.SyncStatus == EGL_UNSIGNALED_KHR) {
++      dri2_sync->base.SyncStatus = EGL_SIGNALED_KHR;
++      /* unblock all threads currently blocked by sync */
++      err = pthread_cond_broadcast(dri2_sync->cond);
++
++      if (err) {
++         _eglError(EGL_BAD_PARAMETER, "eglDestroySyncKHR");
++         ret = EGL_FALSE;
++      }
++   }
++
++   err = dri2_egl_unref_sync(dri2_dpy, dri2_sync);
++
++   if (err == EGL_FALSE) {
++      _eglError(EGL_BAD_PARAMETER, "eglDestroySyncKHR");
++      ret = EGL_FALSE;
++   }
++
++   return ret;
+ }
+ 
+ static EGLint
+@@ -2471,11 +2531,18 @@
+                       EGLint flags, EGLTime timeout)
+ {
+    _EGLContext *ctx = _eglGetCurrentContext();
++   struct dri2_egl_driver *dri2_drv = dri2_egl_driver(drv);
+    struct dri2_egl_display *dri2_dpy = dri2_egl_display(dpy);
+    struct dri2_egl_context *dri2_ctx = dri2_egl_context(ctx);
+    struct dri2_egl_sync *dri2_sync = dri2_egl_sync(sync);
+    unsigned wait_flags = 0;
++
++   /* needed for EGL_SYNC_REUSABLE_KHR */
++   struct timespec current;
++   struct timespec expiration;
++
+    EGLint ret = EGL_CONDITION_SATISFIED_KHR;
++   EGLint err;
+ 
+    /* The EGL_KHR_fence_sync spec states:
+     *
+@@ -2488,17 +2555,123 @@
+    /* the sync object should take a reference while waiting */
+    dri2_egl_ref_sync(dri2_sync);
+ 
+-   if (dri2_dpy->fence->client_wait_sync(dri2_ctx ? dri2_ctx->dri_context : NULL,
++   switch (sync->Type) {
++   case EGL_SYNC_FENCE_KHR:
++      if (dri2_dpy->fence->client_wait_sync(dri2_ctx ? dri2_ctx->dri_context : NULL,
+                                          dri2_sync->fence, wait_flags,
+                                          timeout))
+-      dri2_sync->base.SyncStatus = EGL_SIGNALED_KHR;
+-   else
+-      ret = EGL_TIMEOUT_EXPIRED_KHR;
++         dri2_sync->base.SyncStatus = EGL_SIGNALED_KHR;
++      else
++         ret = EGL_TIMEOUT_EXPIRED_KHR;
++
++      break;
++
++   case EGL_SYNC_REUSABLE_KHR:
++      if (dri2_ctx && dri2_sync->base.SyncStatus==EGL_UNSIGNALED_KHR &&
++          (flags & EGL_SYNC_FLUSH_COMMANDS_BIT_KHR)) {
++         /* flush context if EGL_SYNC_FLUSH_COMMANDS_BIT_KHR is set */
++         if (dri2_drv->glFlush)
++            dri2_drv->glFlush();
++      }
++
++      /* if timeout is EGL_FOREVER_KHR, it should wait without any timeout.*/
++      if (timeout == EGL_FOREVER_KHR) {
++         if (pthread_mutex_lock(dri2_sync->mutex)) {
++            ret = EGL_FALSE;
++            goto cleanup;
++         }
++
++         ret = pthread_cond_wait(dri2_sync->cond, dri2_sync->mutex);
++
++         if (pthread_mutex_unlock(dri2_sync->mutex)) {
++            ret = EGL_FALSE;
++            goto cleanup;
++         }
++
++         if (ret) {
++            _eglError(EGL_BAD_PARAMETER, "eglClientWaitSyncKHR");
++            ret = EGL_FALSE;
++         }
++      } else {
++         /* if it's not yet signaled */
++         if (dri2_sync->base.SyncStatus!=EGL_SIGNALED_KHR) {
++
++            clock_gettime(CLOCK_REALTIME, &current);
++
++            expiration.tv_nsec = current.tv_nsec + timeout;
++            expiration.tv_sec = current.tv_sec + expiration.tv_nsec/1000000000L;
++            expiration.tv_nsec = current.tv_nsec%1000000000L;
++
++            if (pthread_mutex_lock(dri2_sync->mutex)) {
++               ret = EGL_FALSE;
++               goto cleanup;
++            }
++
++            ret = pthread_cond_timedwait(dri2_sync->cond, dri2_sync->mutex, &expiration);
++
++            if (pthread_mutex_unlock(dri2_sync->mutex)) {
++               ret = EGL_FALSE;
++               goto cleanup;
++            }
++
++            if (ret)
++               if (ret == ETIMEDOUT) {
++                  if (dri2_sync->base.SyncStatus==EGL_UNSIGNALED_KHR) {
++                     ret = EGL_TIMEOUT_EXPIRED_KHR;
++                  } else {
++                     _eglError(EGL_BAD_PARAMETER, "eglClientWaitSyncKHR");
++                     ret = EGL_FALSE;
++                  }
++               }
++         }
++      }
++      break;
++   }
++
++ cleanup:
++   err = dri2_egl_unref_sync(dri2_dpy, dri2_sync);
++
++   /* fail to unreference dri2_sync */
++   if (ret == EGL_FALSE || err == EGL_FALSE) {
++      _eglError(EGL_BAD_PARAMETER, "eglClientWaitSyncKHR");
++      return EGL_FALSE;
++   }
+ 
+-   dri2_egl_unref_sync(dri2_dpy, dri2_sync);
+    return ret;
+ }
+ 
++static EGLBoolean
++dri2_signal_sync(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSync *sync,
++                      EGLenum mode)
++{
++   struct dri2_egl_sync *dri2_sync = dri2_egl_sync(sync);
++   EGLint ret;
++
++   if (sync->Type!=EGL_SYNC_REUSABLE_KHR) {
++      _eglError(EGL_BAD_MATCH, "eglSignalSyncKHR");
++      return EGL_FALSE;
++   }
++
++   if (mode != EGL_SIGNALED_KHR && mode != EGL_UNSIGNALED_KHR) {
++      _eglError(EGL_BAD_ATTRIBUTE, "eglSignalSyncKHR");
++      return EGL_FALSE;
++   }
++
++   dri2_sync->base.SyncStatus = mode;
++
++   if (mode == EGL_SIGNALED_KHR) {
++      ret = pthread_cond_broadcast(dri2_sync->cond);
++
++      /* fail to broadcast */
++      if (ret) {
++         _eglError(EGL_BAD_PARAMETER, "eglSignalSyncKHR");
++         return EGL_FALSE;
++      }
++   }
++
++   return EGL_TRUE;
++}
++
+ static EGLint
+ dri2_server_wait_sync(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSync *sync)
+ {
+@@ -2620,6 +2793,7 @@
+    dri2_drv->base.API.GetSyncValuesCHROMIUM = dri2_get_sync_values_chromium;
+    dri2_drv->base.API.CreateSyncKHR = dri2_create_sync;
+    dri2_drv->base.API.ClientWaitSyncKHR = dri2_client_wait_sync;
++   dri2_drv->base.API.SignalSyncKHR = dri2_signal_sync;
+    dri2_drv->base.API.WaitSyncKHR = dri2_server_wait_sync;
+    dri2_drv->base.API.DestroySyncKHR = dri2_destroy_sync;
+ 
+diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h isg_gms-mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h
+--- mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2016-05-31 03:41:54.755297768 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2016-05-31 03:38:42.464076539 +0800
+@@ -37,11 +37,16 @@
+    return NULL;
+ }
+ 
++/*
++ * If config doesn't support pbuffer, there is a need to set egl error.
++ * EGL1.4 spec #3.5.2 - EGL_BAD_MATCH
++ */
+ static inline _EGLSurface *
+ dri2_fallback_create_pbuffer_surface(_EGLDriver *drv, _EGLDisplay *disp,
+                                      _EGLConfig *conf,
+                                      const EGLint *attrib_list)
+ {
++   _eglError(EGL_BAD_MATCH, "dri2_fallback_create_pbuffer_surface");
+    return NULL;
+ }
+ 
+diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2.h isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.h
+--- mesa/src/egl/drivers/dri2/egl_dri2.h	2016-05-31 03:41:55.379308230 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.h	2016-05-31 03:38:42.464076539 +0800
+@@ -307,6 +307,8 @@
+ 
+ struct dri2_egl_sync {
+    _EGLSync base;
++   pthread_mutex_t *mutex;
++   pthread_cond_t *cond;
+    int refcount;
+    void *fence;
+ };
+diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_wayland.c isg_gms-mesa/src/egl/drivers/dri2/platform_wayland.c
+--- mesa/src/egl/drivers/dri2/platform_wayland.c	2016-05-31 03:41:55.379308230 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/platform_wayland.c	2016-05-31 03:38:42.464076539 +0800
+@@ -44,6 +44,7 @@
+ 
+ #include <wayland-client.h>
+ #include "wayland-drm-client-protocol.h"
++#include "wayland-egl-priv.h"
+ 
+ enum wl_drm_format_flags {
+    HAS_ARGB8888 = 1,
+@@ -160,8 +161,8 @@
+    dri2_surf->wl_win->private = dri2_surf;
+    dri2_surf->wl_win->resize_callback = resize_callback;
+ 
+-   dri2_surf->base.Width =  -1;
+-   dri2_surf->base.Height = -1;
++   dri2_surf->base.Width = window->width;
++   dri2_surf->base.Height = window->height;
+ 
+    config = dri2_get_dri_config(dri2_conf, EGL_WINDOW_BIT,
+                                 dri2_surf->base.GLColorspace);
+diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_x11.c isg_gms-mesa/src/egl/drivers/dri2/platform_x11.c
+--- mesa/src/egl/drivers/dri2/platform_x11.c	2016-05-31 03:41:55.379308230 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/platform_x11.c	2016-05-31 03:38:42.464076539 +0800
+@@ -235,6 +235,16 @@
+          goto cleanup_surf;
+       }
+ 
++      /*
++       * WA for EGL to avoid attempts to create surface with 0 width or height.
++       * Mainly for eglCreatePbufferSurface, which creation with 0 width or
++       * height causes XServer unstable.
++       */
++      if (dri2_surf->base.Width == 0)
++          dri2_surf->base.Width = 1;
++      if (dri2_surf->base.Height == 0)
++          dri2_surf->base.Height = 1;
++
+       dri2_surf->drawable = xcb_generate_id(dri2_dpy->conn);
+       xcb_create_pixmap(dri2_dpy->conn, conf->BufferSize,
+                        dri2_surf->drawable, screen->root,
+@@ -392,7 +402,11 @@
+    (*dri2_dpy->core->destroyDrawable)(dri2_surf->dri_drawable);
+    
+    if (dri2_dpy->dri2) {
+-      xcb_dri2_destroy_drawable (dri2_dpy->conn, dri2_surf->drawable);
++       xcb_void_cookie_t cookie = xcb_dri2_destroy_drawable_checked(dri2_dpy->conn, dri2_surf->drawable);
++       xcb_generic_error_t* error = xcb_request_check(dri2_dpy->conn, cookie);
++       /* Possible adding error handling here. Currently errors are checked here (but ignored) to prevent process termination
++        if native window was already destroyed. */
++       free(error);
+    } else {
+       assert(dri2_dpy->swrast);
+       swrastDestroyDrawable(dri2_dpy, dri2_surf);
+@@ -871,6 +885,25 @@
+    struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
+    struct dri2_egl_surface *dri2_surf = dri2_egl_surface(draw);
+ 
++   /*
++    * Updating surface width and height fields for querying size by
++    * eglQuerySurface with EGL_WIDTH, EGL_HEIGHT It's needed for window surface
++    * when window is resized.
++    */
++   if (!(draw->Type & EGL_PBUFFER_BIT)) {
++      xcb_generic_error_t *error = NULL;
++      xcb_get_geometry_cookie_t cookie = xcb_get_geometry (dri2_dpy->conn, dri2_surf->drawable);
++      xcb_get_geometry_reply_t *reply = xcb_get_geometry_reply (dri2_dpy->conn, cookie, &error);
++      if (reply != NULL)
++      {
++         dri2_surf->base.Width = reply->width;
++         dri2_surf->base.Height = reply->height;
++         free(reply);
++      }
++      if (error != NULL)
++        free(error);
++   }
++
+    if (dri2_dpy->dri2) {
+       if (dri2_x11_swap_buffers_msc(drv, disp, draw, 0, 0, 0) != -1) {
+           return EGL_TRUE;
+diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglapi.c isg_gms-mesa/src/egl/main/eglapi.c
+--- mesa/src/egl/main/eglapi.c	2016-05-31 03:41:55.379308230 +0800
++++ isg_gms-mesa/src/egl/main/eglapi.c	2016-05-31 03:38:42.464076539 +0800
+@@ -101,6 +101,63 @@
+ #include "eglimage.h"
+ #include "eglsync.h"
+ 
++/**
++ * List item containing window related to surface
++ */
++typedef struct
++{
++    struct window_list_item *next;
++    EGLNativeWindowType native_window;
++    EGLSurface attached_surface;
++} window_list_item;
++
++window_list_item *window_surface_association_list = NULL;
++
++/*
++ * Checks if a EGLWindow already have a created surface.
++ */
++static inline bool
++is_window_associated_with_surface(EGLNativeWindowType window)
++{
++   window_list_item *it = window_surface_association_list;
++   for (; it != NULL; it = (window_list_item*)it->next) {
++       if (it->native_window == window)
++          return true;
++   }
++
++   return false;
++}
++
++static inline void
++associate_window_with_surface_list(EGLNativeWindowType window, EGLSurface surface)
++{
++   window_list_item *attach = calloc(1, sizeof(window_list_item));
++   assert(attach);
++
++   attach->next = (struct window_list_item*)window_surface_association_list;
++   attach->native_window = window;
++   attach->attached_surface = surface;
++
++   window_surface_association_list = attach;
++}
++
++static inline void
++disassociate_window_with_surface_list(EGLSurface surface)
++{
++   window_list_item *it = window_surface_association_list, *last = NULL;
++   for (; it != NULL; it = (window_list_item*)it->next) {
++      if (it->attached_surface == surface) {
++         if (it == window_surface_association_list) {
++            window_surface_association_list = (window_list_item*)it->next;
++         } else {
++            last->next = it->next;
++         }
++         free(it);
++         return;
++      }
++      last = it;
++   }
++}
+ 
+ /**
+  * Macros to help return an API entrypoint.
+@@ -751,9 +808,19 @@
+                        EGLNativeWindowType window, const EGLint *attrib_list)
+ {
+    _EGLDisplay *disp = _eglLockDisplay(dpy);
++   EGLSurface window_surface = NULL;
+    STATIC_ASSERT(sizeof(void*) == sizeof(window));
+-   return _eglCreateWindowSurfaceCommon(disp, config, (void*) window,
+-                                        attrib_list);
++
++   if (is_window_associated_with_surface(window))
++      RETURN_EGL_ERROR(disp, EGL_BAD_ALLOC, EGL_NO_SURFACE);
++
++   window_surface = _eglCreateWindowSurfaceCommon(disp, config, (void*)window,
++                                                  attrib_list);
++
++   if (window_surface)
++       associate_window_with_surface_list(window, window_surface);
++
++   return window_surface;
+ }
+ 
+ 
+@@ -902,6 +969,8 @@
+    _eglUnlinkSurface(surf);
+    ret = drv->API.DestroySurface(drv, disp, surf);
+ 
++   disassociate_window_with_surface_list(surface);
++
+    RETURN_EGL_EVAL(disp, ret);
+ }
+ 
+@@ -1478,6 +1547,14 @@
+    if (s->SyncStatus == EGL_SIGNALED_KHR)
+       RETURN_EGL_EVAL(disp, EGL_CONDITION_SATISFIED_KHR);
+ 
++   /* if sync type is EGL_SYNC_REUSABLE_KHR, dpy should be
++    * unlocked here to allow other threads also to be able to
++    * go into waiting state.
++    */
++
++   if (s->Type == EGL_SYNC_REUSABLE_KHR)
++      _eglUnlockDisplay(dpy);
++
+    ret = drv->API.ClientWaitSyncKHR(drv, disp, s, flags, timeout);
+ 
+    RETURN_EGL_EVAL(disp, ret);
+diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglsurface.c isg_gms-mesa/src/egl/main/eglsurface.c
+--- mesa/src/egl/main/eglsurface.c	2016-05-31 03:41:55.383308297 +0800
++++ isg_gms-mesa/src/egl/main/eglsurface.c	2016-05-31 03:38:42.468076608 +0800
+@@ -235,6 +235,19 @@
+       }
+    }
+ 
++   /*
++    * If the surface is Pbuffer type and texture format or target is an
++    * EGL_NO_TEXTURE then both of them should be EGL_NO_TEXTURE.
++    * Otherwise EGL_BAD_MATCH should be returned.
++    */
++   if (((surf->TextureFormat == EGL_NO_TEXTURE &&
++       surf->TextureTarget != EGL_NO_TEXTURE) ||
++       (surf->TextureFormat != EGL_NO_TEXTURE &&
++       surf->TextureTarget == EGL_NO_TEXTURE)) &&
++       (surf->Type & EGL_PBUFFER_BIT)) {
++      err = EGL_BAD_MATCH;
++   }
++
+    return err;
+ }
+ 
+diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglsync.c isg_gms-mesa/src/egl/main/eglsync.c
+--- mesa/src/egl/main/eglsync.c	2016-05-31 03:41:55.383308297 +0800
++++ isg_gms-mesa/src/egl/main/eglsync.c	2016-05-31 03:38:42.468076608 +0800
+@@ -152,7 +152,8 @@
+       /* update the sync status */
+       if (sync->SyncStatus != EGL_SIGNALED_KHR &&
+           (sync->Type == EGL_SYNC_FENCE_KHR ||
+-           sync->Type == EGL_SYNC_CL_EVENT_KHR))
++           sync->Type == EGL_SYNC_CL_EVENT_KHR ||
++	   sync->Type == EGL_SYNC_REUSABLE_KHR))
+          drv->API.ClientWaitSyncKHR(drv, dpy, sync, 0, 0);
+ 
+       *value = sync->SyncStatus;
+diff -x .git -x .gitignore -Naur mesa/src/glx/glxcmds.c isg_gms-mesa/src/glx/glxcmds.c
+--- mesa/src/glx/glxcmds.c	2016-05-31 03:41:55.495310175 +0800
++++ isg_gms-mesa/src/glx/glxcmds.c	2016-05-31 03:38:42.668079952 +0800
+@@ -1628,8 +1628,33 @@
+ glXCreateNewContext(Display * dpy, GLXFBConfig fbconfig,
+                     int renderType, GLXContext shareList, Bool allowDirect)
+ {
++   int list_size;
+    struct glx_config *config = (struct glx_config *) fbconfig;
+ 
++   if (!config)
++   {
++       return NULL;
++   }
++
++   int screen = XDefaultScreen(dpy);
++   struct glx_config **config_list = (struct glx_config **)
++      glXGetFBConfigs(dpy, screen, &list_size);
++
++   int i;
++   for (i = 0; i < list_size; i++)
++   {
++       if (config_list[i] == config)
++       {
++           break;
++       }
++   }
++   free(config_list);
++
++   if (i == list_size)
++   {
++       return NULL;
++   }
++
+    return CreateContext(dpy, config->fbconfigID, config, shareList,
+ 			allowDirect, X_GLXCreateNewContext, renderType,
+ 			config->screen);
+@@ -1727,7 +1752,7 @@
+    CARD32 *interval_ptr;
+    CARD8 opcode;
+ 
+-   if (gc == NULL) {
++   if (gc == NULL || gc == &dummyContext) {
+       return GLX_BAD_CONTEXT;
+    }
+ 
+diff -x .git -x .gitignore -Naur mesa/src/glx/query_renderer.c isg_gms-mesa/src/glx/query_renderer.c
+--- mesa/src/glx/query_renderer.c	2016-05-31 03:41:54.987301657 +0800
++++ isg_gms-mesa/src/glx/query_renderer.c	2016-05-31 03:38:42.672080019 +0800
+@@ -106,7 +106,7 @@
+ {
+    struct glx_context *gc = __glXGetCurrentContext();
+ 
+-   if (gc == NULL)
++   if (gc == NULL || gc == &dummyContext)
+       return False;
+ 
+    return __glXQueryRendererInteger(gc->psc, attribute, value);
+@@ -166,7 +166,7 @@
+ {
+    struct glx_context *gc = __glXGetCurrentContext();
+ 
+-   if (gc == NULL)
++   if (gc == NULL || gc == &dummyContext)
+       return False;
+ 
+    return __glXQueryRendererString(gc->psc, attribute);
+diff -x .git -x .gitignore -Naur mesa/src/glx/xfont.c isg_gms-mesa/src/glx/xfont.c
+--- mesa/src/glx/xfont.c	2016-05-31 03:41:54.987301657 +0800
++++ isg_gms-mesa/src/glx/xfont.c	2016-05-31 03:38:42.672080019 +0800
+@@ -235,7 +235,7 @@
+    int i;
+ 
+    dpy = CC->currentDpy;
+-   win = CC->currentDrawable;
++   win = DefaultRootWindow(dpy);
+ 
+ #if !defined(GLX_USE_APPLEGL)
+    glxdraw = GetGLXDRIDrawable(CC->currentDpy, CC->currentDrawable);
+diff -x .git -x .gitignore -Naur mesa/src/mapi/mapi_abi.py isg_gms-mesa/src/mapi/mapi_abi.py
+--- mesa/src/mapi/mapi_abi.py	2016-05-31 03:41:55.031302395 +0800
++++ isg_gms-mesa/src/mapi/mapi_abi.py	2016-05-31 03:38:42.700080488 +0800
+@@ -38,7 +38,7 @@
+ 
+ 
+ # number of dynamic entries
+-ABI_NUM_DYNAMIC_ENTRIES = 256
++ABI_NUM_DYNAMIC_ENTRIES = 512
+ 
+ class ABIEntry(object):
+     """Represent an ABI entry."""
+diff -x .git -x .gitignore -Naur mesa/src/mapi/u_execmem.c isg_gms-mesa/src/mapi/u_execmem.c
+--- mesa/src/mapi/u_execmem.c	2016-05-31 03:41:55.031302395 +0800
++++ isg_gms-mesa/src/mapi/u_execmem.c	2016-05-31 03:38:42.700080488 +0800
+@@ -37,7 +37,7 @@
+ #include "u_execmem.h"
+ 
+ 
+-#define EXEC_MAP_SIZE (4*1024)
++#define EXEC_MAP_SIZE (8*1024)
+ 
+ static mtx_t exec_mutex = _MTX_INITIALIZER_NP;
+ 

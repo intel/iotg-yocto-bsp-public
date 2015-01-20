@@ -1,0 +1,36 @@
+From db9909aa275c5e4b5a15eb52befff4c8de934d7f Mon Sep 17 00:00:00 2001
+From: "Ng, Mei Yeen" <mei.yeen.ng@intel.com>
+Date: Tue, 23 Feb 2016 10:40:48 +0800
+Subject: [PATCH] tpm2.0-tss: update SRCURI to specific tag
+
+Signed-off-by: Ng, Mei Yeen <mei.yeen.ng@intel.com>
+---
+ meta-measured/recipes-tpm/tpm2.0-tss/tpm2.0-tss_git.bb | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/meta-measured/recipes-tpm/tpm2.0-tss/tpm2.0-tss_git.bb b/meta-measured/recipes-tpm/tpm2.0-tss/tpm2.0-tss_git.bb
+index 53ac1a0..70019aa 100644
+--- a/meta-measured/recipes-tpm/tpm2.0-tss/tpm2.0-tss_git.bb
++++ b/meta-measured/recipes-tpm/tpm2.0-tss/tpm2.0-tss_git.bb
+@@ -13,15 +13,15 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/BSD;md5=377548
+ # it's fixed upstream.
+ DEPENDS = "autoconf-archive"
+ 
+-SRC_URI = "git://github.com/01org/TPM2.0-TSS.git;protocol=git;branch=master;name=TPM2.0-TSS;destsuffix=TPM2.0-TSS"
++SRC_URI = "git://github.com/01org/TPM2.0-TSS.git;protocol=git;tag=1.0-alpha_0;name=TPM2.0-TSS;destsuffix=TPM2.0-TSS"
+ 
+ # CAPS? SRSLY?
+ S = "${WORKDIR}/${@d.getVar('BPN',d).upper()}"
+ 
+ # https://lists.yoctoproject.org/pipermail/yocto/2013-November/017042.html
+-SRCREV = "${AUTOREV}"
++#SRCREV = "${AUTOREV}"
+ PVBASE := "${PV}"
+-PV = "${PVBASE}.${SRCPV}"
++PV = "${PVBASE}.${SRCPV}-tag1.0-alpha_0"
+ 
+ inherit autotools autotools-bootstrap
+ 
+-- 
+1.9.1
+

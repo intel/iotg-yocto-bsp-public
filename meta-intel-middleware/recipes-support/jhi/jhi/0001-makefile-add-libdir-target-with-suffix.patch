@@ -1,0 +1,29 @@
+From cdb0a7ee12644534d822c414afa05d9f401ad06f Mon Sep 17 00:00:00 2001
+From: Anuj Mittal <anujx.mittal@intel.com>
+Date: Tue, 16 Feb 2016 10:24:35 +0800
+Subject: [PATCH] makefile: add libdir target with suffix
+
+Signed-off-by: Anuj Mittal <anujx.mittal@intel.com>
+---
+ CMakeLists.txt | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 65e295f..1ed78c6 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -199,8 +199,10 @@ target_link_libraries(smoketest jhi teemanagement pthread)
+ #   Install   #
+ ###############
+ 
++set(LIB_SUFFIX "" CACHE STRING "Define suffix of directory name (32/64)")
++set(EXEC_INSTALL_PREFIX "${CMAKE_INSTALL_PREFIX}" CACHE PATH "Base directory for executables and libraries" FORCE)
++set(LIBDIR "${EXEC_INSTALL_PREFIX}/lib${LIB_SUFFIX}" CACHE PATH "The subdirectory relative to the install prefix where libraries will be installed (default is /lib${LIB_SUFFIX})" FORCE)
+ set(BINDIR       /usr/sbin)
+-set(LIBDIR       /usr/lib)
+ set(APPLETS_DIR  /var/lib/intel/dal/applets)
+ set(APP_REPO_DIR /var/lib/intel/dal/applet_repository)
+ set(CONFDIR      /etc/jhi)
+-- 
+1.9.1
+

@@ -1,0 +1,189 @@
+diff -x .git -x .gitignore -Naur intel-driver/gms-integration isg_gms-intel-va-driver/gms-integration
+--- intel-driver/gms-integration	1970-01-01 07:30:00.000000000 +0730
++++ isg_gms-intel-va-driver/gms-integration	2016-05-31 03:42:33.863953605 +0800
+@@ -0,0 +1,12 @@
++###
++### GMS integration
++###
++upstream 4643f94991e4e36ce3a23de63cce9fe543ed1725
++	add the support of 8-aligned size setting for hevc encoding
++###
++### GMS integration
++###
++upstream 4643f94991e4e36ce3a23de63cce9fe543ed1725
++	add the support of 8-aligned size setting for hevc encoding
++topic/jpeg_8k_enc_dec_support af517364be0e75c292d4f06e84ff345356701f89
++	jpeg enc/dec gen9: Allow up to 16K JPEG max resolution on gen9
+diff -x .git -x .gitignore -Naur intel-driver/src/gen9_mfd.c isg_gms-intel-va-driver/src/gen9_mfd.c
+--- intel-driver/src/gen9_mfd.c	2016-05-31 03:42:41.888088194 +0800
++++ isg_gms-intel-va-driver/src/gen9_mfd.c	2016-05-31 03:42:33.871953740 +0800
+@@ -1989,3 +1989,17 @@
+         return gen8_dec_hw_context_init(ctx, obj_config);
+     }
+ }
++
++void gen9_max_resolution(struct i965_driver_data *i965,
++                         struct object_config *obj_config,
++                         int *w,                                /* out */
++                         int *h)                                /* out */
++{
++    if (obj_config->profile == VAProfileJPEGBaseline) {
++        *w = 16384;
++        *h = 16384;
++    } else {
++        *w = i965->codec_info->max_width;
++        *h = i965->codec_info->max_height;
++    }
++}
+diff -x .git -x .gitignore -Naur intel-driver/src/i965_device_info.c isg_gms-intel-va-driver/src/i965_device_info.c
+--- intel-driver/src/i965_device_info.c	2016-05-31 03:42:42.004090144 +0800
++++ isg_gms-intel-va-driver/src/i965_device_info.c	2016-05-31 03:42:33.875953807 +0800
+@@ -321,15 +321,17 @@
+ 
+ extern struct hw_context *gen9_enc_hw_context_init(VADriverContextP, struct object_config *);
+ extern void gen9_post_processing_context_init(VADriverContextP, void *, struct intel_batchbuffer *);
++extern void gen9_max_resolution(struct i965_driver_data *, struct object_config *, int *, int *);
+ static struct hw_codec_info skl_hw_codec_info = {
+     .dec_hw_context_init = gen9_dec_hw_context_init,
+     .enc_hw_context_init = gen9_enc_hw_context_init,
+     .proc_hw_context_init = gen75_proc_context_init,
+     .render_init = gen9_render_init,
+     .post_processing_context_init = gen9_post_processing_context_init,
++    .max_resolution = gen9_max_resolution,
+ 
+-    .max_width = 4096,
+-    .max_height = 4096,
++    .max_width = 4096,  /* default. See max_resolution */
++    .max_height = 4096, /* default. See max_resolution */
+     .min_linear_wpitch = 128,
+     .min_linear_hpitch = 16,
+ 
+@@ -375,9 +377,10 @@
+     .proc_hw_context_init = gen75_proc_context_init,
+     .render_init = gen9_render_init,
+     .post_processing_context_init = gen9_post_processing_context_init,
++    .max_resolution = gen9_max_resolution,
+ 
+-    .max_width = 4096,
+-    .max_height = 4096,
++    .max_width = 4096,  /* default. See max_resolution */
++    .max_height = 4096, /* default. See max_resolution */
+     .min_linear_wpitch = 128,
+     .min_linear_hpitch = 16,
+ 
+@@ -427,9 +430,10 @@
+     .proc_hw_context_init = gen75_proc_context_init,
+     .render_init = gen9_render_init,
+     .post_processing_context_init = gen9_post_processing_context_init,
++    .max_resolution = gen9_max_resolution,
+ 
+-    .max_width = 4096,
+-    .max_height = 4096,
++    .max_width = 4096,   /* default. See max_resolution */
++    .max_height = 4096,  /* default. See max_resolution */
+     .min_linear_wpitch = 128,
+     .min_linear_hpitch = 16,
+ 
+diff -x .git -x .gitignore -Naur intel-driver/src/i965_drv_video.c isg_gms-intel-va-driver/src/i965_drv_video.c
+--- intel-driver/src/i965_drv_video.c	2016-05-31 03:42:42.008090209 +0800
++++ isg_gms-intel-va-driver/src/i965_drv_video.c	2016-05-31 03:42:33.875953807 +0800
+@@ -2071,6 +2071,20 @@
+     object_heap_free(heap, obj);
+ }
+ 
++static inline void
++max_resolution(struct i965_driver_data *i965,
++               struct object_config *obj_config,
++               int *w,                                  /* out */
++               int *h)                                  /* out */
++{
++    if (i965->codec_info->max_resolution) {
++        i965->codec_info->max_resolution(i965, obj_config, w, h);
++    } else {
++        *w = i965->codec_info->max_width;
++        *h = i965->codec_info->max_height;
++    }
++}
++
+ VAStatus
+ i965_CreateContext(VADriverContextP ctx,
+                    VAConfigID config_id,
+@@ -2088,14 +2102,18 @@
+     VAStatus vaStatus = VA_STATUS_SUCCESS;
+     int contextID;
+     int i;
++    int max_width;
++    int max_height;
+ 
+     if (NULL == obj_config) {
+         vaStatus = VA_STATUS_ERROR_INVALID_CONFIG;
+         return vaStatus;
+     }
+ 
+-    if (picture_width > i965->codec_info->max_width ||
+-        picture_height > i965->codec_info->max_height) {
++    max_resolution(i965, obj_config, &max_width, &max_height);
++
++    if (picture_width > max_width ||
++        picture_height > max_height) {
+         vaStatus = VA_STATUS_ERROR_RESOLUTION_NOT_SUPPORTED;
+         return vaStatus;
+     }
+@@ -5365,7 +5383,9 @@
+     struct object_config *obj_config;
+     int i = 0;
+     VASurfaceAttrib *attribs = NULL;
+-    
++    int max_width;
++    int max_height;
++
+     if (config == VA_INVALID_ID)
+         return VA_STATUS_ERROR_INVALID_CONFIG;
+ 
+@@ -5752,16 +5772,18 @@
+     attribs[i].value.value.p = NULL; /* ignore */
+     i++;
+ 
++    max_resolution(i965, obj_config, &max_width, &max_height);
++
+     attribs[i].type = VASurfaceAttribMaxWidth;
+     attribs[i].value.type = VAGenericValueTypeInteger;
+     attribs[i].flags = VA_SURFACE_ATTRIB_GETTABLE;
+-    attribs[i].value.value.i = i965->codec_info->max_width;
++    attribs[i].value.value.i = max_width;
+     i++;
+ 
+     attribs[i].type = VASurfaceAttribMaxHeight;
+     attribs[i].value.type = VAGenericValueTypeInteger;
+     attribs[i].flags = VA_SURFACE_ATTRIB_GETTABLE;
+-    attribs[i].value.value.i = i965->codec_info->max_height;
++    attribs[i].value.value.i = max_height;
+     i++;
+ 
+     if (i > *num_attribs) {
+diff -x .git -x .gitignore -Naur intel-driver/src/i965_drv_video.h isg_gms-intel-va-driver/src/i965_drv_video.h
+--- intel-driver/src/i965_drv_video.h	2016-05-31 03:42:42.008090209 +0800
++++ isg_gms-intel-va-driver/src/i965_drv_video.h	2016-05-31 03:42:33.875953807 +0800
+@@ -347,6 +347,8 @@
+     int ring;
+ };
+ 
++struct i965_driver_data;
++
+ struct hw_codec_info
+ {
+     struct hw_context *(*dec_hw_context_init)(VADriverContextP, struct object_config *);
+@@ -356,6 +358,13 @@
+     void (*post_processing_context_init)(VADriverContextP, void *, struct intel_batchbuffer *);
+     void (*preinit_hw_codec)(VADriverContextP, struct hw_codec_info *);
+ 
++    /**
++     * Allows HW info to support per-codec max resolution.  If this functor is
++     * not initialized, then @max_width and @max_height will be used as the
++     * default maximum resolution for all codecs on this HW info.
++     */
++    void (*max_resolution)(struct i965_driver_data *, struct object_config *, int *, int *);
++
+     int max_width;
+     int max_height;
+     int min_linear_wpitch;

@@ -1,0 +1,9 @@
+diff -x .git -x .gitignore -Naur libva/gms-integration isg_gms-libva/gms-integration
+--- libva/gms-integration	1970-01-01 07:30:00.000000000 +0730
++++ isg_gms-libva/gms-integration	2016-05-31 03:42:04.779465847 +0800
+@@ -0,0 +1,5 @@
++###
++### GMS integration
++###
++upstream 4cb6d787bd8270bbba8f8334991db974c592c5c2
++	gcc suggests not putting ; at end of if statements

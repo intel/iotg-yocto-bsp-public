@@ -1,0 +1,927 @@
+diff -x .git -x .gitignore -Naur drm/gms-integration isg_gms-libdrm/gms-integration
+--- drm/gms-integration	1970-01-01 07:30:00.000000000 +0730
++++ isg_gms-libdrm/gms-integration	2016-05-31 03:36:27.993827407 +0800
+@@ -0,0 +1,17 @@
++###
++### GMS integration
++###
++upstream cc9a53f076d4e958e595e1daaff2c286ce1b7bb1
++	headers: Update drm.h
++topic/bxt-enablement ca067e29e9cb2cfe7c692927c4ce0096bffb434b
++	intel/bxt: Add new BXT device ID
++topic/vpg_mocs_update 66a12de467b8f728747ec7ac25086a27bf989ec6
++	MUST_REBASE [VPG]: drm/i915: Add MESA MOCS values to user-space.
++topic/vpg_ufo_patches 2d49da553951883766c4a76d0a0b3cb867e41e18
++	intel: Add interface to query Pooled EU parameters
++topic/vpg_gpa_patches c5fc3677644322ce07a2453a5f3921080de66ff9
++	libdrm: Fix perfmon alignment attribute
++topic/background_color fe0907279957104121ef31d7b8022389498e36d9
++	xf86drmMode: Add RGBA property helpers
++topic/plane_blend 265b8b104580ae85e20b633fa43e85458a6ea837
++	xf86drmMode: Add plane blending helpers
+diff -x .git -x .gitignore -Naur drm/include/drm/i915_drm.h isg_gms-libdrm/include/drm/i915_drm.h
+--- drm/include/drm/i915_drm.h	2016-05-31 03:36:51.734224273 +0800
++++ isg_gms-libdrm/include/drm/i915_drm.h	2016-05-31 03:36:27.997827473 +0800
+@@ -28,6 +28,7 @@
+ #define _I915_DRM_H_
+ 
+ #include "drm.h"
++#include <i915_perfmon.h>
+ 
+ /* Please note that modifications to all structs defined here are
+  * subject to backwards-compatibility constraints.
+@@ -230,6 +231,7 @@
+ #define DRM_I915_GEM_USERPTR		0x33
+ #define DRM_I915_GEM_CONTEXT_GETPARAM	0x34
+ #define DRM_I915_GEM_CONTEXT_SETPARAM	0x35
++#define DRM_I915_PERFMON		0x3e
+ 
+ #define DRM_IOCTL_I915_INIT		DRM_IOW( DRM_COMMAND_BASE + DRM_I915_INIT, drm_i915_init_t)
+ #define DRM_IOCTL_I915_FLUSH		DRM_IO ( DRM_COMMAND_BASE + DRM_I915_FLUSH)
+@@ -283,7 +285,7 @@
+ #define DRM_IOCTL_I915_GEM_USERPTR			DRM_IOWR (DRM_COMMAND_BASE + DRM_I915_GEM_USERPTR, struct drm_i915_gem_userptr)
+ #define DRM_IOCTL_I915_GEM_CONTEXT_GETPARAM	DRM_IOWR (DRM_COMMAND_BASE + DRM_I915_GEM_CONTEXT_GETPARAM, struct drm_i915_gem_context_param)
+ #define DRM_IOCTL_I915_GEM_CONTEXT_SETPARAM	DRM_IOWR (DRM_COMMAND_BASE + DRM_I915_GEM_CONTEXT_SETPARAM, struct drm_i915_gem_context_param)
+-
++#define DRM_IOCTL_I915_PERFMON		DRM_IOWR(DRM_COMMAND_BASE + DRM_I915_PERFMON, struct drm_i915_perfmon)
+ /* Allow drivers to submit batchbuffers directly to hardware, relying
+  * on the security mechanisms provided by hardware.
+  */
+@@ -358,6 +360,11 @@
+ #define I915_PARAM_HAS_RESOURCE_STREAMER 36
+ #define I915_PARAM_HAS_EXEC_SOFTPIN	 37
+ 
++/* Private (not upstreamed) parameters start from 0x800   */
++/* This helps to avoid conflicts with new upstream values */
++#define I915_PARAM_HAS_POOLED_EU         0x800
++#define I915_PARAM_MIN_EU_IN_POOL        0x801
++
+ typedef struct drm_i915_getparam {
+ 	__s32 param;
+ 	/*
+diff -x .git -x .gitignore -Naur drm/include/drm/i915_perfmon.h isg_gms-libdrm/include/drm/i915_perfmon.h
+--- drm/include/drm/i915_perfmon.h	1970-01-01 07:30:00.000000000 +0730
++++ isg_gms-libdrm/include/drm/i915_perfmon.h	2016-05-31 03:36:27.997827473 +0800
+@@ -0,0 +1,124 @@
++/*
++ * Copyright  2013 Intel Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
++ * IN THE SOFTWARE.
++ */
++
++#ifndef _I915_PERFMON_H_
++#define _I915_PERFMON_H_
++
++#define I915_PERFMON_IOCTL_VERSION	5
++
++struct drm_i915_perfmon_config_entry {
++	__u32 offset;
++	__u32 value;
++};
++
++static const unsigned int I915_PERFMON_CONFIG_SIZE = 256;
++
++/* Explicitly aligned to 8 bytes to avoid mismatch
++   between 64-bit KM and 32-bit UM. */
++typedef __u64 drm_i915_perfmon_shared_ptr __attribute__((__aligned__(8)));
++
++struct drm_i915_perfmon_user_config {
++	/* This is pointer to struct drm_i915_perfmon_config_entry.*/
++	drm_i915_perfmon_shared_ptr entries;
++	__u32 size;
++	__u32 id;
++};
++
++enum DRM_I915_PERFMON_CONFIG_TARGET {
++	I915_PERFMON_CONFIG_TARGET_CTX,
++	I915_PERFMON_CONFIG_TARGET_PID,
++	I915_PERFMON_CONFIG_TARGET_ALL,
++};
++
++struct drm_i915_perfmon_set_config {
++	enum DRM_I915_PERFMON_CONFIG_TARGET target;
++	struct drm_i915_perfmon_user_config oa;
++	struct drm_i915_perfmon_user_config gp;
++	__u32 pid;
++};
++
++struct drm_i915_perfmon_load_config {
++	__u32 ctx_id;
++	__u32 oa_id;
++	__u32 gp_id;
++};
++
++
++static const unsigned int I915_PERFMON_MAX_HW_CTX_IDS = 1024;
++
++struct drm_i915_perfmon_get_hw_ctx_ids {
++	__u32 pid;
++	__u32 count;
++	 /* This is pointer to __u32. */
++	drm_i915_perfmon_shared_ptr ids;
++};
++
++struct drm_i915_perfmon_get_hw_ctx_id {
++	__u32 ctx_id;
++	__u32 hw_ctx_id;
++};
++
++struct drm_i915_perfmon_pin_oa_buffer {
++	/** Handle of the buffer to be pinned. */
++	__u32 handle;
++	__u32 pad;
++
++	/** alignment required within the aperture */
++	__u64 alignment;
++
++	/** Returned GTT offset of the buffer. */
++	__u64 offset;
++};
++
++struct drm_i915_perfmon_unpin_oa_buffer {
++	/** Handle of the buffer to be pinned. */
++	__u32 handle;
++	__u32 pad;
++};
++
++enum I915_PERFMON_IOCTL_OP {
++	I915_PERFMON_OPEN = 8,
++	I915_PERFMON_CLOSE,
++	I915_PERFMON_ENABLE_CONFIG,
++	I915_PERFMON_DISABLE_CONFIG,
++	I915_PERFMON_SET_CONFIG,
++	I915_PERFMON_LOAD_CONFIG,
++	I915_PERFMON_GET_HW_CTX_ID,
++	I915_PERFMON_GET_HW_CTX_IDS,
++	I915_PERFMON_PIN_OA_BUFFER,
++	I915_PERFMON_UNPIN_OA_BUFFER,
++};
++
++struct drm_i915_perfmon {
++	enum I915_PERFMON_IOCTL_OP op;
++	union {
++		struct drm_i915_perfmon_set_config	set_config;
++		struct drm_i915_perfmon_load_config	load_config;
++		struct drm_i915_perfmon_get_hw_ctx_id	get_hw_ctx_id;
++		struct drm_i915_perfmon_get_hw_ctx_ids	get_hw_ctx_ids;
++		struct drm_i915_perfmon_pin_oa_buffer	pin_oa_buffer;
++		struct drm_i915_perfmon_unpin_oa_buffer	unpin_oa_buffer;
++	} data;
++};
++
++#endif	/* _I915_PERFMON_H_ */
+diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/intel/intel_bufmgr_gem.c
+--- drm/intel/intel_bufmgr_gem.c	2016-05-31 03:36:51.734224273 +0800
++++ isg_gms-libdrm/intel/intel_bufmgr_gem.c	2016-05-31 03:36:27.997827473 +0800
+@@ -146,6 +146,7 @@
+ 	unsigned int bo_reuse : 1;
+ 	unsigned int no_exec : 1;
+ 	unsigned int has_vebox : 1;
++	unsigned int has_ext_mmap : 1;
+ 	bool fenced_relocs;
+ 
+ 	struct {
+@@ -209,6 +210,8 @@
+ 
+ 	/** Mapped address for the buffer, saved across map/unmap cycles */
+ 	void *mem_virtual;
++	/** Uncached Mapped address for the buffer, saved across map/unmap cycles */
++	void *mem_wc_virtual;
+ 	/** GTT virtual address for the buffer, saved across map/unmap cycles */
+ 	void *gtt_virtual;
+ 	/**
+@@ -1192,6 +1195,10 @@
+ 		drm_munmap(bo_gem->gtt_virtual, bo_gem->bo.size);
+ 		bufmgr_gem->vma_count--;
+ 	}
++	if (bo_gem->mem_wc_virtual) {
++		munmap(bo_gem->mem_wc_virtual, bo_gem->bo.size);
++		bufmgr_gem->vma_count--;
++	}
+ 
+ 	/* Close this object */
+ 	memclear(close);
+@@ -1215,6 +1222,9 @@
+ 
+ 	if (bo_gem->gtt_virtual)
+ 		VALGRIND_MAKE_MEM_NOACCESS(bo_gem->gtt_virtual, bo->size);
++
++	if (bo_gem->mem_wc_virtual)
++		VALGRIND_MAKE_MEM_NOACCESS(bo_gem->mem_wc_virtual, bo->size);
+ #endif
+ }
+ 
+@@ -1260,6 +1270,8 @@
+ 
+ 	/* We may need to evict a few entries in order to create new mmaps */
+ 	limit = bufmgr_gem->vma_max - 2*bufmgr_gem->vma_open;
++	if (bufmgr_gem->has_ext_mmap)
++		limit -= bufmgr_gem->vma_open;
+ 	if (limit < 0)
+ 		limit = 0;
+ 
+@@ -1282,6 +1294,11 @@
+ 			bo_gem->gtt_virtual = NULL;
+ 			bufmgr_gem->vma_count--;
+ 		}
++		if (bo_gem->mem_wc_virtual) {
++			munmap(bo_gem->mem_wc_virtual, bo_gem->bo.size);
++			bo_gem->mem_wc_virtual = NULL;
++			bufmgr_gem->vma_count--;
++		}
+ 	}
+ }
+ 
+@@ -1294,6 +1311,8 @@
+ 		bufmgr_gem->vma_count++;
+ 	if (bo_gem->gtt_virtual)
+ 		bufmgr_gem->vma_count++;
++	if (bo_gem->mem_wc_virtual)
++		bufmgr_gem->vma_count++;
+ 	drm_intel_gem_bo_purge_vma_cache(bufmgr_gem);
+ }
+ 
+@@ -1306,6 +1325,8 @@
+ 		bufmgr_gem->vma_count--;
+ 	if (bo_gem->gtt_virtual)
+ 		bufmgr_gem->vma_count--;
++	if (bo_gem->mem_wc_virtual)
++		bufmgr_gem->vma_count--;
+ 	drm_intel_gem_bo_purge_vma_cache(bufmgr_gem);
+ }
+ 
+@@ -1410,6 +1431,123 @@
+ 	}
+ }
+ 
++static int
++map_wc(drm_intel_bo *bo)
++{
++	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
++	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
++	int ret;
++
++	if (bo_gem->is_userptr)
++		return -EINVAL;
++
++	if (!bufmgr_gem->has_ext_mmap)
++		return -EINVAL;
++
++	if (bo_gem->map_count++ == 0)
++		drm_intel_gem_bo_open_vma(bufmgr_gem, bo_gem);
++
++	/* Get a mapping of the buffer if we haven't before. */
++	if (bo_gem->mem_wc_virtual == NULL) {
++		struct drm_i915_gem_mmap mmap_arg;
++
++		DBG("bo_map_wc: mmap %d (%s), map_count=%d\n",
++		    bo_gem->gem_handle, bo_gem->name, bo_gem->map_count);
++
++		memclear(mmap_arg);
++		mmap_arg.handle = bo_gem->gem_handle;
++		/* To indicate the uncached virtual mapping to KMD */
++		mmap_arg.flags = I915_MMAP_WC;
++		mmap_arg.offset = 0;
++		mmap_arg.size = bo->size;
++		ret = drmIoctl(bufmgr_gem->fd,
++			       DRM_IOCTL_I915_GEM_MMAP,
++			       &mmap_arg);
++		if (ret != 0) {
++			ret = -errno;
++			DBG("%s:%d: Error mapping buffer %d (%s): %s .\n",
++			    __FILE__, __LINE__, bo_gem->gem_handle,
++			    bo_gem->name, strerror(errno));
++			if (--bo_gem->map_count == 0)
++				drm_intel_gem_bo_close_vma(bufmgr_gem, bo_gem);
++			return ret;
++		}
++		VG(VALGRIND_MALLOCLIKE_BLOCK(mmap_arg.addr_ptr, mmap_arg.size, 0, 1));
++		bo_gem->mem_wc_virtual = (void *)(uintptr_t) mmap_arg.addr_ptr;
++	}
++
++	bo->virtual = bo_gem->mem_wc_virtual;
++
++	DBG("bo_map_wc: %d (%s) -> %p\n", bo_gem->gem_handle, bo_gem->name,
++	    bo_gem->mem_wc_virtual);
++
++	return 0;
++}
++
++/* To be used in a similar way to mmap_gtt */
++int
++drm_intel_gem_bo_map_wc(drm_intel_bo *bo) {
++	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
++	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
++	struct drm_i915_gem_set_domain set_domain;
++	int ret;
++
++	pthread_mutex_lock(&bufmgr_gem->lock);
++
++	ret = map_wc(bo);
++	if (ret) {
++		pthread_mutex_unlock(&bufmgr_gem->lock);
++		return ret;
++	}
++
++	/* Now move it to the GTT domain so that the GPU and CPU
++	 * caches are flushed and the GPU isn't actively using the
++	 * buffer.
++	 *
++	 * The domain change is done even for the objects which
++	 * are not bounded. For them first the pages are acquired,
++	 * before the domain change.
++	 */
++	memclear(set_domain);
++	set_domain.handle = bo_gem->gem_handle;
++	set_domain.read_domains = I915_GEM_DOMAIN_GTT;
++	set_domain.write_domain = I915_GEM_DOMAIN_GTT;
++	ret = drmIoctl(bufmgr_gem->fd,
++		       DRM_IOCTL_I915_GEM_SET_DOMAIN,
++		       &set_domain);
++	if (ret != 0) {
++		DBG("%s:%d: Error setting domain %d: %s\n",
++		    __FILE__, __LINE__, bo_gem->gem_handle,
++		    strerror(errno));
++	}
++	drm_intel_gem_bo_mark_mmaps_incoherent(bo);
++	VG(VALGRIND_MAKE_MEM_DEFINED(bo_gem->mem_wc_virtual, bo->size));
++	pthread_mutex_unlock(&bufmgr_gem->lock);
++
++	return 0;
++}
++
++int
++drm_intel_gem_bo_map_wc_unsynchronized(drm_intel_bo *bo) {
++	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
++#ifdef HAVE_VALGRIND
++	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
++#endif
++	int ret;
++
++	pthread_mutex_lock(&bufmgr_gem->lock);
++
++	ret = map_wc(bo);
++	if (ret == 0) {
++		drm_intel_gem_bo_mark_mmaps_incoherent(bo);
++		VG(VALGRIND_MAKE_MEM_DEFINED(bo_gem->mem_wc_virtual, bo->size));
++	}
++
++	pthread_mutex_unlock(&bufmgr_gem->lock);
++
++	return ret;
++}
++
+ static int drm_intel_gem_bo_map(drm_intel_bo *bo, int write_enable)
+ {
+ 	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
+@@ -1436,6 +1574,7 @@
+ 
+ 		memclear(mmap_arg);
+ 		mmap_arg.handle = bo_gem->gem_handle;
++		mmap_arg.flags = 0;
+ 		mmap_arg.size = bo->size;
+ 		ret = drmIoctl(bufmgr_gem->fd,
+ 			       DRM_IOCTL_I915_GEM_MMAP,
+@@ -1694,6 +1833,11 @@
+ 	return ret;
+ }
+ 
++int drm_intel_gem_bo_unmap_wc(drm_intel_bo *bo)
++{
++	return drm_intel_gem_bo_unmap(bo);
++}
++
+ int
+ drm_intel_gem_bo_unmap_gtt(drm_intel_bo *bo)
+ {
+@@ -3430,6 +3574,10 @@
+ 	if (ret == 0 && *gp.value > 0)
+ 		bufmgr_gem->bufmgr.bo_set_softpin_offset = drm_intel_gem_bo_set_softpin_offset;
+ 
++	gp.param = I915_PARAM_MMAP_VERSION;
++	ret = drmIoctl(bufmgr_gem->fd, DRM_IOCTL_I915_GETPARAM, &gp);
++	bufmgr_gem->has_ext_mmap = (ret == 0) & (*gp.value > 0);
++
+ 	if (bufmgr_gem->gen < 4) {
+ 		gp.param = I915_PARAM_NUM_FENCES_AVAIL;
+ 		gp.value = &bufmgr_gem->available_fences;
+diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr.h isg_gms-libdrm/intel/intel_bufmgr.h
+--- drm/intel/intel_bufmgr.h	2016-05-31 03:36:51.734224273 +0800
++++ isg_gms-libdrm/intel/intel_bufmgr.h	2016-05-31 03:36:27.997827473 +0800
+@@ -183,6 +183,9 @@
+ int drm_intel_gem_bo_map_unsynchronized(drm_intel_bo *bo);
+ int drm_intel_gem_bo_map_gtt(drm_intel_bo *bo);
+ int drm_intel_gem_bo_unmap_gtt(drm_intel_bo *bo);
++int drm_intel_gem_bo_map_wc_unsynchronized(drm_intel_bo *bo);
++int drm_intel_gem_bo_map_wc(drm_intel_bo *bo);
++int drm_intel_gem_bo_unmap_wc(drm_intel_bo *bo);
+ 
+ int drm_intel_gem_bo_get_reloc_count(drm_intel_bo *bo);
+ void drm_intel_gem_bo_clear_relocs(drm_intel_bo *bo, int start);
+diff -x .git -x .gitignore -Naur drm/intel/intel_mocs_table.h isg_gms-libdrm/intel/intel_mocs_table.h
+--- drm/intel/intel_mocs_table.h	1970-01-01 07:30:00.000000000 +0730
++++ isg_gms-libdrm/intel/intel_mocs_table.h	2016-05-31 03:36:27.997827473 +0800
+@@ -0,0 +1,79 @@
++/*
++ * Copyright (c) 2015 Intel Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions: *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
++ * SOFTWARE.
++ */
++
++struct drm_i915_mocs_entry {
++	uint32_t control_value;
++	uint16_t l3cc_value;
++};
++
++#define LE_CACHEABILITY(value)	((value) << 0)
++#define LE_TGT_CACHE(value)	((value) << 2)
++#define LE_LRUM(value)		((value) << 4)
++#define LE_AOM(value)		((value) << 6)
++#define LE_RSC(value)		((value) << 7)
++#define LE_SCC(value)		((value) << 8)
++#define LE_PFM(value)		((value) << 11)
++#define LE_SCF(value)		((value) << 14)
++#define L3_ESC(value)		((value) << 0)
++#define L3_SCC(value)		((value) << 1)
++#define L3_CACHEABILITY(value)	((value) << 4)
++#define LE_PAGETABLE		0
++#define LE_UC			1
++#define LE_WT			2
++#define LE_WB			3
++#define L3_DIRECT		0
++#define L3_UC			1
++#define L3_RESERVED		2
++#define L3_WB			3
++#define MESA_ELLC		0
++#define MESA_LLC		1
++#define LLC_ELLC		2
++
++#define MOCS_DEF_skylake_mocs_table static const struct drm_i915_mocs_entry MESA_MOCS[] = {\
++	/* { 0x00000009, 0x0010 } */\
++	{ (LE_CACHEABILITY(LE_UC) | LE_TGT_CACHE(LLC_ELLC) | LE_LRUM(0) |\
++	   LE_AOM(0) | LE_RSC(0) | LE_SCC(0) | LE_PFM(0) | LE_SCF(0)),\
++	  (L3_ESC(0) | L3_SCC(0) | L3_CACHEABILITY(L3_UC)) },\
++	/* { 0x00000038, 0x0030 } */\
++	{ (LE_CACHEABILITY(LE_PAGETABLE) | LE_TGT_CACHE(LLC_ELLC) | LE_LRUM(3) |\
++	   LE_AOM(0) | LE_RSC(0) | LE_SCC(0) | LE_PFM(0) | LE_SCF(0)),\
++	  (L3_ESC(0) | L3_SCC(0) | L3_CACHEABILITY(L3_WB)) },\
++	/* { 0x0000003b, 0x0030 } */\
++	{ (LE_CACHEABILITY(LE_WB) | LE_TGT_CACHE(LLC_ELLC) | LE_LRUM(3) |\
++	   LE_AOM(0) | LE_RSC(0) | LE_SCC(0) | LE_PFM(0) | LE_SCF(0)),\
++	  (L3_ESC(0) | L3_SCC(0) | L3_CACHEABILITY(L3_WB)) }\
++}
++
++#define MOCS_DEF_broxton_mocs_table static const struct drm_i915_mocs_entry MESA_MOCS[] = {\
++	/* { 0x00000009, 0x0010 } */\
++	{ (LE_CACHEABILITY(LE_UC) | LE_TGT_CACHE(LLC_ELLC) | LE_LRUM(0) |\
++	   LE_AOM(0) | LE_RSC(0) | LE_SCC(0) | LE_PFM(0) | LE_SCF(0)),\
++	  (L3_ESC(0) | L3_SCC(0) | L3_CACHEABILITY(L3_UC)) },\
++	/* { 0x00000038, 0x0030 } */\
++	{ (LE_CACHEABILITY(LE_PAGETABLE) | LE_TGT_CACHE(LLC_ELLC) | LE_LRUM(3) |\
++	   LE_AOM(0) | LE_RSC(0) | LE_SCC(0) | LE_PFM(0) | LE_SCF(0)),\
++	  (L3_ESC(0) | L3_SCC(0) | L3_CACHEABILITY(L3_WB)) },\
++	/* { 0x0000003b, 0x0030 } */\
++	{ (LE_CACHEABILITY(LE_WB) | LE_TGT_CACHE(LLC_ELLC) | LE_LRUM(3) |\
++	   LE_AOM(0) | LE_RSC(0) | LE_SCC(0) | LE_PFM(0) | LE_SCF(0)),\
++	  (L3_ESC(0) | L3_SCC(0) | L3_CACHEABILITY(L3_WB)) }\
++}
+diff -x .git -x .gitignore -Naur drm/intel/intel_perfmon.c isg_gms-libdrm/intel/intel_perfmon.c
+--- drm/intel/intel_perfmon.c	1970-01-01 07:30:00.000000000 +0730
++++ isg_gms-libdrm/intel/intel_perfmon.c	2016-05-31 03:36:27.997827473 +0800
+@@ -0,0 +1,210 @@
++/*
++ * Copyright © 2014 Intel Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
++ * IN THE SOFTWARE.
++ */
++
++#include <stdio.h>
++#include <stdint.h>
++
++#include "i915_drm.h"
++#include "i915_perfmon.h"
++#include <xf86drm.h>
++
++#include "intel_bufmgr.h"
++#include "intel_bufmgr_priv.h"
++#include "intel_perfmon.h"
++
++#include "errno.h"
++
++int
++drm_intel_perfmon_enable_config(int fd, int enable)
++{
++	struct drm_i915_perfmon perfmon;
++	int ret;
++
++	perfmon.op = enable ?
++			I915_PERFMON_ENABLE_CONFIG :
++			I915_PERFMON_DISABLE_CONFIG;
++	ret = drmIoctl(fd, DRM_IOCTL_I915_PERFMON, &perfmon);
++
++	return ret;
++}
++
++int
++drm_intel_perfmon_open(int fd)
++{
++	struct drm_i915_perfmon perfmon;
++	int ret;
++
++	perfmon.op = I915_PERFMON_OPEN;
++	ret = drmIoctl(fd, DRM_IOCTL_I915_PERFMON, &perfmon);
++
++	return ret;
++}
++
++int
++drm_intel_perfmon_close(int fd)
++{
++	struct drm_i915_perfmon perfmon;
++	int ret;
++
++	perfmon.op = I915_PERFMON_CLOSE;
++	ret = drmIoctl(fd, DRM_IOCTL_I915_PERFMON, &perfmon);
++
++	return ret;
++}
++
++int
++drm_intel_perfmon_set_config(
++	int fd,
++	enum DRM_I915_PERFMON_CONFIG_TARGET target,
++	unsigned int pid,
++	struct drm_i915_perfmon_config_entry *oa_entries,
++	unsigned int num_oa_entries,
++	unsigned int oa_id,
++	struct drm_i915_perfmon_config_entry *gp_entries,
++	unsigned int num_gp_entries,
++	unsigned int gp_id)
++{
++	struct drm_i915_perfmon perfmon_ioctl;
++	int ret;
++
++	perfmon_ioctl.op = I915_PERFMON_SET_CONFIG;
++	perfmon_ioctl.data.set_config.target = target;
++	perfmon_ioctl.data.set_config.pid = pid;
++	perfmon_ioctl.data.set_config.oa.entries = (uintptr_t)oa_entries;
++	perfmon_ioctl.data.set_config.oa.size	= num_oa_entries;
++	perfmon_ioctl.data.set_config.oa.id	= oa_id;
++	perfmon_ioctl.data.set_config.gp.entries = (uintptr_t)gp_entries;
++	perfmon_ioctl.data.set_config.gp.size	= num_gp_entries;
++	perfmon_ioctl.data.set_config.gp.id 	= gp_id;
++
++	ret = drmIoctl(fd, DRM_IOCTL_I915_PERFMON, &perfmon_ioctl);
++
++	return ret;
++}
++
++int
++drm_intel_perfmon_load_config(
++	int fd,
++	drm_intel_context *ctx,
++	uint32_t *oa_cfg_id,
++	uint32_t *gp_cfg_id)
++{
++	struct drm_i915_perfmon perfmon;
++	int ret;
++
++	perfmon.op = I915_PERFMON_LOAD_CONFIG;
++	perfmon.data.load_config.ctx_id = ctx ? ctx->ctx_id : 0;
++	perfmon.data.load_config.oa_id = *oa_cfg_id;
++	perfmon.data.load_config.gp_id = *gp_cfg_id;
++	ret = drmIoctl(fd, DRM_IOCTL_I915_PERFMON, &perfmon);
++
++	*oa_cfg_id = perfmon.data.load_config.oa_id;
++	*gp_cfg_id = perfmon.data.load_config.gp_id;
++
++	return ret;
++}
++
++
++int
++drm_intel_perfmon_get_hw_ctx_id(
++	int fd,
++	drm_intel_context *ctx,
++	unsigned int *hw_ctx_id)
++{
++	struct drm_i915_perfmon perfmon;
++	int ret;
++
++	perfmon.op = I915_PERFMON_GET_HW_CTX_ID;
++	perfmon.data.get_hw_ctx_id.ctx_id = ctx ? ctx->ctx_id : 0;
++	ret = drmIoctl(fd, DRM_IOCTL_I915_PERFMON, &perfmon);
++
++	*hw_ctx_id = perfmon.data.get_hw_ctx_id.hw_ctx_id;
++	return ret;
++}
++
++int
++drm_intel_perfmon_get_hw_ctx_ids(
++	int fd,
++	int pid,
++	unsigned int *hw_ctx_ids,
++	unsigned int *hw_ctx_ids_count)
++{
++	struct drm_i915_perfmon perfmon;
++	int ret;
++
++	perfmon.op = I915_PERFMON_GET_HW_CTX_IDS;
++	perfmon.data.get_hw_ctx_ids.pid = pid;
++	perfmon.data.get_hw_ctx_ids.count = *hw_ctx_ids_count;
++	perfmon.data.get_hw_ctx_ids.ids = (uintptr_t)hw_ctx_ids;
++
++	ret = drmIoctl(fd, DRM_IOCTL_I915_PERFMON, &perfmon);
++	*hw_ctx_ids_count = perfmon.data.get_hw_ctx_ids.count;
++
++	return ret;
++
++}
++
++int
++drm_intel_perfmon_pin_oa_buffer(
++	int fd,
++	drm_intel_bo *bo,
++	uint32_t alignment)
++{
++	struct drm_i915_perfmon perfmon;
++	int ret;
++
++	perfmon.op = I915_PERFMON_PIN_OA_BUFFER;
++	perfmon.data.pin_oa_buffer.handle = bo->handle;
++	perfmon.data.pin_oa_buffer.alignment = alignment;
++	perfmon.data.pin_oa_buffer.offset = 0UL;
++
++	ret = drmIoctl(fd, DRM_IOCTL_I915_PERFMON, &perfmon);
++
++	if (ret != 0)
++		return -errno;
++
++	bo->offset64 = perfmon.data.pin_oa_buffer.offset;
++	bo->offset = perfmon.data.pin_oa_buffer.offset;
++
++	return ret;
++}
++
++
++int
++drm_intel_perfmon_unpin_oa_buffer(
++	int fd,
++	drm_intel_bo *bo)
++{
++	struct drm_i915_perfmon perfmon;
++	int ret;
++
++	perfmon.op = I915_PERFMON_UNPIN_OA_BUFFER;
++	perfmon.data.unpin_oa_buffer.handle = bo->handle;
++
++	ret = drmIoctl(fd, DRM_IOCTL_I915_PERFMON, &perfmon);
++
++	if (ret != 0)
++		return -errno;
++
++	return 0;
++}
+diff -x .git -x .gitignore -Naur drm/intel/intel_perfmon.h isg_gms-libdrm/intel/intel_perfmon.h
+--- drm/intel/intel_perfmon.h	1970-01-01 07:30:00.000000000 +0730
++++ isg_gms-libdrm/intel/intel_perfmon.h	2016-05-31 03:36:27.997827473 +0800
+@@ -0,0 +1,72 @@
++/*
++ * Copyright © 2014 Intel Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
++ * IN THE SOFTWARE.
++ *
++ */
++
++/**
++ * @file intel_perfmon.h
++ *
++ * Wrapper functions for perfmon Ioctl.
++ */
++
++#ifndef INTEL_PERFMON_H
++#define INTEL_PERFMON_H
++
++#define DRM_INTEL_PERFMON_VERSION 2
++
++
++int drm_intel_perfmon_set_irq(int fd, unsigned int enable);
++
++int drm_intel_perfmon_cancel_wait_irq(int fd);
++
++int drm_intel_perfmon_open(int fd);
++
++int drm_intel_perfmon_close(int fd);
++
++int drm_intel_perfmon_enable_config(int fd, int enable);
++
++int drm_intel_perfmon_set_config(int fd,
++	enum DRM_I915_PERFMON_CONFIG_TARGET target,
++	unsigned int pid,
++	struct drm_i915_perfmon_config_entry *oa_entries,
++	unsigned int num_oa_entries,
++	unsigned int oa_id,
++	struct drm_i915_perfmon_config_entry *gp_entries,
++	unsigned int num_gp_entries,
++	unsigned int gp_id);
++
++int drm_intel_perfmon_load_config(int fd, drm_intel_context *ctx,
++	uint32_t *oa_cfg_id,
++	uint32_t *gp_cfg_id);
++
++int drm_intel_perfmon_get_hw_ctx_id(int fd, drm_intel_context *ctx,
++	unsigned int *hw_ctx_id);
++
++int drm_intel_perfmon_get_hw_ctx_ids(int fd, int pid, unsigned int *hw_ctx_ids,
++	unsigned int *hw_ctx_ids_count);
++
++int drm_intel_perfmon_pin_oa_buffer(int fd, drm_intel_bo *bo,
++	uint32_t alignment);
++
++int drm_intel_perfmon_unpin_oa_buffer(int fd, drm_intel_bo *bo);
++
++#endif /* INTEL_PERFMON_H */
+diff -x .git -x .gitignore -Naur drm/intel/Makefile.sources isg_gms-libdrm/intel/Makefile.sources
+--- drm/intel/Makefile.sources	2016-05-31 03:36:51.734224273 +0800
++++ isg_gms-libdrm/intel/Makefile.sources	2016-05-31 03:36:27.997827473 +0800
+@@ -6,9 +6,12 @@
+ 	intel_decode.c \
+ 	intel_chipset.h \
+ 	mm.c \
+-	mm.h
++	mm.h \
++	intel_perfmon.c
+ 
+ LIBDRM_INTEL_H_FILES := \
+ 	intel_bufmgr.h \
+ 	intel_aub.h \
+-	intel_debug.h
++	intel_debug.h \
++	intel_mocs_table.h \
++	intel_perfmon.h
+diff -x .git -x .gitignore -Naur drm/Makefile.sources isg_gms-libdrm/Makefile.sources
+--- drm/Makefile.sources	2016-05-31 03:36:51.726224139 +0800
++++ isg_gms-libdrm/Makefile.sources	2016-05-31 03:36:27.989827340 +0800
+@@ -22,6 +22,7 @@
+ 	include/drm/drm_mode.h \
+ 	include/drm/drm_sarea.h \
+ 	include/drm/i915_drm.h \
++	include/drm/i915_perfmon.h \
+ 	include/drm/mach64_drm.h \
+ 	include/drm/mga_drm.h \
+ 	include/drm/nouveau_drm.h \
+diff -x .git -x .gitignore -Naur drm/tests/modetest/modetest.c isg_gms-libdrm/tests/modetest/modetest.c
+--- drm/tests/modetest/modetest.c	2016-05-31 03:36:51.746224473 +0800
++++ isg_gms-libdrm/tests/modetest/modetest.c	2016-05-31 03:36:28.009827675 +0800
+@@ -523,6 +523,7 @@
+ 		return NULL;
+ 
+ 	drmSetClientCap(dev->fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
++	drmSetClientCap(dev->fd, DRM_CLIENT_CAP_ATOMIC, 1);
+ 
+ 	res->res = drmModeGetResources(dev->fd);
+ 	if (!res->res) {
+diff -x .git -x .gitignore -Naur drm/xf86drmMode.c isg_gms-libdrm/xf86drmMode.c
+--- drm/xf86drmMode.c	2016-05-31 03:36:51.750224539 +0800
++++ isg_gms-libdrm/xf86drmMode.c	2016-05-31 03:36:28.013827741 +0800
+@@ -1448,3 +1448,39 @@
+ 	destroy.blob_id = id;
+ 	return DRM_IOCTL(fd, DRM_IOCTL_MODE_DESTROYPROPBLOB, &destroy);
+ }
++
++/*
++ * Builds an RGBA 16bpc color value with bits laid out in the format expected
++ * by DRM RGBA properties.  @bpc is the number of bits per component value
++ * being provided as parameters.
++ */
++uint64_t
++drmModeRGBA(unsigned bpc,
++	    uint16_t red,
++	    uint16_t green,
++	    uint16_t blue,
++	    uint16_t alpha)
++{
++	int shift;
++	uint64_t val;
++
++	if (bpc > 16)
++		return -ERANGE;
++
++	/*
++	 * If we were provided with fewer than 16 bpc, shift the value we
++	 * received into the most significant bits.
++	 */
++	shift = 16 - bpc;
++
++	val = red << shift;
++	val <<= 16;
++	val |= green << shift;
++	val <<= 16;
++	val |= blue << shift;
++	val <<= 16;
++	val |= alpha << shift;
++
++	return val;
++}
++
+diff -x .git -x .gitignore -Naur drm/xf86drmMode.h isg_gms-libdrm/xf86drmMode.h
+--- drm/xf86drmMode.h	2016-05-31 03:36:51.750224539 +0800
++++ isg_gms-libdrm/xf86drmMode.h	2016-05-31 03:36:28.013827741 +0800
+@@ -507,6 +507,30 @@
+ 				     uint32_t *id);
+ extern int drmModeDestroyPropertyBlob(int fd, uint32_t id);
+ 
++extern uint64_t drmModeRGBA(unsigned bpc,
++			    uint16_t red,
++			    uint16_t green,
++			    uint16_t blue,
++			    uint16_t alpha);
++#define DRM_RGBA8888(r, g, b, a)     drmModeRGBA(8, r, g, b, a)
++#define DRM_RGBA16161616(r, g, b, a) drmModeRGBA(16, r, g, b, a)
++
++enum drm_blend_factor {
++	DRM_BLEND_FACTOR_AUTO,
++	DRM_BLEND_FACTOR_ZERO,
++	DRM_BLEND_FACTOR_ONE,
++	DRM_BLEND_FACTOR_SRC_ALPHA,
++	DRM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
++	DRM_BLEND_FACTOR_CONSTANT_ALPHA,
++	DRM_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA,
++	DRM_BLEND_FACTOR_CONSTANT_ALPHA_TIMES_SRC_ALPHA,
++	DRM_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA_TIMES_SRC_ALPHA,
++};
++
++#define DRM_BLEND_FUNC(src_factor, dst_factor)         \
++       (DRM_BLEND_FACTOR_##src_factor << 16 | DRM_BLEND_FACTOR_##dst_factor)
++#define DRM_BLEND_FUNC_SRC_FACTOR(val) (((val) >> 16) & 0xffff)
++#define DRM_BLEND_FUNC_DST_FACTOR(val) ((val) & 0xffff)
+ 
+ #if defined(__cplusplus)
+ }

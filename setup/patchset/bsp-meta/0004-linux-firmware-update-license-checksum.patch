@@ -1,0 +1,26 @@
+From 2d8d4d517b9134f71d1f03eef036f6df5b26d9ec Mon Sep 17 00:00:00 2001
+From: Rebecca Chang Swee Fun <rebecca.swee.fun.chang@intel.com>
+Date: Fri, 20 May 2016 11:07:50 +0800
+Subject: [PATCH] linux-firmware: update license checksum
+
+Signed-off-by: Rebecca Chang Swee Fun <rebecca.swee.fun.chang@intel.com>
+---
+ meta/recipes-kernel/linux-firmware/linux-firmware_git.bb | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/meta/recipes-kernel/linux-firmware/linux-firmware_git.bb b/meta/recipes-kernel/linux-firmware/linux-firmware_git.bb
+index 98ef83c..3fafe20 100644
+--- a/meta/recipes-kernel/linux-firmware/linux-firmware_git.bb
++++ b/meta/recipes-kernel/linux-firmware/linux-firmware_git.bb
+@@ -79,7 +79,7 @@ LIC_FILES_CHKSUM = "\
+     file://LICENCE.xc5000c;md5=12b02efa3049db65d524aeb418dd87ca \
+     file://LICENSE.amd-ucode;md5=3a0de451253cc1edbf30a3c621effee3 \
+     file://LICENSE.dib0700;md5=f7411825c8a555a1a3e5eab9ca773431 \
+-    file://LICENSE.radeon;md5=6c7f97c6c62bdd9596d0238bb205118c \
++    file://LICENSE.radeon;md5=69612f4f7b141a97659cb1d609a1bde2 \
+     file://LICENCE.siano;md5=602c79ae3f98f1e73d880fd9f940a418 \
+ "
+ 
+-- 
+1.9.1
+

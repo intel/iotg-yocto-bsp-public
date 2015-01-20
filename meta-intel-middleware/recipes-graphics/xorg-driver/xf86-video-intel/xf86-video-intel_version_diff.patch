@@ -1,0 +1,25 @@
+diff -x .git -x .gitignore -Naur xf86-video-intel/gms-integration isg_gms-sna_ddx/gms-integration
+--- xf86-video-intel/gms-integration	1970-01-01 07:30:00.000000000 +0730
++++ isg_gms-sna_ddx/gms-integration	2016-05-31 03:42:59.456382906 +0800
+@@ -0,0 +1,7 @@
++###
++### GMS integration
++###
++upstream 46caee86db0fb32b16213893c79d9c1a21ed0883
++	sna: Fix reporting of errno after setcrtc failure
++hsd/1504134673 9b4488f2453e2e3e8831906c2103631e6a807c95
++	Add NULL checking for drawable in sna_dri2_flip_event
+diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/sna_dri2.c isg_gms-sna_ddx/src/sna/sna_dri2.c
+--- xf86-video-intel/src/sna/sna_dri2.c	2016-05-31 03:43:20.512736191 +0800
++++ isg_gms-sna_ddx/src/sna/sna_dri2.c	2016-05-31 03:42:59.484383377 +0800
+@@ -2942,6 +2942,10 @@
+ 	case FLIP_THROTTLE:
+ 		if (flip->signal) {
+ 			DBG(("%s: triple buffer swap complete, unblocking client\n", __FUNCTION__));
++			if(flip->draw == NULL) {
++				sna_dri2_event_free(flip);
++				break;
++			}
+ 			frame_swap_complete(flip, DRI2_FLIP_COMPLETE);
+ 		}
+ 	case FLIP_COMPLETE:
