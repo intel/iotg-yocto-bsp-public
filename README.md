@@ -117,7 +117,7 @@ If you need to modify the recipes or configurations, make your customization in 
 ```
 
 ### Features supported
-To view the full list of supported features, see [Apollo Lake I Beta Release Note.pdf](link)
+To view the full list of supported features, see [Apollo Lake I Beta Release Note.pdf](https://github.com/01org/bsp-apollolake-i/blob/beta/Apollo_Lake%E2%80%93I_BSP_for_Yocto_Project_Release_Notes_Beta.pdf)
 
 ### Known Issues
-To view full list of known issues related to Linux driver, see [Apollo Lake I Beta Release Note.pdf](link)
+To view full list of known issues related to Linux driver, see [Apollo Lake I Beta Release Note.pdf](https://github.com/01org/bsp-apollolake-i/blob/beta/Apollo_Lake%E2%80%93I_BSP_for_Yocto_Project_Release_Notes_Beta.pdf)
