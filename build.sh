@@ -5,11 +5,11 @@
 
 # Linux-stable
 KVER="4.1"
-KTAG="4.1.22"
+KTAG="4.1.27"
 LOCAL_LINUX_BRANCH="linux-4.1.y"
 
 LINUX_GIT='git://git.yoctoproject.org/linux-yocto-4.1'
-SRC_REV='d03753ddb28a1141e550a67c99ac95789a424fc5'
+SRC_REV='685c5d20c716cf420a13954ae10148cc75089e19'
 
 ########################################################################
 # End of configuration
