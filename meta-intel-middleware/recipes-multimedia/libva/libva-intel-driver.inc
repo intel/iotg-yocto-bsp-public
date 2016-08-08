@@ -11,9 +11,9 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=2e48940f94acb0af582e5ef03537800f"
 
 COMPATIBLE_HOST = '(i.86|x86_64).*-linux'
 
-SRC_URI += "git://anongit.freedesktop.org/vaapi/intel-driver;branch=master"
+SRC_URI += "git://anongit.freedesktop.org/vaapi/intel-driver;branch=v1.7-branch"
 
-DEPENDS = "virtual/libva libdrm"
+DEPENDS = "libva libdrm"
 
 inherit autotools pkgconfig
 
