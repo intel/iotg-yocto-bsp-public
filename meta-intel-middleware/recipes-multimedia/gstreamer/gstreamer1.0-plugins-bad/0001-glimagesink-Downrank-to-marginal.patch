@@ -1,6 +1,6 @@
-From c6b37a80806f9128de47f1ccc3f2354f8d436bb6 Mon Sep 17 00:00:00 2001
+From 4ecb51c97e92669096ca32fe3fa6d8cf2c25173c Mon Sep 17 00:00:00 2001
 From: Alexander Kanavin <alex.kanavin@gmail.com>
-Date: Thu, 24 Sep 2015 19:47:32 +0300
+Date: Mon, 20 Jun 2016 18:12:13 +0800
 Subject: [PATCH] glimagesink: Downrank to marginal
 
 On desktop, where there is good OpenGL, xvimagesink will come up first,
@@ -15,10 +15,10 @@ Signed-off-by: Alexander Kanavin <alex.kanavin@gmail.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/ext/gl/gstopengl.c b/ext/gl/gstopengl.c
-index a4b2540..0ccaacd 100644
+index 50676c4..f61c86b 100644
 --- a/ext/gl/gstopengl.c
 +++ b/ext/gl/gstopengl.c
-@@ -101,7 +101,7 @@ plugin_init (GstPlugin * plugin)
+@@ -118,7 +118,7 @@ plugin_init (GstPlugin * plugin)
  #endif
  
    if (!gst_element_register (plugin, "glimagesink",
@@ -28,5 +28,5 @@ index a4b2540..0ccaacd 100644
    }
  
 -- 
-2.1.4
+1.9.1
 

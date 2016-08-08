@@ -1,0 +1,123 @@
+From dbfcea08dfd8f65fe9a8bd8b8949613eb050963a Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?V=C3=ADctor=20Manuel=20J=C3=A1quez=20Leal?=
+ <vjaquez@igalia.com>
+Date: Tue, 3 Feb 2015 20:47:32 +0100
+Subject: [PATCH] vc1parser: re-enable BDU parsing for bitstream
+
+Currently the parser is not able to parse bitstream like in this pipeline:
+
+  gst-launch-1.0 filesrc location=mytestfile.vc1 ! vc1parse ! ..
+
+Since the parser bails out with an error message.
+
+This patch proposes a way re-enable it using the function
+gst_vc1_identify_next_bdu() early. If a complete sequence header BDU
+is found, the stream format is assumed as bdu-frame.
+
+https://bugzilla.gnome.org/show_bug.cgi?id=743948
+---
+ gst/videoparsers/gstvc1parse.c | 47 +++++++++++++++++++++---------------------
+ 1 file changed, 24 insertions(+), 23 deletions(-)
+
+diff --git a/gst/videoparsers/gstvc1parse.c b/gst/videoparsers/gstvc1parse.c
+index 7c2608b..11ba28b 100644
+--- a/gst/videoparsers/gstvc1parse.c
++++ b/gst/videoparsers/gstvc1parse.c
+@@ -267,7 +267,7 @@ gst_vc1_parse_reset (GstVC1Parse * vc1parse)
+ {
+   vc1parse->profile = -1;
+   vc1parse->level = -1;
+-  vc1parse->format = 0;
++  vc1parse->format = GST_VC1_PARSE_FORMAT_WMV3;
+   vc1parse->width = 0;
+   vc1parse->height = 0;
+   vc1parse->fps_n = vc1parse->fps_d = 0;
+@@ -354,7 +354,8 @@ gst_vc1_parse_is_format_allowed (GstVC1Parse * vc1parse)
+       break;
+     case VC1_HEADER_FORMAT_NONE:
+       /* In simple/main profile, there is no sequence header BDU */
+-      if (vc1parse->profile != GST_VC1_PROFILE_ADVANCED &&
++      if ((vc1parse->profile != GST_VC1_PROFILE_ADVANCED &&
++              vc1parse->profile != -1 /* not extracted yet */ ) &&
+           (vc1parse->output_stream_format == VC1_STREAM_FORMAT_BDU ||
+               vc1parse->output_stream_format == VC1_STREAM_FORMAT_BDU_FRAME ||
+               vc1parse->output_stream_format == VC1_STREAM_FORMAT_FRAME_LAYER))
+@@ -509,8 +510,6 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
+     tmp = gst_caps_make_writable (tmp);
+     s = gst_caps_get_structure (tmp, 0);
+ 
+-    /* If already fixed this does nothing */
+-    gst_structure_fixate_field_string (s, "header-format", "asf");
+     header_format = gst_structure_get_string (s, "header-format");
+     if (!header_format) {
+       vc1parse->output_header_format = vc1parse->input_header_format;
+@@ -522,8 +521,6 @@ gst_vc1_parse_renegotiate (GstVC1Parse * vc1parse)
+           header_format_from_string (header_format);
+     }
+ 
+-    /* If already fixed this does nothing */
+-    gst_structure_fixate_field_string (s, "stream-format", "asf");
+     stream_format = gst_structure_get_string (s, "stream-format");
+     if (!stream_format) {
+       vc1parse->output_stream_format = vc1parse->input_stream_format;
+@@ -635,23 +632,6 @@ gst_vc1_parse_detect (GstBaseParse * parse, GstBuffer * buffer)
+   data = minfo.data;
+   size = minfo.size;
+ 
+-#if 0
+-  /* FIXME: disable BDU check for now as BDU parsing needs more work.
+-   */
+-  while (size >= 4) {
+-    guint32 startcode = GST_READ_UINT32_BE (data);
+-
+-    if ((startcode & 0xffffff00) == 0x00000100) {
+-      GST_DEBUG_OBJECT (vc1parse, "Found BDU startcode");
+-      vc1parse->input_stream_format = VC1_STREAM_FORMAT_BDU_FRAME;
+-      goto detected;
+-    }
+-
+-    data += 4;
+-    size -= 4;
+-  }
+-#endif
+-
+   while (size >= 40) {
+     if (data[3] == 0xc5 && GST_READ_UINT32_LE (data + 4) == 0x00000004 &&
+         GST_READ_UINT32_LE (data + 20) == 0x0000000c) {
+@@ -689,6 +669,24 @@ gst_vc1_parse_detect (GstBaseParse * parse, GstBuffer * buffer)
+     return GST_FLOW_ERROR;
+   }
+ 
++  data = minfo.data;
++  size = minfo.size;
++  if (size >= 4) {
++    GstVC1ParserResult pres;
++    GstVC1BDU bdu;
++
++    pres = gst_vc1_identify_next_bdu (data, size, &bdu);
++    if (pres == GST_VC1_PARSER_OK) {
++      GST_DEBUG_OBJECT (vc1parse, "Found a complete BDU");
++      GstVC1StartCode startcode = data[3];
++      if (startcode == GST_VC1_SEQUENCE) {
++        GST_DEBUG_OBJECT (vc1parse, "Assuming bdu-frame stream format");
++        vc1parse->input_stream_format = VC1_STREAM_FORMAT_BDU_FRAME;
++        goto detected;
++      }
++    }
++  }
++
+   /* Otherwise we try some heuristics */
+   if (vc1parse->input_header_format == VC1_HEADER_FORMAT_ASF) {
+     GST_DEBUG_OBJECT (vc1parse, "Assuming ASF stream format");
+@@ -2092,6 +2090,9 @@ gst_vc1_parse_handle_seq_hdr (GstVC1Parse * vc1parse,
+   if (profile == GST_VC1_PROFILE_ADVANCED) {
+     GstVC1Level level;
+     gint width, height;
++
++    vc1parse->format = GST_VC1_PARSE_FORMAT_WVC1;
++
+     level = vc1parse->seq_hdr.advanced.level;
+     if (vc1parse->level != level) {
+       vc1parse->update_caps = TRUE;
+-- 
+2.1.4
