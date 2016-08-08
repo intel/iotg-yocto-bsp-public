@@ -8,9 +8,9 @@ PR = "r1"
 def map_valibs(d):
     # The intel implementation requires the libva-intel-driver package
     if base_contains('MACHINE_FEATURES', 'va-impl-intel', "1", "0", d) == "1":
-       return "virtual/libva libva-intel-driver"
+       return "libva libva-intel-driver"
     # All meta-intel video acceleration requires libva
-    return "virtual/libva"
+    return "libva"
 
 VA_IMPL = "${@map_valibs(d)}"
 
@@ -20,7 +20,7 @@ PACKAGES = "\
 
 ALLOW_EMPTY_va-intel = "1"
 
-DEPENDS_va-intel = " \
+RDEPENDS_va-intel = " \
     ${VA_IMPL} \
     "
 
