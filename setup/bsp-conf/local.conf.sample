@@ -32,19 +32,9 @@ MACHINE ??= "intel-corei7-64-cavs-hda"
 # These settings are applicable for Intel Apollo Lake project only.
 # Please comment out when you are compiling for other projects.
 
-PREFERRED_PROVIDER_virtual/kernel ?= "linux-yocto"
-PREFERRED_VERSION_linux-yocto ?= "4.1%"
-
+# Uncomment when you are integrating closed source media stack
 #MACHINE_HWCODECS = ""
-MACHINE_EXTRA_RRECOMMENDS = "linux-firmware"
-XSERVER = "\
-    ${XSERVER_X86_BASE} \
-    ${XSERVER_X86_EXT} \
-    ${XSERVER_X86_FBDEV} \
-    ${XSERVER_X86_MODESETTING} \
-    ${XSERVER_X86_VESA} \
-    ${XSERVER_X86_I915} \
-    "
+
 OLD_XSERVER_X86_EXT = ""
 XSERVER_X86_MATROX_MGA = ""
 XSERVER_X86_ASPEED_AST = ""
@@ -74,7 +64,10 @@ PACKAGECONFIG_append_pn-gstreamer1.0-plugins-good = "vpx"
 #MULTILIBS = "multilib:lib32"
 #DEFAULTTUNE_virtclass-multilib-lib32 = "corei7-32"
 
-# Install libva in image
+# Install libva
+IMAGE_INSTALL_append = " libva"
+
+# Install libva-intel-driver (i965/Intel VA) in image
 IMAGE_INSTALL_append = " libva-intel-driver"
 
 # Install Wayland in image
@@ -306,5 +299,3 @@ require conf/distro/include/security_flags.inc
 SECURITY_CFLAGS = "-fstack-protector-strong -pie -fpie -D_FORTIFY_SOURCE=2 -O2 -Wformat -Wformat-security"
 SECURITY_NO_PIE_CFLAGS = "-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -Wformat -Wformat-security"
 SECURITY_LDFLAGS = "-Wl,-z,relro,-z,now,-z,noexecstack"
-
-PREFERRED_PROVIDER_virtual/libva = "libva"
