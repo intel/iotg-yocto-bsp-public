@@ -17,10 +17,9 @@ SECTION = "x11"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://COPYING;md5=2e48940f94acb0af582e5ef03537800f"
 
-SRC_URI = "git://anongit.freedesktop.org/git/libva;branch=master"
+SRC_URI = "git://anongit.freedesktop.org/git/libva;branch=v1.7-branch"
 
 DEPENDS = "libdrm virtual/mesa virtual/libgles1 virtual/libgles2 virtual/egl"
-PROVIDES += "virtual/libva"
 
 inherit autotools pkgconfig
 
