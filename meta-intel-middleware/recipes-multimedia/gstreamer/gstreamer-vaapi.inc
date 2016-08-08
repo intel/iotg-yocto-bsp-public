@@ -9,13 +9,11 @@ FILESPATH = "${@base_set_filespath(["${FILE_DIRNAME}/${REALPN}", "${FILE_DIRNAME
 LICENSE = "LGPLv2.1+"
 LIC_FILES_CHKSUM = "file://COPYING.LIB;md5=4fbd65380cdd255951079008b364516c"
 
-DEPENDS = "virtual/libva"
+DEPENDS = "libva"
 
 inherit autotools pkgconfig gtk-doc
 
 PACKAGES =+ "${PN}-tests"
-
-EXTRA_OECONF += "--disable-builtin-libvpx"
 
 PACKAGECONFIG ??= "drm \
                    ${@base_contains("DISTRO_FEATURES", "opengl x11", "glx", "", d)} \
