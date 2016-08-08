@@ -13,17 +13,8 @@ SRC_URI = " \
     file://0001-Disable-yasm-for-libav-when-disable-yasm.patch \
     file://workaround-to-build-gst-libav-for-i586-with-gcc.patch \
 "
-SRC_URI[md5sum] = "067eb7fe9a5b075e5d407797b1d36ad8"
-SRC_URI[sha256sum] = "b9e30df308c39752f0b22e0f554d8b6f93d95f5d8673a78538219e05adc73e5d"
 
-LIBAV_EXTRA_CONFIGURE_COMMON_ARG = "--target-os=linux \
-  --cc='${CC}' --as='${CC}' --ld='${CC}' --nm='${NM}' --ar='${AR}' \
-  --ranlib='${RANLIB}' \
-  ${GSTREAMER_1_0_DEBUG} \
-  --cross-prefix='${HOST_PREFIX}'"
+SRC_URI[md5sum] = "95bc3dd0ea2dc664b4f3a96897005013"
+SRC_URI[sha256sum] = "b5f3c7a27b39b5f5c2f0bfd546b0c655020faf6b38d27b64b346c43e5ebf687a"
 
 S = "${WORKDIR}/gst-libav-${PV}"
-
-# http://errors.yoctoproject.org/Errors/Details/20493/
-ARM_INSTRUCTION_SET_armv4 = "arm"
-ARM_INSTRUCTION_SET_armv5 = "arm"
