@@ -3,11 +3,12 @@ LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7cacdbeed46a0096b10"
 
 SRC_URI = "git://github.com/01org/dynamic-application-loader-host-interface;protocol=https \
-           file://0001-makefile-add-libdir-target-with-suffix.patch"
+           file://0001-makefile-add-libdir-target-with-suffix.patch \
+           file://0001-jhi-disable-MEI-driver-and-enable-KDI.patch"
 
 inherit cmake useradd update-rc.d
 
-SRCREV = "${AUTOREV}"
+SRCREV = "407f99e2cc8889b9f36bc4a95f034b47d5f1f4a3"
 
 S = "${WORKDIR}/git"
 

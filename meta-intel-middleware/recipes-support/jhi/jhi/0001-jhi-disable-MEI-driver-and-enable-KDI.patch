@@ -1,0 +1,37 @@
+From 81afd47da0e735fc894e38960e57c6417bec1397 Mon Sep 17 00:00:00 2001
+From: Anuj Mittal <anujx.mittal@intel.com>
+Date: Thu, 16 Jun 2016 16:58:59 +0800
+Subject: [PATCH] jhi: disable MEI driver and enable KDI
+
+Upstream-Status: Inappropriate [Configuration]
+
+Requested by Jonathan Lahav since MEI driver has
+been replaced by KDI for APL-I.
+
+MEI still remains the default driver for all other
+use cases so this change can't be made upstream.
+
+Signed-off-by: Anuj Mittal <anujx.mittal@intel.com>
+---
+ service/linux/jhid.conf | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/service/linux/jhid.conf b/service/linux/jhid.conf
+index 9c17ecc..13390e6 100644
+--- a/service/linux/jhid.conf
++++ b/service/linux/jhid.conf
+@@ -15,9 +15,9 @@
+ #
+ # Uncomment one of the following:
+ #
+-transport MEI
++#transport MEI
+ #transport SOCKET
+-#transport KERNEL
++transport KERNEL
+ #
+ #
+ #
+-- 
+1.9.1
+
