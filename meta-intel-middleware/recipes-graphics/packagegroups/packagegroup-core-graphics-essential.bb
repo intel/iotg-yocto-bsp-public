@@ -24,6 +24,7 @@ RDEPENDS_packagegroup-core-graphics-essential = "\
     gstreamer1.0-plugins-base \
     gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly \
     gstreamer1.0-rtsp-server \
     gstreamer-vaapi-1.0 \
     gtk+3 \
@@ -41,7 +42,6 @@ RDEPENDS_packagegroup-core-graphics-essential = "\
     libpng12 \
     libsoup-2.4 \
     libtheora \
-    libva-intel-driver \
     libvorbis \
     libpciaccess \
     libvpx \
