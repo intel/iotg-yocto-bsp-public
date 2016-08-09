@@ -1,6 +1,6 @@
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/ChangeLog isg_gms-gstreamer-vaapi/ChangeLog
---- gstreamer-vaapi/ChangeLog	2016-08-08 02:33:18.111504785 +0800
-+++ isg_gms-gstreamer-vaapi/ChangeLog	2016-08-08 02:33:10.735378973 +0800
+--- gstreamer-vaapi/ChangeLog	2016-08-09 02:31:44.148660664 +0800
++++ isg_gms-gstreamer-vaapi/ChangeLog	2016-08-09 02:31:36.276519812 +0800
 @@ -1,9 +1,227 @@
 +=== release 1.8.2 ===
 +
@@ -232,8 +232,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/ChangeLog isg_gms-gstreamer-vaa
  2016-03-01 16:14:47 +0200  Sebastian Dröge <sebastian@centricular.com>
  
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/configure.ac isg_gms-gstreamer-vaapi/configure.ac
---- gstreamer-vaapi/configure.ac	2016-08-08 02:33:18.115504853 +0800
-+++ isg_gms-gstreamer-vaapi/configure.ac	2016-08-08 02:33:10.735378973 +0800
+--- gstreamer-vaapi/configure.ac	2016-08-09 02:31:44.148660664 +0800
++++ isg_gms-gstreamer-vaapi/configure.ac	2016-08-09 02:31:36.276519812 +0800
 @@ -1,7 +1,7 @@
  # gstreamer-vaapi package version number
  m4_define([gst_vaapi_major_version], [1])
@@ -280,7 +280,7 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/configure.ac isg_gms-gstreamer-
    [enable_opengl="yes"], [enable_opengl="no"])
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gms-integration isg_gms-gstreamer-vaapi/gms-integration
 --- gstreamer-vaapi/gms-integration	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-gstreamer-vaapi/gms-integration	2016-08-08 02:33:10.735378973 +0800
++++ isg_gms-gstreamer-vaapi/gms-integration	2016-08-09 02:31:36.276519812 +0800
 @@ -0,0 +1,12 @@
 +###
 +### GMS integration
@@ -295,8 +295,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gms-integration isg_gms-gstream
 +topic/icamerasrc_support b4bb6982fc47a0f3fa62b5132c483ba00bec3923
 +	Enable preview of RGB565-32 format on vaapipostproc
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapidecodebin.c isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapidecodebin.c
---- gstreamer-vaapi/gst/vaapi/gstvaapidecodebin.c	2016-08-08 02:33:18.127505058 +0800
-+++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapidecodebin.c	2016-08-08 02:33:10.767379519 +0800
+--- gstreamer-vaapi/gst/vaapi/gstvaapidecodebin.c	2016-08-09 02:31:44.196661524 +0800
++++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapidecodebin.c	2016-08-09 02:31:36.312520456 +0800
 @@ -99,6 +99,9 @@
  #if USE_VP8_DECODER
      GST_CAPS_CODEC("video/x-vp8")
@@ -308,8 +308,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapidecodebin.c i
  /* *INDENT-ON* */
  
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapidecode.c isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapidecode.c
---- gstreamer-vaapi/gst/vaapi/gstvaapidecode.c	2016-08-08 02:33:18.127505058 +0800
-+++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapidecode.c	2016-08-08 02:33:10.767379519 +0800
+--- gstreamer-vaapi/gst/vaapi/gstvaapidecode.c	2016-08-09 02:31:44.196661524 +0800
++++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapidecode.c	2016-08-09 02:31:36.312520456 +0800
 @@ -133,6 +133,7 @@
  };
  
@@ -327,8 +327,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapidecode.c isg_
        "Codec/Decoder/Video", GST_PLUGIN_DESC,
        "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, "
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapidecode.h isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapidecode.h
---- gstreamer-vaapi/gst/vaapi/gstvaapidecode.h	2016-08-08 02:33:18.127505058 +0800
-+++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapidecode.h	2016-08-08 02:33:10.767379519 +0800
+--- gstreamer-vaapi/gst/vaapi/gstvaapidecode.h	2016-08-09 02:31:44.196661524 +0800
++++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapidecode.h	2016-08-09 02:31:36.312520456 +0800
 @@ -30,29 +30,7 @@
  
  G_BEGIN_DECLS
@@ -361,8 +361,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapidecode.h isg_
  typedef struct _GstVaapiDecode                  GstVaapiDecode;
  typedef struct _GstVaapiDecodeClass             GstVaapiDecodeClass;
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapiencode.c isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapiencode.c
---- gstreamer-vaapi/gst/vaapi/gstvaapiencode.c	2016-08-08 02:33:18.127505058 +0800
-+++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapiencode.c	2016-08-08 02:33:10.767379519 +0800
+--- gstreamer-vaapi/gst/vaapi/gstvaapiencode.c	2016-08-09 02:31:44.196661524 +0800
++++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapiencode.c	2016-08-09 02:31:36.312520456 +0800
 @@ -44,6 +44,8 @@
      gst_vaapiencode, GST_TYPE_VIDEO_ENCODER,
      GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES);
@@ -381,8 +381,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapiencode.c isg_
        GST_DEBUG_FUNCPTR (gst_vaapiencode_change_state);
  
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.c isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.c
---- gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.c	2016-08-08 02:33:18.135505194 +0800
-+++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.c	2016-08-08 02:33:10.767379519 +0800
+--- gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.c	2016-08-09 02:31:44.196661524 +0800
++++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.c	2016-08-09 02:31:36.312520456 +0800
 @@ -35,8 +35,6 @@
  /* Default debug category is from the subclass */
  #define GST_CAT_DEFAULT (plugin->debug_category)
@@ -462,8 +462,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.c 
  
    /* Check whether GstVideoMeta, or GstVideoAlignment, is needed (raw video) */
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.h isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.h
---- gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.h	2016-08-08 02:33:18.135505194 +0800
-+++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.h	2016-08-08 02:33:10.767379519 +0800
+--- gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.h	2016-08-09 02:31:44.196661524 +0800
++++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.h	2016-08-09 02:31:36.312520456 +0800
 @@ -31,7 +31,7 @@
  #include <gst/video/gstvideosink.h>
  #include <gst/vaapi/gstvaapidisplay.h>
@@ -503,8 +503,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapipluginbase.h 
      GstObject * object);
  
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapipluginutil.c isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapipluginutil.c
---- gstreamer-vaapi/gst/vaapi/gstvaapipluginutil.c	2016-08-08 02:33:18.135505194 +0800
-+++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapipluginutil.c	2016-08-08 02:33:10.767379519 +0800
+--- gstreamer-vaapi/gst/vaapi/gstvaapipluginutil.c	2016-08-09 02:31:44.196661524 +0800
++++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapipluginutil.c	2016-08-09 02:31:36.312520456 +0800
 @@ -103,6 +103,7 @@
    return display;
  }
@@ -522,8 +522,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapipluginutil.c 
  static GstVaapiDisplay *
  gst_vaapi_create_display_from_gl_context (GstObject * gl_context_object)
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapipostproc.c isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapipostproc.c
---- gstreamer-vaapi/gst/vaapi/gstvaapipostproc.c	2016-08-08 02:33:18.135505194 +0800
-+++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapipostproc.c	2016-08-08 02:33:10.767379519 +0800
+--- gstreamer-vaapi/gst/vaapi/gstvaapipostproc.c	2016-08-09 02:31:44.196661524 +0800
++++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapipostproc.c	2016-08-09 02:31:36.312520456 +0800
 @@ -92,6 +92,8 @@
      G_IMPLEMENT_INTERFACE (GST_TYPE_COLOR_BALANCE,
          gst_vaapipostproc_colorbalance_init));
@@ -577,8 +577,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapipostproc.c is
        "VA-API video postprocessing",
        "Filter/Converter/Video;Filter/Converter/Video/Scaler;"
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapisink.c isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapisink.c
---- gstreamer-vaapi/gst/vaapi/gstvaapisink.c	2016-08-08 02:33:18.135505194 +0800
-+++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapisink.c	2016-08-08 02:33:10.771379587 +0800
+--- gstreamer-vaapi/gst/vaapi/gstvaapisink.c	2016-08-09 02:31:44.196661524 +0800
++++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapisink.c	2016-08-09 02:31:36.312520456 +0800
 @@ -107,6 +107,8 @@
      G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
          gst_vaapisink_navigation_iface_init));
@@ -649,8 +649,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapisink.c isg_gm
    gst_element_class_set_static_metadata (element_class,
        "VA-API sink", "Sink/Video", GST_PLUGIN_DESC,
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapivideobufferpool.c isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapivideobufferpool.c
---- gstreamer-vaapi/gst/vaapi/gstvaapivideobufferpool.c	2016-08-08 02:33:18.135505194 +0800
-+++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapivideobufferpool.c	2016-08-08 02:33:10.771379587 +0800
+--- gstreamer-vaapi/gst/vaapi/gstvaapivideobufferpool.c	2016-08-09 02:31:44.196661524 +0800
++++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapivideobufferpool.c	2016-08-09 02:31:36.316520529 +0800
 @@ -141,7 +141,7 @@
    GstVideoInfo *const new_vip = &priv->video_info[!priv->video_info_index];
    GstVideoAlignment align;
@@ -695,8 +695,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapivideobufferpo
    /* ERRORS */
  error_invalid_config:
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapivideocontext.c isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapivideocontext.c
---- gstreamer-vaapi/gst/vaapi/gstvaapivideocontext.c	2016-08-08 02:33:18.135505194 +0800
-+++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapivideocontext.c	2016-08-08 02:33:10.771379587 +0800
+--- gstreamer-vaapi/gst/vaapi/gstvaapivideocontext.c	2016-08-09 02:31:44.196661524 +0800
++++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapivideocontext.c	2016-08-09 02:31:36.316520529 +0800
 @@ -141,6 +141,9 @@
      return FALSE;
  
@@ -708,8 +708,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapivideocontext.
        "found context (%" GST_PTR_FORMAT ") in %s query", ctxt,
        direction == GST_PAD_SRC ? "downstream" : "upstream");
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapivideometa_texture.c isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapivideometa_texture.c
---- gstreamer-vaapi/gst/vaapi/gstvaapivideometa_texture.c	2016-08-08 02:33:18.135505194 +0800
-+++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapivideometa_texture.c	2016-08-08 02:33:10.771379587 +0800
+--- gstreamer-vaapi/gst/vaapi/gstvaapivideometa_texture.c	2016-08-09 02:31:44.216661882 +0800
++++ isg_gms-gstreamer-vaapi/gst/vaapi/gstvaapivideometa_texture.c	2016-08-09 02:31:36.316520529 +0800
 @@ -40,7 +40,7 @@
  struct _GstVaapiVideoMetaTexture
  {
@@ -758,8 +758,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst/vaapi/gstvaapivideometa_tex
        (GBoxedFreeFunc) meta_texture_free);
    if (!meta)
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapicodedbufferpool.c isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapicodedbufferpool.c
---- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapicodedbufferpool.c	2016-08-08 02:33:18.115504853 +0800
-+++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapicodedbufferpool.c	2016-08-08 02:33:10.735378973 +0800
+--- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapicodedbufferpool.c	2016-08-09 02:31:44.172661094 +0800
++++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapicodedbufferpool.c	2016-08-09 02:31:36.276519812 +0800
 @@ -54,6 +54,7 @@
  static void
  coded_buffer_pool_finalize (GstVaapiCodedBufferPool * pool)
@@ -769,8 +769,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapicode
  }
  
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapidecoder_h265.c isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapidecoder_h265.c
---- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapidecoder_h265.c	2016-08-08 02:33:18.115504853 +0800
-+++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapidecoder_h265.c	2016-08-08 02:33:10.743379110 +0800
+--- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapidecoder_h265.c	2016-08-09 02:31:44.172661094 +0800
++++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapidecoder_h265.c	2016-08-09 02:31:36.280519883 +0800
 @@ -623,6 +623,15 @@
  }
  
@@ -833,8 +833,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapideco
        ofs = pi->nalu.offset + pi->nalu.size;
        gst_vaapi_parser_info_h265_replace (&pi, NULL);
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilter.c isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilter.c
---- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilter.c	2016-08-08 02:33:18.127505058 +0800
-+++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilter.c	2016-08-08 02:33:10.755379314 +0800
+--- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilter.c	2016-08-09 02:31:44.180661239 +0800
++++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilter.c	2016-08-09 02:31:36.288520028 +0800
 @@ -38,6 +38,12 @@
  #define GST_VAAPI_FILTER(obj) \
      ((GstVaapiFilter *)(obj))
@@ -884,8 +884,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilt
 +  return TRUE;
 +}
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilter.h isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilter.h
---- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilter.h	2016-08-08 02:33:18.127505058 +0800
-+++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilter.h	2016-08-08 02:33:10.755379314 +0800
+--- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilter.h	2016-08-09 02:31:44.180661239 +0800
++++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilter.h	2016-08-09 02:31:36.288520028 +0800
 @@ -246,4 +246,8 @@
  gst_vaapi_filter_set_skintone (GstVaapiFilter * filter,
      gboolean enhance);
@@ -896,8 +896,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapifilt
 +
  #endif /* GST_VAAPI_FILTER_H */
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurface.c isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurface.c
---- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurface.c	2016-08-08 02:33:18.127505058 +0800
-+++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurface.c	2016-08-08 02:33:10.755379314 +0800
+--- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurface.c	2016-08-09 02:31:44.180661239 +0800
++++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurface.c	2016-08-09 02:31:36.308520384 +0800
 @@ -624,6 +624,7 @@
    GstVaapiDisplay *display;
    VAImage va_image;
@@ -919,8 +919,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurf
  
  /**
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurface.h isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurface.h
---- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurface.h	2016-08-08 02:33:17.943501919 +0800
-+++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurface.h	2016-08-08 02:33:10.755379314 +0800
+--- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurface.h	2016-08-09 02:31:43.936656872 +0800
++++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurface.h	2016-08-09 02:31:36.308520384 +0800
 @@ -66,6 +66,7 @@
   * @GST_VAAPI_CHROMA_TYPE_RGB32: 32-bit RGB chroma format
   * @GST_VAAPI_CHROMA_TYPE_RGB16: 16-bit RGB chroma format
@@ -940,8 +940,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapisurf
  
  /**
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gstreamer-vaapi.doap isg_gms-gstreamer-vaapi/gstreamer-vaapi.doap
---- gstreamer-vaapi/gstreamer-vaapi.doap	2016-08-08 02:33:18.135505194 +0800
-+++ isg_gms-gstreamer-vaapi/gstreamer-vaapi.doap	2016-08-08 02:33:10.771379587 +0800
+--- gstreamer-vaapi/gstreamer-vaapi.doap	2016-08-09 02:31:44.216661882 +0800
++++ isg_gms-gstreamer-vaapi/gstreamer-vaapi.doap	2016-08-09 02:31:36.316520529 +0800
 @@ -27,6 +27,42 @@
  
   <release>
@@ -986,8 +986,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/gstreamer-vaapi.doap isg_gms-gs
     <branch>master</branch>
     <created>2016-03-01</created>
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/NEWS isg_gms-gstreamer-vaapi/NEWS
---- gstreamer-vaapi/NEWS	2016-08-08 02:33:18.111504785 +0800
-+++ isg_gms-gstreamer-vaapi/NEWS	2016-08-08 02:33:10.735378973 +0800
+--- gstreamer-vaapi/NEWS	2016-08-09 02:31:44.148660664 +0800
++++ isg_gms-gstreamer-vaapi/NEWS	2016-08-09 02:31:36.276519812 +0800
 @@ -1 +1,26 @@
 -This is gstreamer-vaapi 1.7.90.
 +### 1.8.2
@@ -1017,8 +1017,8 @@ diff -x .git -x .gitignore -Naur gstreamer-vaapi/NEWS isg_gms-gstreamer-vaapi/NE
 +[buglist-1.8.2]: https://bugzilla.gnome.org/buglist.cgi?bug_status=RESOLVED&bug_status=VERIFIED&classification=Platform&limit=0&list_id=130196&order=bug_id&product=GStreamer&query_format=advanced&resolution=FIXED&target_milestone=1.8.2
 +
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/tests/test-display.c isg_gms-gstreamer-vaapi/tests/test-display.c
---- gstreamer-vaapi/tests/test-display.c	2016-08-08 02:33:18.135505194 +0800
-+++ isg_gms-gstreamer-vaapi/tests/test-display.c	2016-08-08 02:33:10.771379587 +0800
+--- gstreamer-vaapi/tests/test-display.c	2016-08-09 02:31:44.216661882 +0800
++++ isg_gms-gstreamer-vaapi/tests/test-display.c	2016-08-09 02:31:36.316520529 +0800
 @@ -269,8 +269,14 @@
  int
  main(int argc, char *argv[])
