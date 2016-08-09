@@ -3,7 +3,7 @@ require recipes-kernel/linux/linux-yocto.inc
 
 SUMMARY = "Linux Kernel for enabling Intel Apollo Lake-i"
 
-SRC_URI = "git://github.com/01org/linux-apollolake-i.git;protocol=ssh;branch=beta;name=machine"
+SRC_URI = "git://github.com/01org/linux-apollolake-i.git;protocol=ssh;branch=gold;name=machine"
 
 # Linux Kernel Config Fragments
 SRC_URI += "file://intel-corei7-64.cfg"
@@ -14,9 +14,9 @@ SRC_URI_append_intel-corei7-64-cavs-hda = " file://cavs_hda.scc"
 SRC_URI_append_intel-corei7-64-cavs-ssp = " file://cavs_ssp.scc"
 
 # Latest source commit for target machine
-SRCREV = "e9690ab9bfd921e5e2ce087ca25ec33da1dc8c15"
+SRCREV = "a437738a4ef8e116409099d74d6f5ce4fcda7ee5"
 
-LINUX_VERSION ?= "4.1.22"
+LINUX_VERSION ?= "4.1.27"
 LINUX_VERSION_EXTENSION = "apollolake"
 
 PR = "r0"
