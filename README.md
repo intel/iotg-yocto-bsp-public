@@ -72,10 +72,9 @@ If this is your first build, just run the setup.sh script from your bsp-apollola
 	- check for required software dependencies (this is only performed for Linux Ubuntu 14.04)
 	- test python, network, gitconfig and git proxy
    b. Prepare sources
-	- download Linux kernel v4.1.13 from Intel Linux Kernel from github.
+	- download Linux kernel v4.1.27 from Intel Linux Kernel from github.
 	- apply Intel Linux kernel patches
-	- combolayer downloads Poky Jethro v2.0.1 and other meta layers based on setup/combolayer.conf
-	- apply patches to Yocto BSP recipes
+	- combolayer downloads Poky Jethro v2.0.2 and other meta layers based on setup/combolayer.conf
 	- setup bblayers for bitbake build
 	- setup local.conf for bitbake build
 	- prepare environment for bitbake build
@@ -90,7 +89,7 @@ If this is your first build, just run the setup.sh script from your bsp-apollola
    <your_path>/yocto_build/build/tmp/deploy/images/intel-corei7-64-cavs-hda/
 	- HDDIMG image file name: core-image-sato-sdk-intel-corei7-64-cavs-hda-<build-date-time>.hddimg
 	- ISO image file name:    core-image-sato-sdk-intel-corei7-64-cavs-hda-<build-date-time>.iso
-	
+
    If you select to build image with CAVS SSP Audio support, your bootable image location is:-
    <your_path>/yocto_build/build/tmp/deploy/images/intel-corei7-64-cavs-ssp/
 	- HDDIMG image file name: core-image-sato-sdk-intel-corei7-64-cavs-ssp-<build-date-time>.hddimg
