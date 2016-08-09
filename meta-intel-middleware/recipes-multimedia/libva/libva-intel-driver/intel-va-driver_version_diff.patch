@@ -1,6 +1,6 @@
 diff -x .git -x .gitignore -Naur intel-driver/gms-integration isg_gms-intel-va-driver/gms-integration
 --- intel-driver/gms-integration	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-intel-va-driver/gms-integration	2016-08-08 02:32:08.998326262 +0800
++++ isg_gms-intel-va-driver/gms-integration	2016-08-09 02:30:12.911028216 +0800
 @@ -0,0 +1,5 @@
 +###
 +### GMS integration
@@ -8,8 +8,8 @@ diff -x .git -x .gitignore -Naur intel-driver/gms-integration isg_gms-intel-va-d
 +upstream_v1.7 396224348ae47f3093e79dc84a7d4f1f1513ba55
 +	libva-intel-driver 1.7.1
 diff -x .git -x .gitignore -Naur intel-driver/src/gen6_mfc_common.c isg_gms-intel-va-driver/src/gen6_mfc_common.c
---- intel-driver/src/gen6_mfc_common.c	2016-08-08 02:32:16.154448256 +0800
-+++ isg_gms-intel-va-driver/src/gen6_mfc_common.c	2016-08-08 02:32:08.998326262 +0800
+--- intel-driver/src/gen6_mfc_common.c	2016-08-09 02:30:23.023209143 +0800
++++ isg_gms-intel-va-driver/src/gen6_mfc_common.c	2016-08-09 02:30:12.911028216 +0800
 @@ -790,6 +790,11 @@
  
      assert(qp <= QP_MAX); 
@@ -23,8 +23,8 @@ diff -x .git -x .gitignore -Naur intel-driver/src/gen6_mfc_common.c isg_gms-inte
          vme_state_message[MODE_INTRA_16X16] = 0;
          m_cost = lambda * 4;
 diff -x .git -x .gitignore -Naur intel-driver/src/gen75_vpp_vebox.c isg_gms-intel-va-driver/src/gen75_vpp_vebox.c
---- intel-driver/src/gen75_vpp_vebox.c	2016-08-08 02:32:16.154448256 +0800
-+++ isg_gms-intel-va-driver/src/gen75_vpp_vebox.c	2016-08-08 02:32:09.002326330 +0800
+--- intel-driver/src/gen75_vpp_vebox.c	2016-08-09 02:30:23.023209143 +0800
++++ isg_gms-intel-va-driver/src/gen75_vpp_vebox.c	2016-08-09 02:30:12.915028288 +0800
 @@ -923,6 +923,7 @@
          dri_bo *iecp_bo = proc_ctx->iecp_state_table.bo;
          dri_bo_map(iecp_bo, 1);
@@ -146,8 +146,8 @@ diff -x .git -x .gitignore -Naur intel-driver/src/gen75_vpp_vebox.c isg_gms-inte
 +    return status;
  }
 diff -x .git -x .gitignore -Naur intel-driver/src/gen8_mfc.c isg_gms-intel-va-driver/src/gen8_mfc.c
---- intel-driver/src/gen8_mfc.c	2016-08-08 02:32:16.154448256 +0800
-+++ isg_gms-intel-va-driver/src/gen8_mfc.c	2016-08-08 02:32:09.006326399 +0800
+--- intel-driver/src/gen8_mfc.c	2016-08-09 02:30:23.023209143 +0800
++++ isg_gms-intel-va-driver/src/gen8_mfc.c	2016-08-09 02:30:12.919028359 +0800
 @@ -49,7 +49,7 @@
  #define SURFACE_STATE_OFFSET(index)             (SURFACE_STATE_PADDED_SIZE * index)
  #define BINDING_TABLE_OFFSET(index)             (SURFACE_STATE_OFFSET(MAX_MEDIA_SURFACES_GEN6) + sizeof(unsigned int) * index)
@@ -805,8 +805,8 @@ diff -x .git -x .gitignore -Naur intel-driver/src/gen8_mfc.c isg_gms-intel-va-dr
      mfc_context->pipe_mode_select = gen8_mfc_pipe_mode_select;
      mfc_context->set_surface_state = gen8_mfc_surface_state;
 diff -x .git -x .gitignore -Naur intel-driver/src/gen8_post_processing.c isg_gms-intel-va-driver/src/gen8_post_processing.c
---- intel-driver/src/gen8_post_processing.c	2016-08-08 02:32:16.154448256 +0800
-+++ isg_gms-intel-va-driver/src/gen8_post_processing.c	2016-08-08 02:32:09.006326399 +0800
+--- intel-driver/src/gen8_post_processing.c	2016-08-09 02:30:23.023209143 +0800
++++ isg_gms-intel-va-driver/src/gen8_post_processing.c	2016-08-09 02:30:12.919028359 +0800
 @@ -380,6 +380,7 @@
                            int width, int height, int pitch, int format,
  			  int index, int is_target)
@@ -846,8 +846,8 @@ diff -x .git -x .gitignore -Naur intel-driver/src/gen8_post_processing.c isg_gms
      ss2->ss1.cbcr_pixel_offset_v_direction = 0;
      ss2->ss1.width = width - 1;
 diff -x .git -x .gitignore -Naur intel-driver/src/gen9_mfd.c isg_gms-intel-va-driver/src/gen9_mfd.c
---- intel-driver/src/gen9_mfd.c	2016-08-08 02:32:16.154448256 +0800
-+++ isg_gms-intel-va-driver/src/gen9_mfd.c	2016-08-08 02:32:09.006326399 +0800
+--- intel-driver/src/gen9_mfd.c	2016-08-09 02:30:23.023209143 +0800
++++ isg_gms-intel-va-driver/src/gen9_mfd.c	2016-08-09 02:30:12.919028359 +0800
 @@ -1989,3 +1989,17 @@
          return gen8_dec_hw_context_init(ctx, obj_config);
      }
@@ -867,8 +867,8 @@ diff -x .git -x .gitignore -Naur intel-driver/src/gen9_mfd.c isg_gms-intel-va-dr
 +    }
 +}
 diff -x .git -x .gitignore -Naur intel-driver/src/gen9_vdenc.c isg_gms-intel-va-driver/src/gen9_vdenc.c
---- intel-driver/src/gen9_vdenc.c	2016-08-08 02:32:16.158448324 +0800
-+++ isg_gms-intel-va-driver/src/gen9_vdenc.c	2016-08-08 02:32:09.014326535 +0800
+--- intel-driver/src/gen9_vdenc.c	2016-08-09 02:30:23.091210359 +0800
++++ isg_gms-intel-va-driver/src/gen9_vdenc.c	2016-08-09 02:30:12.919028359 +0800
 @@ -778,7 +778,7 @@
          OUT_BCS_BATCH(batch, attr);                             \
      } while (0)
@@ -879,8 +879,8 @@ diff -x .git -x .gitignore -Naur intel-driver/src/gen9_vdenc.c isg_gms-intel-va-
          buffer.width = bfsize;                                  \
          buffer.height = 1;                                      \
 diff -x .git -x .gitignore -Naur intel-driver/src/i965_defines.h isg_gms-intel-va-driver/src/i965_defines.h
---- intel-driver/src/i965_defines.h	2016-08-08 02:32:16.162448393 +0800
-+++ isg_gms-intel-va-driver/src/i965_defines.h	2016-08-08 02:32:09.022326671 +0800
+--- intel-driver/src/i965_defines.h	2016-08-09 02:30:23.091210359 +0800
++++ isg_gms-intel-va-driver/src/i965_defines.h	2016-08-09 02:30:12.939028717 +0800
 @@ -978,4 +978,6 @@
  #define MFC_BITSTREAM_BYTECOUNT_FRAME_REG       0x128A0
  #define MFC_IMAGE_STATUS_CTRL_REG               0x128B8
@@ -889,8 +889,8 @@ diff -x .git -x .gitignore -Naur intel-driver/src/i965_defines.h isg_gms-intel-v
 +
  #endif /* _I965_DEFINES_H_ */
 diff -x .git -x .gitignore -Naur intel-driver/src/i965_device_info.c isg_gms-intel-va-driver/src/i965_device_info.c
---- intel-driver/src/i965_device_info.c	2016-08-08 02:32:16.162448393 +0800
-+++ isg_gms-intel-va-driver/src/i965_device_info.c	2016-08-08 02:32:09.022326671 +0800
+--- intel-driver/src/i965_device_info.c	2016-08-09 02:30:23.091210359 +0800
++++ isg_gms-intel-va-driver/src/i965_device_info.c	2016-08-09 02:30:12.939028717 +0800
 @@ -239,7 +239,7 @@
  
      .max_width = 4096,
@@ -962,8 +962,8 @@ diff -x .git -x .gitignore -Naur intel-driver/src/i965_device_info.c isg_gms-int
  
      .h264_mvc_dec_profiles = (VA_PROFILE_MASK(H264StereoHigh) |
 diff -x .git -x .gitignore -Naur intel-driver/src/i965_drv_video.c isg_gms-intel-va-driver/src/i965_drv_video.c
---- intel-driver/src/i965_drv_video.c	2016-08-08 02:32:16.162448393 +0800
-+++ isg_gms-intel-va-driver/src/i965_drv_video.c	2016-08-08 02:32:09.022326671 +0800
+--- intel-driver/src/i965_drv_video.c	2016-08-09 02:30:23.091210359 +0800
++++ isg_gms-intel-va-driver/src/i965_drv_video.c	2016-08-09 02:30:12.939028717 +0800
 @@ -2130,6 +2130,20 @@
      object_heap_free(heap, obj);
  }
@@ -1063,8 +1063,8 @@ diff -x .git -x .gitignore -Naur intel-driver/src/i965_drv_video.c isg_gms-intel
  
      if (i > *num_attribs) {
 diff -x .git -x .gitignore -Naur intel-driver/src/i965_drv_video.h isg_gms-intel-va-driver/src/i965_drv_video.h
---- intel-driver/src/i965_drv_video.h	2016-08-08 02:32:16.162448393 +0800
-+++ isg_gms-intel-va-driver/src/i965_drv_video.h	2016-08-08 02:32:09.022326671 +0800
+--- intel-driver/src/i965_drv_video.h	2016-08-09 02:30:23.091210359 +0800
++++ isg_gms-intel-va-driver/src/i965_drv_video.h	2016-08-09 02:30:12.939028717 +0800
 @@ -354,6 +354,8 @@
      int ring;
  };
@@ -1089,8 +1089,8 @@ diff -x .git -x .gitignore -Naur intel-driver/src/i965_drv_video.h isg_gms-intel
      int max_height;
      int min_linear_wpitch;
 diff -x .git -x .gitignore -Naur intel-driver/src/i965_gpe_utils.c isg_gms-intel-va-driver/src/i965_gpe_utils.c
---- intel-driver/src/i965_gpe_utils.c	2016-08-08 02:32:16.162448393 +0800
-+++ isg_gms-intel-va-driver/src/i965_gpe_utils.c	2016-08-08 02:32:09.022326671 +0800
+--- intel-driver/src/i965_gpe_utils.c	2016-08-09 02:30:23.091210359 +0800
++++ isg_gms-intel-va-driver/src/i965_gpe_utils.c	2016-08-09 02:30:12.939028717 +0800
 @@ -721,6 +721,7 @@
                              struct object_surface *obj_surface,
                              struct gen8_surface_state2 *ss)
@@ -1164,8 +1164,8 @@ diff -x .git -x .gitignore -Naur intel-driver/src/i965_gpe_utils.c isg_gms-intel
      ss->ss8.base_addr = (uint32_t)buffer_surface->bo->offset64;
      ss->ss9.base_addr_high = (uint32_t)(buffer_surface->bo->offset64 >> 32);
 diff -x .git -x .gitignore -Naur intel-driver/src/i965_pciids.h isg_gms-intel-va-driver/src/i965_pciids.h
---- intel-driver/src/i965_pciids.h	2016-08-08 02:32:16.162448393 +0800
-+++ isg_gms-intel-va-driver/src/i965_pciids.h	2016-08-08 02:32:09.026326740 +0800
+--- intel-driver/src/i965_pciids.h	2016-08-09 02:30:23.139211218 +0800
++++ isg_gms-intel-va-driver/src/i965_pciids.h	2016-08-09 02:30:12.943028789 +0800
 @@ -174,14 +174,12 @@
  CHIPSET(0x5912, kbl, kbl,       "Intel(R) Kabylake")
  CHIPSET(0x5917, kbl, kbl,       "Intel(R) Kabylake")
@@ -1186,8 +1186,8 @@ diff -x .git -x .gitignore -Naur intel-driver/src/i965_pciids.h isg_gms-intel-va
 +CHIPSET(0x5923, kbl, kbl,       "Intel(R) Kabylake")
 +CHIPSET(0x5927, kbl, kbl,       "Intel(R) Kabylake")
 diff -x .git -x .gitignore -Naur intel-driver/src/shaders/utils/Makefile.am isg_gms-intel-va-driver/src/shaders/utils/Makefile.am
---- intel-driver/src/shaders/utils/Makefile.am	2016-08-08 02:32:16.162448393 +0800
-+++ isg_gms-intel-va-driver/src/shaders/utils/Makefile.am	2016-08-08 02:32:09.118328308 +0800
+--- intel-driver/src/shaders/utils/Makefile.am	2016-08-09 02:30:23.139211218 +0800
++++ isg_gms-intel-va-driver/src/shaders/utils/Makefile.am	2016-08-09 02:30:13.107031723 +0800
 @@ -24,9 +24,14 @@
  INTEL_GEN75_INC	= mfc_batchbuffer_hsw.inc
  INTEL_GEN75_ASM	= $(INTEL_G75A:%.g75a=%.gen75.asm)
@@ -1261,7 +1261,7 @@ diff -x .git -x .gitignore -Naur intel-driver/src/shaders/utils/Makefile.am isg_
  	$(INTEL_GEN9_INC)	\
 diff -x .git -x .gitignore -Naur intel-driver/src/shaders/utils/mfc_batchbuffer_hsw.g8a isg_gms-intel-va-driver/src/shaders/utils/mfc_batchbuffer_hsw.g8a
 --- intel-driver/src/shaders/utils/mfc_batchbuffer_hsw.g8a	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-intel-va-driver/src/shaders/utils/mfc_batchbuffer_hsw.g8a	2016-08-08 02:32:09.118328308 +0800
++++ isg_gms-intel-va-driver/src/shaders/utils/mfc_batchbuffer_hsw.g8a	2016-08-09 02:30:13.107031723 +0800
 @@ -0,0 +1,28 @@
 +/*
 + * Copyright © 2010-2016 Intel Corporation
@@ -1293,7 +1293,7 @@ diff -x .git -x .gitignore -Naur intel-driver/src/shaders/utils/mfc_batchbuffer_
 +#include "mfc_batchbuffer_hsw.asm"
 diff -x .git -x .gitignore -Naur intel-driver/src/shaders/utils/mfc_batchbuffer_hsw.g8b isg_gms-intel-va-driver/src/shaders/utils/mfc_batchbuffer_hsw.g8b
 --- intel-driver/src/shaders/utils/mfc_batchbuffer_hsw.g8b	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-intel-va-driver/src/shaders/utils/mfc_batchbuffer_hsw.g8b	2016-08-08 02:32:09.118328308 +0800
++++ isg_gms-intel-va-driver/src/shaders/utils/mfc_batchbuffer_hsw.g8b	2016-08-09 02:30:13.107031723 +0800
 @@ -0,0 +1,105 @@
 +   { 0x00800001, 0x23400608, 0x00000000, 0x00000000 },
 +   { 0x00600001, 0x21e00608, 0x00000000, 0x00000000 },
@@ -1402,7 +1402,7 @@ diff -x .git -x .gitignore -Naur intel-driver/src/shaders/utils/mfc_batchbuffer_
 +   { 0x0000007e, 0x00000000, 0x00000000, 0x00000000 },
 diff -x .git -x .gitignore -Naur intel-driver/src/shaders/utils/mfc_batchbuffer_hsw.g9a isg_gms-intel-va-driver/src/shaders/utils/mfc_batchbuffer_hsw.g9a
 --- intel-driver/src/shaders/utils/mfc_batchbuffer_hsw.g9a	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-intel-va-driver/src/shaders/utils/mfc_batchbuffer_hsw.g9a	2016-08-08 02:32:09.118328308 +0800
++++ isg_gms-intel-va-driver/src/shaders/utils/mfc_batchbuffer_hsw.g9a	2016-08-09 02:30:13.107031723 +0800
 @@ -0,0 +1,28 @@
 +/*
 + * Copyright © 2010-2016 Intel Corporation
@@ -1434,7 +1434,7 @@ diff -x .git -x .gitignore -Naur intel-driver/src/shaders/utils/mfc_batchbuffer_
 +#include "mfc_batchbuffer_hsw.asm"
 diff -x .git -x .gitignore -Naur intel-driver/src/shaders/utils/mfc_batchbuffer_hsw.g9b isg_gms-intel-va-driver/src/shaders/utils/mfc_batchbuffer_hsw.g9b
 --- intel-driver/src/shaders/utils/mfc_batchbuffer_hsw.g9b	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-intel-va-driver/src/shaders/utils/mfc_batchbuffer_hsw.g9b	2016-08-08 02:32:09.118328308 +0800
++++ isg_gms-intel-va-driver/src/shaders/utils/mfc_batchbuffer_hsw.g9b	2016-08-09 02:30:13.107031723 +0800
 @@ -0,0 +1,105 @@
 +   { 0x00800001, 0x23400608, 0x00000000, 0x00000000 },
 +   { 0x00600001, 0x21e00608, 0x00000000, 0x00000000 },
