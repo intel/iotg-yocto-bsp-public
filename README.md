@@ -73,7 +73,6 @@ If this is your first build, just run the setup.sh script from your bsp-apollola
 	- test python, network, gitconfig and git proxy
    b. Prepare sources
 	- download Linux kernel v4.1.27 from Intel Linux Kernel from github.
-	- apply Intel Linux kernel patches
 	- combolayer downloads Poky Jethro v2.0.2 and other meta layers based on setup/combolayer.conf
 	- setup bblayers for bitbake build
 	- setup local.conf for bitbake build
