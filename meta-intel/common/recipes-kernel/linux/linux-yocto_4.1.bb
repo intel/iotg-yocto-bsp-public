@@ -14,7 +14,7 @@ SRC_URI_append_intel-corei7-64-cavs-hda = " file://cavs_hda.scc"
 SRC_URI_append_intel-corei7-64-cavs-ssp = " file://cavs_ssp.scc"
 
 # Latest source commit for target machine
-SRCREV = "c9e5ad5be0a6704577ae90c52f34ab49d8d1d55b"
+SRCREV = "41fc98f785ad56f0df1b85ac039bd5e391697842"
 
 LINUX_VERSION ?= "4.1.27"
 LINUX_VERSION_EXTENSION = "apollolake"
