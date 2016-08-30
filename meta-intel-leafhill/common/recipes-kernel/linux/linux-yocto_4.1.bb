@@ -3,7 +3,7 @@ require recipes-kernel/linux/linux-yocto.inc
 
 SUMMARY = "Linux Kernel for enabling Intel Apollo Lake-i"
 
-SRC_URI = "git://github.com/01org/linux-apollolake-i.git;protocol=ssh;branch=gold;name=machine"
+SRC_URI = "git://github.com/01org/iotg-yocto-linux-public.git;protocol=ssh;branch=e3900/master;name=machine"
 
 # Linux Kernel Config Fragments
 SRC_URI += "file://intel-corei7-64.cfg"
