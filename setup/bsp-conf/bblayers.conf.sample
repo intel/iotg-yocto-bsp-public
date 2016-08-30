@@ -9,8 +9,8 @@ BBLAYERS ?= " \
   ##OEROOT##/meta \
   ##OEROOT##/meta-yocto \
   ##OEROOT##/meta-yocto-bsp \
-  ##OEROOT##/meta-intel \
-  ##OEROOT##/meta-intel/meta-tlk \
+  ##OEROOT##/meta-intel-leafhill \
+  ##OEROOT##/meta-intel-leafhill/meta-tlk \
   ##OEROOT##/meta-intel-middleware \
   ##OEROOT##/meta-openembedded/meta-gnome \
   ##OEROOT##/meta-openembedded/meta-filesystems \
