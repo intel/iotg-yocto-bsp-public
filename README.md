@@ -4,12 +4,12 @@ tarballed and released in the github for individual recipes is under the LICENSE
 stated in the associated recipe (.bb file) unless otherwise stated.
 License information for any other recipes is either explicitly stated or defaults to GPL version 2.
 
-The use of this Intel Apollo Lake BSP with Linux Kernel is licensed under [SOFTWARE LIMITED LICENSE AGREEMENT](https://github.com/01org/bsp-apollolake-i/blob/master/Intel%20Software%20License_15Oct15.pdf)
+The use of this Intel Atom E3900 BSP with Linux Kernel is licensed under [SOFTWARE LIMITED LICENSE AGREEMENT](https://github.com/01org/iotg-yocto-bsp-public/blob/e3900/master/Intel%20Software%20License_15Oct15.pdf)
 
-# About Intel Apollo Lake-I Yocto BSP
-This Intel Apollo Lake BSP contains the following essential components for building a custom embedded Linux image.
+# About Intel Atom E3900 Yocto BSP
+This Intel Atom E3900 BSP contains the following essential components for building a custom embedded Linux image.
 - One-Click setup script for setting up build environment from scratch
-- meta-intel layer for Linux kernel configurations
+- meta-intel-leafhill layer for Linux kernel configurations
 - meta-intel-middleware layer for user space packages and configurations
 - template of local.conf for building core-image-sato-sdk and core-image-sato image
 
@@ -20,22 +20,22 @@ Minimum host system configuration for Yocto BSP build:
 - High speed network connectivity
 
 IMPORTANT: To enable Yocto BSP build, you will need to setup and enable SSH keys on your host machine.
-See the [Setting up Guide](https://github.com/01org/bsp-apollolake-i/wiki/Setting-Up-Guide) for more details.
+See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/SSH-Setup-Guide-for-New-Users) for more details.
 
-## Getting Started with Yocto BSP for Intel Apollo Lake:
+## Getting Started with Yocto BSP for Intel Atom E3900 SoC:
 - Make sure you have setup SSH connection to GitHub for recipe to pull Linux kernel.
 - Download this Yocto BSP from GitHub via SSH or HTTPS to your host machine.
-   <br> - HTTPS directly from https://github.com/01org/bsp-apollolake-i by selecting the appropriate branch/release version, e.g. alpha1, from the top left menu; or
-   <br> - SSH using following command (release_version, e.g. beta)
+   <br> - HTTPS directly from https://github.com/01org/iotg-yocto-bsp-public.git by selecting the appropriate branch/release version, e.g. e3900/master, from the top left menu; or
+   <br> - SSH using following command (release_version, e.g. e3900/master)
 ```
-      git clone https://github.com/01org/bsp-apollolake-i -b <release_version>
+      git clone https://github.com/01org/iotg-yocto-bsp-public.git -b e3900/master
 ```
 - Execute the setup.sh script to check your host machine settings, download Poky and other meta layers from Yocto Project and prepare your environment for build.
 
 **NOTE: Do not interrupt the setup.sh execution especially during local repository initialization**
 
 #### Default configuration set for core-image-sato image in this BSP:
-- meta-intel contains i915 graphics driver. However, they are dependent on gstreamer plugins.
+- meta-intel-leafhill contains i915 graphics driver. However, they are dependent on gstreamer plugins.
   <br> These plugins require license flags set to "commercial" in order to be included in the build.
   <br> You will find LICENSE_FLAGS_WHITELIST = "commercial" already set by the template in the local.conf for your build.
 
@@ -56,7 +56,7 @@ At the end of a successful build, you should have a live image that you can boot
 You can deploy the hddimg image to a USB or SATA device.
 
 ### Your First Build
-If this is your first build, just run the setup.sh script from your bsp-apollolake-i/ directory:
+If this is your first build, just run the setup.sh script from your iotg-yocto-bsp-public/ directory:
 ```
    $ ./setup.sh
 ```
@@ -115,7 +115,7 @@ If you need to modify the recipes or configurations, make your customization in 
 ```
 
 ### Features supported
-To view the full list of supported features, see [Apollo Lake I Beta Release Note.pdf](https://github.com/01org/bsp-apollolake-i/blob/beta/Apollo_Lake%E2%80%93I_BSP_for_Yocto_Project_Release_Notes_Beta.pdf)
+To view the full list of supported features, see [Intel_Atom_E3900_PV_Release_Note.pdf](https://github.com/01org/iotg-yocto-bsp-public/blob/e3900/master/Intel_Atom_E3900_PV_Release_Note.pdf)
 
 ### Known Issues
-To view full list of known issues related to Linux driver, see [Apollo Lake I Beta Release Note.pdf](https://github.com/01org/bsp-apollolake-i/blob/beta/Apollo_Lake%E2%80%93I_BSP_for_Yocto_Project_Release_Notes_Beta.pdf)
+To view full list of known issues related to Linux driver, see [Intel_Atom_E3900_PV_Release_Note.pdf](https://github.com/01org/iotg-yocto-bsp-public/blob/e3900/master/Intel_Atom_E3900_PV_Release_Note.pdf)
