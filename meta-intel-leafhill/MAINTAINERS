@@ -1,17 +1,17 @@
 This file contains a list of BSP maintainers for the BSPs contained in
-the meta-intel repository.
+the meta-intel-leafhill repository.
 
 The purpose of this file is to provide contact information for
-specific BSPs and other code contained within meta-intel.  You should
-address questions and patches for a particular BSP or other code to
-the appropriate maintainer listed in this file, cc'ing the meta-intel
-mailing list.  This ensures that your question or patch will be
+specific BSPs and other code contained within meta-intel-leafhill.
+You should address questions and patches for a particular BSP or other code to
+the appropriate maintainer listed in this file, cc'ing the meta-intel-leafhill
+maintainer.  This ensures that your question or patch will be
 addressed by the appropriate person, and that it will be seen by other
 users who may be facing similar problems or questions.
 
 Please see the top-level README file for guidelines relating to the
 details of submitting patches, reporting problems, or asking questions
-about any of the BSPs or other recipes contained within meta-intel.
+about any of the BSPs or other recipes contained within meta-intel-leafhill.
 
 Descriptions of section entries:
 
@@ -28,9 +28,9 @@ Maintainers List (try to look for most precise areas first)
 
 		-----------------------------------
 COMMON
-M:	Saul Wold <sgw@linux.intel.com>
+M:	Chang Rebecca Swee Fun <rebecca.swee.fun.chang@intel.com>
 F:	common/
 
 TLK
-M:	Saul Wold <sgw@linux.intel.com>
+M:	Chang Rebecca Swee Fun <rebecca.swee.fun.chang@intel.com>
 F:	meta-tlk/
