@@ -3,29 +3,12 @@
 # Configuration
 ########################################################################
 
-# Linux-stable
+# Yocto Project Poky based Linux
 KVER="4.1"
-KTAG="4.1.27"
-LOCAL_LINUX_BRANCH="linux-4.1.y"
-
-LINUX_GIT='git://git.yoctoproject.org/linux-yocto-4.1'
-SRC_REV='685c5d20c716cf420a13954ae10148cc75089e19'
 
 ########################################################################
 # End of configuration
 ########################################################################
-
-apply_bsp_meta_patch () {
-	cur_dir=$(pwd)
-
-	echo "Patching BSP meta layer ..."
-	sleep 3
-
-	git am $cur_dir/setup/patchset/bsp-meta/*.patch
-	git am $cur_dir/setup/patchset/oe-meta/*.patch
-
-	cd ${cur_dir}
-}
 
 apply_combined_repo_commit () {
 	echo   "Initial Repo Population: Apollo Lake BSP for linux-yocto ver-${KVER}" > VERSION.txt
@@ -117,7 +100,6 @@ build_bsp () {
 	sleep 3
 	setup/combo-layer -c setup/combolayer.conf init
 	apply_combined_repo_commit
-	apply_bsp_meta_patch
 
 	echo "========================================================================="
 	echo "By default, this setup script will create a brand new repo which combines"
@@ -138,7 +120,6 @@ build_kernel () {
 	sleep 3
 	setup/combo-layer -c setup/combolayer.conf init
 	apply_combined_repo_commit
-	apply_bsp_meta_patch
 
 	echo "========================================================================="
 	echo "By default, this setup script will create a brand new repo which combines"
