@@ -23,24 +23,13 @@ apply_machine_local_conf () {
 	cd ../..
 
 	case $machine in
-		CAVS-HDA)
-			echo -e "\nlocal.conf: machine: CAVS HD-Audio -- intel-corei7-64-cavs-hda \n"
-			# MACHINE set to intel-corei7-64-cavs-hda by default.
-			# Do nothing.
-			;;
 		CAVS-SSP)
-			echo -e "\nlocal.conf: machine: CAVS SSP -- intel-corei7-64-cavs-ssp \n"
-			# Remove default MACHINE -- intel-corei7-64-cavs-hda
-			sed -i -e "/$MACHINE\ \?\?\=\ \"intel\-corei7\-64\-cavs\-hda\"/d" yocto_build/build/conf/local.conf
-			# Replace with MACHINE specify for SSP Audio
-			sed -i '1i MACHINE ??= \"intel-corei7-64-cavs-ssp\"' yocto_build/build/conf/local.conf
+			# Need to turn on AUDIO_FEATURES = "ssp"
+			sed -i -e "/$AUDIO\_FEATURES\ \=\ \"ssp\"/d" yocto_build/build/conf/local.conf
 			;;
-		HDA)
-			echo -e "\nlocal.conf: machine: Legacy HD-Audio -- intel-corei7-64 \n"
-			# Remove default MACHINE -- intel-corei7-64-cavs-hda
-			sed -i -e "/$MACHINE\ \?\?\=\ \"intel\-corei7\-64\-cavs\-hda\"/d" yocto_build/build/conf/local.conf
-			# Replace with MACHINE specify for Legacy Audio
-			sed -i '1i MACHINE ??= \"intel-corei7-64\"' yocto_build/build/conf/local.conf
+		*)
+			# Default settings.
+			# Do nothing.
 			;;
 	esac
 
