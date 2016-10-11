@@ -14,15 +14,27 @@
 #
 # Machine Selection
 #
-# This sets the default machine to be intel-corei7-64-cavs-hda if no other machine is selected:
-# This sets the default image to be built with CAVS HD-Audio driver and configuration.
+# This sets the default machine to be intel-corei7-64:
+MACHINE = "intel-corei7-64"
+
 #
-# To build image with SSP dummy codec support, please use: MACHINE ??= "intel-corei7-64-cavs-ssp"
-# To build image with legacy audio driver support, please use: MACHINE ??= "intel-corei7-64"
+# Kernel Features
 #
-#MACHINE ??= "intel-corei7-64"
-#MACHINE ??= "intel-corei7-64-cavs-ssp"
-MACHINE ??= "intel-corei7-64-cavs-hda"
+# This sets KERNEL_FEATURES to leafhill.
+# This setting is meant for Bitbake to pull the correct set of
+# kernel config fragments in yocto-kernel-cache.
+#
+# It is not recommend to remove if your target platform is
+# based on Intel Atom E3900 SoC Family.
+KERNEL_FEATURES += "leafhill"
+
+#
+# Apollo Lake Yocto BSP supports different Audio features,
+# i.e. legacy HD-Audio, CAVS HD-Audio, and CAVS SSP Audio codec support.
+#
+# By default, this configuration will build CAVS HD-Audio feature.
+# To build CAVS SSP Audio feature, uncomment the line below.
+#AUDIO_FEATURES = "ssp"
 
 #
 # Machine Configuration Override for Apollo Lake platform
@@ -40,9 +52,9 @@ XSERVER_X86_MATROX_MGA = ""
 XSERVER_X86_ASPEED_AST = ""
 MACHINE_ESSENTIAL_EXTRA_RDEPENDS_remove = "intel-microcode"
 INITRD_remove = "${DEPLOY_DIR_IMAGE}/microcode.cpio"
-SYSLINUX_OPTS = "serial 2 115200"
-SERIAL_CONSOLE = "115200 ttyS2"
-APPEND = "console=ttyS2,115200n8 console=tty0 maxcpus=4 noxsave 3 reboot=efi kmemleak=off i915.enable_dc=0 i915.enable_ipc=1"
+
+# Make image boot to runlevel 3 by default
+APPEND = "3"
 
 #
 # User Space Configuration Override for Apollo Lake Platform
@@ -58,7 +70,8 @@ PREFERRED_VERSION_xserver-xorg = "1.17%"
 # Enable vp8dec for gstreamer1.0-plugins-good
 PACKAGECONFIG_append_pn-gstreamer1.0-plugins-good = "vpx"
 
-# Enable multi-libraries
+# Multi-libraries support is by default "OFF"
+# Please uncomment the 4 lines below to enable multilib support.
 #require conf/multilib.conf
 #DEFAULTTUNE = "corei7-64"
 #MULTILIBS = "multilib:lib32"

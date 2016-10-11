@@ -9,19 +9,18 @@ BBLAYERS ?= " \
   ##OEROOT##/meta \
   ##OEROOT##/meta-yocto \
   ##OEROOT##/meta-yocto-bsp \
-  ##OEROOT##/meta-intel-leafhill \
-  ##OEROOT##/meta-intel-leafhill/meta-tlk \
+  ##OEROOT##/meta-intel \
+  ##OEROOT##/meta-intel/meta-tlk \
   ##OEROOT##/meta-intel-middleware \
-  ##OEROOT##/meta-openembedded/meta-gnome \
   ##OEROOT##/meta-openembedded/meta-filesystems \
   ##OEROOT##/meta-openembedded/meta-networking \
   ##OEROOT##/meta-openembedded/meta-oe \
   ##OEROOT##/meta-openembedded/meta-python \
-  ##OEROOT##/meta-openembedded/meta-xfce \
   ##OEROOT##/meta-openembedded/meta-multimedia \
   ##OEROOT##/meta-qt5 \
   ##OEROOT##/meta-measured \
   ##OEROOT##/meta-intel-iot-middleware \
+  ##OEROOT##/meta-intel-leafhill \
   "
 BBLAYERS_NON_REMOVABLE ?= " \
   ##OEROOT##/meta \
