@@ -1,0 +1,17 @@
+README
+======
+
+This folder contains kernel patchset tarballs for different users' requirement.
+The selection of which kernel patchset tarball to use during image compilation
+can be select by user via command prompt interaction.
+
+By default, CAVS HD-Audio features will be compiled using the following tarball:
+auto_nightly_integrator-linux-<yyyy-mm-dd>-<commit id>-patches.tar.bz2
+auto_nightly_integrator-linux-<yyyy-mm-dd>-<commit id>.version
+
+This kernel patchset tarball does not contains any source code for Audio feature
+released by IOTG Audio CoE.
+If you inclined to use legacy audio feature from open source, this the kernel
+patchset tarball tailored to suit your needs.
+auto_nightly_integrator-linux-nossp-<yyyy-mm-dd>-<commit id>-patches.tar.bz2
+auto_nightly_integrator-linux-nossp-<yyyy-mm-dd>-<commit id>.version
