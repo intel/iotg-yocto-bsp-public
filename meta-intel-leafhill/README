@@ -1,7 +1,7 @@
 meta-intel-leafhill
 ===================
 
-This is the location for Intel IoTG PED maintained BSPs.
+This is the location for Intel IoTG PED customizations for Yocto BSPs.
 
 Please see the README files contained in the individual BSP layers for
 BSP-specific information. For details on the intel-common BSPs, see the
@@ -20,28 +20,48 @@ please try to do the following first:
 If you believe you have encountered a bug, you can contact IoTG PED
 customer support team and cc meta-intel-leafhill maintainer.
 
-Intel-specific machine features
-===============================
-
-The meta-intel-leafhill layer makes some additional machine features
-available to BSPs.  These machine features can be used in a BSP layer in the
-same way that machine features are used in other layers based on
-oe-core, via the MACHINE_FEATURES variable.
 
 Requirements
 ------------
 
-The meta-intel-leafhill machine features are only available to a BSP
-when the meta-intel-leafhill layer is included in the build configuration, and
-the meta-intel.inc file is included in the machine configuration of
-that BSP.
+The meta-intel-leafhill kernel features are only available to a BSP
+when the meta-intel-leafhill layer is included in the build configuration.
 
 To make these features available for your machine, you will need to:
 
   1. include a configuration line such as the below in bblayers.conf
 	BBLAYERS += "<local path>/meta-intel-leafhill"
-  2. include the following line in the machine configuration file
-	require conf/machine/include/meta-intel.inc
 
 Once the above requirements are met, the machine features provided by
 the meta-intel-leafhill layer will be available for the BSP to use.
+
+
+Dependencies
+------------
+
+This layer depends on:
+
+  URI: git://git.openembedded.org/bitbake
+  branch: jethro
+
+  URI: git://git.openembedded.org/openembedded-core
+  layers: meta
+  branch: jethro
+
+  URI: git://git.yoctoproject.org/poky
+  layers: meta
+  branch: jethro
+
+  URI: git://git.yoctoproject.org/meta-intel
+  layers: intel
+  branch: jethro
+
+
+Patches
+-------
+
+Please submit any patches against this layer to the maintainer:
+
+Maintainer: Chang Rebecca Swee Fun <rebecca.swee.fun.chang@intel.com>
+
+Please see the meta-intel-leafhill/MAINTAINERS file for more details.

@@ -27,10 +27,6 @@ Please keep this list in alphabetical order.
 Maintainers List (try to look for most precise areas first)
 
 		-----------------------------------
-COMMON
+meta-intel-leafhill
 M:	Chang Rebecca Swee Fun <rebecca.swee.fun.chang@intel.com>
-F:	common/
-
-TLK
-M:	Chang Rebecca Swee Fun <rebecca.swee.fun.chang@intel.com>
-F:	meta-tlk/
+F:	meta-intel-leafhill/
