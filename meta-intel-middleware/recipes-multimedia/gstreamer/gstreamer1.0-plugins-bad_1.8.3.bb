@@ -11,7 +11,7 @@ SRC_URI += " \
             file://configure-allow-to-disable-libssh2.patch \
             file://Enable_BDU_parsing_for_bitstream.patch"
 
-SRC_URI[md5sum] = "83abc2e70684e7b195f18ca2992ef6e8"
-SRC_URI[sha256sum] = "d7995317530c8773ec088f94d9320909d41da61996b801ebacce9a56af493f97"
+SRC_URI[md5sum] = "955281a43e98c5464563fa049e0a0911"
+SRC_URI[sha256sum] = "7899fcb18e6a1af2888b19c90213af018a57d741c6e72ec56b133bc73ec8509b"
 
 S = "${WORKDIR}/gst-plugins-bad-${PV}"

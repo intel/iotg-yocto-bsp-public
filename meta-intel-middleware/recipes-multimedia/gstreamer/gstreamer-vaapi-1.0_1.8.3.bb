@@ -6,7 +6,7 @@ SRC_URI = "git://anongit.freedesktop.org/gstreamer/gstreamer-vaapi;branch=1.8;na
 
 LIC_FILES_CHKSUM = "file://COPYING.LIB;md5=4fbd65380cdd255951079008b364516c"
 
-SRCREV_base = "a486942ba2d44ba2f60fec25175c681786021b48"
+SRCREV_base = "c1f5efee1d0d286fd804c5456f43f9b7ecfce35b"
 SRCREV_common = "6f2d2093e84cc0eb99b634fa281822ebb9507285"
 SRCREV_FORMAT = "base"
 
