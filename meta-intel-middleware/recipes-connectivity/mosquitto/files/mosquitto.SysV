@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# description: Mosquitto broker
+# Required-Start: $network
+# Required-Stop: $network
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+
+# source function library
+. /etc/init.d/functions
+
+# Defination of file
+MOSQUITTO=/usr/sbin/mosquitto
+CONFIG_FILE=/etc/mosquitto/mosquitto.conf
+PID_FILE=/var/run/mosquitto.pid
+
+# Start service
+start() {
+    [ -x $MOSQUITTO ] || exit 5
+    [ -f $CONFIG_FILE ] || exit 6
+    if [ -f $PID_FILE ] && kill -0 $(cat $PID_FILE); then
+        echo "Service already running" >&2
+        return 1
+    fi
+    echo "Starting Mosquitto broker: " >&2
+    $MOSQUITTO -c $CONFIG_FILE & echo $! > $PID_FILE
+    echo "Mosquitto service started" >&2
+}
+# Stop service
+stop() {
+    if [ ! -f "$PID_FILE" ] || ! kill -0 $(cat "$PID_FILE"); then
+      echo "Service not running" >&2
+      return 1
+    fi
+    echo "Stopping Mosquitto broker: " >&2
+    kill -15 $(cat $PID_FILE) && rm -f $PID_FILE
+    echo "Mosquitto service stopped" >&2
+}
+# main
+case "$1" in
+  start)
+    start
+    ;;
+  stop)
+    stop
+    ;;
+  restart|reload)
+    stop
+    start
+    ;;
+  *)
+    echo $"Usage: $0 {start|stop|restart|reload}"
+    exit 1
+esac
