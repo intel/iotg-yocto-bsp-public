@@ -30,12 +30,21 @@ See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/S
 ```
       git clone https://github.com/01org/iotg-yocto-bsp-public.git -b e3900/master
 ```
+- This git tree will maintained as single product branch. In order to get code base from previous release, e.g. PV release, you need to checkout to the specific tag.
+   <br> - For Intel Atom E3900 PV release:
+```
+      git checkout E3900-PV
+```
+   <br> - For Intel Atom E3900 Maintenance Release Version 1:
+```
+      git checkout E3900-MR1
+```
 - Execute the setup.sh script to check your host machine settings, download Poky and other meta layers from Yocto Project and prepare your environment for build.
 
 **NOTE: Do not interrupt the setup.sh execution especially during local repository initialization**
 
 #### Default configuration set for core-image-sato image in this BSP:
-- meta-intel-leafhill contains i915 graphics driver. However, they are dependent on gstreamer plugins.
+- meta-intel-middleware contains i915 graphics driver. However, they are dependent on gstreamer plugins.
   <br> These plugins require license flags set to "commercial" in order to be included in the build.
   <br> You will find LICENSE_FLAGS_WHITELIST = "commercial" already set by the template in the local.conf for your build.
 
@@ -84,15 +93,10 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
   For setup.sh to run completely, this process may take up to 5 hours or more depending on the performance
   of your build machine. When the build process is completed, you may browse for the image from the path:
 
-   If you select to build image with CAVS HD-Audio support, your bootable image location is:-
-   <your_path>/yocto_build/build/tmp/deploy/images/intel-corei7-64-cavs-hda/
-	- HDDIMG image file name: core-image-sato-sdk-intel-corei7-64-cavs-hda-<build-date-time>.hddimg
-	- ISO image file name:    core-image-sato-sdk-intel-corei7-64-cavs-hda-<build-date-time>.iso
-
-   If you select to build image with CAVS SSP Audio support, your bootable image location is:-
-   <your_path>/yocto_build/build/tmp/deploy/images/intel-corei7-64-cavs-ssp/
-	- HDDIMG image file name: core-image-sato-sdk-intel-corei7-64-cavs-ssp-<build-date-time>.hddimg
-	- ISO image file name:    core-image-sato-sdk-intel-corei7-64-cavs-ssp-<build-date-time>.iso
+   Your bootable image location is:-
+   <your_path>/yocto_build/build/tmp/deploy/images/intel-corei7-64/
+	- HDDIMG image file name: core-image-sato-sdk-intel-corei7-64-<build-date-time>.hddimg
+	- ISO image file name:    core-image-sato-sdk-intel-corei7-64-<build-date-time>.iso
 
 ### For Subsequent Build
 If you need to modify the recipes or configurations, make your customization in the yocto_build folder after running the ./setup script on your host machine.
