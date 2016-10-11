@@ -20,6 +20,7 @@ BBLAYERS ?= " \
   ##OEROOT##/meta-qt5 \
   ##OEROOT##/meta-measured \
   ##OEROOT##/meta-intel-iot-middleware \
+  ##OEROOT##/meta-soletta \
   ##OEROOT##/meta-intel-leafhill \
   "
 BBLAYERS_NON_REMOVABLE ?= " \

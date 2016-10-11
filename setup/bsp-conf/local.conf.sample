@@ -108,6 +108,9 @@ IMAGE_INSTALL_append = " xinit-env"
 # By default, we want our OS to includes all kernel modules.
 IMAGE_INSTALL_append = " kernel-modules"
 
+# Install soletta framework
+IMAGE_INSTALL_append = " soletta"
+
 # Take note that as we are building 3rd party ingredient.
 # We need the LICENSE_FLAGS below.
 LICENSE_FLAGS_WHITELIST += "commercial"
