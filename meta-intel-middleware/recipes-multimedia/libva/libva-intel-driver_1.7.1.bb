@@ -4,6 +4,6 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=2e48940f94acb0af582e5ef03537800f"
 
 SRC_URI += "file://intel-va-driver_version_diff.patch"
 
-SRCREV = "396224348ae47f3093e79dc84a7d4f1f1513ba55"
+SRCREV = "ce444fb412966ca6afbb1331b7cae8ab621c1108"
 
 S = "${WORKDIR}/git"
