@@ -8,7 +8,7 @@ SRC_URI = "git://github.com/01org/dynamic-application-loader-host-interface;prot
 
 inherit cmake useradd update-rc.d
 
-SRCREV = "407f99e2cc8889b9f36bc4a95f034b47d5f1f4a3"
+SRCREV = "40afac2504a274003f989529a1cd8deb087a7be5"
 
 S = "${WORKDIR}/git"
 
@@ -36,6 +36,7 @@ do_install_append () {
 
         install -d ${D}${bindir}
         install -m 755 ${B}/bin_linux/smoketest ${D}${bindir}
+        install -m 755 ${B}/bin_linux/bist ${D}${bindir}
 
         cp -r ${S}/test/smoketest/applets/* ${D}${localstatedir}/lib/intel/dal/applets/
 }
