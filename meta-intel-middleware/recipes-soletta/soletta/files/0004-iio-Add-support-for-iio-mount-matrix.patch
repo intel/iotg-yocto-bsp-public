@@ -1,0 +1,155 @@
+From bbe3529de8c94632f0f78fef55e0e3f654a80ce2 Mon Sep 17 00:00:00 2001
+From: Yong Li <yong.b.li@intel.com>
+Date: Thu, 11 Aug 2016 14:25:17 +0800
+Subject: [PATCH 4/5] iio: Add support for iio mount matrix
+
+Fix issue #2205
+
+Upstream-Status: Accepted
+
+Signed-off-by: Yong Li <yong.b.li@intel.com>
+Signed-off-by: Lay, Kuan Loon <kuan.loon.lay@intel.com>
+Signed-off-by: Chai, Chong Yi <chong.yi.chai@intel.com>
+---
+ data/scripts/libsoletta.sym  |  1 +
+ src/lib/io/include/sol-iio.h | 14 ++++++++++++++
+ src/lib/io/sol-iio.c         | 43 +++++++++++++++++++++++++++++++++++++++++++
+ src/modules/flow/iio/nodes.c | 20 ++++++++++++++++++++
+ 4 files changed, 78 insertions(+)
+
+diff --git a/data/scripts/libsoletta.sym b/data/scripts/libsoletta.sym
+index f1e42bd..273ef9b 100644
+--- a/data/scripts/libsoletta.sym
++++ b/data/scripts/libsoletta.sym
+@@ -415,6 +415,7 @@ global:
+         sol_iio_open;
+         sol_iio_read_channel_raw_buffer;
+         sol_iio_read_channel_value;
++        sol_iio_get_mount_matrix;
+ 
+         sol_init;
+ 
+diff --git a/src/lib/io/include/sol-iio.h b/src/lib/io/include/sol-iio.h
+index 3af1340..923cc66 100644
+--- a/src/lib/io/include/sol-iio.h
++++ b/src/lib/io/include/sol-iio.h
+@@ -230,6 +230,20 @@ struct sol_str_slice
+ sol_iio_read_channel_raw_buffer(struct sol_iio_channel *channel);
+ 
+ /**
++ * @brief Returns mount_atrix data array.
++ *
++ * This function is meaningful only when mount_matrix is supported.
++ *
++ * @param device device to get mount matrix
++ * @param mount_matrix Where read value will be stored
++ *
++ * @return true on sucess, false means does not support mount_matrix or failure.
++ *
++ */
++bool
++sol_iio_get_mount_matrix(struct sol_iio_device *device, double mount_matrix[9]);
++
++/**
+  * @}
+  */
+ 
+diff --git a/src/lib/io/sol-iio.c b/src/lib/io/sol-iio.c
+index 1779592..e3db317 100644
+--- a/src/lib/io/sol-iio.c
++++ b/src/lib/io/sol-iio.c
+@@ -120,6 +120,8 @@ struct resolve_absolute_path_data {
+ #define SAMPLING_FREQUENCY_BUFFER_PATH SYSFS_DEVICES_PATH "/iio:device%d/buffer/sampling_frequency"
+ #define SAMPLING_FREQUENCY_TRIGGER_PATH SYSFS_DEVICES_PATH "/trigger%d/sampling_frequency"
+ 
++#define SYSFS_MOUNT_MATRIX SYSFS_DEVICES_PATH "/iio:device%d/in_mount_matrix"
++
+ #define I2C_DEVICES_PATH "/sys/bus/i2c/devices/%u-%04u/"
+ 
+ #define HRTIMER_TRIGGER_PREFIX "hrtimer:"
+@@ -1522,3 +1524,44 @@ sol_iio_read_channel_raw_buffer(struct sol_iio_channel *channel)
+ 
+     return slice;
+ }
++
++SOL_API bool
++sol_iio_get_mount_matrix(struct sol_iio_device *device, double mount_matrix[9])
++{
++    char buf[100];
++    char *tmp1, *tmp2;
++    char path[PATH_MAX];
++    bool result = false;
++    int len, i;
++    double f;
++
++    result = craft_filename_path(path, sizeof(path), SYSFS_MOUNT_MATRIX,
++        device->device_id);
++    if (!result) {
++        SOL_DBG("Could not open device mount_matrix file");
++        return false;
++    }
++
++    len = sol_util_read_file(path, "%99[^\n]", buf);
++    if (len < 0) {
++        SOL_INF("Coult not read mount matrix %s on sysfs.", path);
++        return false;
++    }
++
++    SOL_DBG("in_mount_matrix=%s", buf);
++
++    tmp1 = buf;
++    for (i = 0; i < 9; i++) {
++        f = strtof(tmp1, &tmp2);
++        if (tmp1 == tmp2)
++            return false;
++        mount_matrix[i] = f;
++        tmp1 = tmp2 + 1;
++    }
++
++    for (i = 0; i < 9; i++) {
++        SOL_DBG("matrix[%d]=%f", i, mount_matrix[i]);
++    }
++
++    return result;
++}
+diff --git a/src/modules/flow/iio/nodes.c b/src/modules/flow/iio/nodes.c
+index cf08561..c15a2ba 100644
+--- a/src/modules/flow/iio/nodes.c
++++ b/src/modules/flow/iio/nodes.c
+@@ -131,6 +131,9 @@ iio_direction_vector_reader_cb(void *data, struct sol_iio_device *device)
+     };
+     int r;
+     struct iio_node_type *type;
++    double mount_matrix[9];
++    int i;
++    double tmp[3];
+ 
+     type = (struct iio_node_type *)sol_flow_node_get_type(node);
+ 
+@@ -143,6 +146,23 @@ iio_direction_vector_reader_cb(void *data, struct sol_iio_device *device)
+     r = sol_iio_read_channel_value(mdata->channel_z, &out.z);
+     SOL_INT_CHECK_GOTO(r, < 0, error);
+ 
++    SOL_DBG("%f-%f-%f", out.x, out.y, out.z);
++
++    // mount correction
++    if (sol_iio_get_mount_matrix(device, mount_matrix)) {
++        SOL_DBG("Apply mount_matrix");
++        for (i = 0; i < 3; i++) {
++            tmp[i] = out.x * mount_matrix[i * 3]
++                + out.y * mount_matrix[i * 3 + 1]
++                + out.z * mount_matrix[i * 3 + 2];
++        }
++
++        out.x = tmp[0];
++        out.y = tmp[1];
++        out.z = tmp[2];
++        SOL_DBG("%f-%f-%f", out.x, out.y, out.z);
++    }
++
+     sol_flow_send_direction_vector_packet(node, type->out_port, &out);
+ 
+     return;
+-- 
+1.9.1
+

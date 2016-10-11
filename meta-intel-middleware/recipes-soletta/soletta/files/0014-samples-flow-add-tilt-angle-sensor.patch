@@ -1,0 +1,404 @@
+From e98d2f4d1e5c61f749226d8960feeb6dd9c33d12 Mon Sep 17 00:00:00 2001
+From: "Kweh, Hock Leong" <hock.leong.kweh@intel.com>
+Date: Thu, 15 Sep 2016 03:02:25 +0800
+Subject: [PATCH 14/14] samples/flow: add tilt angle sensor
+
+This example get 3-axis raw data inputs from iio Accelerometer and
+convert into pitch angle and roll angle as outputs. It is also a
+FBP & C hybrid programming model sensor sample. A makefile contains
+both in-tree and out-of-tree build methods is provided as well.
+
+Upstream-Status: Pending
+
+Signed-off-by: Kweh, Hock Leong <hock.leong.kweh@intel.com>
+---
+ Kconfig                                      |    1 +
+ src/samples/flow/tilt-angle/Kconfig          |    9 +++
+ src/samples/flow/tilt-angle/Makefile         |   71 +++++++++++++++++
+ src/samples/flow/tilt-angle/README           |   44 +++++++++++
+ src/samples/flow/tilt-angle/arctan-node.c    |  107 ++++++++++++++++++++++++++
+ src/samples/flow/tilt-angle/arctan-spec.json |   33 ++++++++
+ src/samples/flow/tilt-angle/tilt_angle.fbp   |   59 ++++++++++++++
+ 7 files changed, 324 insertions(+)
+ create mode 100644 src/samples/flow/tilt-angle/Kconfig
+ create mode 100644 src/samples/flow/tilt-angle/Makefile
+ create mode 100644 src/samples/flow/tilt-angle/README
+ create mode 100644 src/samples/flow/tilt-angle/arctan-node.c
+ create mode 100644 src/samples/flow/tilt-angle/arctan-spec.json
+ create mode 100755 src/samples/flow/tilt-angle/tilt_angle.fbp
+
+diff --git a/Kconfig b/Kconfig
+index ebe4434..38567cc 100644
+--- a/Kconfig
++++ b/Kconfig
+@@ -230,6 +230,7 @@ source "src/samples/flow/trash-disposer/Kconfig"
+ source "src/samples/flow/unix-socket/Kconfig"
+ source "src/samples/flow/webservices/Kconfig"
+ source "src/samples/flow/iio+network/Kconfig"
++source "src/samples/flow/tilt-angle/Kconfig"
+ 
+ endmenu
+ 
+diff --git a/src/samples/flow/tilt-angle/Kconfig b/src/samples/flow/tilt-angle/Kconfig
+new file mode 100644
+index 0000000..2e1af7f
+--- /dev/null
++++ b/src/samples/flow/tilt-angle/Kconfig
+@@ -0,0 +1,9 @@
++config FLOW_TILT_ANGLE_ARCTANGENT_NODE
++	tristate "Node type: arctangent"
++	depends on USE_FLOW
++	default m
++
++config FLOW_TILT_ANGLE_SAMPLE
++	bool
++	depends on FLOW_FBP_GENERATOR_SAMPLES && FLOW_TILT_ANGLE_ARCTANGENT_NODE && FLOW_NODE_TYPE_IIO && FLOW_NODE_TYPE_CONSOLE && FLOW_NODE_TYPE_CONVERTER && FLOW_NODE_TYPE_FLOAT && FLOW_NODE_TYPE_CONSTANT && FLOW_NODE_TYPE_STRING
++	default y
+diff --git a/src/samples/flow/tilt-angle/Makefile b/src/samples/flow/tilt-angle/Makefile
+new file mode 100644
+index 0000000..fea35bb
+--- /dev/null
++++ b/src/samples/flow/tilt-angle/Makefile
+@@ -0,0 +1,71 @@
++ifeq (y,$(or $(BUILD_TYPE_RELEASE),$(BUILD_TYPE_DEBUG)))
++#
++# In-tree makefile
++#
++obj-$(FLOW_TILT_ANGLE_ARCTANGENT_NODE) += arctangent.mod
++obj-arctangent-$(FLOW_TILT_ANGLE_ARCTANGENT_NODE) := arctan-spec.json
++obj-arctangent-$(FLOW_TILT_ANGLE_ARCTANGENT_NODE) += arctan-node.o
++obj-arctangent-$(FLOW_TILT_ANGLE_ARCTANGENT_NODE)-type := flow
++
++sample-$(FLOW_TILT_ANGLE_SAMPLE) += tilt_angle
++sample-tilt_angle-$(FLOW_TILT_ANGLE_SAMPLE) := tilt_angle.fbp
++else
++#
++# Out-of-tree makefile
++#
++## variables share with external
++CC ?= gcc
++SYSROOT ?= /
++LIBDIR ?= /usr/lib/
++DESTDIR ?= $(SYSROOT)
++SOLINSTALLEDPATH ?= $(SYSROOT)
++## variables use locally
++DESTDIRNOBACKSLASH = $(patsubst %/,%,$(DESTDIR))
++LIBDIRNOFRONTSLASH = $(patsubst /%,%,$(LIBDIR))
++DESTLIBPATHNOBACKSLASH = $(patsubst %/,%,$(DESTDIRNOBACKSLASH)/$(LIBDIRNOFRONTSLASH))
++SOLINSTALLEDPATHNOBACKSLASH = $(patsubst %/,%,$(SOLINSTALLEDPATH))
++SOLLIBPATH = $(SOLINSTALLEDPATHNOBACKSLASH)/$(LIBDIRNOFRONTSLASH)
++SOLBINPATH = $(SOLINSTALLEDPATHNOBACKSLASH)/usr/bin/
++GENSCHEMA = $(SOLINSTALLEDPATHNOBACKSLASH)/usr/share/soletta/flow/schemas/node-type-genspec.schema
++## compiler flags
++EXTRA_CFLAGS += -fstack-protector-strong -fPIE -fPIC -O2 -D_FORTIFY_SOURCE=2 -Wformat -Wformat-security
++EXTRA_LDFLAGS += -z noexecstack -z relro -z now -pie
++CFLAGS += --sysroot=$(SYSROOT) -I$(SOLINSTALLEDPATHNOBACKSLASH)/usr/include/soletta/ -DSOL_FLOW_NODE_TYPE_MODULE_EXTERNAL=1 $(EXTRA_CFLAGS)
++LDFLAGS += -L$(SOLLIBPATH) -lsoletta $(EXTRA_LDFLAGS)
++SOFLAGS = -shared
++OBJ = obj
++SOLPREFIX := sol_flow_node_type
++
++.PHONY: all install clean
++all: arctangent.so
++
++arctan-spec-gen.h arctan-spec-gen.c arctan-spec-gen.json: arctan-spec.json
++	$(SOLBINPATH)sol-flow-node-type-gen.py --prefix $(SOLPREFIX) --genspec-schema $(GENSCHEMA) $^ $*.h $*.c $*.json
++
++tilt_angle.c: tilt_angle.fbp arctan-spec-gen.json
++	$(SOLBINPATH)sol-fbp-generator -j arctan-spec-gen.json $< $@
++
++$(OBJ)/%.o: %.c arctan-spec-gen.h arctan-spec-gen.c
++	mkdir -p $(OBJ)
++	$(CC) -c -o $@ $< $(CFLAGS) $(LDFLAGS)
++
++arctangent.so: $(OBJ)/arctan-node.o
++	$(CC) $(CFLAGS) $(LDFLAGS) $(SOFLAGS) $^ -o $@
++
++tilt_angle: $(OBJ)/tilt_angle.o
++	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@
++
++install: arctangent.so tilt_angle.fbp README Makefile arctan-spec-gen.h arctan-spec-gen.c arctan-node.c arctan-spec.json arctan-spec-gen.json
++	install -d $(DESTLIBPATHNOBACKSLASH)/soletta/modules/flow/
++	install -m 0755 $< $(DESTLIBPATHNOBACKSLASH)/soletta/modules/flow/
++	install -d $(DESTDIRNOBACKSLASH)/opt/soletta/samples/flow/tilt-angle/
++	install -m 0755 tilt_angle.fbp $(DESTDIRNOBACKSLASH)/opt/soletta/samples/flow/tilt-angle/
++	install -m 0644 README $(DESTDIRNOBACKSLASH)/opt/soletta/samples/flow/tilt-angle/
++	install -m 0644 Makefile $(DESTDIRNOBACKSLASH)/opt/soletta/samples/flow/tilt-angle/
++	install -m 0644 arctan-spec.json $(DESTDIRNOBACKSLASH)/opt/soletta/samples/flow/tilt-angle/
++	install -m 0644 arctan-node.c $(DESTDIRNOBACKSLASH)/opt/soletta/samples/flow/tilt-angle/
++	install -m 0644 arctan-spec-gen.* $(DESTDIRNOBACKSLASH)/opt/soletta/samples/flow/tilt-angle/
++
++clean:
++	rm -rf $(OBJ) arctan-spec-gen.* *.so tilt_angle tilt_angle.c
++endif
+\ No newline at end of file
+diff --git a/src/samples/flow/tilt-angle/README b/src/samples/flow/tilt-angle/README
+new file mode 100644
+index 0000000..bf98e45
+--- /dev/null
++++ b/src/samples/flow/tilt-angle/README
+@@ -0,0 +1,44 @@
++This example gets 3-axis raw data inputs from iio accelerometer and converts
++into pitch angle and roll angle as outputs.
++It showcases below:
++------------------
++* perform arithmetic in Soletta FBP programming model
++* custom node creation & compilation by using generation tool (sol-flow-node-type-gen.py)
++* sensor configuration/setting in FBP format
++* iio buffered with default buffer size
++* non-timer triggered data sampling
++* in-tree & out-of-tree makefile
++* fbp conversion & compilation by using conversion tool (sol-fbp-generator)
++
++Out-of-tree makefile environment variables usage:
++------------------------------------------------
++There are 5 environment variables available for user to configure if needed.
++* CC                User can choose different compiler toolchain.
++                    (default is 'gcc')
++* SYSROOT           User can input different system root path.
++                    (default is '/')
++* LIBDIR            This is to cater multilib system where the libsoletta.so installed.
++                    e.g. /usr/lib64/ or /usr/lib32/ (default is '/usr/lib/')
++* DESTDIR           User can choose to install built binary at different path.
++                    (default is SYSROOT value)
++* SOLINSTALLEDPATH  This is to cater user build Soletta source manually and install the Soletta different directory.
++                    It should be the same path as if 'make install DEST=XXX' after the Soletta built.
++                    (default is SYSROOT value)
++examples:
++1.)# CC=XXX-gcc SYSROOT=/XXX/XXX/ LIBDIR=/XXX/XXX/ SOLINSTALLEDPATH=/XXX/XXX/ make all
++2.)# make install DESTDIR=/XXX/XXX/
++
++
++Out-of-tree Compilation & Installation:
++======================================
++# make all
++# make install
++
++Execution directly from FBP:
++===========================
++# ./tilt_angle.fbp
++
++Execution from built binaries:
++=============================
++# make tilt_angle
++# ./tilt_angle
+diff --git a/src/samples/flow/tilt-angle/arctan-node.c b/src/samples/flow/tilt-angle/arctan-node.c
+new file mode 100644
+index 0000000..b1a32b6
+--- /dev/null
++++ b/src/samples/flow/tilt-angle/arctan-node.c
+@@ -0,0 +1,107 @@
++/*
++ * This file is part of the Soletta (TM) Project
++ *
++ * Copyright (C) 2016 Intel Corporation. All rights reserved.
++ *
++ * Licensed under the Apache License, Version 2.0 (the "License");
++ * you may not use this file except in compliance with the License.
++ * You may obtain a copy of the License at
++ *
++ *     http://www.apache.org/licenses/LICENSE-2.0
++ *
++ * Unless required by applicable law or agreed to in writing, software
++ * distributed under the License is distributed on an "AS IS" BASIS,
++ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++ * See the License for the specific language governing permissions and
++ * limitations under the License.
++ */
++
++/**
++ * @file arctan-node.c
++ *
++ * This file contains the implementation of custom node types. It uses
++ * generated boilerplate from JSON which later modified to
++ * perform arctangent algorithm.
++ *
++ * The instruction used to generate custom node template code from
++ * arctan-spec.json which eventually being included into arctan-node.c:
++ *
++ *    $ sol-flow-node-type-gen.py \
++ *            --prefix sol_flow_node_type --genspec-schema \
++ *            /usr/share/soletta/flow/schemas/node-type-genspec.schema \
++ *            arctan-spec.json \
++ *            arctan-spec-gen.h \
++ *            arctan-spec-gen.c \
++ *            arctan-spec-gen.json
++ *
++ * The instruction to compile this custom node:
++ *    $ gcc `pkg-config --libs --cflags soletta` \
++ *          -DSOL_FLOW_NODE_TYPE_MODULE_EXTERNAL=1 \
++ *          -shared -fPIC arctan-node.c -o arctangent.so
++ *
++ * The location to install arctangent.so:
++ *    $ install -m 0755 arctangent.so /usr/lib/soletta/modules/flow/
++ */
++
++#include <errno.h>
++#include <stdio.h>
++#include <math.h>
++
++#include <sol-log.h>
++#include <sol-mainloop.h>
++#include <sol-flow.h>
++
++static int
++logic_process(struct sol_flow_node *node, void *data, uint16_t port,
++              uint16_t conn_id, const struct sol_flow_packet *packet);
++
++/* This file is generated using sol-flow-node-type-gen.py, see above */
++#include "arctan-spec-gen.c"
++
++/**
++ * Logic:
++ *
++ * This node will receive a float input and then calculate the
++ * value of arctangent of it to be feed at the output port.
++ * Formula for arctangent power series and reciprocal arguments
++ * are as follows:
++ *
++ *     arctangent(x) = summation[(-1)^n * (z^(2n+1) / 2n+1)]
++ *
++ *     arctangent(x) = -(PI/2) - arctangent(1/x)
++ *
++ * Detailed explanation can be refered at :
++ *
++ *     https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
++ *
++ * This node contains no data, it will recompute everything based on
++ * the last received packet, thus there is no node private data, open
++ * or close methods.
++ */
++static int
++logic_process(struct sol_flow_node *node, void *data, uint16_t port,
++              uint16_t conn_id, const struct sol_flow_packet *packet)
++{
++    int r;
++    struct sol_drange d_value;
++    double arctan = 0;
++
++    r = sol_flow_packet_get_drange(packet, &d_value);
++    SOL_INT_CHECK(r, < 0, r);
++
++    /*
++     * atan() is a fuction in math.h library to calculate the
++     * value of arctangent in radian
++     */
++    if (isfinite(d_value.val)) {
++        arctan = atan(d_value.val) * 180 / M_PI;
++    } else {
++        arctan = 90;
++    }
++
++    r = sol_flow_send_drange_value_packet(node,
++                                          SOL_FLOW_NODE_TYPE_ARCTANGENT_LOGIC__OUT__OUT,
++                                          arctan);
++
++    return 0;
++}
+diff --git a/src/samples/flow/tilt-angle/arctan-spec.json b/src/samples/flow/tilt-angle/arctan-spec.json
+new file mode 100644
+index 0000000..c88d077
+--- /dev/null
++++ b/src/samples/flow/tilt-angle/arctan-spec.json
+@@ -0,0 +1,33 @@
++{
++  "$schema": "http://solettaproject.github.io/soletta/schemas/node-type-genspec.schema",
++  "name": "arctangent",
++  "meta": {
++    "author": "Intel Corporation",
++    "license": "Apache-2.0",
++    "version": "1"
++  },
++  "types": [
++    {
++      "category": "logic",
++      "description": "Calculate arctangent from float input",
++      "name": "arctangent/logic",
++      "in_ports": [
++        {
++          "data_type": "float",
++          "description": "Float input",
++          "methods": {
++            "process": "logic_process"
++          },
++          "name": "IN"
++        }
++      ],
++      "out_ports": [
++        {
++          "data_type": "float",
++          "description": "Arctangent output",
++          "name": "OUT"
++        }
++      ]
++    }
++  ]
++}
+diff --git a/src/samples/flow/tilt-angle/tilt_angle.fbp b/src/samples/flow/tilt-angle/tilt_angle.fbp
+new file mode 100755
+index 0000000..c3a0a73
+--- /dev/null
++++ b/src/samples/flow/tilt-angle/tilt_angle.fbp
+@@ -0,0 +1,59 @@
++#!/usr/bin/env sol-fbp-runner
++
++# This file is part of the Soletta (TM) Project
++#
++# Copyright (C) 2016 Intel Corporation. All rights reserved.
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# This fbp code is used to measure tilt angle of accelerometer 3 dimensionally
++# respective to axis x (pitch)and y (roll), which later displayed on console.
++# Formulas used are as below:
++#
++#     Pitch = arctan(X/squareroot(Y^2+Z^2)
++#     Roll = arctan(Y/squareroot(X^2+Z^2)
++#
++# For detailed explanation refer to :
++#
++#     http://www.hobbytronics.co.uk/accelerometer-info
++
++## Nodes naming define
++accel(iio/accelerometer:iio_device="accel_3d", buffer_size=0)
++# arctangent custom node logic in arctan-node.c
++arctanx(arctangent/logic)
++arctany(arctangent/logic)
++converter(converter/direction-vector-to-float)
++powx(float/pow)
++powy(float/pow)
++powz(float/pow)
++two(constant/float:value=2)
++add(float/addition)
++add2(float/addition)
++div(float/division)
++div2(float/division)
++concatenate(string/concatenate:separator="        ")
++
++## Nodes routing
++_(constant/empty) OUT -> IN _(console:prefix="Tilt Angle (degree) :-")
++accel OUT -> IN converter
++converter X -> BASE powx OUT -> OPERAND[0] add OUT -> IN _(float/sqrt) OUT -> DIVISOR div
++converter Y -> BASE powy OUT -> OPERAND[0] add2 OUT -> IN _(float/sqrt) OUT -> DIVISOR div2
++converter Z -> BASE powz OUT -> OPERAND[1] add
++two OUT -> EXPONENT powz OUT -> OPERAND[1] add2
++two OUT -> EXPONENT powy
++two OUT -> EXPONENT powx
++converter X -> DIVIDEND div2 OUT -> IN arctanx
++arctanx OUT -> IN _(converter/float-to-string:format_prefix="Pitch Angle (x-axis): ") OUT -> IN[0] concatenate
++converter Y -> DIVIDEND div OUT -> IN arctany
++arctany OUT -> IN _(converter/float-to-string:format_prefix="Roll Angle (y-axis): ") OUT -> IN[1] concatenate
++concatenate OUT -> IN _(console:prefix="")
+-- 
+1.7.9.5
+

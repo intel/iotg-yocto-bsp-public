@@ -1,0 +1,165 @@
+From 37ea9c929eeac959ea43af9f01d80a950e316854 Mon Sep 17 00:00:00 2001
+From: "Kweh, Hock Leong" <hock.leong.kweh@intel.com>
+Date: Thu, 15 Sep 2016 22:22:35 +0800
+Subject: [PATCH 10/11] samples/flow/iio+network: add iio pressure sensor with
+ mqtt sample app
+
+Add iio pressure sensor sample app to iio+network model with mqtt
+functionality.
+
+Upstream-Status: Pending
+
+Signed-off-by: Kweh, Hock Leong <hock.leong.kweh@intel.com>
+---
+ src/samples/flow/iio+network/Makefile             |    8 ++++++
+ src/samples/flow/iio+network/pressure-console.fbp |   25 +++++++++++++++++
+ src/samples/flow/iio+network/pressure-mqtt.fbp    |   30 +++++++++++++++++++++
+ src/samples/flow/iio+network/pressure.fbp         |   30 +++++++++++++++++++++
+ src/samples/flow/iio+network/sol-flow-hid.json    |   13 +++++++++
+ 5 files changed, 106 insertions(+)
+ create mode 100644 src/samples/flow/iio+network/pressure-console.fbp
+ create mode 100644 src/samples/flow/iio+network/pressure-mqtt.fbp
+ create mode 100644 src/samples/flow/iio+network/pressure.fbp
+ create mode 100644 src/samples/flow/iio+network/sol-flow-hid.json
+
+diff --git a/src/samples/flow/iio+network/Makefile b/src/samples/flow/iio+network/Makefile
+index 7cb9b99..ce4ad21 100644
+--- a/src/samples/flow/iio+network/Makefile
++++ b/src/samples/flow/iio+network/Makefile
+@@ -5,3 +5,11 @@ sample-ambient-light-and-proximity-console-$(FLOW_IIO_NETWORK_SAMPLE)-conffile :
+ sample-$(FLOW_IIO_NETWORK_SAMPLE) += ambient-light-and-proximity-mqtt
+ sample-ambient-light-and-proximity-mqtt-$(FLOW_IIO_NETWORK_SAMPLE) := ambient-light-and-proximity-mqtt.fbp
+ sample-ambient-light-and-proximity-mqtt-$(FLOW_IIO_NETWORK_SAMPLE)-conffile := sol-flow-SoFIA-3GR.json
++
++sample-$(FLOW_IIO_NETWORK_SAMPLE) += pressure-console
++sample-pressure-mqtt-$(FLOW_IIO_NETWORK_SAMPLE) := pressure-console.fbp
++sample-pressure-mqtt-$(FLOW_IIO_NETWORK_SAMPLE)-conffile := sol-flow-hid.json
++
++sample-$(FLOW_IIO_NETWORK_SAMPLE) += pressure-mqtt
++sample-pressure-mqtt-$(FLOW_IIO_NETWORK_SAMPLE) := pressure-mqtt.fbp
++sample-pressure-mqtt-$(FLOW_IIO_NETWORK_SAMPLE)-conffile := sol-flow-hid.json
+diff --git a/src/samples/flow/iio+network/pressure-console.fbp b/src/samples/flow/iio+network/pressure-console.fbp
+new file mode 100644
+index 0000000..5cef1bd
+--- /dev/null
++++ b/src/samples/flow/iio+network/pressure-console.fbp
+@@ -0,0 +1,25 @@
++#!/usr/bin/env sol-fbp-runner
++
++# This file is part of the Soletta (TM) Project
++#
++# Copyright (C) 2016 Intel Corporation. All rights reserved.
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Print IIO pressure reading in console
++
++DECLARE=pressure:fbp:pressure.fbp
++pres(pressure:interval=1000)
++
++pres PRESSURE -> IN _(console:prefix="Pressure: ", suffix=" kPa")
++
+diff --git a/src/samples/flow/iio+network/pressure-mqtt.fbp b/src/samples/flow/iio+network/pressure-mqtt.fbp
+new file mode 100644
+index 0000000..415e544
+--- /dev/null
++++ b/src/samples/flow/iio+network/pressure-mqtt.fbp
+@@ -0,0 +1,30 @@
++#!/usr/bin/env sol-fbp-runner
++
++# This file is part of the Soletta (TM) Project
++#
++# Copyright (C) 2016 Intel Corporation. All rights reserved.
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# Publish IIO pressure reading through MQTT
++
++DECLARE=pressure:fbp:pressure.fbp
++pres(pressure:interval=1000)
++
++# publish
++pub(mqtt/client:host="127.0.0.1",topic="soletta/mqtt/sensor_data")
++
++pres SENSOR_STRING -> IN convert(converter/string-to-blob) OUT -> DATA pub
++
++convert OUT -> PUBLISH pub
++
+diff --git a/src/samples/flow/iio+network/pressure.fbp b/src/samples/flow/iio+network/pressure.fbp
+new file mode 100644
+index 0000000..49febe9
+--- /dev/null
++++ b/src/samples/flow/iio+network/pressure.fbp
+@@ -0,0 +1,30 @@
++#!/usr/bin/env sol-fbp-runner
++
++# This file is part of the Soletta (TM) Project
++#
++# Copyright (C) 2016 Intel Corporation. All rights reserved.
++#
++# Licensed under the Apache License, Version 2.0 (the "License");
++# you may not use this file except in compliance with the License.
++# You may obtain a copy of the License at
++#
++#     http://www.apache.org/licenses/LICENSE-2.0
++#
++# Unless required by applicable law or agreed to in writing, software
++# distributed under the License is distributed on an "AS IS" BASIS,
++# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
++# See the License for the specific language governing permissions and
++# limitations under the License.
++
++# IIO pressure reading
++
++pressure(MyPress)
++
++# timer trigger sensor reading every seconds
++timer(timer:interval=1000)
++
++timer OUT -> TICK pressure OUT -> IN pressure_str(converter/float-to-string:format_prefix="Pressure: ", format_suffix=" kPa")
++
++OPTION=timer.interval:interval
++OUTPORT=pressure.OUT:PRESSURE
++OUTPORT=pressure_str.OUT:SENSOR_STRING
+diff --git a/src/samples/flow/iio+network/sol-flow-hid.json b/src/samples/flow/iio+network/sol-flow-hid.json
+new file mode 100644
+index 0000000..39af6df
+--- /dev/null
++++ b/src/samples/flow/iio+network/sol-flow-hid.json
+@@ -0,0 +1,13 @@
++{
++  "$schema": "http://solettaproject.github.io/soletta/schemas/config.schema",
++  "nodetypes": [
++    {
++      "name": "MyPress",
++      "type": "iio/pressure-sensor",
++      "options": {
++        "iio_device": "press",
++        "buffer_size": -1
++      }
++    }
++  ]
++}
+-- 
+1.7.9.5
+
