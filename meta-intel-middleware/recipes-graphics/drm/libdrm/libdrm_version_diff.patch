@@ -1,6 +1,6 @@
 diff -x .git -x .gitignore -Naur drm/gms-integration isg_gms-libdrm/gms-integration
 --- drm/gms-integration	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-libdrm/gms-integration	2016-08-09 02:21:50.530040648 +0800
++++ isg_gms-libdrm/gms-integration	2016-10-11 02:22:15.448725320 +0800
 @@ -0,0 +1,17 @@
 +###
 +### GMS integration
@@ -20,8 +20,8 @@ diff -x .git -x .gitignore -Naur drm/gms-integration isg_gms-libdrm/gms-integrat
 +topic/plane_blend 265b8b104580ae85e20b633fa43e85458a6ea837
 +	xf86drmMode: Add plane blending helpers
 diff -x .git -x .gitignore -Naur drm/include/drm/i915_drm.h isg_gms-libdrm/include/drm/i915_drm.h
---- drm/include/drm/i915_drm.h	2016-08-09 02:22:04.886297451 +0800
-+++ isg_gms-libdrm/include/drm/i915_drm.h	2016-08-09 02:21:50.530040648 +0800
+--- drm/include/drm/i915_drm.h	2016-10-11 02:22:30.100991918 +0800
++++ isg_gms-libdrm/include/drm/i915_drm.h	2016-10-11 02:22:15.448725320 +0800
 @@ -28,6 +28,7 @@
  #define _I915_DRM_H_
  
@@ -65,7 +65,7 @@ diff -x .git -x .gitignore -Naur drm/include/drm/i915_drm.h isg_gms-libdrm/inclu
  
  #define DRM_IOCTL_I915_INIT		DRM_IOW( DRM_COMMAND_BASE + DRM_I915_INIT, drm_i915_init_t)
  #define DRM_IOCTL_I915_FLUSH		DRM_IO ( DRM_COMMAND_BASE + DRM_I915_FLUSH)
-@@ -283,6 +305,17 @@
+@@ -283,6 +305,20 @@
  #define DRM_IOCTL_I915_GEM_USERPTR			DRM_IOWR (DRM_COMMAND_BASE + DRM_I915_GEM_USERPTR, struct drm_i915_gem_userptr)
  #define DRM_IOCTL_I915_GEM_CONTEXT_GETPARAM	DRM_IOWR (DRM_COMMAND_BASE + DRM_I915_GEM_CONTEXT_GETPARAM, struct drm_i915_gem_context_param)
  #define DRM_IOCTL_I915_GEM_CONTEXT_SETPARAM	DRM_IOWR (DRM_COMMAND_BASE + DRM_I915_GEM_CONTEXT_SETPARAM, struct drm_i915_gem_context_param)
@@ -77,13 +77,16 @@ diff -x .git -x .gitignore -Naur drm/include/drm/i915_drm.h isg_gms-libdrm/inclu
 +
 +/* Extended ioctl definitions */
 +#define DRM_I915_EXT_USERDATA		0x0
++#define DRM_I915_GEM_GET_APERTURE2	0x1
 +
 +#define DRM_IOCTL_I915_EXT_USERDATA \
 +			DRM_IOWR(DRM_I915_EXT_USERDATA, struct drm_i915_gem_userdata_blk)
++#define DRM_IOCTL_I915_GEM_GET_APERTURE2 \
++			DRM_IOR(DRM_I915_GEM_GET_APERTURE2, struct drm_i915_gem_get_aperture2)
  
  /* Allow drivers to submit batchbuffers directly to hardware, relying
   * on the security mechanisms provided by hardware.
-@@ -358,6 +391,11 @@
+@@ -358,6 +394,15 @@
  #define I915_PARAM_HAS_RESOURCE_STREAMER 36
  #define I915_PARAM_HAS_EXEC_SOFTPIN	 37
  
@@ -91,11 +94,62 @@ diff -x .git -x .gitignore -Naur drm/include/drm/i915_drm.h isg_gms-libdrm/inclu
 +/* This helps to avoid conflicts with new upstream values */
 +#define I915_PARAM_HAS_POOLED_EU         0x800
 +#define I915_PARAM_MIN_EU_IN_POOL        0x801
++#define I915_PARAM_HAS_GET_APERTURE2     0x802
++#define I915_PARAM_HAS_GUC               0x803
++#define I915_PARAM_HAS_HUC               0x804
++#define I915_PARAM_CREATE_VERSION        0x805
 +
  typedef struct drm_i915_getparam {
  	__s32 param;
  	/*
-@@ -957,6 +995,38 @@
+@@ -456,6 +501,46 @@
+ 	 */
+ 	__u32 handle;
+ 	__u32 pad;
++	/**
++	 * Requested flags (currently used for placement
++	 * (which memory domain))
++	 *
++	 * You can request that the object be created from special memory
++	 * rather than regular system pages using this parameter. Such
++	 * irregular objects may have certain restrictions (such as CPU
++	 * access to a stolen object is verboten).
++	 *
++	 * This can be used in the future for other purposes too
++	 * e.g. specifying tiling/caching/madvise
++	 */
++	__u64 flags;
++#define I915_CREATE_PLACEMENT_NORMAL 	0 /* standard swappable bo  */
++	/* Allocate the object from memory reserved for the igfx (stolen).
++	 *
++	 * Objects allocated from stolen are restricted in the API they can use,
++	 * as direct CPU access to stolen memory is prohibited by the system.
++	 * This means that you cannot use a regular CPU mmap (either using WB
++	 * or with the WC extension). You can still use a GTT mmap, pwrite,
++	 * pread and pass it around for use by execbuffer and between processes
++	 * like normal.
++	 *
++	 * Stolen memory is a very limited resource and certain functions of the
++	 * hardware can only work from within stolen memory. Userspace's
++	 * allocations may be evicted from stolen and moved to normal memory as
++	 * required. If the allocation is marked as purgeable (using madvise),
++	 * the allocation will be dropped and further access to the object's
++	 * backing storage will result in -EFAULT. Stolen objects will also be
++	 * migrated to normal memory across suspend and resume, as the stolen
++	 * memory is not preserved.
++	 *
++	 * Stolen memory is regarded as a resource placement hint, most suitable
++	 * for medium-sized buffers that are only accessed by the GPU and can be
++	 * discarded.
++	 */
++#define I915_CREATE_PLACEMENT_STOLEN 	1 /* Cannot use CPU mmaps */
++
++#define I915_CREATE_PLACEMENT_MASK	0xff
++#define __I915_CREATE_UNKNOWN_FLAGS	~I915_CREATE_PLACEMENT_MASK
+ };
+ 
+ struct drm_i915_gem_pread {
+@@ -957,6 +1042,38 @@
  	__u32 phys_swizzle_mode;
  };
  
@@ -134,9 +188,66 @@ diff -x .git -x .gitignore -Naur drm/include/drm/i915_drm.h isg_gms-libdrm/inclu
  struct drm_i915_gem_get_aperture {
  	/** Total size of the aperture used by i915_gem_execbuffer, in bytes */
  	__u64 aper_size;
+@@ -966,6 +1083,48 @@
+ 	 * bytes
+ 	 */
+ 	__u64 aper_available_size;
++
++	/**
++	 * Versioning to indicate if map_total_size and stolen_total_size
++	 * value returned are valid or not
++	 */
++	__u64 version;
++
++	/**
++	 * Total space in the mappable region of the aperture, in bytes
++	 */
++	__u64 map_total_size;
++
++	/**
++	 * Total space in the stolen region, in bytes
++	 */
++	__u64 stolen_total_size;
++};
++
++struct drm_i915_gem_get_aperture2 {
++	/** Total size of the aperture used by i915_gem_execbuffer, in bytes */
++	__u64 aper_size;
++
++	/**
++	 * Available space in the aperture used by i915_gem_execbuffer, in
++	 * bytes
++	 */
++	__u64 aper_available_size;
++
++	/**
++	 * Total space in the mappable region of the aperture, in bytes
++	 */
++	__u64 map_total_size;
++
++	/**
++	 * Available space in the mappable region of the aperture, in bytes
++	 */
++	__u64 map_available_size;
++
++	/**
++	 * Single largest available region inside the mappable region, in bytes.
++	 */
++	__u64 map_largest_size;
+ };
+ 
+ struct drm_i915_get_pipe_from_crtc_id {
+@@ -1167,6 +1326,7 @@
+ #define I915_CONTEXT_PARAM_BAN_PERIOD	0x1
+ #define I915_CONTEXT_PARAM_NO_ZEROMAP	0x2
+ #define I915_CONTEXT_PARAM_GTT_SIZE	0x3
++#define I915_CONTEXT_PARAM_PRIORITY	0x4
+ 	__u64 value;
+ };
+ 
 diff -x .git -x .gitignore -Naur drm/include/drm/i915_perfmon.h isg_gms-libdrm/include/drm/i915_perfmon.h
 --- drm/include/drm/i915_perfmon.h	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-libdrm/include/drm/i915_perfmon.h	2016-08-09 02:21:50.530040648 +0800
++++ isg_gms-libdrm/include/drm/i915_perfmon.h	2016-10-11 02:22:15.448725320 +0800
 @@ -0,0 +1,124 @@
 +/*
 + * Copyright  2013 Intel Corporation
@@ -263,9 +374,24 @@ diff -x .git -x .gitignore -Naur drm/include/drm/i915_perfmon.h isg_gms-libdrm/i
 +
 +#endif	/* _I915_PERFMON_H_ */
 diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr.c isg_gms-libdrm/intel/intel_bufmgr.c
---- drm/intel/intel_bufmgr.c	2016-08-09 02:22:04.886297451 +0800
-+++ isg_gms-libdrm/intel/intel_bufmgr.c	2016-08-09 02:21:50.534040719 +0800
-@@ -269,6 +269,50 @@
+--- drm/intel/intel_bufmgr.c	2016-10-11 02:22:29.960989371 +0800
++++ isg_gms-libdrm/intel/intel_bufmgr.c	2016-10-11 02:22:15.452725392 +0800
+@@ -55,6 +55,14 @@
+ }
+ 
+ drm_intel_bo *
++drm_intel_bo_alloc2(drm_intel_bufmgr *bufmgr, const char *name,
++		    unsigned long size, unsigned int alignment,
++		    unsigned long flags)
++{
++	return bufmgr->bo_alloc2(bufmgr, name, size, alignment, flags);
++}
++
++drm_intel_bo *
+ drm_intel_bo_alloc_for_render(drm_intel_bufmgr *bufmgr, const char *name,
+ 			      unsigned long size, unsigned int alignment)
+ {
+@@ -269,6 +277,50 @@
  	return -ENODEV;
  }
  
@@ -317,8 +443,8 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr.c isg_gms-libdrm/intel/i
  drm_intel_bo_disable_reuse(drm_intel_bo *bo)
  {
 diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/intel/intel_bufmgr_gem.c
---- drm/intel/intel_bufmgr_gem.c	2016-08-09 02:22:04.886297451 +0800
-+++ isg_gms-libdrm/intel/intel_bufmgr_gem.c	2016-08-09 02:21:50.534040719 +0800
+--- drm/intel/intel_bufmgr_gem.c	2016-10-11 02:22:30.116992210 +0800
++++ isg_gms-libdrm/intel/intel_bufmgr_gem.c	2016-10-11 02:22:15.452725392 +0800
 @@ -146,6 +146,7 @@
  	unsigned int bo_reuse : 1;
  	unsigned int no_exec : 1;
@@ -336,7 +462,66 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
  	/** GTT virtual address for the buffer, saved across map/unmap cycles */
  	void *gtt_virtual;
  	/**
-@@ -1192,6 +1195,10 @@
+@@ -734,8 +737,16 @@
+ 	if (flags & BO_ALLOC_FOR_RENDER)
+ 		for_render = true;
+ 
+-	/* Round the allocated size up to a power of two number of pages. */
+-	bucket = drm_intel_gem_bo_bucket_for_size(bufmgr_gem, size);
++	if (flags & BO_ALLOC_STOLEN) {
++		/* No BO caching implemented for stolen backed objects, which
++		 * is fine as comparatively it takes much less time to allocate
++		 * backing pages from Stolen memory.
++		 */
++		bucket = NULL;
++	} else {
++		/* Round the allocated size up to a power of two number of pages. */
++		bucket = drm_intel_gem_bo_bucket_for_size(bufmgr_gem, size);
++	}
+ 
+ 	/* If we don't have caching at this size, don't actually round the
+ 	 * allocation up.
+@@ -811,6 +822,9 @@
+ 		memclear(create);
+ 		create.size = bo_size;
+ 
++		if (flags & BO_ALLOC_STOLEN)
++			create.flags |= I915_CREATE_PLACEMENT_STOLEN;
++
+ 		ret = drmIoctl(bufmgr_gem->fd,
+ 			       DRM_IOCTL_I915_GEM_CREATE,
+ 			       &create);
+@@ -845,7 +859,11 @@
+ 	bo_gem->reloc_tree_fences = 0;
+ 	bo_gem->used_as_reloc_target = false;
+ 	bo_gem->has_error = false;
+-	bo_gem->reusable = true;
++	/* No BO caching for stolen backed objects */
++	if (flags & BO_ALLOC_STOLEN)
++		bo_gem->reusable = false;
++	else
++		bo_gem->reusable = true;
+ 	bo_gem->use_48b_address_range = false;
+ 
+ 	drm_intel_bo_gem_set_in_aperture_size(bufmgr_gem, bo_gem, alignment);
+@@ -879,6 +897,16 @@
+ }
+ 
+ static drm_intel_bo *
++drm_intel_gem_bo_alloc2(drm_intel_bufmgr *bufmgr, const char *name,
++			unsigned long size, unsigned int alignment,
++			unsigned long flags)
++{
++
++	return drm_intel_gem_bo_alloc_internal(bufmgr, name, size, flags,
++					       I915_TILING_NONE, 0, 0);
++}
++
++static drm_intel_bo *
+ drm_intel_gem_bo_alloc_tiled(drm_intel_bufmgr *bufmgr, const char *name,
+ 			     int x, int y, int cpp, uint32_t *tiling_mode,
+ 			     unsigned long *pitch, unsigned long flags)
+@@ -1192,6 +1220,10 @@
  		drm_munmap(bo_gem->gtt_virtual, bo_gem->bo.size);
  		bufmgr_gem->vma_count--;
  	}
@@ -347,7 +532,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
  
  	/* Close this object */
  	memclear(close);
-@@ -1215,6 +1222,9 @@
+@@ -1215,6 +1247,9 @@
  
  	if (bo_gem->gtt_virtual)
  		VALGRIND_MAKE_MEM_NOACCESS(bo_gem->gtt_virtual, bo->size);
@@ -357,7 +542,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
  #endif
  }
  
-@@ -1260,6 +1270,8 @@
+@@ -1260,6 +1295,8 @@
  
  	/* We may need to evict a few entries in order to create new mmaps */
  	limit = bufmgr_gem->vma_max - 2*bufmgr_gem->vma_open;
@@ -366,7 +551,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
  	if (limit < 0)
  		limit = 0;
  
-@@ -1282,6 +1294,11 @@
+@@ -1282,6 +1319,11 @@
  			bo_gem->gtt_virtual = NULL;
  			bufmgr_gem->vma_count--;
  		}
@@ -378,7 +563,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
  	}
  }
  
-@@ -1294,6 +1311,8 @@
+@@ -1294,6 +1336,8 @@
  		bufmgr_gem->vma_count++;
  	if (bo_gem->gtt_virtual)
  		bufmgr_gem->vma_count++;
@@ -387,7 +572,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
  	drm_intel_gem_bo_purge_vma_cache(bufmgr_gem);
  }
  
-@@ -1306,6 +1325,8 @@
+@@ -1306,6 +1350,8 @@
  		bufmgr_gem->vma_count--;
  	if (bo_gem->gtt_virtual)
  		bufmgr_gem->vma_count--;
@@ -396,7 +581,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
  	drm_intel_gem_bo_purge_vma_cache(bufmgr_gem);
  }
  
-@@ -1410,6 +1431,123 @@
+@@ -1410,6 +1456,123 @@
  	}
  }
  
@@ -520,7 +705,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
  static int drm_intel_gem_bo_map(drm_intel_bo *bo, int write_enable)
  {
  	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
-@@ -1436,6 +1574,7 @@
+@@ -1436,6 +1599,7 @@
  
  		memclear(mmap_arg);
  		mmap_arg.handle = bo_gem->gem_handle;
@@ -528,7 +713,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
  		mmap_arg.size = bo->size;
  		ret = drmIoctl(bufmgr_gem->fd,
  			       DRM_IOCTL_I915_GEM_MMAP,
-@@ -1694,6 +1833,11 @@
+@@ -1694,6 +1858,11 @@
  	return ret;
  }
  
@@ -540,7 +725,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
  int
  drm_intel_gem_bo_unmap_gtt(drm_intel_bo *bo)
  {
-@@ -2583,6 +2727,93 @@
+@@ -2583,6 +2752,93 @@
  	return 0;
  }
  
@@ -634,7 +819,84 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
  drm_intel_bo *
  drm_intel_bo_gem_create_from_prime(drm_intel_bufmgr *bufmgr, int prime_fd, int size)
  {
-@@ -3301,6 +3532,28 @@
+@@ -3154,6 +3410,76 @@
+ }
+ 
+ int
++drm_intel_gem_context_get_priority(drm_intel_context *ctx, int *priority)
++{
++	drm_intel_bufmgr_gem *bufmgr_gem;
++	struct drm_i915_gem_context_param ctxparam;
++	int ret;
++
++	if ((ctx == NULL) || (priority == NULL))
++		return -EINVAL;
++
++	memclear(ctxparam);
++
++	bufmgr_gem = (drm_intel_bufmgr_gem *)ctx->bufmgr;
++	ctxparam.ctx_id = ctx->ctx_id;
++	ctxparam.param = I915_CONTEXT_PARAM_PRIORITY;
++	ret = drmIoctl(bufmgr_gem->fd, DRM_IOCTL_I915_GEM_CONTEXT_GETPARAM,
++		       &ctxparam);
++	if (ret != 0) {
++		int err = errno;
++		*priority = 0;
++		fprintf(stderr, "DRM_IOCTL_I915_GEM_CONTEXT_GETPARAM failed: %s\n",
++			strerror(err));
++		return -err;
++	}
++
++	*priority = (int) ctxparam.value;
++
++	return 0;
++}
++
++int
++drm_intel_gem_context_set_priority(drm_intel_context *ctx, int priority)
++{
++	drm_intel_bufmgr_gem *bufmgr_gem;
++	struct drm_i915_gem_context_param ctxparam;
++	int ret;
++
++	if (ctx == NULL)
++		return -EINVAL;
++
++	memclear(ctxparam);
++
++	switch (priority) {
++	case DRM_INTEL_CTX_SET_PRIORITY_EGL_LOW:
++		priority = -500;
++		break;
++	case DRM_INTEL_CTX_SET_PRIORITY_EGL_MEDIUM:
++		priority = -0;
++		break;
++	case DRM_INTEL_CTX_SET_PRIORITY_EGL_HIGH:
++		priority = 500;
++		break;
++	}
++
++	bufmgr_gem = (drm_intel_bufmgr_gem *)ctx->bufmgr;
++	ctxparam.ctx_id = ctx->ctx_id;
++	ctxparam.param = I915_CONTEXT_PARAM_PRIORITY;
++	ctxparam.value = priority;
++	ret = drmIoctl(bufmgr_gem->fd, DRM_IOCTL_I915_GEM_CONTEXT_SETPARAM,
++		       &ctxparam);
++	if (ret != 0) {
++		int err = errno;
++		fprintf(stderr, "DRM_IOCTL_I915_GEM_CONTEXT_SETPARAM failed: %s\n",
++			strerror(err));
++		return -err;
++	}
++
++	return 0;
++}
++
++int
+ drm_intel_get_reset_stats(drm_intel_context *ctx,
+ 			  uint32_t *reset_count,
+ 			  uint32_t *active,
+@@ -3301,6 +3627,28 @@
  }
  
  /**
@@ -663,7 +925,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
   * Initializes the GEM buffer manager, which uses the kernel to allocate, map,
   * and manage map buffer objections.
   *
-@@ -3430,6 +3683,10 @@
+@@ -3430,6 +3778,10 @@
  	if (ret == 0 && *gp.value > 0)
  		bufmgr_gem->bufmgr.bo_set_softpin_offset = drm_intel_gem_bo_set_softpin_offset;
  
@@ -674,7 +936,15 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
  	if (bufmgr_gem->gen < 4) {
  		gp.param = I915_PARAM_NUM_FENCES_AVAIL;
  		gp.value = &bufmgr_gem->available_fences;
-@@ -3488,6 +3745,14 @@
+@@ -3472,6 +3824,7 @@
+ 	bufmgr_gem->max_relocs = batch_size / sizeof(uint32_t) / 2 - 2;
+ 
+ 	bufmgr_gem->bufmgr.bo_alloc = drm_intel_gem_bo_alloc;
++	bufmgr_gem->bufmgr.bo_alloc2 = drm_intel_gem_bo_alloc2;
+ 	bufmgr_gem->bufmgr.bo_alloc_for_render =
+ 	    drm_intel_gem_bo_alloc_for_render;
+ 	bufmgr_gem->bufmgr.bo_alloc_tiled = drm_intel_gem_bo_alloc_tiled;
+@@ -3488,6 +3841,14 @@
  	bufmgr_gem->bufmgr.bo_unpin = drm_intel_gem_bo_unpin;
  	bufmgr_gem->bufmgr.bo_get_tiling = drm_intel_gem_bo_get_tiling;
  	bufmgr_gem->bufmgr.bo_set_tiling = drm_intel_gem_bo_set_tiling;
@@ -690,9 +960,23 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_gem.c isg_gms-libdrm/int
  	/* Use the new one if available */
  	if (exec2) {
 diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr.h isg_gms-libdrm/intel/intel_bufmgr.h
---- drm/intel/intel_bufmgr.h	2016-08-09 02:22:04.886297451 +0800
-+++ isg_gms-libdrm/intel/intel_bufmgr.h	2016-08-09 02:21:50.534040719 +0800
-@@ -161,6 +161,23 @@
+--- drm/intel/intel_bufmgr.h	2016-10-11 02:22:30.100991918 +0800
++++ isg_gms-libdrm/intel/intel_bufmgr.h	2016-10-11 02:22:15.452725392 +0800
+@@ -110,9 +110,13 @@
+ } drm_intel_aub_annotation;
+ 
+ #define BO_ALLOC_FOR_RENDER (1<<0)
++#define BO_ALLOC_STOLEN	    (1<<1)
+ 
+ drm_intel_bo *drm_intel_bo_alloc(drm_intel_bufmgr *bufmgr, const char *name,
+ 				 unsigned long size, unsigned int alignment);
++drm_intel_bo *drm_intel_bo_alloc2(drm_intel_bufmgr *bufmgr, const char *name,
++				  unsigned long size, unsigned int alignment,
++				  unsigned long flags);
+ drm_intel_bo *drm_intel_bo_alloc_for_render(drm_intel_bufmgr *bufmgr,
+ 					    const char *name,
+ 					    unsigned long size,
+@@ -161,6 +165,23 @@
  			    uint32_t stride);
  int drm_intel_bo_get_tiling(drm_intel_bo *bo, uint32_t * tiling_mode,
  			    uint32_t * swizzle_mode);
@@ -716,7 +1000,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr.h isg_gms-libdrm/intel/i
  int drm_intel_bo_flink(drm_intel_bo *bo, uint32_t * name);
  int drm_intel_bo_busy(drm_intel_bo *bo);
  int drm_intel_bo_madvise(drm_intel_bo *bo, int madv);
-@@ -183,6 +200,9 @@
+@@ -183,6 +204,9 @@
  int drm_intel_gem_bo_map_unsynchronized(drm_intel_bo *bo);
  int drm_intel_gem_bo_map_gtt(drm_intel_bo *bo);
  int drm_intel_gem_bo_unmap_gtt(drm_intel_bo *bo);
@@ -726,7 +1010,19 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr.h isg_gms-libdrm/intel/i
  
  int drm_intel_gem_bo_get_reloc_count(drm_intel_bo *bo);
  void drm_intel_gem_bo_clear_relocs(drm_intel_bo *bo, int start);
-@@ -273,6 +293,12 @@
+@@ -209,6 +233,11 @@
+ 
+ drm_intel_context *drm_intel_gem_context_create(drm_intel_bufmgr *bufmgr);
+ void drm_intel_gem_context_destroy(drm_intel_context *ctx);
++int drm_intel_gem_context_get_priority(drm_intel_context *ctx, int *priority);
++#define DRM_INTEL_CTX_SET_PRIORITY_EGL_LOW		(0x10001)
++#define DRM_INTEL_CTX_SET_PRIORITY_EGL_MEDIUM		(0x10002)
++#define DRM_INTEL_CTX_SET_PRIORITY_EGL_HIGH		(0x10003)
++int drm_intel_gem_context_set_priority(drm_intel_context *ctx, int priority);
+ int drm_intel_gem_bo_context_exec(drm_intel_bo *bo, drm_intel_context *ctx,
+ 				  int used, unsigned int flags);
+ 
+@@ -273,6 +302,12 @@
  int drm_intel_get_subslice_total(int fd, unsigned int *subslice_total);
  int drm_intel_get_eu_total(int fd, unsigned int *eu_total);
  
@@ -740,9 +1036,25 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr.h isg_gms-libdrm/intel/i
   * from dri_* to drm_intel_*
   */
 diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_priv.h isg_gms-libdrm/intel/intel_bufmgr_priv.h
---- drm/intel/intel_bufmgr_priv.h	2016-08-09 02:22:04.886297451 +0800
-+++ isg_gms-libdrm/intel/intel_bufmgr_priv.h	2016-08-09 02:21:50.534040719 +0800
-@@ -309,6 +309,55 @@
+--- drm/intel/intel_bufmgr_priv.h	2016-10-11 02:22:29.960989371 +0800
++++ isg_gms-libdrm/intel/intel_bufmgr_priv.h	2016-10-11 02:22:15.452725392 +0800
+@@ -51,6 +51,15 @@
+ 				   unsigned long size, unsigned int alignment);
+ 
+ 	/**
++	 * Allocate a buffer object, hinting where the object is supposed to be
++	 * placed (like backed by stolen memory area or by shmem), by using
++	 * flags parameter.
++	 */
++	drm_intel_bo *(*bo_alloc2) (drm_intel_bufmgr *bufmgr, const char *name,
++				   unsigned long size, unsigned int alignment,
++				   unsigned long flags);
++
++	/**
+ 	 * Allocate a buffer object, hinting that it will be used as a
+ 	 * render target.
+ 	 *
+@@ -309,6 +318,55 @@
  	/** Returns true if target_bo is in the relocation tree rooted at bo. */
  	int (*bo_references) (drm_intel_bo *bo, drm_intel_bo *target_bo);
  
@@ -800,7 +1112,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_bufmgr_priv.h isg_gms-libdrm/in
  };
 diff -x .git -x .gitignore -Naur drm/intel/intel_mocs_table.h isg_gms-libdrm/intel/intel_mocs_table.h
 --- drm/intel/intel_mocs_table.h	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-libdrm/intel/intel_mocs_table.h	2016-08-09 02:21:50.534040719 +0800
++++ isg_gms-libdrm/intel/intel_mocs_table.h	2016-10-11 02:22:15.452725392 +0800
 @@ -0,0 +1,79 @@
 +/*
 + * Copyright (c) 2015 Intel Corporation
@@ -883,7 +1195,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_mocs_table.h isg_gms-libdrm/int
 +}
 diff -x .git -x .gitignore -Naur drm/intel/intel_perfmon.c isg_gms-libdrm/intel/intel_perfmon.c
 --- drm/intel/intel_perfmon.c	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-libdrm/intel/intel_perfmon.c	2016-08-09 02:21:50.534040719 +0800
++++ isg_gms-libdrm/intel/intel_perfmon.c	2016-10-11 02:22:15.452725392 +0800
 @@ -0,0 +1,210 @@
 +/*
 + * Copyright © 2014 Intel Corporation
@@ -1097,7 +1409,7 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_perfmon.c isg_gms-libdrm/intel/
 +}
 diff -x .git -x .gitignore -Naur drm/intel/intel_perfmon.h isg_gms-libdrm/intel/intel_perfmon.h
 --- drm/intel/intel_perfmon.h	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-libdrm/intel/intel_perfmon.h	2016-08-09 02:21:50.534040719 +0800
++++ isg_gms-libdrm/intel/intel_perfmon.h	2016-10-11 02:22:15.460725538 +0800
 @@ -0,0 +1,72 @@
 +/*
 + * Copyright © 2014 Intel Corporation
@@ -1172,8 +1484,8 @@ diff -x .git -x .gitignore -Naur drm/intel/intel_perfmon.h isg_gms-libdrm/intel/
 +
 +#endif /* INTEL_PERFMON_H */
 diff -x .git -x .gitignore -Naur drm/intel/Makefile.sources isg_gms-libdrm/intel/Makefile.sources
---- drm/intel/Makefile.sources	2016-08-09 02:22:04.886297451 +0800
-+++ isg_gms-libdrm/intel/Makefile.sources	2016-08-09 02:21:50.534040719 +0800
+--- drm/intel/Makefile.sources	2016-10-11 02:22:29.960989371 +0800
++++ isg_gms-libdrm/intel/Makefile.sources	2016-10-11 02:22:15.452725392 +0800
 @@ -6,9 +6,12 @@
  	intel_decode.c \
  	intel_chipset.h \
@@ -1190,8 +1502,8 @@ diff -x .git -x .gitignore -Naur drm/intel/Makefile.sources isg_gms-libdrm/intel
 +	intel_mocs_table.h \
 +	intel_perfmon.h
 diff -x .git -x .gitignore -Naur drm/Makefile.sources isg_gms-libdrm/Makefile.sources
---- drm/Makefile.sources	2016-08-09 02:22:05.026299955 +0800
-+++ isg_gms-libdrm/Makefile.sources	2016-08-09 02:21:50.526040575 +0800
+--- drm/Makefile.sources	2016-10-11 02:22:30.100991918 +0800
++++ isg_gms-libdrm/Makefile.sources	2016-10-11 02:22:15.444725247 +0800
 @@ -22,6 +22,7 @@
  	include/drm/drm_mode.h \
  	include/drm/drm_sarea.h \
@@ -1201,8 +1513,8 @@ diff -x .git -x .gitignore -Naur drm/Makefile.sources isg_gms-libdrm/Makefile.so
  	include/drm/mga_drm.h \
  	include/drm/nouveau_drm.h \
 diff -x .git -x .gitignore -Naur drm/tests/modetest/modetest.c isg_gms-libdrm/tests/modetest/modetest.c
---- drm/tests/modetest/modetest.c	2016-08-09 02:22:04.914297952 +0800
-+++ isg_gms-libdrm/tests/modetest/modetest.c	2016-08-09 02:21:50.598041864 +0800
+--- drm/tests/modetest/modetest.c	2016-10-11 02:22:30.124992355 +0800
++++ isg_gms-libdrm/tests/modetest/modetest.c	2016-10-11 02:22:15.476725829 +0800
 @@ -523,6 +523,7 @@
  		return NULL;
  
@@ -1212,8 +1524,8 @@ diff -x .git -x .gitignore -Naur drm/tests/modetest/modetest.c isg_gms-libdrm/te
  	res->res = drmModeGetResources(dev->fd);
  	if (!res->res) {
 diff -x .git -x .gitignore -Naur drm/xf86drmMode.c isg_gms-libdrm/xf86drmMode.c
---- drm/xf86drmMode.c	2016-08-09 02:22:04.918298024 +0800
-+++ isg_gms-libdrm/xf86drmMode.c	2016-08-09 02:21:50.606042007 +0800
+--- drm/xf86drmMode.c	2016-10-11 02:22:30.124992355 +0800
++++ isg_gms-libdrm/xf86drmMode.c	2016-10-11 02:22:15.492726120 +0800
 @@ -1448,3 +1448,39 @@
  	destroy.blob_id = id;
  	return DRM_IOCTL(fd, DRM_IOCTL_MODE_DESTROYPROPBLOB, &destroy);
@@ -1255,8 +1567,8 @@ diff -x .git -x .gitignore -Naur drm/xf86drmMode.c isg_gms-libdrm/xf86drmMode.c
 +}
 +
 diff -x .git -x .gitignore -Naur drm/xf86drmMode.h isg_gms-libdrm/xf86drmMode.h
---- drm/xf86drmMode.h	2016-08-09 02:22:04.918298024 +0800
-+++ isg_gms-libdrm/xf86drmMode.h	2016-08-09 02:21:50.606042007 +0800
+--- drm/xf86drmMode.h	2016-10-11 02:22:30.124992355 +0800
++++ isg_gms-libdrm/xf86drmMode.h	2016-10-11 02:22:15.492726120 +0800
 @@ -507,6 +507,30 @@
  				     uint32_t *id);
  extern int drmModeDestroyPropertyBlob(int fd, uint32_t id);
