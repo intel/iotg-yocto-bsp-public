@@ -3,6 +3,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI += "file://brcmfmac43241b4-sdio.txt \
 	    file://0001-Add-BXT-DMC-1.07-firmware.patch \
 	    file://0002-linux-firmware-i915-GuC-firmware-for-Broxton-v8.7.patch \
+	    file://0003-linux-firmware-i915-HuC-firmware-for-Broxton-v1.7.patch \
            "
 
 LICENSE = "\
@@ -65,6 +66,7 @@ do_patch() {
 	# Binary patch must be patched in sequence
 	git am ${WORKDIR}/0001-Add-BXT-DMC-1.07-firmware.patch
 	git am ${WORKDIR}/0002-linux-firmware-i915-GuC-firmware-for-Broxton-v8.7.patch
+	git am ${WORKDIR}/0003-linux-firmware-i915-HuC-firmware-for-Broxton-v1.7.patch
 }
 
 do_install_append() {

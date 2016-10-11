@@ -3,9 +3,12 @@ From: Matt Roper <matthew.d.roper@intel.com>
 Date: Wed, 20 Apr 2016 09:56:56 -0700
 Subject: [PATCH 1/2] Add BXT DMC 1.07 firmware
 
+[Upstream Status: Pending]
+
 Still waiting on VPG for formal upstream release to kernel.org
 
 Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Signed-off-by: Chang Rebecca Swee Fun <rebecca.swee.fun.chang@intel.com>
 ---
  i915/bxt_dmc_ver1.bin    |   2 +-
  i915/bxt_dmc_ver1_07.bin | Bin 0 -> 8380 bytes

@@ -3,12 +3,15 @@ From: Tom O'Rourke <Tom.O'Rourke@intel.com>
 Date: Wed, 16 Mar 2016 17:25:19 -0700
 Subject: [PATCH 2/2] linux-firmware/i915: GuC firmware for Broxton v8.7
 
+[Upstream Status: Pending]
+
 This is the first release of GuC firmware for Broxton platforms.
 
 Signed-off-by: Tom O'Rourke <Tom.O'Rourke@intel.com>
 Signed-off-by: Jeff McGee <jeff.mcgee@intel.com>
 Signed-off-by: Michel Thierry <michel.thierry@intel.com>
 Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Signed-off-by: Chang Rebecca Swee Fun <rebecca.swee.fun.chang@intel.com>
 ---
  WHENCE                  |   4 ++++
  i915/bxt_guc_ver8.bin   |   1 +
