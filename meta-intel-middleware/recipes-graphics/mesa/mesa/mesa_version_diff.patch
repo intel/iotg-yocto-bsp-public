@@ -1,6 +1,6 @@
 diff -x .git -x .gitignore -Naur mesa/configure.ac isg_gms-mesa/configure.ac
---- mesa/configure.ac	2016-08-09 02:29:32.938313032 +0800
-+++ isg_gms-mesa/configure.ac	2016-08-09 02:24:28.020857928 +0800
+--- mesa/configure.ac	2016-10-11 02:27:53.402878950 +0800
++++ isg_gms-mesa/configure.ac	2016-10-11 02:24:46.495474492 +0800
 @@ -704,8 +704,10 @@
  if test "x$enable_asm" = xyes -a "x$cross_compiling" = xyes; then
      case "$host_cpu" in
@@ -16,7 +16,7 @@ diff -x .git -x .gitignore -Naur mesa/configure.ac isg_gms-mesa/configure.ac
  fi
 diff -x .git -x .gitignore -Naur mesa/gms-integration isg_gms-mesa/gms-integration
 --- mesa/gms-integration	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-mesa/gms-integration	2016-08-09 02:24:28.156860360 +0800
++++ isg_gms-mesa/gms-integration	2016-10-11 02:24:46.527475074 +0800
 @@ -0,0 +1,13 @@
 +###
 +### GMS integration
@@ -32,8 +32,8 @@ diff -x .git -x .gitignore -Naur mesa/gms-integration isg_gms-mesa/gms-integrati
 +topic/xcompile 751b9278c39229e6be9432745a42570006abc018
 +	configure.ac: enable_asm=yes when x-compiling across same arch (v2)
 diff -x .git -x .gitignore -Naur mesa/include/pci_ids/i965_pci_ids.h isg_gms-mesa/include/pci_ids/i965_pci_ids.h
---- mesa/include/pci_ids/i965_pci_ids.h	2016-08-09 02:29:33.066315322 +0800
-+++ isg_gms-mesa/include/pci_ids/i965_pci_ids.h	2016-08-09 02:24:28.216861435 +0800
+--- mesa/include/pci_ids/i965_pci_ids.h	2016-10-11 02:27:53.422879315 +0800
++++ isg_gms-mesa/include/pci_ids/i965_pci_ids.h	2016-10-11 02:24:46.559475656 +0800
 @@ -162,4 +162,5 @@
  CHIPSET(0x22B3, chv,     "Intel(R) HD Graphics (Cherryview)")
  CHIPSET(0x0A84, bxt,     "Intel(R) HD Graphics (Broxton)")
@@ -42,8 +42,8 @@ diff -x .git -x .gitignore -Naur mesa/include/pci_ids/i965_pci_ids.h isg_gms-mes
 +CHIPSET(0x5A84, bxt,     "Intel(R) HD Graphics 505 (APL)")
 +CHIPSET(0x5A85, bxt,     "Intel(R) HD Graphics 500 (APL)")
 diff -x .git -x .gitignore -Naur mesa/src/compiler/glsl/linker.cpp isg_gms-mesa/src/compiler/glsl/linker.cpp
---- mesa/src/compiler/glsl/linker.cpp	2016-08-09 02:29:33.310319688 +0800
-+++ isg_gms-mesa/src/compiler/glsl/linker.cpp	2016-08-09 02:24:28.300862936 +0800
+--- mesa/src/compiler/glsl/linker.cpp	2016-10-11 02:27:53.466880117 +0800
++++ isg_gms-mesa/src/compiler/glsl/linker.cpp	2016-10-11 02:24:46.651477332 +0800
 @@ -4658,6 +4658,7 @@
                                  &prog->Comp.SharedSize);
  
@@ -53,8 +53,8 @@ diff -x .git -x .gitignore -Naur mesa/src/compiler/glsl/linker.cpp isg_gms-mesa/
  
  done:
 diff -x .git -x .gitignore -Naur mesa/src/compiler/glsl/lower_vec_index_to_swizzle.cpp isg_gms-mesa/src/compiler/glsl/lower_vec_index_to_swizzle.cpp
---- mesa/src/compiler/glsl/lower_vec_index_to_swizzle.cpp	2016-08-09 02:29:33.314319760 +0800
-+++ isg_gms-mesa/src/compiler/glsl/lower_vec_index_to_swizzle.cpp	2016-08-09 02:24:28.308863081 +0800
+--- mesa/src/compiler/glsl/lower_vec_index_to_swizzle.cpp	2016-10-11 02:27:53.474880263 +0800
++++ isg_gms-mesa/src/compiler/glsl/lower_vec_index_to_swizzle.cpp	2016-10-11 02:24:46.655477405 +0800
 @@ -30,18 +30,14 @@
   */
  
@@ -191,8 +191,8 @@ diff -x .git -x .gitignore -Naur mesa/src/compiler/glsl/lower_vec_index_to_swizz
  
  bool
 diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2.c isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.c
---- mesa/src/egl/drivers/dri2/egl_dri2.c	2016-08-09 02:29:33.470322551 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.c	2016-08-09 02:24:28.364864082 +0800
+--- mesa/src/egl/drivers/dri2/egl_dri2.c	2016-10-11 02:27:53.506880846 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.c	2016-10-11 02:24:46.675477769 +0800
 @@ -38,6 +38,8 @@
  #include <fcntl.h>
  #include <errno.h>
@@ -499,8 +499,8 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2.c isg_gms-me
     dri2_drv->base.API.DestroySyncKHR = dri2_destroy_sync;
  
 diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h isg_gms-mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h
---- mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2016-08-09 02:29:28.798238960 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2016-08-09 02:24:28.364864082 +0800
+--- mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2016-10-11 02:27:52.162856355 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2016-10-11 02:24:46.675477769 +0800
 @@ -37,11 +37,16 @@
     return NULL;
  }
@@ -519,8 +519,8 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h 
  }
  
 diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2.h isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.h
---- mesa/src/egl/drivers/dri2/egl_dri2.h	2016-08-09 02:29:33.470322551 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.h	2016-08-09 02:24:28.364864082 +0800
+--- mesa/src/egl/drivers/dri2/egl_dri2.h	2016-10-11 02:27:53.506880846 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.h	2016-10-11 02:24:46.675477769 +0800
 @@ -307,6 +307,8 @@
  
  struct dri2_egl_sync {
@@ -531,8 +531,8 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2.h isg_gms-me
     void *fence;
  };
 diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_wayland.c isg_gms-mesa/src/egl/drivers/dri2/platform_wayland.c
---- mesa/src/egl/drivers/dri2/platform_wayland.c	2016-08-09 02:29:33.470322551 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/platform_wayland.c	2016-08-09 02:24:28.368864153 +0800
+--- mesa/src/egl/drivers/dri2/platform_wayland.c	2016-10-11 02:27:53.506880846 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/platform_wayland.c	2016-10-11 02:24:46.675477769 +0800
 @@ -44,6 +44,7 @@
  
  #include <wayland-client.h>
@@ -541,9 +541,25 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_wayland.c is
  
  enum wl_drm_format_flags {
     HAS_ARGB8888 = 1,
-@@ -160,8 +161,8 @@
+@@ -118,6 +119,13 @@
+    (*dri2_dpy->flush->invalidate)(dri2_surf->dri_drawable);
+ }
+ 
++static void
++destroy_window_callback(void *data)
++{
++   struct dri2_egl_surface *dri2_surf = data;
++   dri2_surf->wl_win = NULL;
++}
++
+ /**
+  * Called via eglCreateWindowSurface(), drv->API.CreateWindowSurface().
+  */
+@@ -159,9 +167,10 @@
+ 
     dri2_surf->wl_win->private = dri2_surf;
     dri2_surf->wl_win->resize_callback = resize_callback;
++   dri2_surf->wl_win->destroy_window_callback = destroy_window_callback;
  
 -   dri2_surf->base.Width =  -1;
 -   dri2_surf->base.Height = -1;
@@ -552,9 +568,23 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_wayland.c is
  
     config = dri2_get_dri_config(dri2_conf, EGL_WINDOW_BIT,
                                  dri2_surf->base.GLColorspace);
+@@ -257,8 +266,11 @@
+    if (dri2_surf->throttle_callback)
+       wl_callback_destroy(dri2_surf->throttle_callback);
+ 
+-   dri2_surf->wl_win->private = NULL;
+-   dri2_surf->wl_win->resize_callback = NULL;
++   if (dri2_surf->wl_win) {
++      dri2_surf->wl_win->private = NULL;
++      dri2_surf->wl_win->resize_callback = NULL;
++      dri2_surf->wl_win->destroy_window_callback = NULL;
++   }
+ 
+    free(surf);
+ 
 diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_x11.c isg_gms-mesa/src/egl/drivers/dri2/platform_x11.c
---- mesa/src/egl/drivers/dri2/platform_x11.c	2016-08-09 02:29:33.470322551 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/platform_x11.c	2016-08-09 02:24:28.368864153 +0800
+--- mesa/src/egl/drivers/dri2/platform_x11.c	2016-10-11 02:27:53.506880846 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/platform_x11.c	2016-10-11 02:24:46.675477769 +0800
 @@ -235,6 +235,16 @@
           goto cleanup_surf;
        }
@@ -612,8 +642,8 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_x11.c isg_gm
        if (dri2_x11_swap_buffers_msc(drv, disp, draw, 0, 0, 0) != -1) {
            return EGL_TRUE;
 diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglapi.c isg_gms-mesa/src/egl/main/eglapi.c
---- mesa/src/egl/main/eglapi.c	2016-08-09 02:29:33.514323338 +0800
-+++ isg_gms-mesa/src/egl/main/eglapi.c	2016-08-09 02:24:28.368864153 +0800
+--- mesa/src/egl/main/eglapi.c	2016-10-11 02:27:53.506880846 +0800
++++ isg_gms-mesa/src/egl/main/eglapi.c	2016-10-11 02:24:46.675477769 +0800
 @@ -101,6 +101,63 @@
  #include "eglimage.h"
  #include "eglsync.h"
@@ -744,8 +774,8 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglapi.c isg_gms-mesa/src/egl
  
     RETURN_EGL_EVAL(disp, ret);
 diff -x .git -x .gitignore -Naur mesa/src/egl/main/egldisplay.c isg_gms-mesa/src/egl/main/egldisplay.c
---- mesa/src/egl/main/egldisplay.c	2016-08-09 02:29:33.514323338 +0800
-+++ isg_gms-mesa/src/egl/main/egldisplay.c	2016-08-09 02:24:28.376864297 +0800
+--- mesa/src/egl/main/egldisplay.c	2016-10-11 02:27:53.506880846 +0800
++++ isg_gms-mesa/src/egl/main/egldisplay.c	2016-10-11 02:24:46.691478060 +0800
 @@ -178,25 +178,24 @@
  _EGLPlatformType
  _eglGetNativePlatform(void *nativeDisplay)
@@ -787,8 +817,8 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/main/egldisplay.c isg_gms-mesa/src
     return native_platform;
  }
 diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglsurface.c isg_gms-mesa/src/egl/main/eglsurface.c
---- mesa/src/egl/main/eglsurface.c	2016-08-09 02:29:33.514323338 +0800
-+++ isg_gms-mesa/src/egl/main/eglsurface.c	2016-08-09 02:24:28.376864297 +0800
+--- mesa/src/egl/main/eglsurface.c	2016-10-11 02:27:53.514880992 +0800
++++ isg_gms-mesa/src/egl/main/eglsurface.c	2016-10-11 02:24:46.691478060 +0800
 @@ -235,6 +235,19 @@
        }
     }
@@ -810,8 +840,8 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglsurface.c isg_gms-mesa/src
  }
  
 diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglsync.c isg_gms-mesa/src/egl/main/eglsync.c
---- mesa/src/egl/main/eglsync.c	2016-08-09 02:29:33.514323338 +0800
-+++ isg_gms-mesa/src/egl/main/eglsync.c	2016-08-09 02:24:28.376864297 +0800
+--- mesa/src/egl/main/eglsync.c	2016-10-11 02:27:53.514880992 +0800
++++ isg_gms-mesa/src/egl/main/eglsync.c	2016-10-11 02:24:46.691478060 +0800
 @@ -152,7 +152,8 @@
        /* update the sync status */
        if (sync->SyncStatus != EGL_SIGNALED_KHR &&
@@ -822,9 +852,40 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglsync.c isg_gms-mesa/src/eg
           drv->API.ClientWaitSyncKHR(drv, dpy, sync, 0, 0);
  
        *value = sync->SyncStatus;
+diff -x .git -x .gitignore -Naur mesa/src/egl/wayland/wayland-egl/wayland-egl.c isg_gms-mesa/src/egl/wayland/wayland-egl/wayland-egl.c
+--- mesa/src/egl/wayland/wayland-egl/wayland-egl.c	2016-10-11 02:27:53.514880992 +0800
++++ isg_gms-mesa/src/egl/wayland/wayland-egl/wayland-egl.c	2016-10-11 02:24:46.691478060 +0800
+@@ -66,6 +66,7 @@
+ 	egl_window->surface = surface;
+ 	egl_window->private = NULL;
+ 	egl_window->resize_callback = NULL;
++	egl_window->destroy_window_callback = NULL;
+ 	wl_egl_window_resize(egl_window, width, height, 0, 0);
+ 	egl_window->attached_width  = 0;
+ 	egl_window->attached_height = 0;
+@@ -76,6 +77,8 @@
+ WL_EGL_EXPORT void
+ wl_egl_window_destroy(struct wl_egl_window *egl_window)
+ {
++	if (egl_window->destroy_window_callback)
++		egl_window->destroy_window_callback(egl_window->private);
+ 	free(egl_window);
+ }
+ 
+diff -x .git -x .gitignore -Naur mesa/src/egl/wayland/wayland-egl/wayland-egl-priv.h isg_gms-mesa/src/egl/wayland/wayland-egl/wayland-egl-priv.h
+--- mesa/src/egl/wayland/wayland-egl/wayland-egl-priv.h	2016-10-11 02:27:53.514880992 +0800
++++ isg_gms-mesa/src/egl/wayland/wayland-egl/wayland-egl-priv.h	2016-10-11 02:24:46.691478060 +0800
+@@ -27,6 +27,7 @@
+ 
+ 	void *private;
+ 	void (*resize_callback)(struct wl_egl_window *, void *);
++	void (*destroy_window_callback)(void *);
+ };
+ 
+ #ifdef  __cplusplus
 diff -x .git -x .gitignore -Naur mesa/src/glx/glxcmds.c isg_gms-mesa/src/glx/glxcmds.c
---- mesa/src/glx/glxcmds.c	2016-08-09 02:29:35.634361270 +0800
-+++ isg_gms-mesa/src/glx/glxcmds.c	2016-08-09 02:24:29.420882974 +0800
+--- mesa/src/glx/glxcmds.c	2016-10-11 02:27:53.786885948 +0800
++++ isg_gms-mesa/src/glx/glxcmds.c	2016-10-11 02:24:47.091485343 +0800
 @@ -1628,8 +1628,33 @@
  glXCreateNewContext(Display * dpy, GLXFBConfig fbconfig,
                      int renderType, GLXContext shareList, Bool allowDirect)
@@ -869,8 +930,8 @@ diff -x .git -x .gitignore -Naur mesa/src/glx/glxcmds.c isg_gms-mesa/src/glx/glx
     }
  
 diff -x .git -x .gitignore -Naur mesa/src/glx/query_renderer.c isg_gms-mesa/src/glx/query_renderer.c
---- mesa/src/glx/query_renderer.c	2016-08-09 02:29:30.174263580 +0800
-+++ isg_gms-mesa/src/glx/query_renderer.c	2016-08-09 02:24:29.432883187 +0800
+--- mesa/src/glx/query_renderer.c	2016-10-11 02:27:53.790886021 +0800
++++ isg_gms-mesa/src/glx/query_renderer.c	2016-10-11 02:24:47.095485416 +0800
 @@ -106,7 +106,7 @@
  {
     struct glx_context *gc = __glXGetCurrentContext();
@@ -890,8 +951,8 @@ diff -x .git -x .gitignore -Naur mesa/src/glx/query_renderer.c isg_gms-mesa/src/
  
     return __glXQueryRendererString(gc->psc, attribute);
 diff -x .git -x .gitignore -Naur mesa/src/glx/xfont.c isg_gms-mesa/src/glx/xfont.c
---- mesa/src/glx/xfont.c	2016-08-09 02:29:30.174263580 +0800
-+++ isg_gms-mesa/src/glx/xfont.c	2016-08-09 02:24:29.432883187 +0800
+--- mesa/src/glx/xfont.c	2016-10-11 02:27:52.838868673 +0800
++++ isg_gms-mesa/src/glx/xfont.c	2016-10-11 02:24:47.095485416 +0800
 @@ -235,7 +235,7 @@
     int i;
  
@@ -902,8 +963,8 @@ diff -x .git -x .gitignore -Naur mesa/src/glx/xfont.c isg_gms-mesa/src/glx/xfont
  #if !defined(GLX_USE_APPLEGL)
     glxdraw = GetGLXDRIDrawable(CC->currentDpy, CC->currentDrawable);
 diff -x .git -x .gitignore -Naur mesa/src/mapi/mapi_abi.py isg_gms-mesa/src/mapi/mapi_abi.py
---- mesa/src/mapi/mapi_abi.py	2016-08-09 02:29:30.374267157 +0800
-+++ isg_gms-mesa/src/mapi/mapi_abi.py	2016-08-09 02:24:29.596886121 +0800
+--- mesa/src/mapi/mapi_abi.py	2016-10-11 02:27:52.934870423 +0800
++++ isg_gms-mesa/src/mapi/mapi_abi.py	2016-10-11 02:24:47.155486509 +0800
 @@ -38,7 +38,7 @@
  
  
@@ -914,8 +975,8 @@ diff -x .git -x .gitignore -Naur mesa/src/mapi/mapi_abi.py isg_gms-mesa/src/mapi
  class ABIEntry(object):
      """Represent an ABI entry."""
 diff -x .git -x .gitignore -Naur mesa/src/mapi/u_execmem.c isg_gms-mesa/src/mapi/u_execmem.c
---- mesa/src/mapi/u_execmem.c	2016-08-09 02:29:30.374267157 +0800
-+++ isg_gms-mesa/src/mapi/u_execmem.c	2016-08-09 02:24:29.596886121 +0800
+--- mesa/src/mapi/u_execmem.c	2016-10-11 02:27:52.934870423 +0800
++++ isg_gms-mesa/src/mapi/u_execmem.c	2016-10-11 02:24:47.155486509 +0800
 @@ -37,7 +37,7 @@
  #include "u_execmem.h"
  
