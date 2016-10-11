@@ -1,6 +1,6 @@
 diff -x .git -x .gitignore -Naur xf86-video-intel/gms-integration isg_gms-sna_ddx/gms-integration
 --- xf86-video-intel/gms-integration	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-sna_ddx/gms-integration	2016-08-09 02:30:57.191820493 +0800
++++ isg_gms-sna_ddx/gms-integration	2016-10-11 02:28:53.995983231 +0800
 @@ -0,0 +1,7 @@
 +###
 +### GMS integration
@@ -9,9 +9,88 @@ diff -x .git -x .gitignore -Naur xf86-video-intel/gms-integration isg_gms-sna_dd
 +	sna: Fix reporting of errno after setcrtc failure
 +hsd/1504134673 9b4488f2453e2e3e8831906c2103631e6a807c95
 +	Add NULL checking for drawable in sna_dri2_flip_event
+diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/gen9_render.c isg_gms-sna_ddx/src/sna/gen9_render.c
+--- xf86-video-intel/src/sna/gen9_render.c	2016-10-11 02:29:17.600413488 +0800
++++ isg_gms-sna_ddx/src/sna/gen9_render.c	2016-10-11 02:28:54.055984325 +0800
+@@ -230,11 +230,32 @@
+ 	.urb = { .max_vs_entries = 960 },
+ };
+ 
++static const struct gt_info bxt_gt_info = {
++	.name = "Broxton (gen9)",
++	.urb = { .max_vs_entries = 320 },
++};
++
++static const struct gt_info kbl_gt_info = {
++	.name = "Kayblake (gen9)",
++	.urb = { .max_vs_entries = 960 },
++};
++
+ static bool is_skl(struct sna *sna)
+ {
+ 	return sna->kgem.gen == 0110;
+ }
+ 
++static bool is_bxt(struct sna *sna)
++{
++	return sna->kgem.gen == 0111;
++}
++
++static bool is_kbl(struct sna *sna)
++{
++	return sna->kgem.gen == 0112;
++}
++
++
+ static inline bool too_large(int width, int height)
+ {
+ 	return width > GEN9_MAX_SIZE || height > GEN9_MAX_SIZE;
+@@ -3980,11 +4001,13 @@
+ 		state->gt = GEN9_GT_BIAS + ((devid >> 4) & 0xf) + 1;
+ 	DBG(("%s: gt=%d\n", __FUNCTION__, state->gt));
+ 
+-	state->info = &skl_gt_info;
++	state->info = &min_gt_info;
+ 	if (is_skl(sna))
+ 		state->info = &skl_gt_info;
+-	else
+-		return false;
++	if (is_bxt(sna))
++		state->info = &bxt_gt_info;
++	if (is_kbl(sna))
++		state->info = &kbl_gt_info;
+ 
+ 	sna_static_stream_init(&general);
+ 
+diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/kgem.c isg_gms-sna_ddx/src/sna/kgem.c
+--- xf86-video-intel/src/sna/kgem.c	2016-10-11 02:29:17.616413779 +0800
++++ isg_gms-sna_ddx/src/sna/kgem.c	2016-10-11 02:28:54.055984325 +0800
+@@ -863,8 +863,7 @@
+ {
+ 	struct drm_i915_gem_create create;
+ 
+-	VG_CLEAR(create);
+-	create.handle = 0;
++	memset(&create, 0, sizeof(create));
+ 	create.size = PAGE_SIZE * num_pages;
+ 	(void)do_ioctl(fd, DRM_IOCTL_I915_GEM_CREATE, &create);
+ 
+diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/sna_display.c isg_gms-sna_ddx/src/sna/sna_display.c
+--- xf86-video-intel/src/sna/sna_display.c	2016-10-11 02:29:17.628413998 +0800
++++ isg_gms-sna_ddx/src/sna/sna_display.c	2016-10-11 02:28:54.063984470 +0800
+@@ -655,8 +655,7 @@
+ 
+ 	assert((size & 4095) == 0);
+ 
+-	VG_CLEAR(create);
+-	create.handle = 0;
++	memset(&create, 0, sizeof(create));
+ 	create.size = size;
+ 	(void)drmIoctl(fd, DRM_IOCTL_I915_GEM_CREATE, &create);
+ 
 diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/sna_dri2.c isg_gms-sna_ddx/src/sna/sna_dri2.c
---- xf86-video-intel/src/sna/sna_dri2.c	2016-08-09 02:31:25.176321202 +0800
-+++ isg_gms-sna_ddx/src/sna/sna_dri2.c	2016-08-09 02:30:57.523826433 +0800
+--- xf86-video-intel/src/sna/sna_dri2.c	2016-10-11 02:29:17.628413998 +0800
++++ isg_gms-sna_ddx/src/sna/sna_dri2.c	2016-10-11 02:28:54.063984470 +0800
 @@ -2942,6 +2942,10 @@
  	case FLIP_THROTTLE:
  		if (flip->signal) {
@@ -23,3 +102,40 @@ diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/sna_dri2.c isg_gms-sna
  			frame_swap_complete(flip, DRI2_FLIP_COMPLETE);
  		}
  	case FLIP_COMPLETE:
+diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/sna_driver.c isg_gms-sna_ddx/src/sna/sna_driver.c
+--- xf86-video-intel/src/sna/sna_driver.c	2016-10-11 02:29:17.628413998 +0800
++++ isg_gms-sna_ddx/src/sna/sna_driver.c	2016-10-11 02:28:54.063984470 +0800
+@@ -406,8 +406,7 @@
+ 	if (res.count_crtcs == 0)
+ 		return TRUE;
+ 
+-	VG_CLEAR(create);
+-	create.handle = 0;
++	memset(&create, 0, sizeof(create));
+ 	create.size = 4096;
+ 	if (drmIoctl(fd, DRM_IOCTL_I915_GEM_CREATE, &create))
+ 		return FALSE;
+diff -x .git -x .gitignore -Naur xf86-video-intel/test/dri3-test.c isg_gms-sna_ddx/test/dri3-test.c
+--- xf86-video-intel/test/dri3-test.c	2016-10-11 02:29:17.276407582 +0800
++++ isg_gms-sna_ddx/test/dri3-test.c	2016-10-11 02:28:54.111985346 +0800
+@@ -158,7 +158,7 @@
+ {
+ 	struct drm_i915_gem_create create;
+ 
+-	create.handle = 0;
++	memset(&create, 0, sizeof(create));
+ 	create.size = size;
+ 	(void)drmIoctl(fd, DRM_IOCTL_I915_GEM_CREATE, &create);
+ 
+diff -x .git -x .gitignore -Naur xf86-video-intel/test/present-test.c isg_gms-sna_ddx/test/present-test.c
+--- xf86-video-intel/test/present-test.c	2016-10-11 02:29:17.276407582 +0800
++++ isg_gms-sna_ddx/test/present-test.c	2016-10-11 02:28:54.111985346 +0800
+@@ -1709,7 +1709,7 @@
+ {
+ 	struct drm_i915_gem_create create;
+ 
+-	create.handle = 0;
++	memset(&create, 0, sizeof(create));
+ 	create.size = size;
+ 	(void)drmIoctl(fd, DRM_IOCTL_I915_GEM_CREATE, &create);
+ 
