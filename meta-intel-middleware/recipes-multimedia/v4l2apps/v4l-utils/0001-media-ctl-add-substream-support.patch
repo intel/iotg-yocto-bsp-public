@@ -1,0 +1,370 @@
+From 43270360af250aee43c8dc826b0c38e43284ce16 Mon Sep 17 00:00:00 2001
+From: Jianxu Zheng <jian.xu.zheng@intel.com>
+Date: Mon, 11 Jul 2016 11:40:39 +0800
+Subject: [PATCH 1/2] media-ctl: add substream support
+
+Substream is used to multiplex pad for multistream
+case. Certain pad format is extened to each different
+substreams.
+
+Signed-off-by: Jianxu Zheng <jian.xu.zheng@intel.com>
+---
+ include/linux/media.h           |    1 +
+ include/linux/v4l2-subdev.h     |   10 +++++--
+ utils/media-ctl/libmediactl.c   |   60 +++++++++++++++++++++++++++++++++++++++
+ utils/media-ctl/libv4l2subdev.c |   33 ++++++++++++---------
+ utils/media-ctl/media-ctl.c     |   22 ++++++++------
+ utils/media-ctl/mediactl.h      |    5 ++++
+ utils/media-ctl/v4l2subdev.h    |    4 +--
+ 7 files changed, 108 insertions(+), 27 deletions(-)
+
+diff --git a/include/linux/media.h b/include/linux/media.h
+index 83ef6a2..513d040 100644
+--- a/include/linux/media.h
++++ b/include/linux/media.h
+@@ -139,6 +139,7 @@ struct media_entity_desc {
+ #define MEDIA_PAD_FL_SINK		(1 << 0)
+ #define MEDIA_PAD_FL_SOURCE		(1 << 1)
+ #define MEDIA_PAD_FL_MUST_CONNECT	(1 << 2)
++#define MEDIA_PAD_FL_MULTIPLEX          (1 << 3) 
+ 
+ struct media_pad_desc {
+ 	__u32 entity;		/* entity ID */
+diff --git a/include/linux/v4l2-subdev.h b/include/linux/v4l2-subdev.h
+index dbce2b5..ded32f2 100644
+--- a/include/linux/v4l2-subdev.h
++++ b/include/linux/v4l2-subdev.h
+@@ -48,7 +48,8 @@ struct v4l2_subdev_format {
+ 	__u32 which;
+ 	__u32 pad;
+ 	struct v4l2_mbus_framefmt format;
+-	__u32 reserved[8];
++	__u32 stream;
++	__u32 reserved[7];
+ };
+ 
+ /**
+@@ -71,12 +72,14 @@ struct v4l2_subdev_crop {
+  * @code: format code (MEDIA_BUS_FMT_ definitions)
+  * @which: format type (from enum v4l2_subdev_format_whence)
+  */
++#define V4L2_SUBDEV_FLAG_NEXT_STREAM 0x80000000
+ struct v4l2_subdev_mbus_code_enum {
+ 	__u32 pad;
+ 	__u32 index;
+ 	__u32 code;
+ 	__u32 which;
+-	__u32 reserved[8];
++	__u32 stream;
++	__u32 reserved[7];
+ };
+ 
+ /**
+@@ -95,7 +98,8 @@ struct v4l2_subdev_frame_size_enum {
+ 	__u32 min_height;
+ 	__u32 max_height;
+ 	__u32 which;
+-	__u32 reserved[8];
++	__u32 stream;
++	__u32 reserved[7];
+ };
+ 
+ /**
+diff --git a/utils/media-ctl/libmediactl.c b/utils/media-ctl/libmediactl.c
+index 4a82d24..7eb2e47 100644
+--- a/utils/media-ctl/libmediactl.c
++++ b/utils/media-ctl/libmediactl.c
+@@ -35,11 +35,13 @@
+ #include <unistd.h>
+ 
+ #include <linux/media.h>
++#include <linux/v4l2-subdev.h>
+ #include <linux/videodev2.h>
+ 
+ #include "mediactl.h"
+ #include "mediactl-priv.h"
+ #include "tools.h"
++#include "v4l2subdev.h"
+ 
+ /* -----------------------------------------------------------------------------
+  * Graph access
+@@ -132,6 +134,36 @@ unsigned int media_entity_get_links_count(struct media_entity *entity)
+ 	return entity->num_links;
+ }
+ 
++unsigned int media_entity_pad_get_max_stream(struct media_entity *entity, unsigned int pad)
++{
++	struct v4l2_subdev_mbus_code_enum code;
++	int ret, last_stream = 0;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++	memset(&code, 0, sizeof(struct v4l2_subdev_mbus_code_enum));
++
++	code.pad = pad;
++	code.which = V4L2_SUBDEV_FORMAT_ACTIVE;
++	code.stream = 0 | V4L2_SUBDEV_FLAG_NEXT_STREAM;
++
++	do {
++		last_stream = code.stream;
++		ret = ioctl(entity->fd, VIDIOC_SUBDEV_ENUM_MBUS_CODE, &code);
++
++		if (!ret && last_stream == code.stream)
++			break;
++
++		code.stream |= V4L2_SUBDEV_FLAG_NEXT_STREAM;
++	} while (!ret);
++
++	code.stream &= ~V4L2_SUBDEV_FLAG_NEXT_STREAM;
++	v4l2_subdev_close(entity);
++
++	return code.stream;
++}
++
+ const struct media_link *media_entity_get_link(struct media_entity *entity, unsigned int index)
+ {
+ 	if (index >= entity->num_links)
+@@ -785,6 +817,34 @@ int media_device_add_entity(struct media_device *media,
+ 	return 0;
+ }
+ 
++int media_parse_stream(struct media_device *media,
++		       const char *p, char **endp)
++{
++	unsigned int stream;
++	char *end;
++
++	/* endp can be NULL. To avoid spreading NULL checks across the function,
++	 * set endp to &end in that case.
++	 */
++	if (endp == NULL)
++		endp = &end;
++
++	for (; isspace(*p); ++p);
++
++	if (*p == '/') {
++		for (; !isdigit(*p); ++p);
++		stream = strtoul(p, &end, 10);
++		p = ++end;
++	} else {
++		media_dbg(media, "no valid stream id, default 0.\n");
++		stream = 0;
++	}
++
++	*endp = (char *)p;
++
++	return stream;
++}
++
+ struct media_pad *media_parse_pad(struct media_device *media,
+ 				  const char *p, char **endp)
+ {
+diff --git a/utils/media-ctl/libv4l2subdev.c b/utils/media-ctl/libv4l2subdev.c
+index 16aa530..a41776b 100644
+--- a/utils/media-ctl/libv4l2subdev.c
++++ b/utils/media-ctl/libv4l2subdev.c
+@@ -64,7 +64,7 @@ void v4l2_subdev_close(struct media_entity *entity)
+ 
+ int v4l2_subdev_get_format(struct media_entity *entity,
+ 	struct v4l2_mbus_framefmt *format, unsigned int pad,
+-	enum v4l2_subdev_format_whence which)
++	unsigned int stream, enum v4l2_subdev_format_whence which)
+ {
+ 	struct v4l2_subdev_format fmt;
+ 	int ret;
+@@ -75,6 +75,7 @@ int v4l2_subdev_get_format(struct media_entity *entity,
+ 
+ 	memset(&fmt, 0, sizeof(fmt));
+ 	fmt.pad = pad;
++	fmt.stream = stream;
+ 	fmt.which = which;
+ 
+ 	ret = ioctl(entity->fd, VIDIOC_SUBDEV_G_FMT, &fmt);
+@@ -87,7 +88,7 @@ int v4l2_subdev_get_format(struct media_entity *entity,
+ 
+ int v4l2_subdev_set_format(struct media_entity *entity,
+ 	struct v4l2_mbus_framefmt *format, unsigned int pad,
+-	enum v4l2_subdev_format_whence which)
++	unsigned int stream, enum v4l2_subdev_format_whence which)
+ {
+ 	struct v4l2_subdev_format fmt;
+ 	int ret;
+@@ -98,6 +99,7 @@ int v4l2_subdev_set_format(struct media_entity *entity,
+ 
+ 	memset(&fmt, 0, sizeof(fmt));
+ 	fmt.pad = pad;
++	fmt.stream = stream;
+ 	fmt.which = which;
+ 	fmt.format = *format;
+ 
+@@ -431,7 +433,8 @@ static bool strhazit(const char *str, const char **p)
+ }
+ 
+ static struct media_pad *v4l2_subdev_parse_pad_format(
+-	struct media_device *media, struct v4l2_mbus_framefmt *format,
++	struct media_device *media, unsigned int *stream,
++	struct v4l2_mbus_framefmt *format,
+ 	struct v4l2_rect *crop, struct v4l2_rect *compose,
+ 	struct v4l2_fract *interval, const char *p, char **endp)
+ {
+@@ -449,6 +452,10 @@ static struct media_pad *v4l2_subdev_parse_pad_format(
+ 	}
+ 
+ 	for (p = end; isspace(*p); ++p);
++
++	*stream = media_parse_stream(media, p, &end);
++
++	for (p = end; isspace(*p); ++p);
+ 	if (*p++ != '[') {
+ 		media_dbg(media, "Expected '['\n");
+ 		*endp = (char *)p - 1;
+@@ -523,7 +530,7 @@ static struct media_pad *v4l2_subdev_parse_pad_format(
+ 	return pad;
+ }
+ 
+-static int set_format(struct media_pad *pad,
++static int set_format(struct media_pad *pad, unsigned int stream,
+ 		      struct v4l2_mbus_framefmt *format)
+ {
+ 	int ret;
+@@ -532,12 +539,12 @@ static int set_format(struct media_pad *pad,
+ 		return 0;
+ 
+ 	media_dbg(pad->entity->media,
+-		  "Setting up format %s %ux%u on pad %s/%u\n",
++		  "Setting up format %s %ux%u on pad %s/%u sub-stream %u\n",
+ 		  v4l2_subdev_pixelcode_to_string(format->code),
+ 		  format->width, format->height,
+-		  pad->entity->info.name, pad->index);
++		  pad->entity->info.name, pad->index, stream);
+ 
+-	ret = v4l2_subdev_set_format(pad->entity, format, pad->index,
++	ret = v4l2_subdev_set_format(pad->entity, format, pad->index, stream,
+ 				     V4L2_SUBDEV_FORMAT_ACTIVE);
+ 	if (ret < 0) {
+ 		media_dbg(pad->entity->media,
+@@ -619,12 +626,12 @@ static int v4l2_subdev_parse_setup_format(struct media_device *media,
+ 	struct v4l2_rect crop = { -1, -1, -1, -1 };
+ 	struct v4l2_rect compose = crop;
+ 	struct v4l2_fract interval = { 0, 0 };
+-	unsigned int i;
++	unsigned int i, stream;
+ 	char *end;
+ 	int ret;
+ 
+-	pad = v4l2_subdev_parse_pad_format(media, &format, &crop, &compose,
+-					   &interval, p, &end);
++	pad = v4l2_subdev_parse_pad_format(media, &stream, &format,
++					   &crop, &compose, &interval, p, &end);
+ 	if (pad == NULL) {
+ 		media_print_streampos(media, p, end);
+ 		media_dbg(media, "Unable to parse format\n");
+@@ -632,7 +639,7 @@ static int v4l2_subdev_parse_setup_format(struct media_device *media,
+ 	}
+ 
+ 	if (pad->flags & MEDIA_PAD_FL_SINK) {
+-		ret = set_format(pad, &format);
++		ret = set_format(pad, stream, &format);
+ 		if (ret < 0)
+ 			return ret;
+ 	}
+@@ -646,7 +653,7 @@ static int v4l2_subdev_parse_setup_format(struct media_device *media,
+ 		return ret;
+ 
+ 	if (pad->flags & MEDIA_PAD_FL_SOURCE) {
+-		ret = set_format(pad, &format);
++		ret = set_format(pad, stream, &format);
+ 		if (ret < 0)
+ 			return ret;
+ 	}
+@@ -670,7 +677,7 @@ static int v4l2_subdev_parse_setup_format(struct media_device *media,
+ 			if (link->source == pad &&
+ 			    link->sink->entity->info.type == MEDIA_ENT_T_V4L2_SUBDEV) {
+ 				remote_format = format;
+-				set_format(link->sink, &remote_format);
++				set_format(link->sink, stream, &remote_format);
+ 			}
+ 		}
+ 	}
+diff --git a/utils/media-ctl/media-ctl.c b/utils/media-ctl/media-ctl.c
+index d3f6e04..4e25051 100644
+--- a/utils/media-ctl/media-ctl.c
++++ b/utils/media-ctl/media-ctl.c
+@@ -80,15 +80,19 @@ static void v4l2_subdev_print_format(struct media_entity *entity,
+ {
+ 	struct v4l2_mbus_framefmt format;
+ 	struct v4l2_rect rect;
+-	int ret;
+-
+-	ret = v4l2_subdev_get_format(entity, &format, pad, which);
+-	if (ret != 0)
+-		return;
+-
+-	printf("\t\t[fmt:%s/%ux%u",
+-	       v4l2_subdev_pixelcode_to_string(format.code),
+-	       format.width, format.height);
++	unsigned int stream = media_entity_pad_get_max_stream(entity, pad);
++	int ret, i;
++
++	for (i = 0; i <= stream; i++) {
++		ret = v4l2_subdev_get_format(entity, &format, pad, i,
++					     which);
++		if (ret != 0)
++			return;
++
++		printf("\t\tstream:%d[fmt:%s/%ux%u]\n",
++		       i, v4l2_subdev_pixelcode_to_string(format.code),
++		       format.width, format.height);
++	}
+ 
+ 	ret = v4l2_subdev_get_selection(entity, &rect, pad,
+ 					V4L2_SEL_TGT_CROP_BOUNDS,
+diff --git a/utils/media-ctl/mediactl.h b/utils/media-ctl/mediactl.h
+index 77ac182..7a7ff4f 100644
+--- a/utils/media-ctl/mediactl.h
++++ b/utils/media-ctl/mediactl.h
+@@ -194,6 +194,9 @@ const struct media_entity_desc *media_entity_get_info(struct media_entity *entit
+ const struct media_pad *media_entity_get_pad(struct media_entity *entity,
+ 					     unsigned int index);
+ 
++unsigned int media_entity_pad_get_max_stream(struct media_entity *entity,
++					     unsigned int pad);
++
+ /**
+  * @brief Get the number of links
+  * @param entity - media entity.
+@@ -381,6 +384,8 @@ int media_reset_links(struct media_device *media);
+ struct media_pad *media_parse_pad(struct media_device *media,
+ 				  const char *p, char **endp);
+ 
++int media_parse_stream(struct media_device *media, const char *p,
++		       char **endp);
+ /**
+  * @brief Parse string to a link on the media device.
+  * @param media - media device.
+diff --git a/utils/media-ctl/v4l2subdev.h b/utils/media-ctl/v4l2subdev.h
+index 1cb53ff..7de0a02 100644
+--- a/utils/media-ctl/v4l2subdev.h
++++ b/utils/media-ctl/v4l2subdev.h
+@@ -64,7 +64,7 @@ void v4l2_subdev_close(struct media_entity *entity);
+  */
+ int v4l2_subdev_get_format(struct media_entity *entity,
+ 	struct v4l2_mbus_framefmt *format, unsigned int pad,
+-	enum v4l2_subdev_format_whence which);
++	unsigned int stream, enum v4l2_subdev_format_whence which);
+ 
+ /**
+  * @brief Set the format on a pad.
+@@ -85,7 +85,7 @@ int v4l2_subdev_get_format(struct media_entity *entity,
+  */
+ int v4l2_subdev_set_format(struct media_entity *entity,
+ 	struct v4l2_mbus_framefmt *format, unsigned int pad,
+-	enum v4l2_subdev_format_whence which);
++	unsigned int stream, enum v4l2_subdev_format_whence which);
+ 
+ /**
+  * @brief Retrieve a selection rectangle on a pad.
+-- 
+1.7.9.5
+

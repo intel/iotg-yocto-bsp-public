@@ -1,0 +1,610 @@
+From 744face783c80e68b0a02a5fe5987f9cb98fe493 Mon Sep 17 00:00:00 2001
+From: Jianxu Zheng <jian.xu.zheng@intel.com>
+Date: Mon, 11 Jul 2016 11:46:52 +0800
+Subject: [PATCH 2/2] media-ctl: add routing information control
+
+Routes are used to describe the link between 2 pads
+within one entity.
+
+The information is used to help link traverse in n:n case.
+
+Signed-off-by: Jianxu Zheng <jian.xu.zheng@intel.com>
+---
+ include/linux/v4l2-subdev.h     |   44 +++++++++
+ utils/media-ctl/libmediactl.c   |  202 +++++++++++++++++++++++++++++++++++++++
+ utils/media-ctl/libv4l2subdev.c |   51 ++++++++++
+ utils/media-ctl/media-ctl.c     |   66 ++++++++++++-
+ utils/media-ctl/mediactl.h      |   12 +++
+ utils/media-ctl/options.c       |   12 ++-
+ utils/media-ctl/options.h       |    1 +
+ utils/media-ctl/v4l2subdev.h    |    5 +
+ 8 files changed, 387 insertions(+), 6 deletions(-)
+
+diff --git a/include/linux/v4l2-subdev.h b/include/linux/v4l2-subdev.h
+index ded32f2..ac33c45 100644
+--- a/include/linux/v4l2-subdev.h
++++ b/include/linux/v4l2-subdev.h
+@@ -158,6 +158,48 @@ struct v4l2_subdev_selection {
+ 	__u32 reserved[8];
+ };
+ 
++#define V4L2_SUBDEV_ROUTE_FL_ACTIVE	(1 << 0)
++#define V4L2_SUBDEV_ROUTE_FL_IMMUTABLE	(1 << 1)
++#define V4L2_SUBDEV_ROUTE_FL_SOURCE	(1 << 2)
++/**
++ * struct v4l2_subdev_route - A signal route inside a subdev
++ * @sink_pad: the sink pad
++ * @sink_stream: the sink stream
++ * @source_pad: the source pad
++ * @source_stream: the source stream
++ * @flags: route flags:
++ *
++ *	V4L2_SUBDEV_ROUTE_FL_ACTIVE: Is the stream in use or not? An
++ *	active stream will start when streaming is enabled on a video
++ *	node. Set by the user.
++ *
++ *	V4L2_SUBDEV_ROUTE_FL_SOURCE: Is the sub-device the source of a
++ *	stream? In this case the sink information is unused (and
++ *	zero). Set by the driver.
++ *
++ *	V4L2_SUBDEV_ROUTE_FL_IMMUTABLE: Is the stream immutable, i.e.
++ *	can it be activated and inactivated? Set by the driver.
++ */
++struct v4l2_subdev_route {
++	__u32 sink_pad;
++	__u32 sink_stream;
++	__u32 source_pad;
++	__u32 source_stream;
++	__u32 flags;
++	__u32 reserved[5];
++};
++
++/**
++ * struct v4l2_subdev_routing - Routing information
++ * @routes: the routes array
++ * @num_routes: the total number of routes in the routes array
++ */
++struct v4l2_subdev_routing {
++	struct v4l2_subdev_route *routes;
++	__u32 num_routes;
++	__u32 reserved[5];
++};
++
+ /* Backwards compatibility define --- to be removed */
+ #define v4l2_subdev_edid v4l2_edid
+ 
+@@ -180,5 +222,7 @@ struct v4l2_subdev_selection {
+ #define VIDIOC_SUBDEV_ENUM_DV_TIMINGS		_IOWR('V', 98, struct v4l2_enum_dv_timings)
+ #define VIDIOC_SUBDEV_QUERY_DV_TIMINGS		_IOR('V', 99, struct v4l2_dv_timings)
+ #define VIDIOC_SUBDEV_DV_TIMINGS_CAP		_IOWR('V', 100, struct v4l2_dv_timings_cap)
++#define VIDIOC_SUBDEV_G_ROUTING			_IOWR('V', 38, struct v4l2_subdev_routing)
++#define VIDIOC_SUBDEV_S_ROUTING			_IOWR('V', 39, struct v4l2_subdev_routing)
+ 
+ #endif
+diff --git a/utils/media-ctl/libmediactl.c b/utils/media-ctl/libmediactl.c
+index 7eb2e47..830c547 100644
+--- a/utils/media-ctl/libmediactl.c
++++ b/utils/media-ctl/libmediactl.c
+@@ -330,6 +330,33 @@ int media_reset_links(struct media_device *media)
+ 	return 0;
+ }
+ 
++int media_reset_routes(struct media_device *media)
++{
++	unsigned int i, j;
++	int ret;
++
++	for (i = 0; i < media->entities_count; ++i) {
++		struct media_entity *entity = &media->entities[i];
++		const struct media_entity_desc *info = media_entity_get_info(entity);
++		struct v4l2_subdev_route routes[info->pads];
++		unsigned int num_routes = info->pads;
++
++		ret = v4l2_subdev_get_routing(entity, routes, &num_routes);
++		if (!ret) {
++			for (j = 0; j < num_routes; j++) {
++				if (!(routes[j].flags & V4L2_SUBDEV_ROUTE_FL_IMMUTABLE))
++					routes[j].flags = routes[j].flags & (~V4L2_SUBDEV_ROUTE_FL_ACTIVE);
++			}
++
++			ret = v4l2_subdev_set_routing(entity, routes, num_routes);
++			if (ret < 0)
++				printf("set routing failed.\n");
++		}
++	}
++
++	return 0;
++}
++
+ /* -----------------------------------------------------------------------------
+  * Entities, pads and links enumeration
+  */
+@@ -845,6 +872,36 @@ int media_parse_stream(struct media_device *media,
+ 	return stream;
+ }
+ 
++int media_parse_pad_nr(struct media_device *media, struct media_entity *entity,
++		       const char *p, char **endp, unsigned int *pad_nr)
++{
++	unsigned int pad;
++	char *end;
++
++	/* endp can be NULL. To avoid spreading NULL checks across the function,
++	 * set endp to &end in that case.
++	 */
++
++	if (endp == NULL)
++		endp = &end;
++
++	for (; isspace(*p); ++p);
++
++	pad = strtoul(p, &end, 10);
++	if (pad >= entity->info.pads) {
++		media_dbg(media, "No pad '%d' on entity \"%s\". Maximum pad number is %d\n",
++				pad_nr, entity->info.name, entity->info.pads - 1);
++		*endp = (char *)p;
++		return -EINVAL;
++	}
++
++	for (p = end; isspace(*p); ++p);
++	*endp = (char *)p;
++	*pad_nr = pad;
++
++	return 0;
++}
++
+ struct media_pad *media_parse_pad(struct media_device *media,
+ 				  const char *p, char **endp)
+ {
+@@ -954,6 +1011,74 @@ struct media_link *media_parse_link(struct media_device *media,
+ 	return NULL;
+ }
+ 
++int media_parse_route(struct media_device *media, const char *p, char **endp,
++		       struct media_route *route)
++{
++	struct media_pad *sink;
++	unsigned int pad_nr;
++	int ret;
++	char *end;
++
++	sink = media_parse_pad(media, p, &end);
++	if (sink == NULL) {
++		*endp = end;
++		return -EINVAL;
++	}
++	p = end;
++
++	if (*p++ != '(') {
++		media_dbg(media, "Unable to parse stream_id: expected '('.\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++
++	route->sink_stream = strtoul(p, &end, 10);
++	for (p = end; isspace(*p); p++);
++	if (*p++ != ')') {
++		media_dbg(media, "Unable to parse stream_id: expected ')'.\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++	for (;isspace(*p); p++);
++	end = p;
++	if (end[0] != '=' || end[1] != '>') {
++		*endp = end;
++		media_dbg(media, "Expected '=>'\n");
++		return -EINVAL;
++	}
++	p = end + 2;
++	ret = media_parse_pad_nr(media, sink->entity, p, &end, &pad_nr);
++	if (ret) {
++		*endp = end;
++		return -EINVAL;
++	}
++	p = end;
++
++	if (*p++ != '(') {
++		media_dbg(media, "Unable to parse stream_id: expected '('.\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++
++	route->source_stream = strtoul(p, &end, 10);
++	for (p = end; isspace(*p); p++);
++	if (*p++ != ')') {
++		media_dbg(media, "Unable to parse stream_id: expected ')'.\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++
++	*endp = p;
++
++	route->entity = sink->entity;
++	route->sink_pad = sink->index;
++	route->source_pad = pad_nr;
++
++	printf("Route between \"%s\":%d and pad %d\n",
++	       route->entity->info.name, sink->index, route->source_pad);
++
++	return 0;
++}
+ int media_parse_setup_link(struct media_device *media,
+ 			   const char *p, char **endp)
+ {
+@@ -996,6 +1121,47 @@ int media_parse_setup_link(struct media_device *media,
+ 	return media_setup_link(media, link->source, link->sink, flags);
+ }
+ 
++int media_parse_setup_route(struct media_device *media,
++			    const char *p, char **endp, struct media_route *r)
++{
++	struct media_route route;
++	__u32 stream, flags;
++	int ret;
++	char *end;
++
++	ret = media_parse_route(media, p, &end, &route);
++	if (ret) {
++		media_dbg(media,
++			  "%s: Unable to parse route\n", __func__);
++		*endp = end;
++		return -EINVAL;
++	}
++
++	p = end;
++
++	if (*p++ != '[') {
++		media_dbg(media, "Unable to parse route flag: expected '['.\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++
++	flags = strtoul(p, &end, 10);
++	for (p = end; isspace(*p); p++);
++	if (*p++ != ']') {
++		media_dbg(media, "Unable to parse route flag: expected ']'.\n");
++		*endp = (char *)p - 1;
++		return -EINVAL;
++	}
++
++	for (; isspace(*p); p++);
++	*endp = (char *)p;
++	route.flags = flags;
++	printf("Setting up route %s:%d => %d (%u)[%u]\n",
++		  route.entity->info.name, route.source_pad, route.sink_pad, stream, flags);
++	memcpy(r, &route, sizeof(*r));
++
++	return 0;
++}
+ void media_print_streampos(struct media_device *media, const char *p,
+ 			   const char *end)
+ {
+@@ -1030,3 +1196,39 @@ int media_parse_setup_links(struct media_device *media, const char *p)
+ 
+ 	return *end ? -EINVAL : 0;
+ }
++
++int media_parse_setup_routes(struct media_device *media, const char *p)
++{
++	/* TODO: how many route do we need? */
++	struct media_route route[20];
++	struct v4l2_subdev_route *routes;
++	int ret, j, i = 0;
++	char *end;
++
++	do {
++		ret = media_parse_setup_route(media, p, &end, &route[i]);
++		if (ret < 0) {
++			media_print_streampos(media, p, end);
++			return ret;
++		}
++		i++;
++
++		p = end + 1;
++	} while (*end == ',' && i < 20);
++
++
++	routes = malloc(sizeof(struct v4l2_subdev_route) * i);
++	for (j = 0; j < i; j++) {
++		routes[j].source_pad = route[j].source_pad;
++		routes[j].sink_pad = route[j].sink_pad;
++		routes[j].sink_stream = route[j].sink_stream;
++		routes[j].source_stream = route[j].source_stream;
++		routes[j].flags = route[j].flags;
++	}
++
++	ret = v4l2_subdev_set_routing(route[0].entity, routes, i);
++	free(routes);
++
++	return ret;
++
++}
+diff --git a/utils/media-ctl/libv4l2subdev.c b/utils/media-ctl/libv4l2subdev.c
+index a41776b..37ae595 100644
+--- a/utils/media-ctl/libv4l2subdev.c
++++ b/utils/media-ctl/libv4l2subdev.c
+@@ -150,6 +150,57 @@ int v4l2_subdev_get_selection(struct media_entity *entity,
+ 	return 0;
+ }
+ 
++int v4l2_subdev_get_routing(struct media_entity *entity,
++			    struct v4l2_subdev_route *route, unsigned int *route_num)
++{
++
++	struct v4l2_subdev_routing r;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&r, 0, sizeof(r));
++	r.routes = route;
++	r.num_routes = *route_num;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_G_ROUTING, &r);
++	if (ret < 0)
++		return -errno;
++
++	*route_num = r.num_routes;
++
++	v4l2_subdev_close(entity);
++
++	return 0;
++}
++
++int v4l2_subdev_set_routing(struct media_entity *entity, struct v4l2_subdev_route *route,
++			    unsigned int num_routes)
++{
++
++	struct v4l2_subdev_routing r;
++	int ret;
++
++	ret = v4l2_subdev_open(entity);
++	if (ret < 0)
++		return ret;
++
++	memset(&r, 0, sizeof(r));
++
++	r.routes = route;
++	r.num_routes = num_routes;
++
++	ret = ioctl(entity->fd, VIDIOC_SUBDEV_S_ROUTING, &r);
++	if (ret < 0)
++		return -errno;
++
++	v4l2_subdev_close(entity);
++
++	return 0;
++}
++
+ int v4l2_subdev_set_selection(struct media_entity *entity,
+ 	struct v4l2_rect *rect, unsigned int pad, unsigned int target,
+ 	enum v4l2_subdev_format_whence which)
+diff --git a/utils/media-ctl/media-ctl.c b/utils/media-ctl/media-ctl.c
+index 4e25051..9712474 100644
+--- a/utils/media-ctl/media-ctl.c
++++ b/utils/media-ctl/media-ctl.c
+@@ -433,7 +433,7 @@ static void media_print_pad_text(struct media_entity *entity,
+ 	if (pad->flags & MEDIA_PAD_FL_SOURCE)
+ 		v4l2_subdev_print_subdev_dv(entity);
+ }
+-
++#define ROUTE_NUM	20
+ static void media_print_topology_text(struct media_device *media)
+ {
+ 	static const struct flag_name link_flags[] = {
+@@ -442,9 +442,16 @@ static void media_print_topology_text(struct media_device *media)
+ 		{ MEDIA_LNK_FL_DYNAMIC, "DYNAMIC" },
+ 	};
+ 
++	static const struct flag_name route_flags[] = {
++		{ V4L2_SUBDEV_ROUTE_FL_ACTIVE, "ACTIVE" },
++		{ V4L2_SUBDEV_ROUTE_FL_IMMUTABLE, "IMMUTABLE" },
++		{ V4L2_SUBDEV_ROUTE_FL_SOURCE, "SOURCE" },
++	};
++
+ 	unsigned int nents = media_get_entities_count(media);
+-	unsigned int i, j, k;
++	unsigned int i, j, k, l;
+ 	unsigned int padding;
++	int ret;
+ 
+ 	printf("Device topology\n");
+ 
+@@ -467,11 +474,51 @@ static void media_print_topology_text(struct media_device *media)
+ 
+ 		for (j = 0; j < info->pads; j++) {
+ 			const struct media_pad *pad = media_entity_get_pad(entity, j);
++			unsigned int route_sink, num_routes;
++			struct v4l2_subdev_route routes[ROUTE_NUM];
++			const struct media_pad *remote_pad;
++			num_routes = ROUTE_NUM;
++			route_sink = -1;
+ 
+-			printf("\tpad%u: %s\n", j, media_pad_type_to_string(pad->flags));
+-
++			printf("\tpad%u:%s\n", j, media_pad_type_to_string(pad->flags));
+ 			media_print_pad_text(entity, pad);
++			ret = v4l2_subdev_get_routing(entity, routes, &num_routes);
++			if (!ret) {
++				printf("\t\troute: \n");
++				for (l = 0; l < num_routes; l++) {
++					if (routes[l].sink_pad == pad->index) {
++						if (routes[l].flags & V4L2_SUBDEV_ROUTE_FL_SOURCE) {
++							printf("\t\tpad:%u(%u) [",
++							       routes[l].source_pad, routes[l].source_stream);
++							print_flags(route_flags, ARRAY_SIZE(route_flags), routes[l].flags);
++							printf("]\n");
++						} else {
++							printf("\t\tpad:%u(%u) => pad:%u(%u) [",
++							       routes[l].sink_pad, routes[l].sink_stream,
++							       routes[l].source_pad, routes[l].source_stream);
++							print_flags(route_flags, ARRAY_SIZE(route_flags), routes[l].flags);
++							printf("]\n");
++						}
++					} else if (routes[l].source_pad == pad->index) {
++						if (routes[l].flags & V4L2_SUBDEV_ROUTE_FL_SOURCE) {
++							printf("\t\tpad:%u(%u) [",
++							       routes[l].source_pad, routes[l].source_stream);
++							print_flags(route_flags, ARRAY_SIZE(route_flags), routes[l].flags);
++							printf("]\n");
++						} else {
++							printf("\t\tpad:%u(%u) <= pad:%u(%u) [",
++							       routes[l].source_pad, routes[l].source_stream,
++							       routes[l].sink_pad, routes[l].sink_stream);
++							print_flags(route_flags, ARRAY_SIZE(route_flags), routes[l].flags);
++							printf("]\n");
++						}
++					}
++
++				}
++			}
++
+ 
++			printf("\t\tlink: \n");
+ 			for (k = 0; k < num_links; k++) {
+ 				const struct media_link *link = media_entity_get_link(entity, k);
+ 				const struct media_pad *source = link->source;
+@@ -616,6 +663,8 @@ int main(int argc, char **argv)
+ 			       strerror(-ret), -ret);
+ 			goto out;
+ 		}
++
++		media_reset_routes(media);
+ 	}
+ 
+ 	if (media_opts.links) {
+@@ -627,6 +676,15 @@ int main(int argc, char **argv)
+ 		}
+ 	}
+ 
++	if (media_opts.routes) {
++		ret = media_parse_setup_routes(media, media_opts.routes);
++		if (ret) {
++			printf("Unable to parse route: %s (%d)\n",
++			       strerror(-ret), -ret);
++			goto out;
++		}
++	}
++
+ 	if (media_opts.formats) {
+ 		ret = v4l2_subdev_parse_setup_formats(media,
+ 						      media_opts.formats);
+diff --git a/utils/media-ctl/mediactl.h b/utils/media-ctl/mediactl.h
+index 7a7ff4f..e9c7c5d 100644
+--- a/utils/media-ctl/mediactl.h
++++ b/utils/media-ctl/mediactl.h
+@@ -32,6 +32,16 @@ struct media_link {
+ 	__u32 padding[3];
+ };
+ 
++struct media_route {
++	struct media_entity *entity;
++	__u32 source_pad;
++	__u32 sink_pad;
++	__u32 source_stream;
++	__u32 sink_stream;
++	__u32 flags;
++	__u32 padding[3];
++};
++
+ struct media_pad {
+ 	struct media_entity *entity;
+ 	__u32 index;
+@@ -369,6 +379,7 @@ int media_setup_link(struct media_device *media,
+  * @return 0 on success, or a negative error code on failure.
+  */
+ int media_reset_links(struct media_device *media);
++int media_reset_routes(struct media_device *media);
+ 
+ /**
+  * @brief Parse string to a pad on the media device.
+@@ -413,6 +424,7 @@ struct media_link *media_parse_link(struct media_device *media,
+ int media_parse_setup_link(struct media_device *media,
+ 			   const char *p, char **endp);
+ 
++int media_parse_setup_routes(struct media_device *media, const char *p);
+ /**
+  * @brief Parse string to link(s) on the media device and set it up.
+  * @param media - media device.
+diff --git a/utils/media-ctl/options.c b/utils/media-ctl/options.c
+index 2751e6e..277ed80 100644
+--- a/utils/media-ctl/options.c
++++ b/utils/media-ctl/options.c
+@@ -43,12 +43,15 @@ static void usage(const char *argv0)
+ 	printf("-h, --help		Show verbose help and exit\n");
+ 	printf("-i, --interactive	Modify links interactively\n");
+ 	printf("-l, --links links	Comma-separated list of link descriptors to setup\n");
++	printf("-t, --routes routes	Comma-separated list of route descriptors to setup\n");
+ 	printf("-p, --print-topology	Print the device topology\n");
+ 	printf("    --print-dot		Print the device topology as a dot graph\n");
+ 	printf("-r, --reset		Reset all links to inactive\n");
+ 	printf("-v, --verbose		Be verbose\n");
+ 	printf("\n");
+-	printf("Links and formats are defined as\n");
++	printf("Links, routes and formats are defined as\n");
++	printf("\troutes          = route { ',' route } ;\n");
++	printf("\troute           = entity ':' pad-number(pad-stream) '=>' pad-number(pad-stream) '[' flag ']' ;\n");
+ 	printf("\tlinks           = link { ',' link } ;\n");
+ 	printf("\tlink            = pad '->' pad '[' flags ']' ;\n");
+ 	printf("\tpad             = entity ':' pad-number ;\n");
+@@ -93,6 +96,7 @@ static struct option opts[] = {
+ 	{"help", 0, 0, 'h'},
+ 	{"interactive", 0, 0, 'i'},
+ 	{"links", 1, 0, 'l'},
++	{"routes", 1, 0, 't'},
+ 	{"print-dot", 0, 0, OPT_PRINT_DOT},
+ 	{"print-topology", 0, 0, 'p'},
+ 	{"reset", 0, 0, 'r'},
+@@ -110,7 +114,7 @@ int parse_cmdline(int argc, char **argv)
+ 	}
+ 
+ 	/* parse options */
+-	while ((opt = getopt_long(argc, argv, "d:e:f:hil:prvV:", opts, NULL)) != -1) {
++	while ((opt = getopt_long(argc, argv, "d:e:f:hil:t:prvV:", opts, NULL)) != -1) {
+ 		switch (opt) {
+ 		case 'd':
+ 			media_opts.devname = optarg;
+@@ -143,6 +147,10 @@ int parse_cmdline(int argc, char **argv)
+ 			media_opts.links = optarg;
+ 			break;
+ 
++		case 't':
++			media_opts.routes = optarg;
++			break;
++
+ 		case 'p':
+ 			media_opts.print = 1;
+ 			break;
+diff --git a/utils/media-ctl/options.h b/utils/media-ctl/options.h
+index 9b5f314..140b962 100644
+--- a/utils/media-ctl/options.h
++++ b/utils/media-ctl/options.h
+@@ -33,6 +33,7 @@ struct media_options
+ 	const char *entity;
+ 	const char *formats;
+ 	const char *links;
++	const char *routes;
+ 	const char *fmt_pad;
+ 	const char *dv_pad;
+ };
+diff --git a/utils/media-ctl/v4l2subdev.h b/utils/media-ctl/v4l2subdev.h
+index 7de0a02..799b31b 100644
+--- a/utils/media-ctl/v4l2subdev.h
++++ b/utils/media-ctl/v4l2subdev.h
+@@ -87,6 +87,11 @@ int v4l2_subdev_set_format(struct media_entity *entity,
+ 	struct v4l2_mbus_framefmt *format, unsigned int pad,
+ 	unsigned int stream, enum v4l2_subdev_format_whence which);
+ 
++int v4l2_subdev_get_routing(struct media_entity *entity,
++		struct v4l2_subdev_route *route, unsigned int *route_num);
++
++int v4l2_subdev_set_routing(struct media_entity *entity, struct v4l2_subdev_route *route,
++			    unsigned int num_routes);
+ /**
+  * @brief Retrieve a selection rectangle on a pad.
+  * @param entity - subdev-device media entity.
+-- 
+1.7.9.5
+
