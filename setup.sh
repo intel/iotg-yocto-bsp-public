@@ -204,8 +204,8 @@ bsp_ingredient_update () {
 	cd yocto_build
 	rm -rf .git
 
-	# We don't want these to be installed in the yocto_build directory.
-	rm setup.sh unsetup.sh
+	# We don't want this to be installed in the yocto_build directory.
+	rm setup.sh
 
 	cd ${cur_dir}
 }
@@ -274,16 +274,7 @@ build_bsp_sato () {
 	echo "Entering build status checker ..."
 	sleep 3
 
-	if [ $machine == "CAVS-HDA" ]
-	then
-		cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64-cavs-hda/
-	elif [ $machine == "CAVS-SSP" ]
-	then
-		cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64-cavs-ssp/
-	elif [ $machine == "HDA" ]
-	then
-		cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64/
-	fi
+	cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64/
 
 	if [ ! -f core-image-sato-*.hddimg ]
 	then
@@ -314,16 +305,7 @@ build_bsp_sato_sdk () {
 	echo "Entering build status checker ..."
 	sleep 3
 
-	if [ $machine == "CAVS-HDA" ]
-	then
-		cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64-cavs-hda/
-	elif [ $machine == "CAVS-SSP" ]
-	then
-		cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64-cavs-ssp/
-	elif [ $machine == "HDA" ]
-	then
-		cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64/
-	fi
+	cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64/
 
 	if [ ! -f core-image-sato-sdk-*.hddimg ]
 	then
@@ -384,16 +366,7 @@ build_kernel () {
 	echo "Entering build status checker ..."
 	sleep 3
 
-	if [ $machine == "CAVS-HDA" ]
-	then
-		cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64-cavs-hda/
-	elif [ $machine == "CAVS-SSP" ]
-	then
-		cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64-cavs-ssp/
-	elif [ $machine == "HDA" ]
-	then
-		cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64/
-	fi
+	cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64/
 
 	if [ ! -f bzImage ]
 	then
