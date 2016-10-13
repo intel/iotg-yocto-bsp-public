@@ -121,7 +121,6 @@ build_bsp () {
 	sleep 3
 	setup/combo-layer -c setup/combolayer.conf init
 	apply_combined_repo_commit
-	apply_kernel_patch
 
 	echo "========================================================================="
 	echo "By default, this setup script will create a brand new repo which combines"
@@ -142,7 +141,6 @@ build_kernel () {
 	sleep 3
 	setup/combo-layer -c setup/combolayer.conf init
 	apply_combined_repo_commit
-	apply_kernel_patch
 
 	echo "========================================================================="
 	echo "By default, this setup script will create a brand new repo which combines"
