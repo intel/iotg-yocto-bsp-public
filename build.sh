@@ -52,12 +52,11 @@ apply_combined_repo_commit () {
 
 apply_machine_local_conf () {
 	cur_dir=$(pwd)
-	cd ../..
 
 	case $machine in
 		CAVS-SSP)
 			# Need to turn on AUDIO_FEATURES = "ssp"
-			sed -i -e "/$AUDIO\_FEATURES\ \=\ \"ssp\"/d" yocto_build/build/conf/local.conf
+			echo "AUDIO_FEATURES = \"ssp\"" >> conf/local.conf
 			;;
 		*)
 			# Default settings.
