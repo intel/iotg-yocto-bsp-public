@@ -14,19 +14,19 @@
 #
 # Machine Selection
 #
-# This sets the default machine to be intel-corei7-64:
+# This sets the default machine to be intel-corei7-64 if no other machine is selected:
 MACHINE = "intel-corei7-64"
 
 #
-# Kernel Features
+# Leaf Hill BSP specific settings
 #
-# This sets KERNEL_FEATURES to leafhill.
+# This sets BSP_SUBTYPE to leafhill.
 # This setting is meant for Bitbake to pull the correct set of
 # kernel config fragments in yocto-kernel-cache.
 #
 # It is not recommend to remove if your target platform is
 # based on Intel Atom E3900 SoC Family.
-KERNEL_FEATURES += "leafhill"
+BSP_SUBTYPE = "leafhill"
 
 #
 # Apollo Lake Yocto BSP supports different Audio features,
@@ -54,7 +54,7 @@ MACHINE_ESSENTIAL_EXTRA_RDEPENDS_remove = "intel-microcode"
 INITRD_remove = "${DEPLOY_DIR_IMAGE}/microcode.cpio"
 
 # Make image boot to runlevel 3 by default
-APPEND = "3"
+APPEND = "3 snd_hda_intel.power_save=1 snd_hda_intel.power_save_controller=y scsi_mod.scan=async"
 
 #
 # User Space Configuration Override for Apollo Lake Platform
@@ -108,8 +108,8 @@ IMAGE_INSTALL_append = " xinit-env"
 # By default, we want our OS to includes all kernel modules.
 IMAGE_INSTALL_append = " kernel-modules"
 
-# Install soletta framework
-IMAGE_INSTALL_append = " soletta"
+# Install soletta framework and dev app
+IMAGE_INSTALL_append = " soletta soletta-dev-app"
 
 # Take note that as we are building 3rd party ingredient.
 # We need the LICENSE_FLAGS below.
