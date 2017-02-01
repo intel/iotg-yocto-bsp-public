@@ -4,15 +4,16 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/Apache-2.0;md5=89aea4e17d99a7ca
 
 SRC_URI = "git://github.com/01org/dynamic-application-loader-host-interface;protocol=https \
            file://0001-makefile-add-libdir-target-with-suffix.patch \
-           file://0001-jhi-disable-MEI-driver-and-enable-KDI.patch"
+           file://0001-jhi-disable-MEI-driver-and-enable-KDI.patch \
+           "
 
-inherit cmake useradd update-rc.d
+inherit cmake useradd systemd pkgconfig
 
-SRCREV = "40afac2504a274003f989529a1cd8deb087a7be5"
+SRCREV = "747cc592f8a18ba493faf9967c188ed21c5f18bc"
 
 S = "${WORKDIR}/git"
 
-DEPENDS += "util-linux libxml2"
+DEPENDS += "util-linux libxml2 systemd"
 RDEPENDS_${PN} += "bash"
 
 USERADD_PACKAGES = "${PN}"
@@ -20,8 +21,8 @@ USERADD_PARAM_${PN} = "--system --home /dev/null --no-create-home --shell /bin/f
 
 GROUPADD_PARAM_${PN} = "-g 880 mei"
 
-INITSCRIPT_NAME = "jhi"
-INITSCRIPT_PARAMS = "defaults"
+SYSTEMD_PACKAGES = "${PN}"
+SYSTEMD_SERVICE_${PN} = "jhi.service"
 
 EXTRA_OECMAKE = "-DCMAKE_SKIP_RPATH=ON \
                  ${@base_conditional("libdir", "/usr/lib64", "-DLIB_SUFFIX=64", "", d)} \
@@ -47,9 +48,9 @@ FILES_${PN}-dev = ""
 
 FILES_${PN} = "\
                 ${libdir} \
-                ${sysconfdir}/jhi \
-                ${sysconfdir}/init.d/jhi \
                 ${sbindir} \
+                ${sysconfdir}/jhi \
+                ${systemd_unitdir} \
                 ${localstatedir}/lib/intel/dal/applets/SpoolerApplet.dalp \
                 ${localstatedir}/lib/intel/dal/applet_repository \
                 "
