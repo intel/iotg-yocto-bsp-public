@@ -1,35 +1,9 @@
 diff -x .git -x .gitignore -Naur gstreamer-vaapi/gms-integration isg_gms-gstreamer-vaapi/gms-integration
 --- gstreamer-vaapi/gms-integration	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-gstreamer-vaapi/gms-integration	2016-10-11 02:29:31.576668265 +0800
-@@ -0,0 +1,7 @@
++++ isg_gms-gstreamer-vaapi/gms-integration	2017-02-01 02:11:02.291633542 +0800
+@@ -0,0 +1,5 @@
 +###
 +### GMS integration
 +###
-+upstream c1f5efee1d0d286fd804c5456f43f9b7ecfce35b
-+	Release 1.8.3
-+topic/icamerasrc_support topic/icamerasrc_support
-+	
-diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapiencoder_h264.c isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapiencoder_h264.c
---- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapiencoder_h264.c	2016-10-11 02:29:39.624814983 +0800
-+++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapiencoder_h264.c	2016-10-11 02:29:31.600668702 +0800
-@@ -2446,7 +2446,7 @@
-     encoder->cts_offset = gst_util_uint64_scale (GST_SECOND,
-         GST_VAAPI_ENCODER_FPS_D (encoder), GST_VAAPI_ENCODER_FPS_N (encoder));
-   else
--    encoder->cts_offset = GST_CLOCK_TIME_NONE;
-+    encoder->cts_offset = 0;
- 
-   /* init max_frame_num, max_poc */
-   encoder->log2_max_frame_num =
-diff -x .git -x .gitignore -Naur gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapiencoder_h265.c isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapiencoder_h265.c
---- gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapiencoder_h265.c	2016-10-11 02:29:39.652815493 +0800
-+++ isg_gms-gstreamer-vaapi/gst-libs/gst/vaapi/gstvaapiencoder_h265.c	2016-10-11 02:29:31.600668702 +0800
-@@ -1909,7 +1909,7 @@
-     encoder->cts_offset = gst_util_uint64_scale (GST_SECOND,
-         GST_VAAPI_ENCODER_FPS_D (encoder), GST_VAAPI_ENCODER_FPS_N (encoder));
-   else
--    encoder->cts_offset = GST_CLOCK_TIME_NONE;
-+    encoder->cts_offset = 0;
- 
-   /* init max_poc */
-   encoder->log2_max_pic_order_cnt =
++upstream b60e2df63d8e1c214021dfb8a2bc302ce03eb97a
++	encoder: h264,h265: fix regression in offset count
