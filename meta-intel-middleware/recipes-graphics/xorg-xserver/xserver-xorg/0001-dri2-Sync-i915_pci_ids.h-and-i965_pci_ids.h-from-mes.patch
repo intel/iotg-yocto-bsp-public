@@ -1,0 +1,98 @@
+From 50ca286d79f6304b972ea74487308e7794a170fb Mon Sep 17 00:00:00 2001
+From: Timo Aaltonen <tjaalton@ubuntu.com>
+Date: Wed, 27 Jan 2016 14:18:50 +0200
+Subject: [PATCH] dri2: Sync i915_pci_ids.h and i965_pci_ids.h from mesa
+
+Adds Skylake, Kabylake and Broxton allowing them to use
+modesetting + glamor with dri2.
+
+Upstream-Status: Backport
+https://cgit.freedesktop.org/xorg/xserver/commit?id=50ca286d79f6304b972ea74487308e7794a170fb
+
+Signed-off-by: Timo Aaltonen <timo.aaltonen@canonical.com>
+Reviewed-by: Andreas Boll <andreas.boll.dev@gmail.com>
+Signed-off-by: Anuj Mittal <anujx.mittal@intel.com>
+---
+ hw/xfree86/dri2/pci_ids/i915_pci_ids.h |  4 +--
+ hw/xfree86/dri2/pci_ids/i965_pci_ids.h | 56 +++++++++++++++++++++++++++++++---
+ 2 files changed, 54 insertions(+), 6 deletions(-)
+
+diff --git a/hw/xfree86/dri2/pci_ids/i915_pci_ids.h b/hw/xfree86/dri2/pci_ids/i915_pci_ids.h
+index 7d51975..1c43c8e 100644
+--- a/hw/xfree86/dri2/pci_ids/i915_pci_ids.h
++++ b/hw/xfree86/dri2/pci_ids/i915_pci_ids.h
+@@ -11,5 +11,5 @@ CHIPSET(0x27AE, I945_GME, "Intel(R) 945GME")
+ CHIPSET(0x29B2, Q35_G,    "Intel(R) Q35")
+ CHIPSET(0x29C2, G33_G,    "Intel(R) G33")
+ CHIPSET(0x29D2, Q33_G,    "Intel(R) Q33")
+-CHIPSET(0xA011, IGD_GM,   "Intel(R) IGD")
+-CHIPSET(0xA001, IGD_G,    "Intel(R) IGD")
++CHIPSET(0xA011, PNV_GM,   "Intel(R) Pineview M")
++CHIPSET(0xA001, PNV_G,    "Intel(R) Pineview")
+diff --git a/hw/xfree86/dri2/pci_ids/i965_pci_ids.h b/hw/xfree86/dri2/pci_ids/i965_pci_ids.h
+index 2e04301..5139e27 100644
+--- a/hw/xfree86/dri2/pci_ids/i965_pci_ids.h
++++ b/hw/xfree86/dri2/pci_ids/i965_pci_ids.h
+@@ -109,7 +109,55 @@ CHIPSET(0x162A, bdw_gt3, "Intel(R) Iris Pro P6300 (Broadwell GT3e)")
+ CHIPSET(0x162B, bdw_gt3, "Intel(R) Iris 6100 (Broadwell GT3)")
+ CHIPSET(0x162D, bdw_gt3, "Intel(R) Broadwell GT3")
+ CHIPSET(0x162E, bdw_gt3, "Intel(R) Broadwell GT3")
+-CHIPSET(0x22B0, chv,     "Intel(R) Cherryview")
+-CHIPSET(0x22B1, chv,     "Intel(R) Cherryview")
+-CHIPSET(0x22B2, chv,     "Intel(R) Cherryview")
+-CHIPSET(0x22B3, chv,     "Intel(R) Cherryview")
++CHIPSET(0x1902, skl_gt1, "Intel(R) HD Graphics 510 (Skylake GT1)")
++CHIPSET(0x1906, skl_gt1, "Intel(R) HD Graphics 510 (Skylake GT1)")
++CHIPSET(0x190A, skl_gt1, "Intel(R) Skylake GT1")
++CHIPSET(0x190E, skl_gt1, "Intel(R) Skylake GT1")
++CHIPSET(0x1912, skl_gt2, "Intel(R) HD Graphics 530 (Skylake GT2)")
++CHIPSET(0x1913, skl_gt2, "Intel(R) Skylake GT2f")
++CHIPSET(0x1915, skl_gt2, "Intel(R) Skylake GT2f")
++CHIPSET(0x1916, skl_gt2, "Intel(R) HD Graphics 520 (Skylake GT2)")
++CHIPSET(0x1917, skl_gt2, "Intel(R) Skylake GT2f")
++CHIPSET(0x191A, skl_gt2, "Intel(R) Skylake GT2")
++CHIPSET(0x191B, skl_gt2, "Intel(R) HD Graphics 530 (Skylake GT2)")
++CHIPSET(0x191D, skl_gt2, "Intel(R) HD Graphics P530 (Skylake GT2)")
++CHIPSET(0x191E, skl_gt2, "Intel(R) HD Graphics 515 (Skylake GT2)")
++CHIPSET(0x1921, skl_gt2, "Intel(R) Skylake GT2")
++CHIPSET(0x1923, skl_gt3, "Intel(R) Iris Graphics 540 (Skylake GT3e)")
++CHIPSET(0x1926, skl_gt3, "Intel(R) HD Graphics 535 (Skylake GT3)")
++CHIPSET(0x1927, skl_gt3, "Intel(R) Iris Graphics 550 (Skylake GT3e)")
++CHIPSET(0x192A, skl_gt4, "Intel(R) Skylake GT4")
++CHIPSET(0x192B, skl_gt3, "Intel(R) Iris Graphics (Skylake GT3fe)")
++CHIPSET(0x1932, skl_gt4, "Intel(R) Skylake GT4")
++CHIPSET(0x193A, skl_gt4, "Intel(R) Skylake GT4")
++CHIPSET(0x193B, skl_gt4, "Intel(R) Skylake GT4")
++CHIPSET(0x193D, skl_gt4, "Intel(R) Skylake GT4")
++CHIPSET(0x5902, kbl_gt1, "Intel(R) Kabylake GT1")
++CHIPSET(0x5906, kbl_gt1, "Intel(R) Kabylake GT1")
++CHIPSET(0x590A, kbl_gt1, "Intel(R) Kabylake GT1")
++CHIPSET(0x590B, kbl_gt1, "Intel(R) Kabylake GT1")
++CHIPSET(0x590E, kbl_gt1, "Intel(R) Kabylake GT1")
++CHIPSET(0x5913, kbl_gt1_5, "Intel(R) Kabylake GT1.5")
++CHIPSET(0x5915, kbl_gt1_5, "Intel(R) Kabylake GT1.5")
++CHIPSET(0x5917, kbl_gt1_5, "Intel(R) Kabylake GT1.5")
++CHIPSET(0x5912, kbl_gt2, "Intel(R) Kabylake GT2")
++CHIPSET(0x5916, kbl_gt2, "Intel(R) Kabylake GT2")
++CHIPSET(0x591A, kbl_gt2, "Intel(R) Kabylake GT2")
++CHIPSET(0x591B, kbl_gt2, "Intel(R) Kabylake GT2")
++CHIPSET(0x591D, kbl_gt2, "Intel(R) Kabylake GT2")
++CHIPSET(0x591E, kbl_gt2, "Intel(R) Kabylake GT2")
++CHIPSET(0x5921, kbl_gt2, "Intel(R) Kabylake GT2F")
++CHIPSET(0x5926, kbl_gt3, "Intel(R) Kabylake GT3")
++CHIPSET(0x592A, kbl_gt3, "Intel(R) Kabylake GT3")
++CHIPSET(0x592B, kbl_gt3, "Intel(R) Kabylake GT3")
++CHIPSET(0x5932, kbl_gt4, "Intel(R) Kabylake GT4")
++CHIPSET(0x593A, kbl_gt4, "Intel(R) Kabylake GT4")
++CHIPSET(0x593B, kbl_gt4, "Intel(R) Kabylake GT4")
++CHIPSET(0x593D, kbl_gt4, "Intel(R) Kabylake GT4")
++CHIPSET(0x22B0, chv,     "Intel(R) HD Graphics (Cherryview)")
++CHIPSET(0x22B1, chv,     "Intel(R) HD Graphics (Cherryview)")
++CHIPSET(0x22B2, chv,     "Intel(R) HD Graphics (Cherryview)")
++CHIPSET(0x22B3, chv,     "Intel(R) HD Graphics (Cherryview)")
++CHIPSET(0x0A84, bxt,     "Intel(R) HD Graphics (Broxton)")
++CHIPSET(0x1A84, bxt,     "Intel(R) HD Graphics (Broxton)")
++CHIPSET(0x5A84, bxt,     "Intel(R) HD Graphics (Broxton)")
+-- 
+1.9.1
+
