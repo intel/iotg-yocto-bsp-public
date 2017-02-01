@@ -1,7 +1,6 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI += "file://brcmfmac43241b4-sdio.txt \
-	    file://0001-Add-BXT-DMC-1.07-firmware.patch \
 	    file://0002-linux-firmware-i915-GuC-firmware-for-Broxton-v8.7.patch \
 	    file://0003-linux-firmware-i915-HuC-firmware-for-Broxton-v1.7.patch \
            "
@@ -59,12 +58,11 @@ LIC_FILES_CHKSUM_append = " file://LICENSE.radeon;md5=69612f4f7b141a97659cb1d609
 
 NO_GENERIC_LICENSE[Firmware-qat] = "LICENCE.qat_firmware"
 
-SRCREV = "80d463be829abcee4dbdca8432b9a69452e2021d"
+SRCREV = "5e976de9e02b55563c28555361a7763bc043f5ec"
 
 do_patch() {
 	cd ${S}
 	# Binary patch must be patched in sequence
-	git am ${WORKDIR}/0001-Add-BXT-DMC-1.07-firmware.patch
 	git am ${WORKDIR}/0002-linux-firmware-i915-GuC-firmware-for-Broxton-v8.7.patch
 	git am ${WORKDIR}/0003-linux-firmware-i915-HuC-firmware-for-Broxton-v1.7.patch
 }
