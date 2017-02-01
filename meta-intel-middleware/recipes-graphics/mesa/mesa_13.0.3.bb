@@ -4,12 +4,13 @@ DEPENDS += "python-mako-native"
 
 inherit pythonnative update-alternatives
 
-SRC_URI = "git://anongit.freedesktop.org/mesa/mesa;branch=11.2 \
-           file://mesa_version_diff.patch"
+SRC_URI = "git://anongit.freedesktop.org/mesa/mesa;branch=13.0 \
+           file://mesa_version_diff.patch \
+           file://0001-Simplify-wayland-scanner-lookup.patch"
 
-SRCREV = "79b0e13913b5189bb8629e80439fea746f99fe79"
+SRCREV = "c8ece92ded9337b9ed60aa9568b41313025a1406"
 
-LIC_FILES_CHKSUM = "file://docs/COPYING;md5=ab19091db2ee1aae8753474f8a074a5c"
+LIC_FILES_CHKSUM = "file://docs/license.html;md5=899fbe7e42d494c7c8c159c7001693d5"
 
 ALTERNATIVE_mesa-megadriver = "i965_dri"
 ALTERNATIVE_LINK_NAME[i965_dri] = "/usr/lib/dri/i965_dri.so"
@@ -25,12 +26,13 @@ PACKAGECONFIG = "egl gles dri dri3 \
 		"
 
 PACKAGECONFIG[debug] = "--enable-debug"
+PACKAGECONFIG[wayland] = ",,wayland-native wayland"
 
 #because we cannot rely on the fact that all apps will use pkgconfig,
 #make eglplatform.h independent of MESA_EGL_NO_X11_HEADER
 do_install_append() {
     if ${@bb.utils.contains('PACKAGECONFIG', 'egl', 'true', 'false', d)}; then
-        sed -i -e 's/^#if defined(MESA_EGL_NO_X11_HEADERS)/#if ${@bb.utils.contains('PACKAGECONFIG', 'x11', '0', '1', d)}/' ${D}${includedir}/EGL/eglplatform.h
+        sed -i -e 's/^#if defined(MESA_EGL_NO_X11_HEADERS)$/#if defined(MESA_EGL_NO_X11_HEADERS) || ${@bb.utils.contains('PACKAGECONFIG', 'x11', '0', '1', d)}/' ${D}${includedir}/EGL/eglplatform.h
     fi
 }
 

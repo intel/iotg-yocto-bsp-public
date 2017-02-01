@@ -1,208 +1,18 @@
-diff -x .git -x .gitignore -Naur mesa/configure.ac isg_gms-mesa/configure.ac
---- mesa/configure.ac	2016-10-11 02:27:53.402878950 +0800
-+++ isg_gms-mesa/configure.ac	2016-10-11 02:24:46.495474492 +0800
-@@ -704,8 +704,10 @@
- if test "x$enable_asm" = xyes -a "x$cross_compiling" = xyes; then
-     case "$host_cpu" in
-     i?86 | x86_64 | amd64)
--        enable_asm=no
--        AC_MSG_RESULT([no, cross compiling])
-+        if test "x$host_cpu" != "x$target_cpu"; then
-+            enable_asm=no
-+            AC_MSG_RESULT([no, cross compiling])
-+        fi
-         ;;
-     esac
- fi
 diff -x .git -x .gitignore -Naur mesa/gms-integration isg_gms-mesa/gms-integration
 --- mesa/gms-integration	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-mesa/gms-integration	2016-10-11 02:24:46.527475074 +0800
-@@ -0,0 +1,13 @@
++++ isg_gms-mesa/gms-integration	2017-02-01 02:06:01.250089565 +0800
+@@ -0,0 +1,7 @@
 +###
 +### GMS integration
 +###
-+upstream 79b0e13913b5189bb8629e80439fea746f99fe79
-+	docs: update the sha256 checksums for 11.2.1
-+topic/bxt-enablement 6a62cbc353d54af690d6be769e1c5c4a94b70420
-+	i965/bxt: Add new APL (aka Broxton) device ID
-+topic/vpg_ufo_patches d8030dfb186b6080ea8d09b7971279d74a061683
-+	wayland/egl: Assigning window size to window surface size property
-+topic/reusable_sync 1cfc1f1f0b0317a8d452d95c893489a99755bd31
-+	egl: 'ret' shouldn't be used for pthread error-check
-+topic/xcompile 751b9278c39229e6be9432745a42570006abc018
-+	configure.ac: enable_asm=yes when x-compiling across same arch (v2)
-diff -x .git -x .gitignore -Naur mesa/include/pci_ids/i965_pci_ids.h isg_gms-mesa/include/pci_ids/i965_pci_ids.h
---- mesa/include/pci_ids/i965_pci_ids.h	2016-10-11 02:27:53.422879315 +0800
-+++ isg_gms-mesa/include/pci_ids/i965_pci_ids.h	2016-10-11 02:24:46.559475656 +0800
-@@ -162,4 +162,5 @@
- CHIPSET(0x22B3, chv,     "Intel(R) HD Graphics (Cherryview)")
- CHIPSET(0x0A84, bxt,     "Intel(R) HD Graphics (Broxton)")
- CHIPSET(0x1A84, bxt,     "Intel(R) HD Graphics (Broxton)")
--CHIPSET(0x5A84, bxt,     "Intel(R) HD Graphics (Broxton)")
-+CHIPSET(0x5A84, bxt,     "Intel(R) HD Graphics 505 (APL)")
-+CHIPSET(0x5A85, bxt,     "Intel(R) HD Graphics 500 (APL)")
-diff -x .git -x .gitignore -Naur mesa/src/compiler/glsl/linker.cpp isg_gms-mesa/src/compiler/glsl/linker.cpp
---- mesa/src/compiler/glsl/linker.cpp	2016-10-11 02:27:53.466880117 +0800
-+++ isg_gms-mesa/src/compiler/glsl/linker.cpp	2016-10-11 02:24:46.651477332 +0800
-@@ -4658,6 +4658,7 @@
-                                 &prog->Comp.SharedSize);
- 
-       lower_vector_derefs(prog->_LinkedShaders[i]);
-+      do_vec_index_to_swizzle(prog->_LinkedShaders[i]->ir);
-    }
- 
- done:
-diff -x .git -x .gitignore -Naur mesa/src/compiler/glsl/lower_vec_index_to_swizzle.cpp isg_gms-mesa/src/compiler/glsl/lower_vec_index_to_swizzle.cpp
---- mesa/src/compiler/glsl/lower_vec_index_to_swizzle.cpp	2016-10-11 02:27:53.474880263 +0800
-+++ isg_gms-mesa/src/compiler/glsl/lower_vec_index_to_swizzle.cpp	2016-10-11 02:24:46.655477405 +0800
-@@ -30,18 +30,14 @@
-  */
- 
- #include "ir.h"
--#include "ir_visitor.h"
-+#include "ir_rvalue_visitor.h"
- #include "ir_optimization.h"
- #include "compiler/glsl_types.h"
- #include "main/macros.h"
- 
--/**
-- * Visitor class for replacing expressions with ir_constant values.
-- */
--
- namespace {
- 
--class ir_vec_index_to_swizzle_visitor : public ir_hierarchical_visitor {
-+class ir_vec_index_to_swizzle_visitor : public ir_rvalue_visitor {
- public:
-    ir_vec_index_to_swizzle_visitor()
-    {
-@@ -50,30 +46,28 @@
- 
-    ir_rvalue *convert_vector_extract_to_swizzle(ir_rvalue *val);
- 
--   virtual ir_visitor_status visit_enter(ir_expression *);
--   virtual ir_visitor_status visit_enter(ir_swizzle *);
--   virtual ir_visitor_status visit_enter(ir_assignment *);
--   virtual ir_visitor_status visit_enter(ir_return *);
--   virtual ir_visitor_status visit_enter(ir_call *);
--   virtual ir_visitor_status visit_enter(ir_if *);
-+   virtual void handle_rvalue(ir_rvalue **);
- 
-    bool progress;
- };
- 
- } /* anonymous namespace */
- 
--ir_rvalue *
--ir_vec_index_to_swizzle_visitor::convert_vector_extract_to_swizzle(ir_rvalue *ir)
-+void
-+ir_vec_index_to_swizzle_visitor::handle_rvalue(ir_rvalue **rv)
- {
--   ir_expression *const expr = ir->as_expression();
-+   if (*rv == NULL)
-+      return;
-+
-+   ir_expression *const expr = (*rv)->as_expression();
-    if (expr == NULL || expr->operation != ir_binop_vector_extract)
--      return ir;
-+      return;
- 
-    ir_constant *const idx = expr->operands[1]->constant_expression_value();
-    if (idx == NULL)
--      return ir;
-+      return;
- 
--   void *ctx = ralloc_parent(ir);
-+   void *ctx = ralloc_parent(expr);
-    this->progress = true;
- 
-    /* Page 40 of the GLSL 1.20 spec says:
-@@ -93,71 +87,7 @@
-    const int i = CLAMP(idx->value.i[0], 0,
-                        (int) expr->operands[0]->type->vector_elements - 1);
- 
--   return new(ctx) ir_swizzle(expr->operands[0], i, 0, 0, 0, 1);
--}
--
--ir_visitor_status
--ir_vec_index_to_swizzle_visitor::visit_enter(ir_expression *ir)
--{
--   unsigned int i;
--
--   for (i = 0; i < ir->get_num_operands(); i++) {
--      ir->operands[i] = convert_vector_extract_to_swizzle(ir->operands[i]);
--   }
--
--   return visit_continue;
--}
--
--ir_visitor_status
--ir_vec_index_to_swizzle_visitor::visit_enter(ir_swizzle *ir)
--{
--   /* Can't be hit from normal GLSL, since you can't swizzle a scalar (which
--    * the result of indexing a vector is.  But maybe at some point we'll end up
--    * using swizzling of scalars for vector construction.
--    */
--   ir->val = convert_vector_extract_to_swizzle(ir->val);
--
--   return visit_continue;
--}
--
--ir_visitor_status
--ir_vec_index_to_swizzle_visitor::visit_enter(ir_assignment *ir)
--{
--   ir->rhs = convert_vector_extract_to_swizzle(ir->rhs);
--
--   return visit_continue;
--}
--
--ir_visitor_status
--ir_vec_index_to_swizzle_visitor::visit_enter(ir_call *ir)
--{
--   foreach_in_list_safe(ir_rvalue, param, &ir->actual_parameters) {
--      ir_rvalue *new_param = convert_vector_extract_to_swizzle(param);
--
--      if (new_param != param) {
--	 param->replace_with(new_param);
--      }
--   }
--
--   return visit_continue;
--}
--
--ir_visitor_status
--ir_vec_index_to_swizzle_visitor::visit_enter(ir_return *ir)
--{
--   if (ir->value) {
--      ir->value = convert_vector_extract_to_swizzle(ir->value);
--   }
--
--   return visit_continue;
--}
--
--ir_visitor_status
--ir_vec_index_to_swizzle_visitor::visit_enter(ir_if *ir)
--{
--   ir->condition = convert_vector_extract_to_swizzle(ir->condition);
--
--   return visit_continue;
-+   *rv = new(ctx) ir_swizzle(expr->operands[0], i, 0, 0, 0, 1);
- }
- 
- bool
++upstream c8ece92ded9337b9ed60aa9568b41313025a1406
++	docs: add sha256 checksums for 13.0.3
++topic/vpg_ufo_patches a7636fdc53a8362fad154932e5fe3745b71748d9
++	gbm-dri: Duplicate image after checking its format.
 diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2.c isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.c
---- mesa/src/egl/drivers/dri2/egl_dri2.c	2016-10-11 02:27:53.506880846 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.c	2016-10-11 02:24:46.675477769 +0800
-@@ -38,6 +38,8 @@
- #include <fcntl.h>
- #include <errno.h>
- #include <unistd.h>
-+#include <pthread.h>
-+#include <time.h>
- #ifdef HAVE_LIBDRM
- #include <xf86drm.h>
- #include <drm_fourcc.h>
-@@ -224,15 +226,6 @@
+--- mesa/src/egl/drivers/dri2/egl_dri2.c	2017-02-01 02:09:24.413829633 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.c	2017-02-01 02:06:01.322090890 +0800
+@@ -226,15 +226,6 @@
           dri_masks[3] = value;
           break;
  
@@ -218,289 +28,20 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2.c isg_gms-me
        case __DRI_ATTRIB_FRAMEBUFFER_SRGB_CAPABLE:
           srgb = value != 0;
           if (!disp->Extensions.KHR_gl_colorspace && srgb)
-@@ -623,6 +616,8 @@
-          disp->Extensions.KHR_cl_event2 = EGL_TRUE;
-    }
- 
-+   disp->Extensions.KHR_reusable_sync = EGL_TRUE;
-+
-    if (dri2_dpy->image) {
-       if (dri2_dpy->image->base.version >= 10 &&
-           dri2_dpy->image->getCapabilities != NULL) {
-@@ -1182,6 +1177,10 @@
-    __DRIdrawable *ddraw, *rdraw;
-    __DRIcontext *cctx;
+@@ -1277,6 +1268,10 @@
+    if (!dri2_dpy)
+       return _eglError(EGL_NOT_INITIALIZED, "eglMakeCurrent");
  
 +   /* check display */
 +   if (!dri2_dpy)
 +      return _eglError(EGL_BAD_DISPLAY, "eglMakeCurrent");
 +
     /* make new bindings */
-    if (!_eglBindContext(ctx, dsurf, rsurf, &old_ctx, &old_dsurf, &old_rsurf))
-       return EGL_FALSE;
-@@ -2389,14 +2388,33 @@
-    p_atomic_inc(&sync->refcount);
- }
- 
--static void
-+static EGLint
- dri2_egl_unref_sync(struct dri2_egl_display *dri2_dpy,
-                     struct dri2_egl_sync *dri2_sync)
- {
-+   EGLint ret;
-+
-    if (p_atomic_dec_zero(&dri2_sync->refcount)) {
--      dri2_dpy->fence->destroy_fence(dri2_dpy->dri_screen, dri2_sync->fence);
-+      /* mutex and cond should be freed if not freed yet. */
-+      if (dri2_sync->mutex)
-+         free(dri2_sync->mutex);
-+
-+      if (dri2_sync->cond) {
-+         ret = pthread_cond_destroy(dri2_sync->cond);
-+
-+         if (ret)
-+            return EGL_FALSE;
-+
-+         free(dri2_sync->cond);
-+      }
-+
-+      if (dri2_sync->fence)
-+         dri2_dpy->fence->destroy_fence(dri2_dpy->dri_screen, dri2_sync->fence);
-+
-       free(dri2_sync);
-    }
-+
-+   return EGL_TRUE;
- }
- 
- static _EGLSync *
-@@ -2408,6 +2426,7 @@
-    struct dri2_egl_display *dri2_dpy = dri2_egl_display(dpy);
-    struct dri2_egl_context *dri2_ctx = dri2_egl_context(ctx);
-    struct dri2_egl_sync *dri2_sync;
-+   EGLint ret;
- 
-    dri2_sync = calloc(1, sizeof(struct dri2_egl_sync));
-    if (!dri2_sync) {
-@@ -2450,6 +2469,23 @@
-                                             dri2_sync->fence, 0, 0))
-          dri2_sync->base.SyncStatus = EGL_SIGNALED_KHR;
-       break;
-+
-+   case EGL_SYNC_REUSABLE_KHR:
-+      dri2_sync->cond = calloc(1, sizeof(pthread_cond_t));
-+      dri2_sync->mutex = calloc(1, sizeof(pthread_mutex_t));
-+      ret = pthread_cond_init(dri2_sync->cond, NULL);
-+
-+      if (ret) {
-+         _eglError(EGL_BAD_PARAMETER, "eglCreateSyncKHR");
-+         free(dri2_sync->cond);
-+         free(dri2_sync->mutex);
-+         free(dri2_sync);
-+         return NULL;
-+      }
-+
-+      /* initial status of reusable sync must be "unsignaled" */
-+      dri2_sync->base.SyncStatus = EGL_UNSIGNALED_KHR;
-+      break;
-    }
- 
-    p_atomic_set(&dri2_sync->refcount, 1);
-@@ -2461,9 +2497,33 @@
- {
-    struct dri2_egl_display *dri2_dpy = dri2_egl_display(dpy);
-    struct dri2_egl_sync *dri2_sync = dri2_egl_sync(sync);
-+   EGLint ret = EGL_TRUE;
-+   EGLint err;
- 
--   dri2_egl_unref_sync(dri2_dpy, dri2_sync);
--   return EGL_TRUE;
-+   /* if type of sync is EGL_SYNC_REUSABLE_KHR and it is not signaled yet,
-+    * then unlock all threads possibly blocked by this reusable sync before
-+    * destroy it.
-+    */
-+   if (dri2_sync->base.Type == EGL_SYNC_REUSABLE_KHR &&
-+       dri2_sync->base.SyncStatus == EGL_UNSIGNALED_KHR) {
-+      dri2_sync->base.SyncStatus = EGL_SIGNALED_KHR;
-+      /* unblock all threads currently blocked by sync */
-+      err = pthread_cond_broadcast(dri2_sync->cond);
-+
-+      if (err) {
-+         _eglError(EGL_BAD_PARAMETER, "eglDestroySyncKHR");
-+         ret = EGL_FALSE;
-+      }
-+   }
-+
-+   err = dri2_egl_unref_sync(dri2_dpy, dri2_sync);
-+
-+   if (err == EGL_FALSE) {
-+      _eglError(EGL_BAD_PARAMETER, "eglDestroySyncKHR");
-+      ret = EGL_FALSE;
-+   }
-+
-+   return ret;
- }
- 
- static EGLint
-@@ -2471,11 +2531,18 @@
-                       EGLint flags, EGLTime timeout)
- {
-    _EGLContext *ctx = _eglGetCurrentContext();
-+   struct dri2_egl_driver *dri2_drv = dri2_egl_driver(drv);
-    struct dri2_egl_display *dri2_dpy = dri2_egl_display(dpy);
-    struct dri2_egl_context *dri2_ctx = dri2_egl_context(ctx);
-    struct dri2_egl_sync *dri2_sync = dri2_egl_sync(sync);
-    unsigned wait_flags = 0;
-+
-+   /* needed for EGL_SYNC_REUSABLE_KHR */
-+   struct timespec current;
-+   struct timespec expiration;
-+
-    EGLint ret = EGL_CONDITION_SATISFIED_KHR;
-+   EGLint err;
- 
-    /* The EGL_KHR_fence_sync spec states:
-     *
-@@ -2488,17 +2555,123 @@
-    /* the sync object should take a reference while waiting */
-    dri2_egl_ref_sync(dri2_sync);
- 
--   if (dri2_dpy->fence->client_wait_sync(dri2_ctx ? dri2_ctx->dri_context : NULL,
-+   switch (sync->Type) {
-+   case EGL_SYNC_FENCE_KHR:
-+      if (dri2_dpy->fence->client_wait_sync(dri2_ctx ? dri2_ctx->dri_context : NULL,
-                                          dri2_sync->fence, wait_flags,
-                                          timeout))
--      dri2_sync->base.SyncStatus = EGL_SIGNALED_KHR;
--   else
--      ret = EGL_TIMEOUT_EXPIRED_KHR;
-+         dri2_sync->base.SyncStatus = EGL_SIGNALED_KHR;
-+      else
-+         ret = EGL_TIMEOUT_EXPIRED_KHR;
-+
-+      break;
-+
-+   case EGL_SYNC_REUSABLE_KHR:
-+      if (dri2_ctx && dri2_sync->base.SyncStatus==EGL_UNSIGNALED_KHR &&
-+          (flags & EGL_SYNC_FLUSH_COMMANDS_BIT_KHR)) {
-+         /* flush context if EGL_SYNC_FLUSH_COMMANDS_BIT_KHR is set */
-+         if (dri2_drv->glFlush)
-+            dri2_drv->glFlush();
-+      }
-+
-+      /* if timeout is EGL_FOREVER_KHR, it should wait without any timeout.*/
-+      if (timeout == EGL_FOREVER_KHR) {
-+         if (pthread_mutex_lock(dri2_sync->mutex)) {
-+            ret = EGL_FALSE;
-+            goto cleanup;
-+         }
-+
-+         ret = pthread_cond_wait(dri2_sync->cond, dri2_sync->mutex);
-+
-+         if (pthread_mutex_unlock(dri2_sync->mutex)) {
-+            ret = EGL_FALSE;
-+            goto cleanup;
-+         }
-+
-+         if (ret) {
-+            _eglError(EGL_BAD_PARAMETER, "eglClientWaitSyncKHR");
-+            ret = EGL_FALSE;
-+         }
-+      } else {
-+         /* if it's not yet signaled */
-+         if (dri2_sync->base.SyncStatus!=EGL_SIGNALED_KHR) {
-+
-+            clock_gettime(CLOCK_REALTIME, &current);
-+
-+            expiration.tv_nsec = current.tv_nsec + timeout;
-+            expiration.tv_sec = current.tv_sec + expiration.tv_nsec/1000000000L;
-+            expiration.tv_nsec = current.tv_nsec%1000000000L;
-+
-+            if (pthread_mutex_lock(dri2_sync->mutex)) {
-+               ret = EGL_FALSE;
-+               goto cleanup;
-+            }
-+
-+            ret = pthread_cond_timedwait(dri2_sync->cond, dri2_sync->mutex, &expiration);
-+
-+            if (pthread_mutex_unlock(dri2_sync->mutex)) {
-+               ret = EGL_FALSE;
-+               goto cleanup;
-+            }
-+
-+            if (ret)
-+               if (ret == ETIMEDOUT) {
-+                  if (dri2_sync->base.SyncStatus==EGL_UNSIGNALED_KHR) {
-+                     ret = EGL_TIMEOUT_EXPIRED_KHR;
-+                  } else {
-+                     _eglError(EGL_BAD_PARAMETER, "eglClientWaitSyncKHR");
-+                     ret = EGL_FALSE;
-+                  }
-+               }
-+         }
-+      }
-+      break;
-+   }
-+
-+ cleanup:
-+   err = dri2_egl_unref_sync(dri2_dpy, dri2_sync);
-+
-+   /* fail to unreference dri2_sync */
-+   if (ret == EGL_FALSE || err == EGL_FALSE) {
-+      _eglError(EGL_BAD_PARAMETER, "eglClientWaitSyncKHR");
-+      return EGL_FALSE;
-+   }
- 
--   dri2_egl_unref_sync(dri2_dpy, dri2_sync);
-    return ret;
- }
- 
-+static EGLBoolean
-+dri2_signal_sync(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSync *sync,
-+                      EGLenum mode)
-+{
-+   struct dri2_egl_sync *dri2_sync = dri2_egl_sync(sync);
-+   EGLint ret;
-+
-+   if (sync->Type!=EGL_SYNC_REUSABLE_KHR) {
-+      _eglError(EGL_BAD_MATCH, "eglSignalSyncKHR");
-+      return EGL_FALSE;
-+   }
-+
-+   if (mode != EGL_SIGNALED_KHR && mode != EGL_UNSIGNALED_KHR) {
-+      _eglError(EGL_BAD_ATTRIBUTE, "eglSignalSyncKHR");
-+      return EGL_FALSE;
-+   }
-+
-+   dri2_sync->base.SyncStatus = mode;
-+
-+   if (mode == EGL_SIGNALED_KHR) {
-+      ret = pthread_cond_broadcast(dri2_sync->cond);
-+
-+      /* fail to broadcast */
-+      if (ret) {
-+         _eglError(EGL_BAD_PARAMETER, "eglSignalSyncKHR");
-+         return EGL_FALSE;
-+      }
-+   }
-+
-+   return EGL_TRUE;
-+}
-+
- static EGLint
- dri2_server_wait_sync(_EGLDriver *drv, _EGLDisplay *dpy, _EGLSync *sync)
- {
-@@ -2620,6 +2793,7 @@
-    dri2_drv->base.API.GetSyncValuesCHROMIUM = dri2_get_sync_values_chromium;
-    dri2_drv->base.API.CreateSyncKHR = dri2_create_sync;
-    dri2_drv->base.API.ClientWaitSyncKHR = dri2_client_wait_sync;
-+   dri2_drv->base.API.SignalSyncKHR = dri2_signal_sync;
-    dri2_drv->base.API.WaitSyncKHR = dri2_server_wait_sync;
-    dri2_drv->base.API.DestroySyncKHR = dri2_destroy_sync;
- 
+    if (!_eglBindContext(ctx, dsurf, rsurf, &old_ctx, &old_dsurf, &old_rsurf)) {
+       /* _eglBindContext already sets the EGL error (in _eglCheckMakeCurrent) */
 diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h isg_gms-mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h
---- mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2016-10-11 02:27:52.162856355 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2016-10-11 02:24:46.675477769 +0800
+--- mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2017-02-01 02:09:23.653815634 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2017-02-01 02:06:01.322090890 +0800
 @@ -37,11 +37,16 @@
     return NULL;
  }
@@ -518,21 +59,9 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h 
     return NULL;
  }
  
-diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2.h isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.h
---- mesa/src/egl/drivers/dri2/egl_dri2.h	2016-10-11 02:27:53.506880846 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.h	2016-10-11 02:24:46.675477769 +0800
-@@ -307,6 +307,8 @@
- 
- struct dri2_egl_sync {
-    _EGLSync base;
-+   pthread_mutex_t *mutex;
-+   pthread_cond_t *cond;
-    int refcount;
-    void *fence;
- };
 diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_wayland.c isg_gms-mesa/src/egl/drivers/dri2/platform_wayland.c
---- mesa/src/egl/drivers/dri2/platform_wayland.c	2016-10-11 02:27:53.506880846 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/platform_wayland.c	2016-10-11 02:24:46.675477769 +0800
+--- mesa/src/egl/drivers/dri2/platform_wayland.c	2017-02-01 02:09:24.413829633 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/platform_wayland.c	2017-02-01 02:06:01.322090890 +0800
 @@ -44,6 +44,7 @@
  
  #include <wayland-client.h>
@@ -541,25 +70,9 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_wayland.c is
  
  enum wl_drm_format_flags {
     HAS_ARGB8888 = 1,
-@@ -118,6 +119,13 @@
-    (*dri2_dpy->flush->invalidate)(dri2_surf->dri_drawable);
- }
- 
-+static void
-+destroy_window_callback(void *data)
-+{
-+   struct dri2_egl_surface *dri2_surf = data;
-+   dri2_surf->wl_win = NULL;
-+}
-+
- /**
-  * Called via eglCreateWindowSurface(), drv->API.CreateWindowSurface().
-  */
-@@ -159,9 +167,10 @@
- 
-    dri2_surf->wl_win->private = dri2_surf;
+@@ -168,8 +169,8 @@
     dri2_surf->wl_win->resize_callback = resize_callback;
-+   dri2_surf->wl_win->destroy_window_callback = destroy_window_callback;
+    dri2_surf->wl_win->destroy_window_callback = destroy_window_callback;
  
 -   dri2_surf->base.Width =  -1;
 -   dri2_surf->base.Height = -1;
@@ -568,23 +81,9 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_wayland.c is
  
     config = dri2_get_dri_config(dri2_conf, EGL_WINDOW_BIT,
                                  dri2_surf->base.GLColorspace);
-@@ -257,8 +266,11 @@
-    if (dri2_surf->throttle_callback)
-       wl_callback_destroy(dri2_surf->throttle_callback);
- 
--   dri2_surf->wl_win->private = NULL;
--   dri2_surf->wl_win->resize_callback = NULL;
-+   if (dri2_surf->wl_win) {
-+      dri2_surf->wl_win->private = NULL;
-+      dri2_surf->wl_win->resize_callback = NULL;
-+      dri2_surf->wl_win->destroy_window_callback = NULL;
-+   }
- 
-    free(surf);
- 
 diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_x11.c isg_gms-mesa/src/egl/drivers/dri2/platform_x11.c
---- mesa/src/egl/drivers/dri2/platform_x11.c	2016-10-11 02:27:53.506880846 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/platform_x11.c	2016-10-11 02:24:46.675477769 +0800
+--- mesa/src/egl/drivers/dri2/platform_x11.c	2017-02-01 02:09:24.413829633 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/platform_x11.c	2017-02-01 02:06:01.322090890 +0800
 @@ -235,6 +235,16 @@
           goto cleanup_surf;
        }
@@ -602,7 +101,7 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_x11.c isg_gm
        dri2_surf->drawable = xcb_generate_id(dri2_dpy->conn);
        xcb_create_pixmap(dri2_dpy->conn, conf->BufferSize,
                         dri2_surf->drawable, screen->root,
-@@ -392,7 +402,11 @@
+@@ -389,7 +399,11 @@
     (*dri2_dpy->core->destroyDrawable)(dri2_surf->dri_drawable);
     
     if (dri2_dpy->dri2) {
@@ -615,7 +114,7 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_x11.c isg_gm
     } else {
        assert(dri2_dpy->swrast);
        swrastDestroyDrawable(dri2_dpy, dri2_surf);
-@@ -871,6 +885,25 @@
+@@ -887,6 +901,25 @@
     struct dri2_egl_display *dri2_dpy = dri2_egl_display(disp);
     struct dri2_egl_surface *dri2_surf = dri2_egl_surface(draw);
  
@@ -642,9 +141,9 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_x11.c isg_gm
        if (dri2_x11_swap_buffers_msc(drv, disp, draw, 0, 0, 0) != -1) {
            return EGL_TRUE;
 diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglapi.c isg_gms-mesa/src/egl/main/eglapi.c
---- mesa/src/egl/main/eglapi.c	2016-10-11 02:27:53.506880846 +0800
-+++ isg_gms-mesa/src/egl/main/eglapi.c	2016-10-11 02:24:46.675477769 +0800
-@@ -101,6 +101,63 @@
+--- mesa/src/egl/main/eglapi.c	2017-02-01 02:09:24.413829633 +0800
++++ isg_gms-mesa/src/egl/main/eglapi.c	2017-02-01 02:06:01.326090964 +0800
+@@ -102,6 +102,63 @@
  #include "eglimage.h"
  #include "eglsync.h"
  
@@ -708,30 +207,13 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglapi.c isg_gms-mesa/src/egl
  
  /**
   * Macros to help return an API entrypoint.
-@@ -432,14 +489,11 @@
-    if (dpy->ClientAPIs & EGL_OPENGL_BIT)
-       strcat(dpy->ClientAPIsString, "OpenGL ");
- 
--   if (dpy->ClientAPIs & EGL_OPENGL_ES_BIT)
-+   if (dpy->ClientAPIs & EGL_OPENGL_ES_BIT ||
-+       dpy->ClientAPIs & EGL_OPENGL_ES2_BIT ||
-+       dpy->ClientAPIs & EGL_OPENGL_ES3_BIT_KHR) {
-       strcat(dpy->ClientAPIsString, "OpenGL_ES ");
--
--   if (dpy->ClientAPIs & EGL_OPENGL_ES2_BIT)
--      strcat(dpy->ClientAPIsString, "OpenGL_ES2 ");
--
--   if (dpy->ClientAPIs & EGL_OPENGL_ES3_BIT_KHR)
--      strcat(dpy->ClientAPIsString, "OpenGL_ES3 ");
-+   }
- 
-    if (dpy->ClientAPIs & EGL_OPENVG_BIT)
-       strcat(dpy->ClientAPIsString, "OpenVG ");
-@@ -751,9 +805,19 @@
+@@ -881,11 +938,21 @@
                         EGLNativeWindowType window, const EGLint *attrib_list)
  {
     _EGLDisplay *disp = _eglLockDisplay(dpy);
 +   EGLSurface window_surface = NULL;
+ 
+    _EGL_FUNC_START(disp, EGL_OBJECT_DISPLAY_KHR, NULL, EGL_NO_SURFACE);
     STATIC_ASSERT(sizeof(void*) == sizeof(window));
 -   return _eglCreateWindowSurfaceCommon(disp, config, (void*) window,
 -                                        attrib_list);
@@ -748,8 +230,8 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglapi.c isg_gms-mesa/src/egl
 +   return window_surface;
  }
  
- 
-@@ -902,6 +966,8 @@
+ static void *
+@@ -1076,6 +1143,8 @@
     _eglUnlinkSurface(surf);
     ret = drv->API.DestroySurface(drv, disp, surf);
  
@@ -758,185 +240,47 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglapi.c isg_gms-mesa/src/egl
     RETURN_EGL_EVAL(disp, ret);
  }
  
-@@ -1478,6 +1544,14 @@
-    if (s->SyncStatus == EGL_SIGNALED_KHR)
-       RETURN_EGL_EVAL(disp, EGL_CONDITION_SATISFIED_KHR);
- 
-+   /* if sync type is EGL_SYNC_REUSABLE_KHR, dpy should be
-+    * unlocked here to allow other threads also to be able to
-+    * go into waiting state.
-+    */
-+
-+   if (s->Type == EGL_SYNC_REUSABLE_KHR)
-+      _eglUnlockDisplay(dpy);
-+
-    ret = drv->API.ClientWaitSyncKHR(drv, disp, s, flags, timeout);
- 
-    RETURN_EGL_EVAL(disp, ret);
-diff -x .git -x .gitignore -Naur mesa/src/egl/main/egldisplay.c isg_gms-mesa/src/egl/main/egldisplay.c
---- mesa/src/egl/main/egldisplay.c	2016-10-11 02:27:53.506880846 +0800
-+++ isg_gms-mesa/src/egl/main/egldisplay.c	2016-10-11 02:24:46.691478060 +0800
-@@ -178,25 +178,24 @@
- _EGLPlatformType
- _eglGetNativePlatform(void *nativeDisplay)
- {
--   static _EGLPlatformType native_platform = _EGL_INVALID_PLATFORM;
--   char *detection_method = NULL;
-+   static _EGLPlatformType native_platform;
-+   char *detection_method;
-+
-+   native_platform = _eglGetNativePlatformFromEnv();
-+   detection_method = "environment overwrite";
-+
-+   if (native_platform == _EGL_INVALID_PLATFORM) {
-+      native_platform = _eglNativePlatformDetectNativeDisplay(nativeDisplay);
-+      detection_method = "autodetected";
-+   }
- 
-    if (native_platform == _EGL_INVALID_PLATFORM) {
--      native_platform = _eglGetNativePlatformFromEnv();
--      detection_method = "environment overwrite";
--      if (native_platform == _EGL_INVALID_PLATFORM) {
--         native_platform = _eglNativePlatformDetectNativeDisplay(nativeDisplay);
--         detection_method = "autodetected";
--         if (native_platform == _EGL_INVALID_PLATFORM) {
--            native_platform = _EGL_NATIVE_PLATFORM;
--            detection_method = "build-time configuration";
--         }
--      }
-+      native_platform = _EGL_NATIVE_PLATFORM;
-+      detection_method = "build-time configuration";
-    }
- 
--   if (detection_method != NULL)
--      _eglLog(_EGL_DEBUG, "Native platform type: %s (%s)",
--              egl_platforms[native_platform].name, detection_method);
-+   _eglLog(_EGL_DEBUG, "Native platform type: %s (%s)",
-+           egl_platforms[native_platform].name, detection_method);
- 
-    return native_platform;
- }
-diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglsurface.c isg_gms-mesa/src/egl/main/eglsurface.c
---- mesa/src/egl/main/eglsurface.c	2016-10-11 02:27:53.514880992 +0800
-+++ isg_gms-mesa/src/egl/main/eglsurface.c	2016-10-11 02:24:46.691478060 +0800
-@@ -235,6 +235,19 @@
+diff -x .git -x .gitignore -Naur mesa/src/gbm/backends/dri/gbm_dri.c isg_gms-mesa/src/gbm/backends/dri/gbm_dri.c
+--- mesa/src/gbm/backends/dri/gbm_dri.c	2017-02-01 02:09:24.501831254 +0800
++++ isg_gms-mesa/src/gbm/backends/dri/gbm_dri.c	2017-02-01 02:06:01.554095157 +0800
+@@ -678,8 +678,6 @@
+          return NULL;
        }
+ 
+-      image = dri->image->dupImage(wb->driver_buffer, NULL);
+-
+       switch (wb->format) {
+       case WL_DRM_FORMAT_XRGB8888:
+          gbm_format = GBM_FORMAT_XRGB8888;
+@@ -696,6 +694,8 @@
+       default:
+          return NULL;
+       }
++
++      image = dri->image->dupImage(wb->driver_buffer, NULL);
+       break;
     }
- 
-+   /*
-+    * If the surface is Pbuffer type and texture format or target is an
-+    * EGL_NO_TEXTURE then both of them should be EGL_NO_TEXTURE.
-+    * Otherwise EGL_BAD_MATCH should be returned.
-+    */
-+   if (((surf->TextureFormat == EGL_NO_TEXTURE &&
-+       surf->TextureTarget != EGL_NO_TEXTURE) ||
-+       (surf->TextureFormat != EGL_NO_TEXTURE &&
-+       surf->TextureTarget == EGL_NO_TEXTURE)) &&
-+       (surf->Type & EGL_PBUFFER_BIT)) {
-+      err = EGL_BAD_MATCH;
-+   }
-+
-    return err;
- }
- 
-diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglsync.c isg_gms-mesa/src/egl/main/eglsync.c
---- mesa/src/egl/main/eglsync.c	2016-10-11 02:27:53.514880992 +0800
-+++ isg_gms-mesa/src/egl/main/eglsync.c	2016-10-11 02:24:46.691478060 +0800
-@@ -152,7 +152,8 @@
-       /* update the sync status */
-       if (sync->SyncStatus != EGL_SIGNALED_KHR &&
-           (sync->Type == EGL_SYNC_FENCE_KHR ||
--           sync->Type == EGL_SYNC_CL_EVENT_KHR))
-+           sync->Type == EGL_SYNC_CL_EVENT_KHR ||
-+	   sync->Type == EGL_SYNC_REUSABLE_KHR))
-          drv->API.ClientWaitSyncKHR(drv, dpy, sync, 0, 0);
- 
-       *value = sync->SyncStatus;
-diff -x .git -x .gitignore -Naur mesa/src/egl/wayland/wayland-egl/wayland-egl.c isg_gms-mesa/src/egl/wayland/wayland-egl/wayland-egl.c
---- mesa/src/egl/wayland/wayland-egl/wayland-egl.c	2016-10-11 02:27:53.514880992 +0800
-+++ isg_gms-mesa/src/egl/wayland/wayland-egl/wayland-egl.c	2016-10-11 02:24:46.691478060 +0800
-@@ -66,6 +66,7 @@
- 	egl_window->surface = surface;
- 	egl_window->private = NULL;
- 	egl_window->resize_callback = NULL;
-+	egl_window->destroy_window_callback = NULL;
- 	wl_egl_window_resize(egl_window, width, height, 0, 0);
- 	egl_window->attached_width  = 0;
- 	egl_window->attached_height = 0;
-@@ -76,6 +77,8 @@
- WL_EGL_EXPORT void
- wl_egl_window_destroy(struct wl_egl_window *egl_window)
- {
-+	if (egl_window->destroy_window_callback)
-+		egl_window->destroy_window_callback(egl_window->private);
- 	free(egl_window);
- }
- 
-diff -x .git -x .gitignore -Naur mesa/src/egl/wayland/wayland-egl/wayland-egl-priv.h isg_gms-mesa/src/egl/wayland/wayland-egl/wayland-egl-priv.h
---- mesa/src/egl/wayland/wayland-egl/wayland-egl-priv.h	2016-10-11 02:27:53.514880992 +0800
-+++ isg_gms-mesa/src/egl/wayland/wayland-egl/wayland-egl-priv.h	2016-10-11 02:24:46.691478060 +0800
-@@ -27,6 +27,7 @@
- 
- 	void *private;
- 	void (*resize_callback)(struct wl_egl_window *, void *);
-+	void (*destroy_window_callback)(void *);
- };
- 
- #ifdef  __cplusplus
+ #endif
 diff -x .git -x .gitignore -Naur mesa/src/glx/glxcmds.c isg_gms-mesa/src/glx/glxcmds.c
---- mesa/src/glx/glxcmds.c	2016-10-11 02:27:53.786885948 +0800
-+++ isg_gms-mesa/src/glx/glxcmds.c	2016-10-11 02:24:47.091485343 +0800
-@@ -1628,8 +1628,33 @@
- glXCreateNewContext(Display * dpy, GLXFBConfig fbconfig,
-                     int renderType, GLXContext shareList, Bool allowDirect)
- {
-+   int list_size;
-    struct glx_config *config = (struct glx_config *) fbconfig;
- 
-+   if (!config)
-+   {
-+       return NULL;
-+   }
-+
-+   int screen = XDefaultScreen(dpy);
-+   struct glx_config **config_list = (struct glx_config **)
-+      glXGetFBConfigs(dpy, screen, &list_size);
-+
-+   int i;
-+   for (i = 0; i < list_size; i++)
-+   {
-+       if (config_list[i] == config)
-+       {
-+           break;
-+       }
-+   }
-+   free(config_list);
-+
-+   if (i == list_size)
-+   {
-+       return NULL;
-+   }
-+
-    return CreateContext(dpy, config->fbconfigID, config, shareList,
- 			allowDirect, X_GLXCreateNewContext, renderType,
- 			config->screen);
-@@ -1727,7 +1752,7 @@
+--- mesa/src/glx/glxcmds.c	2017-02-01 02:09:24.505831328 +0800
++++ isg_gms-mesa/src/glx/glxcmds.c	2017-02-01 02:06:01.558095231 +0800
+@@ -1746,7 +1746,7 @@
     CARD32 *interval_ptr;
     CARD8 opcode;
  
--   if (gc == NULL) {
+-   if (gc == &dummyContext) {
 +   if (gc == NULL || gc == &dummyContext) {
        return GLX_BAD_CONTEXT;
     }
  
 diff -x .git -x .gitignore -Naur mesa/src/glx/query_renderer.c isg_gms-mesa/src/glx/query_renderer.c
---- mesa/src/glx/query_renderer.c	2016-10-11 02:27:53.790886021 +0800
-+++ isg_gms-mesa/src/glx/query_renderer.c	2016-10-11 02:24:47.095485416 +0800
+--- mesa/src/glx/query_renderer.c	2017-02-01 02:09:23.893820055 +0800
++++ isg_gms-mesa/src/glx/query_renderer.c	2017-02-01 02:06:01.562095304 +0800
 @@ -106,7 +106,7 @@
  {
     struct glx_context *gc = __glXGetCurrentContext();
  
--   if (gc == NULL)
+-   if (gc == &dummyContext)
 +   if (gc == NULL || gc == &dummyContext)
        return False;
  
@@ -945,14 +289,14 @@ diff -x .git -x .gitignore -Naur mesa/src/glx/query_renderer.c isg_gms-mesa/src/
  {
     struct glx_context *gc = __glXGetCurrentContext();
  
--   if (gc == NULL)
+-   if (gc == &dummyContext)
 +   if (gc == NULL || gc == &dummyContext)
        return False;
  
     return __glXQueryRendererString(gc->psc, attribute);
 diff -x .git -x .gitignore -Naur mesa/src/glx/xfont.c isg_gms-mesa/src/glx/xfont.c
---- mesa/src/glx/xfont.c	2016-10-11 02:27:52.838868673 +0800
-+++ isg_gms-mesa/src/glx/xfont.c	2016-10-11 02:24:47.095485416 +0800
+--- mesa/src/glx/xfont.c	2017-02-01 02:09:23.893820055 +0800
++++ isg_gms-mesa/src/glx/xfont.c	2017-02-01 02:06:01.566095379 +0800
 @@ -235,7 +235,7 @@
     int i;
  
@@ -963,8 +307,8 @@ diff -x .git -x .gitignore -Naur mesa/src/glx/xfont.c isg_gms-mesa/src/glx/xfont
  #if !defined(GLX_USE_APPLEGL)
     glxdraw = GetGLXDRIDrawable(CC->currentDpy, CC->currentDrawable);
 diff -x .git -x .gitignore -Naur mesa/src/mapi/mapi_abi.py isg_gms-mesa/src/mapi/mapi_abi.py
---- mesa/src/mapi/mapi_abi.py	2016-10-11 02:27:52.934870423 +0800
-+++ isg_gms-mesa/src/mapi/mapi_abi.py	2016-10-11 02:24:47.155486509 +0800
+--- mesa/src/mapi/mapi_abi.py	2017-02-01 02:09:23.941820938 +0800
++++ isg_gms-mesa/src/mapi/mapi_abi.py	2017-02-01 02:06:01.610096187 +0800
 @@ -38,7 +38,7 @@
  
  
@@ -975,8 +319,8 @@ diff -x .git -x .gitignore -Naur mesa/src/mapi/mapi_abi.py isg_gms-mesa/src/mapi
  class ABIEntry(object):
      """Represent an ABI entry."""
 diff -x .git -x .gitignore -Naur mesa/src/mapi/u_execmem.c isg_gms-mesa/src/mapi/u_execmem.c
---- mesa/src/mapi/u_execmem.c	2016-10-11 02:27:52.934870423 +0800
-+++ isg_gms-mesa/src/mapi/u_execmem.c	2016-10-11 02:24:47.155486509 +0800
+--- mesa/src/mapi/u_execmem.c	2017-02-01 02:09:23.941820938 +0800
++++ isg_gms-mesa/src/mapi/u_execmem.c	2017-02-01 02:06:01.610096187 +0800
 @@ -37,7 +37,7 @@
  #include "u_execmem.h"
  
