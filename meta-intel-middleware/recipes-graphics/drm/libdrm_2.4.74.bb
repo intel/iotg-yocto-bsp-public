@@ -6,7 +6,7 @@ accelerated OpenGL drivers."
 HOMEPAGE = "http://dri.freedesktop.org"
 SECTION = "x11/base"
 LICENSE = "MIT"
-LIC_FILES_CHKSUM = "file://README;md5=4b3cbc63e3a058ac3259f62316a3ace5"
+LIC_FILES_CHKSUM = "file://xf86drm.c;beginline=9;endline=32;md5=c8a3b961af7667c530816761e949dc71"
 PROVIDES = "drm"
 DEPENDS = "libpthread-stubs udev libpciaccess"
 
@@ -15,7 +15,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI = "git://anongit.freedesktop.org/mesa/drm;branch=master \
            file://libdrm_version_diff.patch"
 
-SRCREV = "cc9a53f076d4e958e595e1daaff2c286ce1b7bb1"
+SRCREV = "5856a5868cd70b02892fc759dc8fe5b3e53a8b96"
 
 inherit autotools pkgconfig
 
@@ -27,6 +27,10 @@ EXTRA_OECONF += "--disable-cairo-tests \
 		"
 
 S = "${WORKDIR}/git"
+
+do_install_append() {
+        cp ${S}/intel/intel_perfmon.h ${D}${includedir}/libdrm/
+}
 
 ALLOW_EMPTY_${PN}-drivers = "1"
 PACKAGES =+ "${PN}-tests ${PN}-drivers ${PN}-radeon ${PN}-nouveau ${PN}-omap \
