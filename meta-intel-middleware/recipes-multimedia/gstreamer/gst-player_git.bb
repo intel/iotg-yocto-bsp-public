@@ -1,6 +1,6 @@
 SUMMARY = "GStreamer playback helper library and examples"
 LICENSE = "LGPL-2.0+"
-LIC_FILES_CHKSUM = "file://gst-play/gst-play.c;beginline=1;endline=20;md5=4734bf8165abd77b801c068dd4e9376b"
+LIC_FILES_CHKSUM = "file://gtk/gtk-play.c;beginline=1;endline=20;md5=f8c72dae3d36823ec716a9ebcae593b9"
 
 DEPENDS = "glib-2.0 gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-bad gtk+3"
 
