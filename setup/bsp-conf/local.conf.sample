@@ -88,7 +88,7 @@ DISTRO_FEATURES_append = " wayland pam"
 CORE_IMAGE_EXTRA_INSTALL += "wayland weston weston-examples"
 
 # Install TPM2.0-TSS in image
-IMAGE_INSTALL_append = " tpm2.0-tss"
+IMAGE_INSTALL_append = " libtss2 libtss2-dev libtss2-staticdev libtctidevice libtctidevice-dev libtctidevice-staticdev libtctisocket libtctisocket-dev libtctisocket-staticdev resourcemgr"
 
 # Install MRAA and its dependencies in image
 IMAGE_INSTALL_append = " nodejs swig mraa"

@@ -1,9 +1,15 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
-# Make sure we fetch source from specific tag
-SRC_URI = "git://github.com/01org/TPM2.0-TSS.git;protocol=git;tag=1.0-alpha_0;name=TPM2.0-TSS;destsuffix=TPM2.0-TSS \
+SRC_URI = "git://github.com/01org/TPM2.0-TSS.git;protocol=git;name=TPM2.0-TSS;destsuffix=TPM2.0-TSS \
 	   file://ax_pthread.m4"
 
-SRCREV = ""
+SRCREV = "47d560652f1ae28519323df61d69ec63bbf1a846"
 
-PV = "${PVBASE}.${SRCPV}-tag1.0-alpha_0"
+PACKAGES += "${PN}-test"
+
+do_install_append() {
+        install -d ${D}${bindir}
+        install -m 755 test/tpmtest/.libs/tpmtest ${D}${bindir}/tpmtest
+}
+
+FILES_${PN}-test = "${bindir}/tpmtest"
