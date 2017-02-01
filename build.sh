@@ -52,11 +52,12 @@ apply_combined_repo_commit () {
 
 apply_machine_local_conf () {
 	cur_dir=$(pwd)
+	cd ../..
 
 	case $machine in
 		CAVS-SSP)
 			# Need to turn on AUDIO_FEATURES = "ssp"
-			echo "AUDIO_FEATURES = \"ssp\"" >> conf/local.conf
+			echo "AUDIO_FEATURES = \"ssp\"" >> yocto_build/build/conf/local.conf
 			;;
 		*)
 			# Default settings.
@@ -120,6 +121,7 @@ build_bsp () {
 	sleep 3
 	setup/combo-layer -c setup/combolayer.conf init
 	apply_combined_repo_commit
+	apply_kernel_patch
 
 	echo "========================================================================="
 	echo "By default, this setup script will create a brand new repo which combines"
@@ -140,6 +142,7 @@ build_kernel () {
 	sleep 3
 	setup/combo-layer -c setup/combolayer.conf init
 	apply_combined_repo_commit
+	apply_kernel_patch
 
 	echo "========================================================================="
 	echo "By default, this setup script will create a brand new repo which combines"
