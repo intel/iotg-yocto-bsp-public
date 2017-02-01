@@ -115,6 +115,11 @@ IMAGE_INSTALL_append = " soletta"
 # We need the LICENSE_FLAGS below.
 LICENSE_FLAGS_WHITELIST += "commercial"
 
+# Use systemd init instead of sysV init
+DISTRO_FEATURES_append = " systemd"
+VIRTUAL-RUNTIME_init_manager = "systemd"
+DISTRO_FEATURES_BACKFILL_CONSIDERED = "sysvinit"
+
 #
 # Where to place downloads
 #
