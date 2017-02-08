@@ -39,6 +39,10 @@ See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/S
 ```
       git checkout E3900-MR1
 ```
+   <br> - For Intel Atom E3900 Maintenance Release Version 2:
+```
+      git checkout E3900-MR2
+```
 - Execute the setup.sh script to check your host machine settings, download Poky and other meta layers from Yocto Project and prepare your environment for build.
 
 **NOTE: Do not interrupt the setup.sh execution especially during local repository initialization**
