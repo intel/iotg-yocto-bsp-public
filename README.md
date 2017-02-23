@@ -43,6 +43,10 @@ See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/S
 ```
       git checkout E3900-MR2
 ```
+- After checking out one of the release tags, you will noticed that you are in 'detached HEAD' state. You can now create a local git branch to host the code.
+```
+      git checkout -b <branch_name>
+```
 - Execute the setup.sh script to check your host machine settings, download Poky and other meta layers from Yocto Project and prepare your environment for build.
 
 **NOTE: Do not interrupt the setup.sh execution especially during local repository initialization**
