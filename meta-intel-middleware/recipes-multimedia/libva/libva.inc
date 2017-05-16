@@ -10,14 +10,14 @@ limited to GPUs or Intel specific hardware, as other hardware and \
 manufacturers can also freely use this API for hardware accelerated \
 video decoding."
 
-HOMEPAGE = "http://www.freedesktop.org/wiki/Software/vaapi"
-BUGTRACKER = "https://bugs.freedesktop.org"
+HOMEPAGE = "https://01.org/linuxmedia/vaapi"
+BUGTRACKER = "https://github.com/01org/libva/issues"
 
 SECTION = "x11"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://COPYING;md5=2e48940f94acb0af582e5ef03537800f"
 
-SRC_URI = "git://anongit.freedesktop.org/git/libva;branch=v1.7-branch"
+SRC_URI = "git://github.com/01org/libva;protocol=https;branch=master"
 
 DEPENDS = "libdrm virtual/mesa virtual/libgles1 virtual/libgles2 virtual/egl"
 
