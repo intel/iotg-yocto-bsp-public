@@ -1,0 +1,11 @@
+[Unit]
+Description=hwclock
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/hwclock --hctosys --localtime
+ExecStop=/sbin/hwclock --systohc --localtime
+
+[Install]
+WantedBy=multi-user.target
+
