@@ -1,7 +1,7 @@
-From adfcb9f3e0b7982ef8009112b1d76eb75f62814d Mon Sep 17 00:00:00 2001
+From 3c10791070fa114c54824a1314130fabb3f69c04 Mon Sep 17 00:00:00 2001
 From: Ryan <ryan.wu@intel.com>
 Date: Fri, 23 Sep 2016 14:09:06 -0700
-Subject: [PATCH] linux-firmware/i915: HuC firmware for Broxton v1.7
+Subject: [PATCH 1/2] linux-firmware/i915: HuC firmware for Broxton v1.7
 
 This is the first release of HuC firmware for Broxton platforms.
 
@@ -15,12 +15,12 @@ Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
  create mode 100644 i915/bxt_huc_ver01_07_2013.bin
 
 diff --git a/WHENCE b/WHENCE
-index e13874d..9f868a9 100644
+index 44b3a81..ae41d26 100644
 --- a/WHENCE
 +++ b/WHENCE
-@@ -3114,6 +3114,9 @@ File: i915/bxt_guc_ver8_7.bin
- File: i915/bxt_guc_ver8.bin
- Version: GUC API/ABI ver 8 - release 1 for Broxton
+@@ -3272,6 +3272,9 @@ Version: Guc API/APB ver 8 - release 7 for Broxton
+ File: i915/kbl_guc_ver9_14.bin
+ Version: Guc API/APB ver 9 release 14 for Kabylake
  
 +File: i915/bxt_huc_ver01_07_2013.bin
 +Version: Huc API/ABI ver 1 - release 07 for Broxton
