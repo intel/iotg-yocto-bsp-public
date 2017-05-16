@@ -1,9 +1,10 @@
 FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 
 SRC_URI += "file://kernel-patch-integration.scc \
-	    file://kernel_ipu.scc \
-	    file://kernel_ish.scc \
-	    file://kernel_io.scc"
+            file://kernel_ipu.scc \
+            file://kernel_io.scc \
+            ${@bb.utils.contains('AUDIO_FEATURES', 'ssp', 'file://kernel_audio-ssp.scc', '', d)} \
+"
 
 SRCREV_meta_corei7-64-intel-common = "46b3153a39950b3542a99486bd964ab2ed65aeb4"
 
