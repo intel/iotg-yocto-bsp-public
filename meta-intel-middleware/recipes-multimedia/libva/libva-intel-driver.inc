@@ -3,15 +3,15 @@ DESCRIPTION = "libva-driver-intel is the VA-API implementation \
 for Intel G45 chipsets and Intel HD Graphics for Intel Core \
 processor family."
 
-HOMEPAGE = "http://www.freedesktop.org/wiki/Software/vaapi"
-BUGTRACKER = "https://bugs.freedesktop.org"
+HOMEPAGE = "https://01.org/linuxmedia/vaapi"
+BUGTRACKER = "https://github.com/01org/intel-vaapi-driver/issues"
 
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://COPYING;md5=2e48940f94acb0af582e5ef03537800f"
 
 COMPATIBLE_HOST = '(i.86|x86_64).*-linux'
 
-SRC_URI += "git://anongit.freedesktop.org/vaapi/intel-driver;branch=v1.7-branch"
+SRC_URI += "git://github.com/01org/intel-vaapi-driver;protocol=https;branch=master"
 
 DEPENDS = "libva libdrm"
 

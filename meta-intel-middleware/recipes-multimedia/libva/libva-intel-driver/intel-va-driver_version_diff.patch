@@ -1,9 +1,9 @@
 diff -x .git -x .gitignore -Naur intel-driver/gms-integration isg_gms-intel-va-driver/gms-integration
 --- intel-driver/gms-integration	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-intel-va-driver/gms-integration	2017-02-01 02:09:52.318343786 +0800
++++ isg_gms-intel-va-driver/gms-integration	2017-05-18 04:55:18.824877488 +0800
 @@ -0,0 +1,5 @@
 +###
 +### GMS integration
 +###
-+upstream ce444fb412966ca6afbb1331b7cae8ab621c1108
-+	Update NEWS
++upstream dbe582c2361d3bb6a04968a2bc21b62bede9c46e
++	gen9_vp9_encoder: fix parameters sent to the shaders
