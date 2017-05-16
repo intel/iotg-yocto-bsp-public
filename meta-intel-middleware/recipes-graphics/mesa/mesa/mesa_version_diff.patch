@@ -1,17 +1,17 @@
 diff -x .git -x .gitignore -Naur mesa/gms-integration isg_gms-mesa/gms-integration
 --- mesa/gms-integration	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-mesa/gms-integration	2017-02-01 02:06:01.250089565 +0800
++++ isg_gms-mesa/gms-integration	2017-05-18 04:50:53.371723540 +0800
 @@ -0,0 +1,7 @@
 +###
 +### GMS integration
 +###
-+upstream c8ece92ded9337b9ed60aa9568b41313025a1406
-+	docs: add sha256 checksums for 13.0.3
-+topic/vpg_ufo_patches a7636fdc53a8362fad154932e5fe3745b71748d9
-+	gbm-dri: Duplicate image after checking its format.
++upstream 3b782f6bc405971e70a090be90a2899bb6d751fc
++	clover: Work around build failure with AltiVec.
++topic/vpg_ufo_patches f20763b130512199822e9fdebf21fad8337bca85
++	egl: Fix for memleak in window-surface association list v4
 diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2.c isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.c
---- mesa/src/egl/drivers/dri2/egl_dri2.c	2017-02-01 02:09:24.413829633 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.c	2017-02-01 02:06:01.322090890 +0800
+--- mesa/src/egl/drivers/dri2/egl_dri2.c	2017-05-18 04:54:43.648194439 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2.c	2017-05-18 04:50:53.511726258 +0800
 @@ -226,15 +226,6 @@
           dri_masks[3] = value;
           break;
@@ -28,7 +28,7 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2.c isg_gms-me
        case __DRI_ATTRIB_FRAMEBUFFER_SRGB_CAPABLE:
           srgb = value != 0;
           if (!disp->Extensions.KHR_gl_colorspace && srgb)
-@@ -1277,6 +1268,10 @@
+@@ -1291,6 +1282,10 @@
     if (!dri2_dpy)
        return _eglError(EGL_NOT_INITIALIZED, "eglMakeCurrent");
  
@@ -40,8 +40,8 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2.c isg_gms-me
     if (!_eglBindContext(ctx, dsurf, rsurf, &old_ctx, &old_dsurf, &old_rsurf)) {
        /* _eglBindContext already sets the EGL error (in _eglCheckMakeCurrent) */
 diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h isg_gms-mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h
---- mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2017-02-01 02:09:23.653815634 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2017-02-01 02:06:01.322090890 +0800
+--- mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2017-05-18 04:54:43.652194517 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h	2017-05-18 04:50:53.511726258 +0800
 @@ -37,11 +37,16 @@
     return NULL;
  }
@@ -60,8 +60,8 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/egl_dri2_fallbacks.h 
  }
  
 diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_wayland.c isg_gms-mesa/src/egl/drivers/dri2/platform_wayland.c
---- mesa/src/egl/drivers/dri2/platform_wayland.c	2017-02-01 02:09:24.413829633 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/platform_wayland.c	2017-02-01 02:06:01.322090890 +0800
+--- mesa/src/egl/drivers/dri2/platform_wayland.c	2017-05-18 04:54:43.652194517 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/platform_wayland.c	2017-05-18 04:50:53.511726258 +0800
 @@ -44,6 +44,7 @@
  
  #include <wayland-client.h>
@@ -82,8 +82,8 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_wayland.c is
     config = dri2_get_dri_config(dri2_conf, EGL_WINDOW_BIT,
                                  dri2_surf->base.GLColorspace);
 diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_x11.c isg_gms-mesa/src/egl/drivers/dri2/platform_x11.c
---- mesa/src/egl/drivers/dri2/platform_x11.c	2017-02-01 02:09:24.413829633 +0800
-+++ isg_gms-mesa/src/egl/drivers/dri2/platform_x11.c	2017-02-01 02:06:01.322090890 +0800
+--- mesa/src/egl/drivers/dri2/platform_x11.c	2017-05-18 04:54:43.652194517 +0800
++++ isg_gms-mesa/src/egl/drivers/dri2/platform_x11.c	2017-05-18 04:50:53.511726258 +0800
 @@ -235,6 +235,16 @@
           goto cleanup_surf;
        }
@@ -141,23 +141,33 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/drivers/dri2/platform_x11.c isg_gm
        if (dri2_x11_swap_buffers_msc(drv, disp, draw, 0, 0, 0) != -1) {
            return EGL_TRUE;
 diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglapi.c isg_gms-mesa/src/egl/main/eglapi.c
---- mesa/src/egl/main/eglapi.c	2017-02-01 02:09:24.413829633 +0800
-+++ isg_gms-mesa/src/egl/main/eglapi.c	2017-02-01 02:06:01.326090964 +0800
-@@ -102,6 +102,63 @@
+--- mesa/src/egl/main/eglapi.c	2017-05-18 04:54:43.652194517 +0800
++++ isg_gms-mesa/src/egl/main/eglapi.c	2017-05-18 04:50:53.511726258 +0800
+@@ -90,6 +90,7 @@
+ #include "c11/threads.h"
+ #include "GL/mesa_glinterop.h"
+ #include "eglcompiler.h"
++#include "util/list.h"
+ 
+ #include "eglglobals.h"
+ #include "eglcontext.h"
+@@ -102,6 +103,72 @@
  #include "eglimage.h"
  #include "eglsync.h"
  
 +/**
 + * List item containing window related to surface
 + */
-+typedef struct
++struct window_list_item
 +{
-+    struct window_list_item *next;
++    struct list_head link;
++
 +    EGLNativeWindowType native_window;
 +    EGLSurface attached_surface;
-+} window_list_item;
++    EGLDisplay attached_display;
++};
 +
-+window_list_item *window_surface_association_list = NULL;
++struct list_head window_list = {NULL, NULL};
 +
 +/*
 + * Checks if a EGLWindow already have a created surface.
@@ -165,49 +175,81 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglapi.c isg_gms-mesa/src/egl
 +static inline bool
 +is_window_associated_with_surface(EGLNativeWindowType window)
 +{
-+   window_list_item *it = window_surface_association_list;
-+   for (; it != NULL; it = (window_list_item*)it->next) {
-+       if (it->native_window == window)
-+          return true;
++   list_for_each_entry(struct window_list_item, item, &window_list, link) {
++      if (item->native_window == window) {
++         return true;
++      }
 +   }
 +
 +   return false;
 +}
 +
 +static inline void
-+associate_window_with_surface_list(EGLNativeWindowType window, EGLSurface surface)
++associate_window_with_surface_list(EGLNativeWindowType window, EGLSurface surface,
++                                   EGLDisplay display)
 +{
-+   window_list_item *attach = calloc(1, sizeof(window_list_item));
++   struct window_list_item *attach = malloc(sizeof(struct window_list_item));
 +   assert(attach);
 +
-+   attach->next = (struct window_list_item*)window_surface_association_list;
 +   attach->native_window = window;
 +   attach->attached_surface = surface;
++   attach->attached_display = display;
 +
-+   window_surface_association_list = attach;
++   list_add(&attach->link, &window_list);
 +}
 +
 +static inline void
 +disassociate_window_with_surface_list(EGLSurface surface)
 +{
-+   window_list_item *it = window_surface_association_list, *last = NULL;
-+   for (; it != NULL; it = (window_list_item*)it->next) {
-+      if (it->attached_surface == surface) {
-+         if (it == window_surface_association_list) {
-+            window_surface_association_list = (window_list_item*)it->next;
-+         } else {
-+            last->next = it->next;
-+         }
-+         free(it);
-+         return;
++   list_for_each_entry(struct window_list_item, item, &window_list, link) {
++     if (item->attached_surface == surface) {
++       list_del(&item->link);
++       free(item);
++       break;
++     }
++   }
++}
++
++static inline void
++disassociate_all_window_surface_links_by_display(EGLDisplay display)
++{
++   list_for_each_entry_safe(struct window_list_item, item, &window_list, link) {
++      if (item->attached_display == display) {
++
++         list_del(&item->link);
++         free(item);
 +      }
-+      last = it;
 +   }
 +}
  
  /**
   * Macros to help return an API entrypoint.
-@@ -881,11 +938,21 @@
+@@ -610,6 +677,10 @@
+       *minor = disp->Version % 10;
+    }
+ 
++   if (!window_list.next || !window_list.prev) {
++      list_inithead(&window_list);
++   }
++
+    RETURN_EGL_SUCCESS(disp, EGL_TRUE);
+ }
+ 
+@@ -627,6 +698,13 @@
+    if (disp->Initialized) {
+       _EGLDriver *drv = disp->Driver;
+ 
++      /*
++       * Avoid mem leaks from window_surface_association_list
++       * when not on all window surfaces eglDestroySurface was called
++       * before calling eglTerminate.
++       */
++      disassociate_all_window_surface_links_by_display(dpy);
++
+       drv->API.Terminate(drv, disp);
+       /* do not reset disp->Driver */
+       disp->ClientAPIsString[0] = 0;
+@@ -884,11 +962,21 @@
                         EGLNativeWindowType window, const EGLint *attrib_list)
  {
     _EGLDisplay *disp = _eglLockDisplay(dpy);
@@ -225,13 +267,13 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglapi.c isg_gms-mesa/src/egl
 +                                                  attrib_list);
 +
 +   if (window_surface)
-+       associate_window_with_surface_list(window, window_surface);
++       associate_window_with_surface_list(window, window_surface, dpy);
 +
 +   return window_surface;
  }
  
  static void *
-@@ -1076,6 +1143,8 @@
+@@ -1086,6 +1174,8 @@
     _eglUnlinkSurface(surf);
     ret = drv->API.DestroySurface(drv, disp, surf);
  
@@ -241,8 +283,8 @@ diff -x .git -x .gitignore -Naur mesa/src/egl/main/eglapi.c isg_gms-mesa/src/egl
  }
  
 diff -x .git -x .gitignore -Naur mesa/src/gbm/backends/dri/gbm_dri.c isg_gms-mesa/src/gbm/backends/dri/gbm_dri.c
---- mesa/src/gbm/backends/dri/gbm_dri.c	2017-02-01 02:09:24.501831254 +0800
-+++ isg_gms-mesa/src/gbm/backends/dri/gbm_dri.c	2017-02-01 02:06:01.554095157 +0800
+--- mesa/src/gbm/backends/dri/gbm_dri.c	2017-05-18 04:54:44.152204226 +0800
++++ isg_gms-mesa/src/gbm/backends/dri/gbm_dri.c	2017-05-18 04:50:53.815732159 +0800
 @@ -678,8 +678,6 @@
           return NULL;
        }
@@ -262,8 +304,8 @@ diff -x .git -x .gitignore -Naur mesa/src/gbm/backends/dri/gbm_dri.c isg_gms-mes
     }
  #endif
 diff -x .git -x .gitignore -Naur mesa/src/glx/glxcmds.c isg_gms-mesa/src/glx/glxcmds.c
---- mesa/src/glx/glxcmds.c	2017-02-01 02:09:24.505831328 +0800
-+++ isg_gms-mesa/src/glx/glxcmds.c	2017-02-01 02:06:01.558095231 +0800
+--- mesa/src/glx/glxcmds.c	2017-05-18 04:54:44.168204537 +0800
++++ isg_gms-mesa/src/glx/glxcmds.c	2017-05-18 04:50:53.819732237 +0800
 @@ -1746,7 +1746,7 @@
     CARD32 *interval_ptr;
     CARD8 opcode;
@@ -274,8 +316,8 @@ diff -x .git -x .gitignore -Naur mesa/src/glx/glxcmds.c isg_gms-mesa/src/glx/glx
     }
  
 diff -x .git -x .gitignore -Naur mesa/src/glx/query_renderer.c isg_gms-mesa/src/glx/query_renderer.c
---- mesa/src/glx/query_renderer.c	2017-02-01 02:09:23.893820055 +0800
-+++ isg_gms-mesa/src/glx/query_renderer.c	2017-02-01 02:06:01.562095304 +0800
+--- mesa/src/glx/query_renderer.c	2017-05-18 04:54:42.484171837 +0800
++++ isg_gms-mesa/src/glx/query_renderer.c	2017-05-18 04:50:53.823732315 +0800
 @@ -106,7 +106,7 @@
  {
     struct glx_context *gc = __glXGetCurrentContext();
@@ -295,8 +337,8 @@ diff -x .git -x .gitignore -Naur mesa/src/glx/query_renderer.c isg_gms-mesa/src/
  
     return __glXQueryRendererString(gc->psc, attribute);
 diff -x .git -x .gitignore -Naur mesa/src/glx/xfont.c isg_gms-mesa/src/glx/xfont.c
---- mesa/src/glx/xfont.c	2017-02-01 02:09:23.893820055 +0800
-+++ isg_gms-mesa/src/glx/xfont.c	2017-02-01 02:06:01.566095379 +0800
+--- mesa/src/glx/xfont.c	2017-05-18 04:54:42.488171914 +0800
++++ isg_gms-mesa/src/glx/xfont.c	2017-05-18 04:50:53.827732393 +0800
 @@ -235,7 +235,7 @@
     int i;
  
@@ -307,8 +349,8 @@ diff -x .git -x .gitignore -Naur mesa/src/glx/xfont.c isg_gms-mesa/src/glx/xfont
  #if !defined(GLX_USE_APPLEGL)
     glxdraw = GetGLXDRIDrawable(CC->currentDpy, CC->currentDrawable);
 diff -x .git -x .gitignore -Naur mesa/src/mapi/mapi_abi.py isg_gms-mesa/src/mapi/mapi_abi.py
---- mesa/src/mapi/mapi_abi.py	2017-02-01 02:09:23.941820938 +0800
-+++ isg_gms-mesa/src/mapi/mapi_abi.py	2017-02-01 02:06:01.610096187 +0800
+--- mesa/src/mapi/mapi_abi.py	2017-05-18 04:54:44.340207876 +0800
++++ isg_gms-mesa/src/mapi/mapi_abi.py	2017-05-18 04:50:53.871733246 +0800
 @@ -38,7 +38,7 @@
  
  
@@ -319,8 +361,8 @@ diff -x .git -x .gitignore -Naur mesa/src/mapi/mapi_abi.py isg_gms-mesa/src/mapi
  class ABIEntry(object):
      """Represent an ABI entry."""
 diff -x .git -x .gitignore -Naur mesa/src/mapi/u_execmem.c isg_gms-mesa/src/mapi/u_execmem.c
---- mesa/src/mapi/u_execmem.c	2017-02-01 02:09:23.941820938 +0800
-+++ isg_gms-mesa/src/mapi/u_execmem.c	2017-02-01 02:06:01.610096187 +0800
+--- mesa/src/mapi/u_execmem.c	2017-05-18 04:54:42.556173235 +0800
++++ isg_gms-mesa/src/mapi/u_execmem.c	2017-05-18 04:50:53.871733246 +0800
 @@ -37,7 +37,7 @@
  #include "u_execmem.h"
  

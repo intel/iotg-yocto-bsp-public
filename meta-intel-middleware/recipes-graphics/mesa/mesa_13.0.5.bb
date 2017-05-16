@@ -8,7 +8,7 @@ SRC_URI = "git://anongit.freedesktop.org/mesa/mesa;branch=13.0 \
            file://mesa_version_diff.patch \
            file://0001-Simplify-wayland-scanner-lookup.patch"
 
-SRCREV = "c8ece92ded9337b9ed60aa9568b41313025a1406"
+SRCREV = "3b782f6bc405971e70a090be90a2899bb6d751fc"
 
 LIC_FILES_CHKSUM = "file://docs/license.html;md5=899fbe7e42d494c7c8c159c7001693d5"
 
