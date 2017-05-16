@@ -15,7 +15,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI = "git://anongit.freedesktop.org/mesa/drm;branch=master \
            file://libdrm_version_diff.patch"
 
-SRCREV = "5856a5868cd70b02892fc759dc8fe5b3e53a8b96"
+SRCREV = "691a21579962d2db2d5cb1de5286fa86ef22214f"
 
 inherit autotools pkgconfig
 
