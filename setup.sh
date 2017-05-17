@@ -213,8 +213,6 @@ bsp_ingredient_update () {
 rebuild_message () {
 	cur_dir=$(pwd)
 
-	cd ../yocto_build
-
 	echo -e "									"
 	echo "=========================================================================="
 	echo "Guidelines to rebuild your changes in BSP layers.				"
@@ -387,7 +385,7 @@ build_kernel () {
 }
 
 echo -e "\nSelect an option: "
-echo -e "1. Build kernel image with CAVS HD Audio driver (Default)\n2. Build kernel image with CAVS SSP Audio driver \n3. Build kernel image with legacy HD Audio driver"
+echo -e "1. Build kernel image with CAVS HD Audio driver (Default)\n2. Build kernel image with CAVS SSP Audio driver"
 echo -e "Default option is build kernel image with CAVS HD Audio driver. If no input is received within 20 secs, default will be used."
 read -t 20 -p "" ans_to_patch
 
@@ -401,11 +399,6 @@ case $ans_to_patch in
 		# CAVS SSP Audio
 		tarball="CAVS"
 		machine="CAVS-SSP"
-		;;
-	3)
-		# Legacy HD Audio
-		tarball="LEGACY"
-		machine="HDA"
 		;;
 	*)
 		tarball="CAVS"
