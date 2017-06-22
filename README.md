@@ -35,6 +35,10 @@ See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/S
 ```
       git checkout E3900-MR2
 ```
+   <br> - For Intel Atom E3900 Maintenance Release Version 3:
+```
+      git checkout E3900-MR3
+```
 - After checking out one of the release tags, you will noticed that you are in 'detached HEAD' state. You can now create a local git branch to host the code.
 ```
       git checkout -b <branch_name>
