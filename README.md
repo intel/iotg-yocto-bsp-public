@@ -22,7 +22,7 @@ Minimum host system configuration for Yocto BSP build:
 IMPORTANT: To enable Yocto BSP build, you will need to setup and enable SSH keys on your host machine.
 See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/SSH-Setup-Guide-for-New-Users) for more details.
 
-## Getting Started with Yocto BSP for Intel Atom E3900 SoC:
+## Getting Started with Yocto BSP for Intel Atom E3900 SoC
 - Make sure you have setup SSH connection to GitHub for recipe to pull Linux kernel.
 - Download this Yocto BSP from GitHub via SSH or HTTPS to your host machine.
    <br> - HTTPS directly from https://github.com/01org/iotg-yocto-bsp-public.git by selecting the appropriate branch/release version, e.g. e3900/master, from the top left menu; or
@@ -30,15 +30,7 @@ See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/S
 ```
       git clone https://github.com/01org/iotg-yocto-bsp-public.git -b e3900/master
 ```
-- This git tree will maintained as single product branch. In order to get code base from previous release, e.g. PV release, you need to checkout to the specific tag.
-   <br> - For Intel Atom E3900 PV release:
-```
-      git checkout E3900-PV
-```
-   <br> - For Intel Atom E3900 Maintenance Release Version 1:
-```
-      git checkout E3900-MR1
-```
+- This git tree will maintained as single product branch. In order to get code base from previous release, you need to checkout to the specific tag.
    <br> - For Intel Atom E3900 Maintenance Release Version 2:
 ```
       git checkout E3900-MR2
@@ -126,8 +118,11 @@ If you need to modify the recipes or configurations, make your customization in 
 	$ bitbake linux-yocto
 ```
 
+### Kernel Source
+Intel Atom E3900 BSP utilize linux-yocto kernel from Yocto project which is hosted in [Yocto Project repositories](http://git.yoctoproject.org/cgit/cgit.cgi/linux-yocto-4.1/). The branch for Intel Atom E3900 BSP kernel is standard/intel/4.1.27/leaf-hill.
+
 ### Features supported
-To view the full list of supported features, see [Intel_Atom_E3900_MR2_Release_Note.pdf](https://github.com/01org/iotg-yocto-bsp-public/blob/a8dcd0d34012522f649afd90ea1e1f1df3418d5f/Intel_Atom_E3900_MR2_Release_Note.pdf)
+To view the full list of supported features, please refer BSP release notes in [Technical Libary for Intel Atom E3900 Series](https://www.intel.com/content/www/us/en/embedded/products/apollo-lake/technical-library.html)
 
 ### Known Issues
-To view full list of known issues related to Linux driver, see [Intel_Atom_E3900_MR2_Release_Note.pdf](https://github.com/01org/iotg-yocto-bsp-public/blob/a8dcd0d34012522f649afd90ea1e1f1df3418d5f/Intel_Atom_E3900_MR2_Release_Note.pdf)
+To view full list of known issues related to Linux driver, please refer BSP release notes in [Technical Libary for Intel Atom E3900 Series](https://www.intel.com/content/www/us/en/embedded/products/apollo-lake/technical-library.html)
