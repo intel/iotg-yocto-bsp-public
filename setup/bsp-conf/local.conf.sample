@@ -28,6 +28,9 @@ MACHINE = "intel-corei7-64"
 # based on Intel Atom E3900 SoC Family.
 BSP_SUBTYPE = "leafhill"
 
+#Exclude piglit, ltp and mesa-demos packages
+PACKAGE_EXCLUDE = "packagegroup-core-apl-extra"
+
 #
 # Apollo Lake Yocto BSP supports different Audio features,
 # i.e. legacy HD-Audio, CAVS HD-Audio, and CAVS SSP Audio codec support.
