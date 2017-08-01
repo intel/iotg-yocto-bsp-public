@@ -3,6 +3,7 @@ FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
 SRC_URI += "file://kernel-patch-integration.scc \
             file://kernel_ipu.scc \
             file://kernel_io.scc \
+            file://kernel_audio.scc \
             ${@bb.utils.contains('AUDIO_FEATURES', 'ssp', 'file://kernel_audio-ssp.scc', '', d)} \
 "
 
