@@ -78,7 +78,6 @@ RDEPENDS_packagegroup-core-graphics-essential = "\
     numactl \
     \
     pango \
-    piglit \
     speex \
     v4l-utils \
     wayland \
