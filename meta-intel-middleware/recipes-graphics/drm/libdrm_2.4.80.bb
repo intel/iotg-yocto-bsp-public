@@ -34,10 +34,10 @@ do_install_append() {
 
 ALLOW_EMPTY_${PN}-drivers = "1"
 PACKAGES =+ "${PN}-tests ${PN}-drivers ${PN}-radeon ${PN}-nouveau ${PN}-omap \
-	     ${PN}-intel ${PN}-exynos ${PN}-kms ${PN}-freedreno"
+	     ${PN}-intel ${PN}-exynos ${PN}-kms ${PN}-freedreno ${PN}-amdgpu ${PN}-etnaviv"
 
 RRECOMMENDS_${PN}-drivers = "${PN}-radeon ${PN}-nouveau ${PN}-omap ${PN}-intel \
-			     ${PN}-exynos ${PN}-freedreno"
+			     ${PN}-exynos ${PN}-freedreno ${PN}-amdgpu ${PN}-etnaviv"
 
 PACKAGECONF[debug] = "--enable-debug"
 
@@ -49,3 +49,5 @@ FILES_${PN}-intel = "${libdir}/libdrm_intel.so.*"
 FILES_${PN}-exynos = "${libdir}/libdrm_exynos.so.*"
 FILES_${PN}-kms = "${libdir}/libkms*.so.*"
 FILES_${PN}-freedreno = "${libdir}/libdrm_freedreno.so.*"
+FILES_${PN}-amdgpu = "${libdir}/libdrm_amdgpu.so.*"
+FILES_${PN}-etnaviv = "${libdir}/libdrm_etnaviv.so.*"
