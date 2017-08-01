@@ -20,13 +20,19 @@ S = "${WORKDIR}/git"
 
 EXTRA_OECONF = "--build=$host --enable-glx-tls"
 
-PACKAGECONFIG = "egl gles dri dri3 \
+PACKAGECONFIG = "egl gles dri dri3 ${MESA_CRYPTO} \
 		 ${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'x11', '', d)}\
 		 ${@bb.utils.contains('DISTRO_FEATURES', 'wayland', 'wayland', '', d)}\
 		"
 
 PACKAGECONFIG[debug] = "--enable-debug"
 PACKAGECONFIG[wayland] = ",,wayland-native wayland"
+
+# Mesa requires one of the following crypto implementation, pick one of them
+MESA_CRYPTO ??= "openssl"
+PACKAGECONFIG[openssl] = "--with-sha1=libcrypto,,openssl"
+PACKAGECONFIG[nettle] = "--with-sha1=libnettle,,nettle"
+PACKAGECONFIG[gcrypt] = "--with-sha1=libgcrypt,,libgcrypt"
 
 #because we cannot rely on the fact that all apps will use pkgconfig,
 #make eglplatform.h independent of MESA_EGL_NO_X11_HEADER
