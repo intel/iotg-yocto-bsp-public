@@ -39,6 +39,10 @@ See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/S
 ```
       git checkout E3900-MR3
 ```
+   <br> - For Intel Atom E3900 Maintenance Release Version 3.1:
+```
+      git checkout E3900-MR3.1
+```
 - After checking out one of the release tags, you will noticed that you are in 'detached HEAD' state. You can now create a local git branch to host the code.
 ```
       git checkout -b <branch_name>
@@ -85,8 +89,8 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
 	- check for required software dependencies (this is only performed for Linux Ubuntu 14.04)
 	- test python, network, gitconfig and git proxy
    b. Prepare sources
-	- download Linux kernel v4.1.27 from Intel Linux Kernel from github.
-	- combolayer downloads Poky Jethro v2.0.2 and other meta layers based on setup/combolayer.conf
+	- download Linux kernel v4.1.42 from Intel Linux Kernel from github.
+	- combolayer downloads Poky Jethro v2.0.3 and other meta layers based on setup/combolayer.conf
 	- setup bblayers for bitbake build
 	- setup local.conf for bitbake build
 	- prepare environment for bitbake build
@@ -123,7 +127,7 @@ If you need to modify the recipes or configurations, make your customization in 
 ```
 
 ### Kernel Source
-Intel Atom E3900 BSP utilize linux-yocto kernel from Yocto project which is hosted in [Yocto Project repositories](http://git.yoctoproject.org/cgit/cgit.cgi/linux-yocto-4.1/). The branch for Intel Atom E3900 BSP kernel is standard/intel/4.1.27/leaf-hill.
+Intel Atom E3900 BSP utilize linux-yocto kernel from Yocto project which is hosted in [Yocto Project repositories](http://git.yoctoproject.org/cgit/cgit.cgi/linux-yocto-4.1/). The branch for Intel Atom E3900 BSP kernel is standard/intel/4.1.42/leaf-hill.
 
 ### Features supported
 To view the full list of supported features, please refer BSP release notes in [Technical Libary for Intel Atom E3900 Series](https://www.intel.com/content/www/us/en/embedded/products/apollo-lake/technical-library.html)
