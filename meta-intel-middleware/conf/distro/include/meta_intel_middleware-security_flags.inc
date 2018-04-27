@@ -14,3 +14,9 @@ SECURITY_CFLAGS_pn-imagemagick = "${SECURITY_NO_PIE_CFLAGS}"
 
 # gives relocation R_X86_64_PC32 errors otherwise
 SECURITY_CFLAGS_pn-tpm2.0-tss = "${SECURITY_NO_PIE_CFLAGS}"
+SECURITY_CFLAGS_pn-libproxy = "${SECURITY_NO_PIE_CFLAGS}"
+
+SECURITY_CFLAGS_pn-gcc-sanitizers = "${SECURITY_NO_PIE_CFLAGS}"
+
+# Deal with linker failures when using the cflags
+SECURITY_CFLAGS_pn-graphviz = ""
