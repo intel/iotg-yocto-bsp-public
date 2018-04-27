@@ -1,0 +1,2 @@
+# Description: Intel Synchronous Serial Port (SSP) Audio Support
+kconf hardware snd_ssp_intel.cfg
