@@ -232,7 +232,7 @@ rebuild_message () {
 	echo "$ bitbake core-image-sato-sdk						"
 	echo -e "									"
 	echo "To compile kernel bzImage only,						"
-	echo "$ bitbake linux-yocto							"
+	echo "$ bitbake linux-intel							"
 	echo "=========================================================================="
 
 	cd ${cur_dir}
@@ -384,27 +384,12 @@ build_kernel () {
 	cd ${cur_dir}
 }
 
-echo -e "\nSelect an option: "
-echo -e "1. Build kernel image with CAVS HD Audio driver (Default)\n2. Build kernel image with CAVS SSP Audio driver"
-echo -e "Default option is build kernel image with CAVS HD Audio driver. If no input is received within 20 secs, default will be used."
-read -t 20 -p "" ans_to_patch
+echo -e "Build kernel image with CAVS HD Audio driver (Default)"
 
-case $ans_to_patch in
-	1)
-		# CAVS HD Audio
-		tarball="CAVS"
-		machine="CAVS-HDA"
-		;;
-	2)
-		# CAVS SSP Audio
-		tarball="CAVS"
-		machine="CAVS-SSP"
-		;;
-	*)
-		tarball="CAVS"
-		machine="CAVS-HDA"
-		;;
-esac
+
+tarball="CAVS"
+machine="CAVS-HDA"
+
 
 echo -e "\nSelect an option: \n1. core-image-sato-sdk (Default)\n2. core-image-sato\n3. linux-kernel\n4. custom"
 echo -e "Default build target is core-image-sato-sdk. If no input is received within 20 secs, default target will be built."

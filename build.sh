@@ -4,7 +4,7 @@
 ########################################################################
 
 # Yocto Project Poky based Linux
-KVER="4.1"
+KVER="4.14"
 
 ########################################################################
 # End of configuration
@@ -13,31 +13,10 @@ KVER="4.1"
 apply_kernel_patch () {
 	cur_dir=$(pwd)
 
-	# This is to apply MR1 patches on top of Gold Release base.
-	echo "Untar kernel tarball to obtain patches ..."
-
-	cd setup/patchset
-
-	case $tarball in
-		LEGACY)
-			echo -e "Extracting kernel patches with legacy HD Audio driver \n"
-			tar xvjf auto_nightly_integrator-linux-nossp-*.tar.bz2
-			;;
-		CAVS)
-			echo -e "Extracting kernel patches with IoTG SSP Audio driver \n"
-			tar xvjf auto_nightly_integrator-linux-2*.tar.bz2
-			;;
-	esac
-
-	cd ${cur_dir}
-	cd meta-intel-leafhill/recipes-kernel/linux/linux-yocto
-
-	# Move the patches over into meta-intel.
-	mv $cur_dir/setup/patchset/patches/* .
-	rm -rf  $cur_dir/setup/patchset/patches
+	cd meta-intel-leafhill/recipes-kernel/linux/linux-intel
 
 	git add --all .
-	git commit -s -m "meta-intel: linux-yocto_4.1: update kernel patch for Apollo Lake BSP"
+	git commit -s -m "meta-intel: linux-intel_4.14: update kernel patch for Apollo Lake BSP"
 
 	cd ${cur_dir}
 }
@@ -109,7 +88,7 @@ build_bzImage () {
 
 	echo "Start baking ..."
 	sleep 3
-	bitbake linux-yocto
+	bitbake virtual/kernel
 
 	cd ${cur_dir}
 }
@@ -121,6 +100,7 @@ build_bsp () {
 	sleep 3
 	setup/combo-layer -c setup/combolayer.conf init
 	apply_combined_repo_commit
+	apply_kernel_patch
 
 	echo "========================================================================="
 	echo "By default, this setup script will create a brand new repo which combines"
@@ -141,6 +121,7 @@ build_kernel () {
 	sleep 3
 	setup/combo-layer -c setup/combolayer.conf init
 	apply_combined_repo_commit
+	apply_kernel_patch
 
 	echo "========================================================================="
 	echo "By default, this setup script will create a brand new repo which combines"
