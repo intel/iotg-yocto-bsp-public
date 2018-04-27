@@ -41,20 +41,13 @@ Dependencies
 
 This layer depends on:
 
-  URI: git://git.openembedded.org/bitbake
-  branch: jethro
-
-  URI: git://git.openembedded.org/openembedded-core
-  layers: meta
-  branch: jethro
-
   URI: git://git.yoctoproject.org/poky
   layers: meta
-  branch: jethro
+  branch: rocko
 
   URI: git://git.yoctoproject.org/meta-intel
   layers: intel
-  branch: jethro
+  branch: rocko
 
 
 Patches
@@ -62,6 +55,7 @@ Patches
 
 Please submit any patches against this layer to the maintainer:
 
-Maintainer: Chang Rebecca Swee Fun <rebecca.swee.fun.chang@intel.com>
+Maintainer: Ching Chien Ho <ching.chien.ho@intel.com>
+Maintainer: Chong Yi Chai <chong.yi.chai@intel.com>
 
 Please see the meta-intel-leafhill/MAINTAINERS file for more details.
