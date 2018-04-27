@@ -8,40 +8,39 @@ SECTION = "x11/base"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://xf86drm.c;beginline=9;endline=32;md5=c8a3b961af7667c530816761e949dc71"
 PROVIDES = "drm"
-DEPENDS = "libpthread-stubs udev libpciaccess"
+DEPENDS = "libpthread-stubs libpciaccess"
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+SRC_URI = "git://anongit.freedesktop.org/mesa/drm \
+           file://libdrm_version_diff.patch \
+           file://0001-intel-New-libdrm-interface-to-create-unbound-wc-user.patch \
+          "
 
-SRC_URI = "git://anongit.freedesktop.org/mesa/drm;branch=master \
-           file://libdrm_version_diff.patch"
-
-SRCREV = "691a21579962d2db2d5cb1de5286fa86ef22214f"
-
-inherit autotools pkgconfig
-
-EXTRA_OECONF += "--disable-cairo-tests \
-		 --enable-omap-experimental-api \
-		 --enable-install-test-programs \
-		 --disable-manpages \
-		 --disable-valgrind \
-		"
+PV = "2.4.91"
 
 S = "${WORKDIR}/git"
 
-do_install_append() {
-        cp ${S}/intel/intel_perfmon.h ${D}${includedir}/libdrm/
-}
+SRCREV = "a5d87b1793ce00b4f7d335921a373620895de534"
+
+inherit autotools pkgconfig manpages
+
+EXTRA_OECONF += "--disable-cairo-tests \
+                 --enable-omap-experimental-api \
+                 --enable-etnaviv-experimental-api \
+                 --enable-install-test-programs \
+                 --disable-valgrind \
+                "
+PACKAGECONFIG[manpages] = "--enable-manpages, --disable-manpages, libxslt-native xmlto-native"
 
 ALLOW_EMPTY_${PN}-drivers = "1"
 PACKAGES =+ "${PN}-tests ${PN}-drivers ${PN}-radeon ${PN}-nouveau ${PN}-omap \
-	     ${PN}-intel ${PN}-exynos ${PN}-kms ${PN}-freedreno ${PN}-amdgpu ${PN}-etnaviv"
+             ${PN}-intel ${PN}-exynos ${PN}-kms ${PN}-freedreno ${PN}-amdgpu \
+             ${PN}-etnaviv"
 
 RRECOMMENDS_${PN}-drivers = "${PN}-radeon ${PN}-nouveau ${PN}-omap ${PN}-intel \
-			     ${PN}-exynos ${PN}-freedreno ${PN}-amdgpu ${PN}-etnaviv"
+                             ${PN}-exynos ${PN}-freedreno ${PN}-amdgpu \
+                             ${PN}-etnaviv"
 
-PACKAGECONF[debug] = "--enable-debug"
-
-FILES_${PN}-tests = "${bindir}/dr* ${bindir}/mode* ${bindir}/*test"
+FILES_${PN}-tests = "${bindir}/*"
 FILES_${PN}-radeon = "${libdir}/libdrm_radeon.so.*"
 FILES_${PN}-nouveau = "${libdir}/libdrm_nouveau.so.*"
 FILES_${PN}-omap = "${libdir}/libdrm_omap.so.*"
@@ -51,3 +50,4 @@ FILES_${PN}-kms = "${libdir}/libkms*.so.*"
 FILES_${PN}-freedreno = "${libdir}/libdrm_freedreno.so.*"
 FILES_${PN}-amdgpu = "${libdir}/libdrm_amdgpu.so.*"
 FILES_${PN}-etnaviv = "${libdir}/libdrm_etnaviv.so.*"
+
