@@ -7,7 +7,7 @@ inherit packagegroup
 PACKAGES = "packagegroup-core-buildessential-extended"
 
 RDEPENDS_packagegroup-core-buildessential-extended = "\
-    alsa-lib \
+    alsa-lib-dev \
     alsa-utils \
     autoconf \
     automake \
@@ -61,13 +61,12 @@ RDEPENDS_packagegroup-core-buildessential-extended = "\
     pkgconfig \
     procps \
     python \
-    python-mako \
+    python3-mako \
     python-numpy \
     python-pip \
     python-pyserial \
     rpm \
     rpm-build \
-    rpmresolve \
     samba \
     strace \
     syslinux \

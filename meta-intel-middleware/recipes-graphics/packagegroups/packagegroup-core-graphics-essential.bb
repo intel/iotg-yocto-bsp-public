@@ -12,6 +12,7 @@ ALLOW_EMPTY_${PN} = "1"
 RDEPENDS_packagegroup-core-graphics-essential = "\
     cairo \
     dmidecode \
+    ffmpeg \
     flac \
     fontconfig \
     freetype \
@@ -26,20 +27,17 @@ RDEPENDS_packagegroup-core-graphics-essential = "\
     gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-ugly \
     gstreamer1.0-rtsp-server \
-    gstreamer-vaapi-1.0 \
     gtk+3 \
     \
     jpeg \
     \
     lame \
     ldd \
-    libav \
     libdrm \
     libglu \
     libmad \
     libogg \
     libpng \
-    libpng12 \
     libsoup-2.4 \
     libtheora \
     libvorbis \
