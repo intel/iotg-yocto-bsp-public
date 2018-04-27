@@ -1,0 +1,34 @@
+From c45311a004c32fdd788bedbf2244c5bcf916ef8f Mon Sep 17 00:00:00 2001
+From: Preeti Sachan <preetixx.sachan@intel.com>
+Date: Thu, 4 Jan 2018 16:04:18 +0800
+Subject: [PATCH] mraa: point to correct install path
+
+Use generic LIB_INSTALL_DIR path for installing python
+site-packages/dist-packages.
+
+Signed-off-by: Preeti Sachan <preetixx.sachan@intel.com>
+---
+ cmake/modules/OpenCVDetectPython.cmake | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/cmake/modules/OpenCVDetectPython.cmake b/cmake/modules/OpenCVDetectPython.cmake
+index e3fc3a9..4acc52d 100644
+--- a/cmake/modules/OpenCVDetectPython.cmake
++++ b/cmake/modules/OpenCVDetectPython.cmake
+@@ -106,10 +106,10 @@ if(NOT ${found})
+     else() #debian based assumed, install to the dist-packages.
+       set(_packages_path "python${_version_major_minor}/dist-packages")
+     endif()
+-      if(EXISTS "${CMAKE_INSTALL_PREFIX}/lib${LIB_SUFFIX}/${${packages_path}}")
+-        set(_packages_path "lib${LIB_SUFFIX}/${_packages_path}")
++      if(EXISTS "${CMAKE_INSTALL_PREFIX}/${LIB_INSTALL_DIR}/${${packages_path}}")
++        set(_packages_path "${LIB_INSTALL_DIR}/${_packages_path}")
+       else()
+-        set(_packages_path "lib/${_packages_path}")
++        set(_packages_path "${LIB_INSTALL_DIR}/${_packages_path}")
+     endif()
+   endif()
+ 
+-- 
+1.9.1
+
