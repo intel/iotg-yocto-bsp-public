@@ -7,10 +7,10 @@ BBFILES ?= ""
 
 BBLAYERS ?= " \
   ##OEROOT##/meta \
-  ##OEROOT##/meta-yocto \
+  ##OEROOT##/meta-poky \
   ##OEROOT##/meta-yocto-bsp \
   ##OEROOT##/meta-intel \
-  ##OEROOT##/meta-intel/meta-tlk \
+  ##OEROOT##/meta-tlk \
   ##OEROOT##/meta-intel-middleware \
   ##OEROOT##/meta-openembedded/meta-filesystems \
   ##OEROOT##/meta-openembedded/meta-networking \
@@ -19,11 +19,5 @@ BBLAYERS ?= " \
   ##OEROOT##/meta-openembedded/meta-multimedia \
   ##OEROOT##/meta-qt5 \
   ##OEROOT##/meta-measured \
-  ##OEROOT##/meta-intel-iot-middleware \
-  ##OEROOT##/meta-soletta \
   ##OEROOT##/meta-intel-leafhill \
-  "
-BBLAYERS_NON_REMOVABLE ?= " \
-  ##OEROOT##/meta \
-  ##OEROOT##/meta-yocto \
   "

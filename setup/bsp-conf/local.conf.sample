@@ -17,6 +17,10 @@
 # This sets the default machine to be intel-corei7-64 if no other machine is selected:
 MACHINE = "intel-corei7-64"
 
+# This set the default kernel to linux-intel version 4.14 LTS
+PREFERRED_PROVIDER_virtual/kernel = "linux-intel"
+PREFERRED_VERSION_linux-intel = "4.14%"
+
 #
 # Leaf Hill BSP specific settings
 #
@@ -54,7 +58,7 @@ OLD_XSERVER_X86_EXT = ""
 XSERVER_X86_MATROX_MGA = ""
 XSERVER_X86_ASPEED_AST = ""
 MACHINE_ESSENTIAL_EXTRA_RDEPENDS_remove = "intel-microcode"
-INITRD_remove = "${DEPLOY_DIR_IMAGE}/microcode.cpio"
+INITRD_LIVE_remove = "${DEPLOY_DIR_IMAGE}/microcode.cpio"
 
 # Make image boot to runlevel 3 by default
 APPEND = "3 snd_hda_intel.power_save=1 snd_hda_intel.power_save_controller=y scsi_mod.scan=async"
@@ -66,9 +70,8 @@ APPEND = "3 snd_hda_intel.power_save=1 snd_hda_intel.power_save_controller=y scs
 PREFERRED_PROVIDER_jpeg = "jpeg"
 PREFERRED_PROVIDER_jpeg-native = "jpeg-native"
 
-# Enable xserver-xorg v1.17.2
+# Enable xserver-xorg
 IMAGE_INSTALL_append = " xserver-xorg"
-PREFERRED_VERSION_xserver-xorg = "1.17%"
 
 # Enable vp8dec for gstreamer1.0-plugins-good
 PACKAGECONFIG_append_pn-gstreamer1.0-plugins-good = "vpx"
@@ -83,9 +86,6 @@ PACKAGECONFIG_append_pn-gstreamer1.0-plugins-good = "vpx"
 # Install libva
 IMAGE_INSTALL_append = " libva"
 
-# Install libva-intel-driver (i965/Intel VA) in image
-IMAGE_INSTALL_append = " libva-intel-driver"
-
 # Install Wayland in image
 DISTRO_FEATURES_append = " wayland pam"
 CORE_IMAGE_EXTRA_INSTALL += "wayland weston weston-examples"
@@ -94,7 +94,11 @@ CORE_IMAGE_EXTRA_INSTALL += "wayland weston weston-examples"
 IMAGE_INSTALL_append = " mesa-glxinfo"
 
 # Install TPM2.0-TSS in image
-IMAGE_INSTALL_append = " libtss2 libtss2-dev libtss2-staticdev libtctidevice libtctidevice-dev libtctidevice-staticdev libtctisocket libtctisocket-dev libtctisocket-staticdev resourcemgr"
+IMAGE_INSTALL_append = " libtss2 libtss2-dev libtctidevice libtctidevice-dev libtctisocket libtctisocket-dev"
+IMAGE_INSTALL_append = " libtss2-staticdev libtctisocket-staticdev libtctidevice-staticdev"
+
+# Install tpm2-abrmd in image
+IMAGE_INSTALL_append = " tpm2-abrmd"
 
 # Install MRAA and its dependencies in image
 IMAGE_INSTALL_append = " nodejs swig mraa"
@@ -108,14 +112,14 @@ IMAGE_INSTALL_append = " jhi"
 # Install IQV driver
 IMAGE_INSTALL_append = " iqvlinux"
 
+# Disable lttng modules
+LTTNGMODULES_corei7-64-intel-common = ""
+
 # Install xinitrc environment file
 IMAGE_INSTALL_append = " xinit-env"
 
 # By default, we want our OS to includes all kernel modules.
 IMAGE_INSTALL_append = " kernel-modules"
-
-# Install soletta framework and dev app
-IMAGE_INSTALL_append = " soletta soletta-dev-app"
 
 # Take note that as we are building 3rd party ingredient.
 # We need the LICENSE_FLAGS below.
@@ -303,7 +307,6 @@ BB_DISKMON_DIRS = "\
 #SSTATE_MIRRORS ?= "\
 #file://.* http://someserver.tld/share/sstate/PATH;downloadfilename=PATH \n \
 #file://.* file:///some/local/dir/sstate/PATH"
-
 
 #
 # Qemu configuration
