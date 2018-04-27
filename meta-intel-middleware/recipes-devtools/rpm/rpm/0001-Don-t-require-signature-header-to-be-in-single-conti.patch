@@ -1,0 +1,47 @@
+From b8e436b0611da6a39cacc39d728316929621a824 Mon Sep 17 00:00:00 2001
+From: Chong Yi Chai <chong.yi.chai@intel.com>
+Date: Tue, 30 Jan 2018 09:09:02 +0800
+Subject: [PATCH] Don't require signature header to be in single contiguous
+ region (#270)
+
+In packages created and signed by rpm.org, the entire signature header is
+always reloaded into a contiguous region so there are never "dribbles" in
+headers coming from packages on disk. However in the case of signature
+header, the region gets changed and rewritten any time signatures
+change so it's not "immutable" in the sense the region of the main
+header is, and requiring it to be that way is perhaps a bit dubious -
+by the "immutable" definition, only build-time added tags should be
+in the region and all later signatures outside it.
+
+Further, there are otherwise legit packages in the wild that are signed by
+something that places the signatures outside the signature region (samples
+in #270 and RhBug:1514190 are from Intel, maybe they're using a home-grown
+signing software) and also rpm5 is actually relying on a padding tag to be
+outside the region as it's used for the actual padding between the
+signature and main header..
+
+Signed-off-by: Chong Yi Chai <chong.yi.chai@intel.com>
+
+[Upstream-status: Backport]
+https://github.com/rpm-software-management/rpm/commit/
+34c2ba3c6a80a778cdf2e42a9193b3264e08e1b3
+---
+ lib/signature.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/signature.c b/lib/signature.c
+index a0bd60f..10a84bf 100644
+--- a/lib/signature.c
++++ b/lib/signature.c
+@@ -165,7 +165,7 @@ rpmRC rpmReadSignature(FD_t fd, Header * sighp, char ** msg)
+     if (sighp)
+ 	*sighp = NULL;
+ 
+-    if (hdrblobRead(fd, 1, 1, RPMTAG_HEADERSIGNATURES, &blob, &buf) != RPMRC_OK)
++    if (hdrblobRead(fd, 1, 0, RPMTAG_HEADERSIGNATURES, &blob, &buf) != RPMRC_OK)
+ 	goto exit;
+     
+     /* OK, blob looks sane, load the header. */
+-- 
+1.9.1
+
