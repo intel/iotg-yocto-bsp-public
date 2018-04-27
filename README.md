@@ -31,6 +31,7 @@ See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/S
       git clone https://github.com/01org/iotg-yocto-bsp-public.git -b e3900/master
 ```
 - This git tree will maintained as single product branch. In order to get code base from previous release, you need to checkout to the specific tag.
+
    <br> - For Intel Atom E3900 Maintenance Release Version 2:
 ```
       git checkout E3900-MR2
@@ -42,6 +43,10 @@ See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/S
    <br> - For Intel Atom E3900 Maintenance Release Version 3.1:
 ```
       git checkout E3900-MR3.1
+```
+   <br> - For Intel Atom E3900 Maintenance Release Version 4 - Alpha:
+```
+      git checkout E3900-MR4-Alpha
 ```
 - After checking out one of the release tags, you will noticed that you are in 'detached HEAD' state. You can now create a local git branch to host the code.
 ```
@@ -67,7 +72,11 @@ This packagegroup is set to build into core-image-sato-sdk by default in this BS
  DEFAULTTUNE = "corei7-64"
  MULTILIBS = "multilib:lib32"
  DEFAULTTUNE_virtclass-multilib-lib32 = "corei7-32"
+ PACKAGE_EXCLUDE_pn-<Image name> = "lib32-libgmp-dev lib32-xtrans-dev lib32-python3-core"
 ```
+
+Image name can be core-image-sato or core-image-sato-sdk. The above libraries are known to cause issue on
+multilib image and should be excluded.
 
 At the end of a successful build, you should have a live image that you can boot from a USB flash drive.
 You can deploy the hddimg image to a USB or SATA device.
@@ -89,8 +98,8 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
 	- check for required software dependencies (this is only performed for Linux Ubuntu 14.04)
 	- test python, network, gitconfig and git proxy
    b. Prepare sources
-	- download Linux kernel v4.1.42 from Intel Linux Kernel from github.
-	- combolayer downloads Poky Jethro v2.0.3 and other meta layers based on setup/combolayer.conf
+	- download Linux kernel v4.14.36 from Intel Linux Kernel from github.
+	- combolayer downloads Poky Jethro v2.4.2 and other meta layers based on setup/combolayer.conf
 	- setup bblayers for bitbake build
 	- setup local.conf for bitbake build
 	- prepare environment for bitbake build
@@ -104,7 +113,6 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
    Your bootable image location is:-
    <your_path>/yocto_build/build/tmp/deploy/images/intel-corei7-64/
 	- HDDIMG image file name: core-image-sato-sdk-intel-corei7-64-<build-date-time>.hddimg
-	- ISO image file name:    core-image-sato-sdk-intel-corei7-64-<build-date-time>.iso
 
 ### For Subsequent Build
 If you need to modify the recipes or configurations, make your customization in the yocto_build folder after running the ./setup script on your host machine.
@@ -123,11 +131,11 @@ If you need to modify the recipes or configurations, make your customization in 
 	$ bitbake core-image-sato-sdk
 
 	# For linux-kernel bzImage only
-	$ bitbake linux-yocto
+	$ bitbake linux-intel
 ```
 
 ### Kernel Source
-Intel Atom E3900 BSP utilize linux-yocto kernel from Yocto project which is hosted in [Yocto Project repositories](http://git.yoctoproject.org/cgit/cgit.cgi/linux-yocto-4.1/). The branch for Intel Atom E3900 BSP kernel is standard/intel/4.1.42/leaf-hill.
+Intel Atom E3900 BSP utilize linux-yocto kernel from Yocto project which is hosted in [Intel Gihub repositories](https://github.com/intel/linux-intel-lts). The branch for Intel Atom E3900 BSP kernel is 4.14/yocto/base.
 
 ### Features supported
 To view the full list of supported features, please refer BSP release notes in [Technical Libary for Intel Atom E3900 Series](https://www.intel.com/content/www/us/en/embedded/products/apollo-lake/technical-library.html)
