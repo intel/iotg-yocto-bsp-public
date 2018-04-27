@@ -9,6 +9,7 @@ Make sure that we compile against the right kernel. Point
 to right paths. Make sure we use the right compiler and flags.
 
 Signed-off-by: Anuj Mittal <anujx.mittal@intel.com>
+Signed-off-by: Ho Ching Chien <ching.chien.ho@intel.com>
 ---
  src/linux/driver/Makefile | 138 ++++------------------------------------------
  1 file changed, 11 insertions(+), 127 deletions(-)
@@ -23,7 +24,7 @@ index c1dee29..66c044f 100644
  
 -
 -
- CFILES = nalioctldrv.c linuxnaldriver.c linuxdriveros_i.c linuxdriverpci_i.c linuxdriverdevice_i.c
+ CFILES = nalioctldrv.c linuxnaldriver.c linuxdriveros_i.c linuxdriverpci_i.c linuxdriverdevice_i.c linuxdrivermemory_i.c
  
 -
 -
