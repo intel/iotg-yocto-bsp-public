@@ -1,0 +1,52 @@
+From 13b0904793f69f0f14f5b124d75f2065a94ef604 Mon Sep 17 00:00:00 2001
+From: liyong4x <yongx.a.li@intel.com>
+Date: Thu, 28 Dec 2017 01:44:07 -0500
+Subject: [PATCH] Do not check GST_IS_PUSH_SRC(element) for sinkpad dmabuffer
+ pool allocation
+
+---
+ gst/vaapi/gstvaapipluginbase.c | 21 ++++++++++-----------
+ 1 file changed, 10 insertions(+), 11 deletions(-)
+
+diff --git a/gst/vaapi/gstvaapipluginbase.c b/gst/vaapi/gstvaapipluginbase.c
+index 8c2b84a..11594a1 100644
+--- a/gst/vaapi/gstvaapipluginbase.c
++++ b/gst/vaapi/gstvaapipluginbase.c
+@@ -423,7 +423,15 @@ has_dmabuf_capable_peer (GstVaapiPluginBase * plugin, GstPad * pad)
+     if (!element)
+       break;
+ 
+-    if (GST_IS_PUSH_SRC (element)) {
++    if (GST_IS_BASE_TRANSFORM (element)) {
++      element_name = gst_element_get_name (element);
++      if (!element_name || sscanf (element_name, "capsfilter%d", &v) != 1)
++        break;
++
++      pad = gst_element_get_static_pad (element, "sink");
++      if (!pad)
++        break;
++    } else {
+       element_name = gst_element_get_name (element);
+       if (!element_name)
+         break;
+@@ -439,16 +447,7 @@ has_dmabuf_capable_peer (GstVaapiPluginBase * plugin, GstPad * pad)
+       else
+         is_dmabuf_capable = v == 5;     /* "dmabuf-import" enum value */
+       break;
+-    } else if (GST_IS_BASE_TRANSFORM (element)) {
+-      element_name = gst_element_get_name (element);
+-      if (!element_name || sscanf (element_name, "capsfilter%d", &v) != 1)
+-        break;
+-
+-      pad = gst_element_get_static_pad (element, "sink");
+-      if (!pad)
+-        break;
+-    } else
+-      break;
++    }
+ 
+     g_free (element_name);
+     element_name = NULL;
+-- 
+1.9.1
+

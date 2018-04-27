@@ -1,0 +1,28 @@
+From ebb2fa6a0a2d2aa7d9f43cdac0087a9ceabb0240 Mon Sep 17 00:00:00 2001
+From: shakin chou <shakin@outlook.com>
+Date: Fri, 3 Nov 2017 11:39:54 +0800
+Subject: [PATCH] playbin: Don't ref_sink() the sinks twice
+
+Since we're already sunk floating reference, we shouldn't call ref_sink
+again, which increases the ref_count and cause leaks.
+
+https://bugzilla.gnome.org/show_bug.cgi?id=789547
+---
+ gst/playback/gstplaybin2.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/gst/playback/gstplaybin2.c b/gst/playback/gstplaybin2.c
+index 46da78e..a2e9ed4 100644
+--- a/gst/playback/gstplaybin2.c
++++ b/gst/playback/gstplaybin2.c
+@@ -4663,7 +4663,6 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
+                   gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (ave->sink)));
+               continue;
+             }
+-            gst_object_ref_sink (*sinkp);
+             created_sink = TRUE;
+           }
+         }
+-- 
+2.9.5
+
