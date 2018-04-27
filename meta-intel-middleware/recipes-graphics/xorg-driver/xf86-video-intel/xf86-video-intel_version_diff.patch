@@ -1,19 +1,21 @@
 diff -x .git -x .gitignore -Naur xf86-video-intel/gms-integration isg_gms-sna_ddx/gms-integration
 --- xf86-video-intel/gms-integration	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-sna_ddx/gms-integration	2017-05-18 04:56:00.413685075 +0800
-@@ -0,0 +1,9 @@
++++ isg_gms-sna_ddx/gms-integration	2017-12-11 02:11:37.162290055 +0800
+@@ -0,0 +1,11 @@
 +###
 +### GMS integration
 +###
-+upstream cb6ba2da056f3298a765b4da5cd626343c00a533
-+	sna: Use the first active crtc as the primary output fallback
++upstream 2100efa105e8c9615eda867d39471d78e500b1bb
++	sna/dri2: Don't cache allocate-as-scanout flag
 +hsd/1504134673 9b4488f2453e2e3e8831906c2103631e6a807c95
 +	Add NULL checking for drawable in sna_dri2_flip_event
++hsd/1504451708 d00a92ca01955c16fb54fd0eb3398dec1f199bee
++	Make sure the cache bo is OK to reuse (v3)
 +topic/vpg_stolen ed6285a9d39938572f40ba548625ff391ef0af9c
 +	sna: Always clear entire gem create ioctl data
 diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/kgem.c isg_gms-sna_ddx/src/sna/kgem.c
---- xf86-video-intel/src/sna/kgem.c	2017-05-18 04:56:19.078047515 +0800
-+++ isg_gms-sna_ddx/src/sna/kgem.c	2017-05-18 04:56:00.449685774 +0800
+--- xf86-video-intel/src/sna/kgem.c	2017-12-11 02:11:52.330291516 +0800
++++ isg_gms-sna_ddx/src/sna/kgem.c	2017-12-11 02:11:37.210290056 +0800
 @@ -879,8 +879,7 @@
  {
  	struct drm_i915_gem_create create;
@@ -25,8 +27,8 @@ diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/kgem.c isg_gms-sna_ddx
  	(void)do_ioctl(fd, DRM_IOCTL_I915_GEM_CREATE, &create);
  
 diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/sna_display.c isg_gms-sna_ddx/src/sna/sna_display.c
---- xf86-video-intel/src/sna/sna_display.c	2017-05-18 04:56:19.426054273 +0800
-+++ isg_gms-sna_ddx/src/sna/sna_display.c	2017-05-18 04:56:00.469686162 +0800
+--- xf86-video-intel/src/sna/sna_display.c	2017-12-11 02:11:52.342291518 +0800
++++ isg_gms-sna_ddx/src/sna/sna_display.c	2017-12-11 02:11:37.222290057 +0800
 @@ -701,8 +701,7 @@
  
  	assert((size & 4095) == 0);
@@ -37,10 +39,31 @@ diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/sna_display.c isg_gms-
  	create.size = size;
  	(void)drmIoctl(fd, DRM_IOCTL_I915_GEM_CREATE, &create);
  
+@@ -2659,6 +2658,20 @@
+ 			return NULL;
+ 		}
+ 
++		/* Make sure cache_bo is still valid compaired to the shadow bo */
++		if (sna_crtc->cache_bo) {
++			/*
++			 * We use the cache bo's pitch when calculating the size because that's what
++			 * get_fb uses to validate the size.
++			 */
++			if ((sna_crtc->cache_bo->pitch < bo->pitch) ||
++			  (kgem_bo_size(sna_crtc->cache_bo) < sna_crtc->cache_bo->pitch * crtc->mode.VDisplay) ) {
++				kgem_bo_destroy(&sna->kgem, sna_crtc->cache_bo);
++				sna_crtc->cache_bo = NULL;
++			}
++		}
++
++
+ 		front = sna_crtc->slave_pixmap ?: sna->front;
+ 		if (__sna_pixmap_get_bo(front) && !rr_active(crtc)) {
+ 			BoxRec b;
 diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/sna_dri2.c isg_gms-sna_ddx/src/sna/sna_dri2.c
---- xf86-video-intel/src/sna/sna_dri2.c	2017-05-18 04:56:19.086047670 +0800
-+++ isg_gms-sna_ddx/src/sna/sna_dri2.c	2017-05-18 04:56:00.469686162 +0800
-@@ -2949,6 +2949,10 @@
+--- xf86-video-intel/src/sna/sna_dri2.c	2017-12-11 02:11:52.342291518 +0800
++++ isg_gms-sna_ddx/src/sna/sna_dri2.c	2017-12-11 02:11:37.222290057 +0800
+@@ -2942,6 +2942,10 @@
  	case FLIP_THROTTLE:
  		if (flip->signal) {
  			DBG(("%s: triple buffer swap complete, unblocking client\n", __FUNCTION__));
@@ -52,8 +75,8 @@ diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/sna_dri2.c isg_gms-sna
  		}
  	case FLIP_COMPLETE:
 diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/sna_driver.c isg_gms-sna_ddx/src/sna/sna_driver.c
---- xf86-video-intel/src/sna/sna_driver.c	2017-05-18 04:56:19.086047670 +0800
-+++ isg_gms-sna_ddx/src/sna/sna_driver.c	2017-05-18 04:56:00.469686162 +0800
+--- xf86-video-intel/src/sna/sna_driver.c	2017-12-11 02:11:52.342291518 +0800
++++ isg_gms-sna_ddx/src/sna/sna_driver.c	2017-12-11 02:11:37.222290057 +0800
 @@ -406,8 +406,7 @@
  	if (res.count_crtcs == 0)
  		return TRUE;
@@ -65,8 +88,8 @@ diff -x .git -x .gitignore -Naur xf86-video-intel/src/sna/sna_driver.c isg_gms-s
  	if (drmIoctl(fd, DRM_IOCTL_I915_GEM_CREATE, &create))
  		return FALSE;
 diff -x .git -x .gitignore -Naur xf86-video-intel/test/dri3-test.c isg_gms-sna_ddx/test/dri3-test.c
---- xf86-video-intel/test/dri3-test.c	2017-05-18 04:56:19.110048137 +0800
-+++ isg_gms-sna_ddx/test/dri3-test.c	2017-05-18 04:56:00.497686706 +0800
+--- xf86-video-intel/test/dri3-test.c	2017-12-11 02:11:52.194291501 +0800
++++ isg_gms-sna_ddx/test/dri3-test.c	2017-12-11 02:11:37.254290058 +0800
 @@ -153,7 +153,7 @@
  {
  	struct drm_i915_gem_create create;
@@ -77,8 +100,8 @@ diff -x .git -x .gitignore -Naur xf86-video-intel/test/dri3-test.c isg_gms-sna_d
  	(void)drmIoctl(fd, DRM_IOCTL_I915_GEM_CREATE, &create);
  
 diff -x .git -x .gitignore -Naur xf86-video-intel/test/present-test.c isg_gms-sna_ddx/test/present-test.c
---- xf86-video-intel/test/present-test.c	2017-05-18 04:56:19.110048137 +0800
-+++ isg_gms-sna_ddx/test/present-test.c	2017-05-18 04:56:00.501686784 +0800
+--- xf86-video-intel/test/present-test.c	2017-12-11 02:11:52.194291501 +0800
++++ isg_gms-sna_ddx/test/present-test.c	2017-12-11 02:11:37.254290058 +0800
 @@ -1709,7 +1709,7 @@
  {
  	struct drm_i915_gem_create create;
