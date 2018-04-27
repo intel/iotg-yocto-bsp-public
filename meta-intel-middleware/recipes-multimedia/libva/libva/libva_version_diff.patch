@@ -1,9 +1,0 @@
-diff -x .git -x .gitignore -Naur libva/gms-integration isg_gms-libva/gms-integration
---- libva/gms-integration	1970-01-01 07:30:00.000000000 +0730
-+++ isg_gms-libva/gms-integration	2017-05-18 04:54:58.060474290 +0800
-@@ -0,0 +1,5 @@
-+###
-+### GMS integration
-+###
-+upstream d829a36cf71ee3bcbeff670fde4287070bb6000a
-+	Bump libva to 1.8.2.pre1 for development
