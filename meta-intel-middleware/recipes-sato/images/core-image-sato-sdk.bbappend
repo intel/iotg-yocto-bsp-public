@@ -7,7 +7,6 @@ IMAGE_INSTALL_append = " packagegroup-core-devtools"
 
 # Extra packages to install into image
 IMAGE_INSTALL_append = " openssl"
-IMAGE_INSTALL_append = " smartpm"
 
 # Remove linux-firmware-usb8897_uapsta.bin
 ROOTFS_POSTPROCESS_COMMAND += "my_rootfs ;"
