@@ -1,18 +1,18 @@
-From a50157b98920852bac5b4d084a726f42bb8d9750 Mon Sep 17 00:00:00 2001
-From: Anuj Mittal <anujx.mittal@intel.com>
-Date: Thu, 21 Jan 2016 20:37:42 +0800
+From 4e136199ae04ec4a8ca3ce5e727da58e1d4c284d Mon Sep 17 00:00:00 2001
+From: Ho Ching Chien <ching.chien.ho@intel.com>
+Date: Thu, 11 May 2017 11:19:24 +0800
 Subject: [PATCH] default.pa: Use the custom settings for APL
 
-Signed-off-by: Anuj Mittal <anujx.mittal@intel.com>
+Signed-off-by: Ho Ching Chien <ching.chien.ho@intel.com>
 ---
- src/daemon/default.pa.in | 14 +-------------
- 1 file changed, 1 insertion(+), 13 deletions(-)
+ src/daemon/default.pa.in | 18 +-----------------
+ 1 file changed, 1 insertion(+), 17 deletions(-)
 
 diff --git a/src/daemon/default.pa.in b/src/daemon/default.pa.in
-index 5ec4641..e790faf 100755
+index 7a68653..8a4326d 100755
 --- a/src/daemon/default.pa.in
 +++ b/src/daemon/default.pa.in
-@@ -50,7 +50,7 @@ load-module module-switch-on-port-available
+@@ -37,7 +37,7 @@ load-module module-switch-on-port-available
  ### (it's probably better to not load these drivers manually, but instead
  ### use module-udev-detect -- see below -- for doing this automatically)
  ifelse(@HAVE_ALSA@, 1, [dnl
@@ -21,7 +21,7 @@ index 5ec4641..e790faf 100755
  #load-module module-alsa-source device=hw:1,0
  ])dnl
  ifelse(@HAVE_OSS_OUTPUT@, 1, [dnl
-@@ -65,18 +65,6 @@ ifelse(@HAVE_MKFIFO@, 1, [dnl
+@@ -52,22 +52,6 @@ ifelse(@HAVE_MKFIFO@, 1, [dnl
  #load-module module-pipe-sink
  ])dnl
  
@@ -29,6 +29,10 @@ index 5ec4641..e790faf 100755
 -ifelse(@HAVE_UDEV@, 1, [dnl
 -.ifexists module-udev-detect@PA_SOEXT@
 -load-module module-udev-detect
+-.else
+-], @HAVE_COREAUDIO@, 1, [dnl
+-.ifexists module-coreaudio-detect@PA_SOEXT@
+-load-module module-coreaudio-detect
 -.else
 -], [dnl
 -.ifexists module-detect@PA_SOEXT@
