@@ -61,7 +61,7 @@ MACHINE_ESSENTIAL_EXTRA_RDEPENDS_remove = "intel-microcode"
 INITRD_LIVE_remove = "${DEPLOY_DIR_IMAGE}/microcode.cpio"
 
 # Make image boot to runlevel 3 by default
-APPEND = "3 snd_hda_intel.power_save=1 snd_hda_intel.power_save_controller=y scsi_mod.scan=async"
+APPEND = "3 snd_hda_intel.power_save=1 snd_hda_intel.power_save_controller=y scsi_mod.scan=async i915.enable_guc_loading=1 i915.enable_guc_submission=1 reboot=efi console=ttyS2,115200n8"
 
 #
 # User Space Configuration Override for Apollo Lake Platform
