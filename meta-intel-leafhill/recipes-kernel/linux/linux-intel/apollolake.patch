@@ -1,3 +1,763 @@
+diff --git a/Documentation/ABI/testing/sysfs-bus-platform b/Documentation/ABI/testing/sysfs-bus-platform
+index 5172a61..f33f0a5 100644
+--- a/Documentation/ABI/testing/sysfs-bus-platform
++++ b/Documentation/ABI/testing/sysfs-bus-platform
+@@ -18,3 +18,20 @@ Description:
+ 		devices to opt-out of driver binding using a driver_override
+ 		name such as "none".  Only a single driver may be specified in
+ 		the override, there is no support for parsing delimiters.
++
++What:		/sys/bus/platform/devices/.../portmux.N/name
++		/sys/bus/platform/devices/.../portmux.N/state
++Date:		April 2016
++Contact:	Lu Baolu <baolu.lu@linux.intel.com>
++Description:
++		In some platforms, a single USB port is shared between a USB host
++		controller and a device controller. A USB mux driver is needed to
++		handle the port mux. Read-only attribute "name" shows the name of
++		the port mux device. "state" attribute shows and stores the mux
++		state.
++		For read:
++		'peripheral' - mux switched to PERIPHERAL controller;
++		'host'       - mux switched to HOST controller.
++		For write:
++		'peripheral' - mux will be switched to PERIPHERAL controller;
++		'host'       - mux will be switched to HOST controller.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 15bb925..5603e29 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -7133,6 +7133,16 @@ S:	Maintained
+ F:	drivers/iio/gyro/mpu3050*
+ F:	Documentation/devicetree/bindings/iio/gyroscope/inv,mpu3050.txt
+ 
++INTEL USB DUAL ROLE PORT MUX DRIVERS
++M:	Lu Baolu <baolu.lu@linux.intel.com>
++L:	linux-usb@vger.kernel.org
++S:	Supported
++F:	include/linux/usb/portmux.h
++F:	drivers/usb/mux/portmux-core.c
++F:	drivers/usb/mux/portmux-intel-gpio.c
++F:	drivers/usb/mux/portmux-intel-drcfg.c
++F:	drivers/mfd/intel-vuport.c
++
+ IOC3 ETHERNET DRIVER
+ M:	Ralf Baechle <ralf@linux-mips.org>
+ L:	linux-mips@linux-mips.org
+diff --git a/arch/arm/mach-sa1100/assabet.c b/arch/arm/mach-sa1100/assabet.c
+index d28ecb9..c28fa48 100644
+--- a/arch/arm/mach-sa1100/assabet.c
++++ b/arch/arm/mach-sa1100/assabet.c
+@@ -541,21 +541,6 @@ static void __init get_assabet_scr(void)
+ 		printk("Neponset expansion board detected\n");
+ }
+ 
+-
+-static void assabet_uart_pm(struct uart_port *port, u_int state, u_int oldstate)
+-{
+-	if (port->mapbase == _Ser1UTCR0) {
+-		if (state)
+-			ASSABET_BCR_clear(ASSABET_BCR_RS232EN |
+-					  ASSABET_BCR_COM_RTS |
+-					  ASSABET_BCR_COM_DTR);
+-		else
+-			ASSABET_BCR_set(ASSABET_BCR_RS232EN |
+-					ASSABET_BCR_COM_RTS |
+-					ASSABET_BCR_COM_DTR);
+-	}
+-}
+-
+ /*
+  * Assabet uses COM_RTS and COM_DTR for both UART1 (com port)
+  * and UART3 (radio module).  We only handle them for UART1 here.
+@@ -614,7 +599,6 @@ static u_int assabet_get_mctrl(struct uart_port *port)
+ static struct sa1100_port_fns assabet_port_fns __initdata = {
+ 	.set_mctrl	= assabet_set_mctrl,
+ 	.get_mctrl	= assabet_get_mctrl,
+-	.pm		= assabet_uart_pm,
+ };
+ 
+ static struct map_desc assabet_io_desc[] __initdata = {
+diff --git a/arch/mips/alchemy/common/platform.c b/arch/mips/alchemy/common/platform.c
+index d77a64f..ed8ab0d 100644
+--- a/arch/mips/alchemy/common/platform.c
++++ b/arch/mips/alchemy/common/platform.c
+@@ -28,26 +28,6 @@
+ 
+ #include <prom.h>
+ 
+-static void alchemy_8250_pm(struct uart_port *port, unsigned int state,
+-			    unsigned int old_state)
+-{
+-#ifdef CONFIG_SERIAL_8250
+-	switch (state) {
+-	case 0:
+-		alchemy_uart_enable(CPHYSADDR(port->membase));
+-		serial8250_do_pm(port, state, old_state);
+-		break;
+-	case 3:		/* power off */
+-		serial8250_do_pm(port, state, old_state);
+-		alchemy_uart_disable(CPHYSADDR(port->membase));
+-		break;
+-	default:
+-		serial8250_do_pm(port, state, old_state);
+-		break;
+-	}
+-#endif
+-}
+-
+ #define PORT(_base, _irq)					\
+ 	{							\
+ 		.mapbase	= _base,			\
+@@ -57,7 +37,6 @@ static void alchemy_8250_pm(struct uart_port *port, unsigned int state,
+ 		.flags		= UPF_SKIP_TEST | UPF_IOREMAP | \
+ 				  UPF_FIXED_TYPE,		\
+ 		.type		= PORT_16550A,			\
+-		.pm		= alchemy_8250_pm,		\
+ 	}
+ 
+ static struct plat_serial8250_port au1x00_uart_data[][4] __initdata = {
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index b4d015e..64e7350 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -1,4 +1,12 @@
+ # SPDX-License-Identifier: GPL-2.0
++#enable SPI node
++config APL_SPI_BRD
++	bool "PCI mode SPI support on APL"
++	depends on X86_INTEL_LPSS
++	---help---
++	  This option is needed if were to use Intel Apollo Lake SPI
++	  in PCI mode.
++
+ # Select 32 or 64 bit
+ config 64BIT
+ 	bool "64-bit kernel" if ARCH = "x86"
+@@ -651,6 +659,24 @@ config IOSF_MBI_DEBUG
+ 
+ 	  If you don't require the option or are in doubt, say N.
+ 
++config X86_INTEL_SBI_APL
++	tristate "Intel SoC Sideband Interface for Apollo Lake"
++	depends on PCI
++	---help---
++	  This option enables sideband interface access for Intel Apollo Lake.
++	  Like IOSF_MBI, the registers are used in lieu of MSR's.
++
++	  You should say Y if you are running a kernel on Apollo Lake.
++
++config X86_INTEL_SBI_APL_DEBUG
++	bool "Enable Intel SoC SBI for Apollo Lake access in debugfs"
++	depends on X86_INTEL_SBI_APL && DEBUG_FS
++	---help---
++	  Select this option to expose the Sideband Interface through
++	  debugfs.
++
++	  You should say N if you do not plan to debug the SoC.
++
+ config X86_RDC321X
+ 	bool "RDC R-321x SoC"
+ 	depends on X86_32
+diff --git a/arch/x86/platform/Makefile b/arch/x86/platform/Makefile
+index d0e8354..6a91585 100644
+--- a/arch/x86/platform/Makefile
++++ b/arch/x86/platform/Makefile
+@@ -1,6 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
+ # Platform specific code goes here
+ obj-y	+= atom/
++obj-y	+= bxt/
+ obj-y	+= ce4100/
+ obj-y	+= efi/
+ obj-y	+= geode/
+diff --git a/arch/x86/platform/bxt/Makefile b/arch/x86/platform/bxt/Makefile
+new file mode 100644
+index 0000000..ee34212
+--- /dev/null
++++ b/arch/x86/platform/bxt/Makefile
+@@ -0,0 +1,2 @@
++obj-$(CONFIG_X86_INTEL_SBI_APL) += sbi_apl.o
++obj-$(CONFIG_APL_SPI_BRD) += apl-board.o
+diff --git a/arch/x86/platform/bxt/apl-board.c b/arch/x86/platform/bxt/apl-board.c
+new file mode 100644
+index 0000000..278ac22
+--- /dev/null
++++ b/arch/x86/platform/bxt/apl-board.c
+@@ -0,0 +1,154 @@
++/*
++ * Copyright (c) 2016, Intel Corporation
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ */
++
++#include <linux/init.h>
++#include <linux/module.h>
++#include <linux/device.h>
++#include <linux/clk.h>
++#include <linux/clkdev.h>
++#include <linux/clk-provider.h>
++#include <linux/spi/spidev.h>
++#include <linux/spi/spi.h>
++#include <linux/spi/pxa2xx_spi.h>
++#include <linux/pwm.h>
++#include <linux/pinctrl/machine.h>
++#include <linux/pinctrl/pinconf-generic.h>
++
++/* Ideally, pin mappings should be provided by ACPI */
++static const struct pinctrl_map uart2_mappings[] __initconst = {
++	PIN_MAP_MUX_GROUP("dw-apb-uart.10", PINCTRL_STATE_INIT, "INT3452:00",
++			  "uart2_in_gpio_grp", "uart2_gpio"),
++	PIN_MAP_MUX_GROUP("dw-apb-uart.10", PINCTRL_STATE_DEFAULT, "INT3452:00",
++			  "uart2_in_uart_grp", "uart2_uart"),
++	PIN_MAP_MUX_GROUP("dw-apb-uart.10", PINCTRL_STATE_SLEEP, "INT3452:00",
++			  "uart2_in_gpio_grp", "uart2_gpio"),
++};
++
++static struct pxa2xx_spi_chip chip_data = {
++	.gpio_cs = -EINVAL,
++	.dma_burst_size = 1,
++	.pio_dma_threshold = 8,
++};
++
++static struct spi_board_info apl_spi_slaves[] = {
++	{
++		.modalias = "spidev",
++		.max_speed_hz = 50000000,
++		.bus_num = 1,
++		.chip_select = 0,
++		.controller_data = &chip_data,
++		.mode = SPI_MODE_0,
++	},
++	{
++		.modalias = "spidev",
++		.max_speed_hz = 50000000,
++		.bus_num = 1,
++		.chip_select = 1,
++		.controller_data = &chip_data,
++		.mode = SPI_MODE_0,
++	},
++	{
++		.modalias = "spidev",
++		.max_speed_hz = 50000000,
++		.bus_num = 1,
++		.chip_select = 2,
++		.controller_data = &chip_data,
++		.mode = SPI_MODE_0,
++	},
++	{
++		.modalias = "spidev",
++		.max_speed_hz = 50000000,
++		.bus_num = 2,
++		.chip_select = 0,
++		.controller_data = &chip_data,
++		.mode = SPI_MODE_0,
++	},
++	{
++		.modalias = "spidev",
++		.max_speed_hz = 50000000,
++		.bus_num = 2,
++		.chip_select = 1,
++		.controller_data = &chip_data,
++		.mode = SPI_MODE_0,
++	},
++	{
++		.modalias = "spidev",
++		.max_speed_hz = 50000000,
++		.bus_num = 2,
++		.chip_select = 2,
++		.controller_data = &chip_data,
++		.mode = SPI_MODE_0,
++	},
++	{
++		.modalias = "spidev",
++		.max_speed_hz = 50000000,
++		.bus_num = 3,
++		.chip_select = 0,
++		.controller_data = &chip_data,
++		.mode = SPI_MODE_0,
++	},
++	{
++		.modalias = "spidev",
++		.max_speed_hz = 50000000,
++		.bus_num = 3,
++		.chip_select = 1,
++		.controller_data = &chip_data,
++		.mode = SPI_MODE_0,
++	},
++	{
++		.modalias = "spidev",
++		.max_speed_hz = 50000000,
++		.bus_num = 3,
++		.chip_select = 2,
++		.controller_data = &chip_data,
++		.mode = SPI_MODE_0,
++	}
++};
++
++static int apl_spi_board_setup(void)
++{
++	int ret = -1;
++
++	/* Register the SPI devices */
++	if (!spi_register_board_info
++			(apl_spi_slaves, ARRAY_SIZE(apl_spi_slaves))) {
++		ret = 0;
++		pr_warn("\nfailed to register the SPI slaves...\n");
++	} else {
++		pr_debug("\nsuccessfully registered the SPI slaves...\n");
++	}
++	return ret;
++}
++
++static int __init apl_board_init(void)
++{
++	int ret;
++
++	pr_debug("\nregistering APL SPI devices...\n");
++	ret = apl_spi_board_setup();
++	if (ret)
++		goto exit;
++
++exit:
++	return ret;
++}
++arch_initcall(apl_board_init);
++
++static int __init uart2_init(void)
++{
++	return pinctrl_register_mappings(uart2_mappings,
++					 ARRAY_SIZE(uart2_mappings));
++}
++postcore_initcall(uart2_init);
++
++MODULE_LICENSE("GPL v2");
+diff --git a/arch/x86/platform/bxt/sbi_apl.c b/arch/x86/platform/bxt/sbi_apl.c
+new file mode 100644
+index 0000000..46e0a6f
+--- /dev/null
++++ b/arch/x86/platform/bxt/sbi_apl.c
+@@ -0,0 +1,400 @@
++/*
++ * Sideband Interface driver for Apollo Lake
++ * Copyright (c) 2015, Intel Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ *
++ * The Sideband Interface is an access mechanism to communicate with multiple
++ * devices on-board the SoC fabric over a PCI interface. This driver deals with
++ * the Apollo Lake SoC.
++ */
++
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/mutex.h>
++#include <linux/pci.h>
++#include <linux/debugfs.h>
++#include <linux/capability.h>
++#include <linux/platform_device.h>
++
++#include <linux/platform_data/sbi_apl.h>
++
++#define DRV_NAME "sbi_apl"
++#define DRV_VERSION "1.0"
++
++static struct sbi_platform_data *plat_data;
++
++static u32 sbi_address(const struct sbi_apl_message *args)
++{
++	return (((u32)args->port_address) << 24 | args->register_offset);
++}
++
++static u16 sbi_status(const struct sbi_apl_message *args)
++{
++	return ((u16)args->opcode << 8) |
++	args->posted << 7 |
++	args->status << 1;
++}
++
++static u16 sbi_routing(const struct sbi_apl_message *args)
++{
++	return ((u16)args->byte_enable << 12) |
++		args->base_address_register << 8 |
++		args->function_id;
++}
++
++/* returns 0 on OK wait */
++static int sbi_do_wait(struct pci_bus *sbi_pdev, unsigned int devfn, u16 *word)
++{
++	int ret;
++	unsigned int timeout = 0x0FFFFFFF; /*2^28-1*/
++
++	do {
++		ret = pci_bus_read_config_word(
++			sbi_pdev,
++			devfn,
++			SBI_STAT_OFFSET,
++			word);
++		if (ret)
++			return ret;
++		if (*word == (u16) -1) {
++			pr_err("sbi_do_wait busy wait failed, P2SB read not allowed?");
++			return 1;
++		}
++		timeout--;
++	} while (timeout && (*word & SBI_STAT_BUSY_MASK));
++	/* fail if time-out occurs */
++	return timeout ? 0 : 1;
++}
++
++static int sbi_do_write(struct pci_bus *sbi_pdev, unsigned int devfn,
++	struct sbi_apl_message *args)
++{
++	int ret = 0;
++	u16 word;
++
++	if (!sbi_pdev)
++		return -ENODEV;
++	if (!capable(CAP_SYS_RAWIO))
++		return -EACCES;
++	/* Is it busy? */
++	if (sbi_do_wait(sbi_pdev, devfn, &word)) {
++		pr_err(DRV_NAME " device has busy bit set %hx!\n", word);
++		ret = -EAGAIN;
++		goto err;
++	};
++	ret = pci_bus_write_config_dword(sbi_pdev, devfn,
++		SBI_ADDR_OFFSET, sbi_address(args));
++	if (ret)
++		goto err;
++	ret = pci_bus_write_config_dword(sbi_pdev, devfn,
++		SBI_DATA_OFFSET, args->data);
++	if (ret)
++		goto err;
++	ret = pci_bus_write_config_word(sbi_pdev, devfn,
++		SBI_ROUT_OFFSET, sbi_routing(args));
++	if (ret)
++		goto err;
++	ret = pci_bus_write_config_dword(sbi_pdev, devfn,
++		SBI_EADD_OFFSET, args->extended_register_address);
++	if (ret)
++		goto err;
++	ret = pci_bus_write_config_word(sbi_pdev, devfn,
++		SBI_STAT_OFFSET, sbi_status(args) | SBI_STAT_BUSY_MASK);
++	if (ret)
++		goto err;
++
++	/* Wait for busy loop */
++	if (sbi_do_wait(sbi_pdev, devfn, &word)) {
++		pr_err(DRV_NAME " device is not responding %hx!\n", word);
++		ret = -EBUSY;
++		goto err;
++	};
++	args->opcode = (word & 0xff00) >> 8;
++	args->posted = (word & 0x0080) >> 7;
++	args->status = (word & 0x0006) >> 1;
++
++	ret = pci_bus_read_config_dword(sbi_pdev, devfn,
++		SBI_DATA_OFFSET, &args->data);
++	if (ret)
++		goto err;
++	pr_debug(DRV_NAME" read commit got %04x\n", args->data);
++	return 0;
++err:
++	pr_err(DRV_NAME " PCI config access failed with %d\n", ret);
++	return ret;
++}
++
++static int sbi_validate(const struct sbi_apl_message *args)
++{
++	if (args->posted > 0x01 ||
++	args->status > 0x03 ||
++	args->byte_enable > 0x0f ||
++	args->base_address_register > 0x07)
++		return -EINVAL;
++	return 0;
++}
++
++/* hide/unhide P2SB PCI device
++ * hide = 1 device will be hidden
++ * hide = 0 device will be visible
++ */
++static void sbi_hide(struct pci_bus *bus, unsigned int devfn, int hide)
++{
++	pci_bus_write_config_byte(bus, devfn, 0xe1, hide);
++}
++
++/* we don't hide anything if it is somehow not hidden to begin with */
++static int sbi_ishidden(struct pci_bus *bus, unsigned int devfn)
++{
++	u8 ret;
++
++	pci_bus_read_config_byte(bus, devfn, 0xe1, &ret);
++	return (ret) ? 1 : 0;
++}
++
++int sbi_apl_commit(struct sbi_apl_message *args)
++{
++	int ret;
++	struct pci_bus *sbi_pdev;
++
++	/* We're called before we're ready */
++	if (!plat_data)
++		return -EAGAIN;
++
++	ret = sbi_validate(args);
++	if (ret)
++		return ret;
++
++	sbi_pdev = pci_find_bus(0, plat_data->bus);
++	if (!sbi_pdev)
++		return -ENODEV;
++	mutex_lock(plat_data->lock);
++	sbi_hide(sbi_pdev, plat_data->p2sb, 0);
++	ret = sbi_do_write(sbi_pdev, plat_data->p2sb, args);
++	sbi_hide(sbi_pdev, plat_data->p2sb, 1);
++	mutex_unlock(plat_data->lock);
++
++	return ret;
++}
++EXPORT_SYMBOL(sbi_apl_commit);
++#ifdef CONFIG_X86_INTEL_SBI_APL_DEBUG
++static struct dentry *sbi_dbg;
++static struct sbi_apl_message debug_args;
++
++static void sbi_dbg_cleanup(void)
++{
++	debugfs_remove_recursive(sbi_dbg);
++	sbi_dbg = NULL;
++}
++
++static int dbg_posted_set(void *data, u64 val)
++{
++	*(u8 *)data = !!val;
++	return 0;
++}
++
++static int dbg_status_set(void *data, u64 val)
++{
++	*(u8 *)data = val & SBI_STAT_STATUS_MASK;
++	return 0;
++}
++
++static int dbg_byte_enable_set(void *data, u64 val)
++{
++	*(u8 *)data = val & SBI_STAT_BYTE_ENABLE_MASK;
++	return 0;
++}
++
++static int dbg_base_address_register_fops_set(void *data, u64 val)
++{
++	*(u8 *)data = val & SBI_STAT_BAR_MASK;
++	return 0;
++}
++
++static int dbg_commit_set(void *data, u64 val)
++{
++	return sbi_apl_commit(&debug_args);
++}
++
++static int dbg_u8_get(void *data, u64 *val)
++{
++	*val = *(u8 *)data;
++	return 0;
++}
++
++DEFINE_SIMPLE_ATTRIBUTE(posted_fops, dbg_u8_get, dbg_posted_set, "0x%01llx\n");
++DEFINE_SIMPLE_ATTRIBUTE(status_fops, dbg_u8_get, dbg_status_set, "0x%01llx\n");
++DEFINE_SIMPLE_ATTRIBUTE(byte_enable_fops, dbg_u8_get, dbg_byte_enable_set,
++	"0x%01llx\n");
++DEFINE_SIMPLE_ATTRIBUTE(base_address_register_fops, dbg_u8_get,
++	dbg_base_address_register_fops_set, "0x%01llx\n");
++DEFINE_SIMPLE_ATTRIBUTE(commit_fops, NULL, dbg_commit_set, "0x%01llx\n");
++
++static void sbi_dbg_setup(void)
++{
++	struct dentry *d;
++
++	if (!IS_ERR_OR_NULL(sbi_dbg))
++		return;
++	memset(&debug_args, 0, sizeof(debug_args));
++	sbi_dbg = debugfs_create_dir("sbi_apl", NULL);
++	if (IS_ERR_OR_NULL(sbi_dbg))
++		return;
++
++	/* port_address */
++	d = debugfs_create_x8("port_address", 0660, sbi_dbg,
++		&debug_args.port_address);
++	if (!d)
++		goto cleanup;
++
++	/* register_offset */
++	d = debugfs_create_x16("register_offset", 0660, sbi_dbg,
++		&debug_args.register_offset);
++	if (!d)
++		goto cleanup;
++
++	/* opcode */
++	d = debugfs_create_x8("opcode", 0660, sbi_dbg, &debug_args.opcode);
++	if (!d)
++		goto cleanup;
++
++	/* data */
++	d = debugfs_create_x32("data", 0660, sbi_dbg, &debug_args.data);
++	if (!d)
++		goto cleanup;
++
++	/* posted */
++	d = debugfs_create_file("posted", 0660, sbi_dbg, &debug_args.posted,
++		&posted_fops);
++	if (!d)
++		goto cleanup;
++
++	/* status */
++	d = debugfs_create_file("status", 0660, sbi_dbg, &debug_args.status,
++		&status_fops);
++	if (!d)
++		goto cleanup;
++
++	/* byte_enable */
++	d = debugfs_create_file("byte_enable", 0660, sbi_dbg,
++		&debug_args.byte_enable, &byte_enable_fops);
++	if (!d)
++		goto cleanup;
++
++	/* base_address_register */
++	d = debugfs_create_file("base_address_register",
++		0660, sbi_dbg, &debug_args.base_address_register,
++		&base_address_register_fops);
++	if (!d)
++		goto cleanup;
++
++	/* function_id */
++	d = debugfs_create_x8("function_id", 0660, sbi_dbg,
++		&debug_args.function_id);
++	if (!d)
++		goto cleanup;
++
++	/* extended_register_address */
++	d = debugfs_create_x32("extended_register_address", 0660, sbi_dbg,
++		&debug_args.extended_register_address);
++	if (!d)
++		goto cleanup;
++
++	/* commit - initiate write to registers */
++	d = debugfs_create_file("commit", 0220, sbi_dbg, NULL, &commit_fops);
++	if (!d)
++		goto cleanup;
++
++	return;
++
++cleanup:
++	sbi_dbg_cleanup();
++}
++
++#else
++static void sbi_dbg_setup(void)
++{
++}
++static void sbi_dbg_cleanup(void)
++{
++}
++#endif /* CONFIG_X86_INTEL_SBI_DEBUG */
++
++static int sbi_apl_plat_probe(struct platform_device *dev)
++{
++	struct pci_bus *bus = NULL;
++	struct sbi_platform_data *pdata;
++	u32 id;
++	int ret;
++
++	if (!dev)
++		return -ENODEV;
++
++	pdata = dev_get_platdata(&dev->dev);
++
++	pr_info("%s starting, bus %x, device %01x.%x", pdata->name, pdata->bus,
++		PCI_SLOT(pdata->p2sb), PCI_FUNC(pdata->p2sb));
++	bus = pci_find_bus(0, pdata->bus);
++	if (!bus) {
++		pr_warn("Cannot get P2SB bus!");
++		return -ENODEV;
++	}
++	mutex_lock(pdata->lock);
++	sbi_hide(bus, pdata->p2sb, 0);
++
++	if (sbi_ishidden(bus, pdata->p2sb)) {
++		pci_bus_read_config_dword(bus, pdata->p2sb, 0x00, &id);
++		if (id != (u32)-1) {
++			pr_warn("P2SB (0x%08x) might be there but disabled",
++				id);
++		} else {
++			pr_err("Cannot unhideP2SB, is it really there?");
++			ret = -ENODEV;
++			goto out;
++		}
++	}
++	sbi_hide(bus, pdata->p2sb, 1);
++	mutex_unlock(pdata->lock);
++	plat_data = pdata;
++	sbi_dbg_setup();
++	return 0;
++
++out:
++	mutex_unlock(pdata->lock);
++	return ret;
++}
++
++static struct platform_driver sbi_plat_driver = {
++	.probe		= sbi_apl_plat_probe,
++	.driver = {
++		.name = DRV_NAME,
++	},
++};
++
++static void __exit sbi_apl_exit(void)
++{
++	sbi_dbg_cleanup();
++	platform_driver_unregister(&sbi_plat_driver);
++}
++
++static int __init sbi_apl_init(void)
++{
++	pr_info("Apollo Lake Sideband Interface loading");
++	return platform_driver_register(&sbi_plat_driver);
++}
++
++MODULE_DESCRIPTION("Apollo Lake Sideband Interface");
++MODULE_VERSION(DRV_VERSION);
++module_init(sbi_apl_init);
++module_exit(sbi_apl_exit);
++MODULE_LICENSE("GPL v2");
++MODULE_ALIAS("platform:" DRV_NAME);
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index c6fe297..da49bf8 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -167,7 +167,7 @@ struct ata_force_ent {
+ module_param_named(allow_tpm, libata_allow_tpm, int, 0444);
+ MODULE_PARM_DESC(allow_tpm, "Permit the use of TPM commands (0=off [default], 1=on)");
+ 
+-static int atapi_an;
++static int atapi_an = 1;
+ module_param(atapi_an, int, 0444);
+ MODULE_PARM_DESC(atapi_an, "Enable ATAPI AN media presence notification (0=0ff [default], 1=on)");
+ 
 diff --git a/drivers/hid/intel-ish-hid/ishtp-hid-client.c b/drivers/hid/intel-ish-hid/ishtp-hid-client.c
 index 157b44a..3bd2683 100644
 --- a/drivers/hid/intel-ish-hid/ishtp-hid-client.c
@@ -323,6 +1083,220 @@ index 6848d8c..4cbbf88 100644
  	return ret;
  }
  
+diff --git a/drivers/mfd/Kconfig b/drivers/mfd/Kconfig
+index fc5e4fe..dc8efad 100644
+--- a/drivers/mfd/Kconfig
++++ b/drivers/mfd/Kconfig
+@@ -1805,6 +1805,14 @@ config MCP_UCB1200_TS
+ 
+ endmenu
+ 
++config MFD_INTEL_VUPORT
++	tristate "Intel virtual USB port controller"
++	select MFD_CORE
++	depends on X86 && ACPI
++	help
++	  Say Y here to enable support for Intel's dual role port mux
++	  controlled by GPIOs.
++
+ config MFD_VEXPRESS_SYSREG
+ 	bool "Versatile Express System Registers"
+ 	depends on VEXPRESS_CONFIG && GPIOLIB && !ARCH_USES_GETTIMEOFFSET
+diff --git a/drivers/mfd/Makefile b/drivers/mfd/Makefile
+index 8703ff1..9839f80 100644
+--- a/drivers/mfd/Makefile
++++ b/drivers/mfd/Makefile
+@@ -220,6 +220,7 @@ obj-$(CONFIG_INTEL_SOC_PMIC)	+= intel-soc-pmic.o
+ obj-$(CONFIG_INTEL_SOC_PMIC_BXTWC)	+= intel_soc_pmic_bxtwc.o
+ obj-$(CONFIG_INTEL_SOC_PMIC_CHTWC)	+= intel_soc_pmic_chtwc.o
+ obj-$(CONFIG_MFD_MT6397)	+= mt6397-core.o
++obj-$(CONFIG_MFD_INTEL_VUPORT)	+= intel-vuport.o
+ 
+ obj-$(CONFIG_MFD_ALTERA_A10SR)	+= altera-a10sr.o
+ obj-$(CONFIG_MFD_SUN4I_GPADC)	+= sun4i-gpadc.o
+diff --git a/drivers/mfd/intel-vuport.c b/drivers/mfd/intel-vuport.c
+new file mode 100644
+index 0000000..f04e6fb
+--- /dev/null
++++ b/drivers/mfd/intel-vuport.c
+@@ -0,0 +1,85 @@
++/*
++ * MFD driver for Intel virtual USB port
++ *
++ * Copyright(c) 2016 Intel Corporation.
++ * Author: Lu Baolu <baolu.lu@linux.intel.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/acpi.h>
++#include <linux/gpio.h>
++#include <linux/mfd/core.h>
++#include <linux/property.h>
++#include <linux/platform_device.h>
++
++/* ACPI GPIO Mappings */
++static const struct acpi_gpio_params id_gpio = { 0, 0, false };
++static const struct acpi_gpio_params vbus_gpio = { 1, 0, false };
++static const struct acpi_gpio_params mux_gpio = { 2, 0, false };
++static const struct acpi_gpio_mapping acpi_usb_gpios[] = {
++	{ "id-gpios", &id_gpio, 1 },
++	{ "gpio-gpios", &vbus_gpio, 1 },
++	{ "usb_mux-gpios", &mux_gpio, 1 },
++	{ },
++};
++
++static struct property_entry reg_properties[] = {
++	PROPERTY_ENTRY_STRING("supply-name", "regulator-usb-gpio"),
++	{ },
++};
++
++static const struct mfd_cell intel_vuport_mfd_cells[] = {
++	{ .name = "extcon-usb-gpio", },
++	{
++		.name = "reg-fixed-voltage",
++		.properties = reg_properties,
++	},
++	{ .name = "intel-mux-gpio", },
++};
++
++static int vuport_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	int ret;
++
++	ret = acpi_dev_add_driver_gpios(ACPI_COMPANION(dev), acpi_usb_gpios);
++	if (ret)
++		return ret;
++
++	return mfd_add_devices(&pdev->dev, PLATFORM_DEVID_NONE,
++				intel_vuport_mfd_cells,
++				ARRAY_SIZE(intel_vuport_mfd_cells), NULL, 0,
++				NULL);
++}
++
++static int vuport_remove(struct platform_device *pdev)
++{
++	mfd_remove_devices(&pdev->dev);
++	acpi_dev_remove_driver_gpios(ACPI_COMPANION(&pdev->dev));
++
++	return 0;
++}
++
++static struct acpi_device_id vuport_acpi_match[] = {
++	{ "INT3496" },
++	{ }
++};
++MODULE_DEVICE_TABLE(acpi, vuport_acpi_match);
++
++static struct platform_driver vuport_driver = {
++	.driver = {
++		.name = "intel-vuport",
++		.acpi_match_table = ACPI_PTR(vuport_acpi_match),
++	},
++	.probe = vuport_probe,
++	.remove = vuport_remove,
++};
++
++module_platform_driver(vuport_driver);
++
++MODULE_AUTHOR("Lu Baolu <baolu.lu@linux.intel.com>");
++MODULE_DESCRIPTION("Intel virtual USB port");
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/mfd/lpc_ich.c b/drivers/mfd/lpc_ich.c
+index cf1120a..a103901 100644
+--- a/drivers/mfd/lpc_ich.c
++++ b/drivers/mfd/lpc_ich.c
+@@ -53,6 +53,7 @@
+ #include <linux/mfd/core.h>
+ #include <linux/mfd/lpc_ich.h>
+ #include <linux/platform_data/itco_wdt.h>
++#include <linux/platform_data/sbi_apl.h>
+ 
+ #define ACPIBASE		0x40
+ #define ACPIBASE_GPE_OFF	0x28
+@@ -101,6 +102,8 @@ struct lpc_ich_priv {
+ 	int abase_save;		/* Cached ACPI base value */
+ 	int actrl_pbase_save;		/* Cached ACPI control or PMC base value */
+ 	int gctrl_save;		/* Cached GPIO control value */
++
++	struct mutex lock;	/* Device hide/unhide control */
+ };
+ 
+ static struct resource wdt_ich_res[] = {
+@@ -157,6 +160,11 @@ struct lpc_ich_priv {
+ 	.ignore_resource_conflicts = true,
+ };
+ 
++static struct mfd_cell lpc_ich_sbi_cell = {
++	.name = "sbi_apl",
++	.resources = 0,
++};
++
+ /* chipset related info */
+ enum lpc_chipsets {
+ 	LPC_ICH = 0,	/* ICH */
+@@ -1169,6 +1177,36 @@ static int lpc_ich_init_spi(struct pci_dev *dev)
+ 			       &lpc_ich_spi_cell, 1, NULL, 0, NULL);
+ }
+ 
++static int lpc_ich_init_sbi(struct pci_dev *dev)
++{
++	struct lpc_ich_priv *priv = pci_get_drvdata(dev);
++	struct sbi_platform_data *info;
++
++	info = devm_kzalloc(&dev->dev, sizeof(*info), GFP_KERNEL);
++	if (!info)
++		return -ENOMEM;
++
++	switch (priv->chipset) {
++	case LPC_APL:
++		info->name = lpc_ich_sbi_cell.name;
++		info->version = 1;
++		info->bus = 0;
++		info->p2sb = PCI_DEVFN(0x0d, 0);
++		info->lock = &priv->lock;
++		break;
++
++	default:
++		return -ENODEV;
++	}
++
++	lpc_ich_sbi_cell.platform_data = info;
++	lpc_ich_sbi_cell.pdata_size = sizeof(*info);
++
++	return mfd_add_devices(&dev->dev, PLATFORM_DEVID_AUTO,
++			       &lpc_ich_sbi_cell, 1, NULL, 0, NULL);
++}
++
++
+ static int lpc_ich_probe(struct pci_dev *dev,
+ 				const struct pci_device_id *id)
+ {
+@@ -1198,6 +1236,8 @@ static int lpc_ich_probe(struct pci_dev *dev,
+ 		priv->gctrl = GPIOCTRL_ICH6;
+ 	}
+ 
++	mutex_init(&priv->lock);
++
+ 	pci_set_drvdata(dev, priv);
+ 
+ 	if (lpc_chipset_info[priv->chipset].iTCO_version) {
+@@ -1218,6 +1258,12 @@ static int lpc_ich_probe(struct pci_dev *dev,
+ 			cell_added = true;
+ 	}
+ 
++	if (priv->chipset == LPC_APL) {
++		ret = lpc_ich_init_sbi(dev);
++		if (!ret)
++			cell_added = true;
++	}
++
+ 	/*
+ 	 * We only care if at least one or none of the cells registered
+ 	 * successfully.
 diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
 index 8136dc7..a350d6b 100644
 --- a/drivers/misc/Kconfig
@@ -1296,6 +2270,3216 @@ index 0000000..cee855e
 +MODULE_AUTHOR("Even Xu <even.xu@intel.com>");
 +MODULE_LICENSE("GPL");
 +MODULE_ALIAS("ishtp:*");
+diff --git a/drivers/pinctrl/intel/pinctrl-broxton.c b/drivers/pinctrl/intel/pinctrl-broxton.c
+index e6e6fd1..9314cd7 100644
+--- a/drivers/pinctrl/intel/pinctrl-broxton.c
++++ b/drivers/pinctrl/intel/pinctrl-broxton.c
+@@ -126,7 +126,8 @@
+ static const unsigned bxt_north_pwm3_pins[] = { 37 };
+ static const unsigned bxt_north_uart0_pins[] = { 38, 39, 40, 41 };
+ static const unsigned bxt_north_uart1_pins[] = { 42, 43, 44, 45 };
+-static const unsigned bxt_north_uart2_pins[] = { 46, 47, 48, 49 };
++static const unsigned bxt_north_uart2_in_pins[] = { 46, 49 };
++static const unsigned bxt_north_uart2_out_pins[] = { 47, 48 };
+ static const unsigned bxt_north_uart0b_pins[] = { 50, 51, 52, 53 };
+ static const unsigned bxt_north_uart1b_pins[] = { 54, 55, 56, 57 };
+ static const unsigned bxt_north_uart2b_pins[] = { 58, 59, 60, 61 };
+@@ -139,7 +140,9 @@
+ 	PIN_GROUP("pwm3_grp", bxt_north_pwm3_pins, 1),
+ 	PIN_GROUP("uart0_grp", bxt_north_uart0_pins, 1),
+ 	PIN_GROUP("uart1_grp", bxt_north_uart1_pins, 1),
+-	PIN_GROUP("uart2_grp", bxt_north_uart2_pins, 1),
++	PIN_GROUP("uart2_in_gpio_grp", bxt_north_uart2_in_pins, 0),
++	PIN_GROUP("uart2_in_uart_grp", bxt_north_uart2_in_pins, 1),
++	PIN_GROUP("uart2_grp", bxt_north_uart2_out_pins, 1),
+ 	PIN_GROUP("uart0b_grp", bxt_north_uart0b_pins, 2),
+ 	PIN_GROUP("uart1b_grp", bxt_north_uart1b_pins, 2),
+ 	PIN_GROUP("uart2b_grp", bxt_north_uart2b_pins, 2),
+@@ -156,8 +159,11 @@
+ static const char * const bxt_north_uart1_groups[] = {
+ 	"uart1_grp", "uart1b_grp",
+ };
+-static const char * const bxt_north_uart2_groups[] = {
+-	"uart2_grp", "uart2b_grp",
++static const char * const bxt_north_uart2_gpio_groups[] = {
++	"uart2_in_gpio_grp", "uart2_grp",
++};
++static const char * const bxt_north_uart2_uart_groups[] = {
++	"uart2_in_uart_grp", "uart2_grp", "uart2b_grp",
+ };
+ static const char * const bxt_north_uart3_groups[] = { "uart3_grp" };
+ 
+@@ -168,7 +174,8 @@
+ 	FUNCTION("pwm3", bxt_north_pwm3_groups),
+ 	FUNCTION("uart0", bxt_north_uart0_groups),
+ 	FUNCTION("uart1", bxt_north_uart1_groups),
+-	FUNCTION("uart2", bxt_north_uart2_groups),
++	FUNCTION("uart2_uart", bxt_north_uart2_uart_groups),
++	FUNCTION("uart2_gpio", bxt_north_uart2_gpio_groups),
+ 	FUNCTION("uart3", bxt_north_uart3_groups),
+ };
+ 
+@@ -620,7 +627,8 @@
+ static const unsigned apl_north_pwm3_pins[] = { 37 };
+ static const unsigned apl_north_uart0_pins[] = { 38, 39, 40, 41 };
+ static const unsigned apl_north_uart1_pins[] = { 42, 43, 44, 45 };
+-static const unsigned apl_north_uart2_pins[] = { 46, 47, 48, 49 };
++static const unsigned apl_north_uart2_in_pins[] = { 46, 49 };
++static const unsigned apl_north_uart2_pins[] = { 47, 48 };
+ 
+ static const struct intel_pingroup apl_north_groups[] = {
+ 	PIN_GROUP("pwm0_grp", apl_north_pwm0_pins, 1),
+@@ -629,6 +637,8 @@
+ 	PIN_GROUP("pwm3_grp", apl_north_pwm3_pins, 1),
+ 	PIN_GROUP("uart0_grp", apl_north_uart0_pins, 1),
+ 	PIN_GROUP("uart1_grp", apl_north_uart1_pins, 1),
++	PIN_GROUP("uart2_in_gpio_grp", apl_north_uart2_in_pins, 0),
++	PIN_GROUP("uart2_in_uart_grp", apl_north_uart2_in_pins, 1),
+ 	PIN_GROUP("uart2_grp", apl_north_uart2_pins, 1),
+ };
+ 
+@@ -638,7 +648,12 @@
+ static const char * const apl_north_pwm3_groups[] = { "pwm3_grp" };
+ static const char * const apl_north_uart0_groups[] = { "uart0_grp" };
+ static const char * const apl_north_uart1_groups[] = { "uart1_grp" };
+-static const char * const apl_north_uart2_groups[] = { "uart2_grp" };
++static const char * const apl_north_uart2_gpio_groups[] = {
++	"uart2_in_gpio_grp", "uart2_grp"
++};
++static const char * const apl_north_uart2_uart_groups[] = {
++	"uart2_in_uart_grp", "uart2_grp"
++};
+ 
+ static const struct intel_function apl_north_functions[] = {
+ 	FUNCTION("pwm0", apl_north_pwm0_groups),
+@@ -647,7 +662,8 @@
+ 	FUNCTION("pwm3", apl_north_pwm3_groups),
+ 	FUNCTION("uart0", apl_north_uart0_groups),
+ 	FUNCTION("uart1", apl_north_uart1_groups),
+-	FUNCTION("uart2", apl_north_uart2_groups),
++	FUNCTION("uart2_uart", apl_north_uart2_uart_groups),
++	FUNCTION("uart2_gpio", apl_north_uart2_gpio_groups),
+ };
+ 
+ static const struct intel_community apl_north_communities[] = {
+diff --git a/drivers/regulator/fixed.c b/drivers/regulator/fixed.c
+index 988a747..a43b0e8 100644
+--- a/drivers/regulator/fixed.c
++++ b/drivers/regulator/fixed.c
+@@ -30,6 +30,9 @@
+ #include <linux/of_gpio.h>
+ #include <linux/regulator/of_regulator.h>
+ #include <linux/regulator/machine.h>
++#include <linux/acpi.h>
++#include <linux/property.h>
++#include <linux/gpio/consumer.h>
+ 
+ struct fixed_voltage_data {
+ 	struct regulator_desc desc;
+@@ -94,6 +97,44 @@ struct fixed_voltage_data {
+ 	return config;
+ }
+ 
++/**
++ * acpi_get_fixed_voltage_config - extract fixed_voltage_config structure info
++ * @dev: device requesting for fixed_voltage_config
++ * @desc: regulator description
++ *
++ * Populates fixed_voltage_config structure by extracting data through ACPI
++ * interface, returns a pointer to the populated structure of NULL if memory
++ * alloc fails.
++ */
++static struct fixed_voltage_config *
++acpi_get_fixed_voltage_config(struct device *dev,
++			      const struct regulator_desc *desc)
++{
++	struct fixed_voltage_config *config;
++	const char *supply_name;
++	struct gpio_desc *gpiod;
++	int ret;
++
++	config = devm_kzalloc(dev, sizeof(*config), GFP_KERNEL);
++	if (!config)
++		return ERR_PTR(-ENOMEM);
++
++	ret = device_property_read_string(dev, "supply-name", &supply_name);
++	if (!ret)
++		config->supply_name = supply_name;
++
++	gpiod = gpiod_get(dev, "gpio", GPIOD_ASIS);
++	if (IS_ERR(gpiod))
++		return ERR_PTR(-ENODEV);
++
++	config->gpio = desc_to_gpio(gpiod);
++	config->enable_high = device_property_read_bool(dev,
++							"enable-active-high");
++	gpiod_put(gpiod);
++
++	return config;
++}
++
+ static struct regulator_ops fixed_voltage_ops = {
+ };
+ 
+@@ -114,6 +155,11 @@ static int reg_fixed_voltage_probe(struct platform_device *pdev)
+ 						     &drvdata->desc);
+ 		if (IS_ERR(config))
+ 			return PTR_ERR(config);
++	} else if (ACPI_HANDLE(&pdev->dev)) {
++		config = acpi_get_fixed_voltage_config(&pdev->dev,
++						       &drvdata->desc);
++		if (IS_ERR(config))
++			return PTR_ERR(config);
+ 	} else {
+ 		config = dev_get_platdata(&pdev->dev);
+ 	}
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 3593867..69a9221 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2719,6 +2719,64 @@ void scsi_exit_queue(void)
+ }
+ EXPORT_SYMBOL(scsi_device_set_state);
+ 
++#define MAX_RETRIES     3
++#define SR_TIMEOUT      (3 * HZ)
++
++/**
++ *	get_change_reason - Obtain media change reason by querying the device
++ *	@sdev:	scsi device to get media change reason from.
++ *
++ *	Returns reason as specified in @scsi_media_change_reason
++ */
++static enum scsi_media_change_reason get_change_reason(struct scsi_device *sdev)
++{
++	int ret, is_good;
++	enum scsi_media_change_reason reason = SDEV_MEDIA_BAD;
++	struct scsi_sense_hdr sshdr;
++
++	ret = scsi_test_unit_ready(sdev, SR_TIMEOUT, MAX_RETRIES, &sshdr);
++	is_good = scsi_status_is_good(ret);
++	pr_debug("%s: changed %d, is_good %d, asc 0x%x, ascq 0x%x\n",
++		__func__, sdev->changed, is_good, sshdr.asc, sshdr.ascq);
++
++	if (is_good)
++		reason = SDEV_MEDIA_ATTACH;
++	else {
++		switch (sshdr.asc) {
++		case 0x28:
++		case 0x29:
++			reason = SDEV_MEDIA_UNDEF;
++			break;
++
++		case 0x04:
++			if (sshdr.ascq == 0x01) {
++				reason = SDEV_MEDIA_UNDEF;
++				break;
++			}
++		/* otherwise fall through */
++		case 0x3A:
++			reason = SDEV_MEDIA_DETACH;
++			break;
++
++		default:
++			reason = SDEV_MEDIA_BAD;
++			break;
++		}
++	}
++	if (!sdev->changed && reason == sdev->last_change_reason)
++		reason = SDEV_MEDIA_UNDEF;
++	else
++		sdev->last_change_reason = reason;
++	return reason;
++}
++
++static char *media_change_reasons[SDEV_MEDIA_REASON_MAX + 1] = {
++	[SDEV_MEDIA_ATTACH] = "SDEV_MEDIA_CHANGE_REASON=MEDIA_ATTACH",
++	[SDEV_MEDIA_DETACH] = "SDEV_MEDIA_CHANGE_REASON=MEDIA_DETACH",
++	[SDEV_MEDIA_BAD] = "SDEV_MEDIA_CHANGE_REASON=MEDIA_BAD",
++};
++
++
+ /**
+  * 	sdev_evt_emit - emit a single SCSI device uevent
+  *	@sdev: associated SCSI device
+@@ -2730,10 +2788,18 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+ {
+ 	int idx = 0;
+ 	char *envp[3];
++	enum scsi_media_change_reason r;
+ 
+ 	switch (evt->evt_type) {
+ 	case SDEV_EVT_MEDIA_CHANGE:
+ 		envp[idx++] = "SDEV_MEDIA_CHANGE=1";
++		if (sdev->add_change_reason) {
++			r = get_change_reason(sdev);
++			if (media_change_reasons[r])
++				envp[idx++] = media_change_reasons[r];
++			pr_debug("%s: reason %s\n", __func__,
++				media_change_reasons[r] ?: "n/a");
++		}
+ 		break;
+ 	case SDEV_EVT_INQUIRY_CHANGE_REPORTED:
+ 		scsi_rescan_device(&sdev->sdev_gendev);
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 9be34d3..b27ab0f 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -734,6 +734,7 @@ static int sr_probe(struct device *dev)
+ 	disk->flags |= GENHD_FL_REMOVABLE;
+ 	device_add_disk(&sdev->sdev_gendev, disk);
+ 
++	sdev->add_change_reason = 1; /* Let SCSI add change reason to uevent */
+ 	sdev_printk(KERN_DEBUG, sdev,
+ 		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
+ 	scsi_autopm_put_device(cd->device);
+diff --git a/drivers/spi/spi-pxa2xx.c b/drivers/spi/spi-pxa2xx.c
+index 4cb515a..a606f14 100644
+--- a/drivers/spi/spi-pxa2xx.c
++++ b/drivers/spi/spi-pxa2xx.c
+@@ -1102,6 +1102,7 @@ static void pump_transfers(unsigned long data)
+ 
+ 	dma_mapped = master->can_dma &&
+ 		     master->can_dma(master, message->spi, transfer) &&
++		     (drv_data->len > chip->pio_dma_threshold) &&
+ 		     master->cur_msg_mapped;
+ 	if (dma_mapped) {
+ 
+@@ -1341,6 +1342,8 @@ static int setup(struct spi_device *spi)
+ 		chip->dma_threshold = 0;
+ 		if (chip_info->enable_loopback)
+ 			chip->cr1 = SSCR1_LBM;
++		if (chip_info->pio_dma_threshold)
++			chip->pio_dma_threshold = chip_info->pio_dma_threshold;
+ 	}
+ 
+ 	chip->lpss_rx_threshold = SSIRF_RxThresh(rx_thres);
+diff --git a/drivers/spi/spi-pxa2xx.h b/drivers/spi/spi-pxa2xx.h
+index 94f7b07..099ed46 100644
+--- a/drivers/spi/spi-pxa2xx.h
++++ b/drivers/spi/spi-pxa2xx.h
+@@ -90,6 +90,7 @@ struct chip_data {
+ 	int (*write)(struct driver_data *drv_data);
+ 	int (*read)(struct driver_data *drv_data);
+ 	void (*cs_control)(u32 command);
++	u32 pio_dma_threshold;
+ };
+ 
+ static inline u32 pxa2xx_spi_read(const struct driver_data *drv_data,
+diff --git a/drivers/tty/serial/8250/8250_core.c b/drivers/tty/serial/8250/8250_core.c
+index d29b512a..1dfe189 100644
+--- a/drivers/tty/serial/8250/8250_core.c
++++ b/drivers/tty/serial/8250/8250_core.c
+@@ -619,6 +619,14 @@ static int univ8250_console_setup(struct console *co, char *options)
+ 	return retval;
+ }
+ 
++static void univ8250_console_exit(struct console *co)
++{
++	struct uart_port *port;
++
++	port = &serial8250_ports[co->index].port;
++	serial8250_console_exit(port);
++}
++
+ /**
+  *	univ8250_console_match - non-standard console matching
+  *	@co:	  registering console
+@@ -677,6 +685,7 @@ static int univ8250_console_match(struct console *co, char *name, int idx,
+ 	.write		= univ8250_console_write,
+ 	.device		= uart_console_device,
+ 	.setup		= univ8250_console_setup,
++	.exit		= univ8250_console_exit,
+ 	.match		= univ8250_console_match,
+ 	.flags		= CON_PRINTBUFFER | CON_ANYTIME,
+ 	.index		= -1,
+@@ -835,7 +844,6 @@ static int serial8250_probe(struct platform_device *dev)
+ 		uart.port.set_termios	= p->set_termios;
+ 		uart.port.set_ldisc	= p->set_ldisc;
+ 		uart.port.get_mctrl	= p->get_mctrl;
+-		uart.port.pm		= p->pm;
+ 		uart.port.dev		= &dev->dev;
+ 		uart.port.irqflags	|= irqflag;
+ 		ret = serial8250_register_8250_port(&uart);
+diff --git a/drivers/tty/serial/8250/8250_dw.c b/drivers/tty/serial/8250/8250_dw.c
+index 5ebf984..76872bf 100644
+--- a/drivers/tty/serial/8250/8250_dw.c
++++ b/drivers/tty/serial/8250/8250_dw.c
+@@ -14,6 +14,7 @@
+  * raised, the LCR needs to be rewritten and the uart status register read.
+  */
+ #include <linux/device.h>
++#include <linux/gpio/consumer.h>
+ #include <linux/io.h>
+ #include <linux/module.h>
+ #include <linux/serial_8250.h>
+@@ -21,7 +22,9 @@
+ #include <linux/of.h>
+ #include <linux/of_irq.h>
+ #include <linux/of_platform.h>
++#include <linux/pinctrl/consumer.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_wakeirq.h>
+ #include <linux/slab.h>
+ #include <linux/acpi.h>
+ #include <linux/pci.h>
+@@ -242,18 +245,6 @@ static int dw8250_handle_irq(struct uart_port *p)
+ 	return 0;
+ }
+ 
+-static void
+-dw8250_do_pm(struct uart_port *port, unsigned int state, unsigned int old)
+-{
+-	if (!state)
+-		pm_runtime_get_sync(port->dev);
+-
+-	serial8250_do_pm(port, state, old);
+-
+-	if (state)
+-		pm_runtime_put_sync_suspend(port->dev);
+-}
+-
+ static void dw8250_set_termios(struct uart_port *p, struct ktermios *termios,
+ 			       struct ktermios *old)
+ {
+@@ -408,12 +399,47 @@ static void dw8250_setup_port(struct uart_port *p)
+ 		up->capabilities |= UART_CAP_IRDA;
+ }
+ 
++static int dw8250_init_wakeup(struct device *dev)
++{
++	struct gpio_desc *wake;
++	int irq, err;
++
++	/* Set up RxD or CTS pin as wake source */
++	wake = gpiod_get(dev, "rx", GPIOD_IN);
++	if (IS_ERR(wake))
++		wake = gpiod_get(dev, "cts", GPIOD_IN);
++	if (IS_ERR(wake))
++		return PTR_ERR(wake);
++
++	irq = gpiod_to_irq(wake);
++	if (irq < 0) {
++		err = irq;
++	} else {
++		device_init_wakeup(dev, true);
++		err = dev_pm_set_dedicated_wake_irq(dev, irq);
++		if (err) {
++			dev_warn(dev, "Can't set dedicated wake IRQ: %d\n", err);
++			device_init_wakeup(dev, false);
++		} else {
++			irq_set_irq_type(irq, IRQ_TYPE_EDGE_BOTH);
++		}
++	}
++	gpiod_put(wake);
++	return err;
++}
++
++static void dw8250_clear_wakeup(struct device *dev)
++{
++	dev_pm_clear_wake_irq(dev);
++	device_init_wakeup(dev, false);
++}
++
+ static int dw8250_probe(struct platform_device *pdev)
+ {
+-	struct uart_8250_port uart = {};
++	struct uart_8250_port uart = {}, *up = &uart;
+ 	struct resource *regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	int irq = platform_get_irq(pdev, 0);
+-	struct uart_port *p = &uart.port;
++	struct uart_port *p = &up->port;
+ 	struct device *dev = &pdev->dev;
+ 	struct dw8250_data *data;
+ 	int err;
+@@ -434,7 +460,6 @@ static int dw8250_probe(struct platform_device *pdev)
+ 	p->mapbase	= regs->start;
+ 	p->irq		= irq;
+ 	p->handle_irq	= dw8250_handle_irq;
+-	p->pm		= dw8250_do_pm;
+ 	p->type		= PORT_8250;
+ 	p->flags	= UPF_SHARE_IRQ | UPF_FIXED_PORT;
+ 	p->dev		= dev;
+@@ -552,17 +577,24 @@ static int dw8250_probe(struct platform_device *pdev)
+ 	if (p->fifosize) {
+ 		data->dma.rxconf.src_maxburst = p->fifosize / 4;
+ 		data->dma.txconf.dst_maxburst = p->fifosize / 4;
+-		uart.dma = &data->dma;
++		up->dma = &data->dma;
+ 	}
+ 
+-	data->line = serial8250_register_8250_port(&uart);
++	data->line = serial8250_register_8250_port(up);
+ 	if (data->line < 0) {
+ 		err = data->line;
+ 		goto err_reset;
+ 	}
+ 
++	err = dw8250_init_wakeup(dev);
++	if (err)
++		dev_dbg(dev, "Can't init wakeup: %d\n", err);
++
+ 	platform_set_drvdata(pdev, data);
+ 
++	pm_runtime_use_autosuspend(dev);
++	pm_runtime_set_autosuspend_delay(dev, -1);
++
+ 	pm_runtime_set_active(dev);
+ 	pm_runtime_enable(dev);
+ 
+@@ -585,8 +617,11 @@ static int dw8250_probe(struct platform_device *pdev)
+ static int dw8250_remove(struct platform_device *pdev)
+ {
+ 	struct dw8250_data *data = platform_get_drvdata(pdev);
++	struct device *dev = &pdev->dev;
++
++	dw8250_clear_wakeup(dev);
+ 
+-	pm_runtime_get_sync(&pdev->dev);
++	pm_runtime_get_sync(dev);
+ 
+ 	serial8250_unregister_port(data->line);
+ 
+@@ -598,8 +633,8 @@ static int dw8250_remove(struct platform_device *pdev)
+ 	if (!IS_ERR(data->clk))
+ 		clk_disable_unprepare(data->clk);
+ 
+-	pm_runtime_disable(&pdev->dev);
+-	pm_runtime_put_noidle(&pdev->dev);
++	pm_runtime_disable(dev);
++	pm_runtime_put_noidle(dev);
+ 
+ 	return 0;
+ }
+@@ -643,6 +678,8 @@ static int dw8250_runtime_suspend(struct device *dev)
+ {
+ 	struct dw8250_data *data = dev_get_drvdata(dev);
+ 
++	pinctrl_pm_select_sleep_state(dev);
++
+ 	if (!IS_ERR(data->clk))
+ 		clk_disable_unprepare(data->clk);
+ 
+@@ -655,6 +692,7 @@ static int dw8250_runtime_suspend(struct device *dev)
+ static int dw8250_runtime_resume(struct device *dev)
+ {
+ 	struct dw8250_data *data = dev_get_drvdata(dev);
++	struct uart_8250_port *up = serial8250_get_port(data->line);
+ 
+ 	if (!IS_ERR(data->pclk))
+ 		clk_prepare_enable(data->pclk);
+@@ -662,6 +700,12 @@ static int dw8250_runtime_resume(struct device *dev)
+ 	if (!IS_ERR(data->clk))
+ 		clk_prepare_enable(data->clk);
+ 
++	pinctrl_pm_select_default_state(dev);
++
++	/* Restore context */
++	serial8250_do_restore_context(&up->port);
++
++	/* TODO: Check if it needs more than it's done in serial8250_console_restore() */
+ 	return 0;
+ }
+ #endif
+diff --git a/drivers/tty/serial/8250/8250_mtk.c b/drivers/tty/serial/8250/8250_mtk.c
+index fb45770..38d0596 100644
+--- a/drivers/tty/serial/8250/8250_mtk.c
++++ b/drivers/tty/serial/8250/8250_mtk.c
+@@ -140,18 +140,6 @@ static int __maybe_unused mtk8250_runtime_resume(struct device *dev)
+ 	return 0;
+ }
+ 
+-static void
+-mtk8250_do_pm(struct uart_port *port, unsigned int state, unsigned int old)
+-{
+-	if (!state)
+-		pm_runtime_get_sync(port->dev);
+-
+-	serial8250_do_pm(port, state, old);
+-
+-	if (state)
+-		pm_runtime_put_sync_suspend(port->dev);
+-}
+-
+ static int mtk8250_probe_of(struct platform_device *pdev, struct uart_port *p,
+ 			   struct mtk8250_data *data)
+ {
+@@ -206,7 +194,6 @@ static int mtk8250_probe(struct platform_device *pdev)
+ 	spin_lock_init(&uart.port.lock);
+ 	uart.port.mapbase = regs->start;
+ 	uart.port.irq = irq->start;
+-	uart.port.pm = mtk8250_do_pm;
+ 	uart.port.type = PORT_16550;
+ 	uart.port.flags = UPF_BOOT_AUTOCONF | UPF_FIXED_PORT;
+ 	uart.port.dev = &pdev->dev;
+diff --git a/drivers/tty/serial/8250/8250_omap.c b/drivers/tty/serial/8250/8250_omap.c
+index 833771b..fe53ca4 100644
+--- a/drivers/tty/serial/8250/8250_omap.c
++++ b/drivers/tty/serial/8250/8250_omap.c
+@@ -483,28 +483,6 @@ static void omap_8250_set_termios(struct uart_port *port,
+ 		tty_termios_encode_baud_rate(termios, baud, baud);
+ }
+ 
+-/* same as 8250 except that we may have extra flow bits set in EFR */
+-static void omap_8250_pm(struct uart_port *port, unsigned int state,
+-			 unsigned int oldstate)
+-{
+-	struct uart_8250_port *up = up_to_u8250p(port);
+-	u8 efr;
+-
+-	pm_runtime_get_sync(port->dev);
+-	serial_out(up, UART_LCR, UART_LCR_CONF_MODE_B);
+-	efr = serial_in(up, UART_EFR);
+-	serial_out(up, UART_EFR, efr | UART_EFR_ECB);
+-	serial_out(up, UART_LCR, 0);
+-
+-	serial_out(up, UART_IER, (state != 0) ? UART_IERX_SLEEP : 0);
+-	serial_out(up, UART_LCR, UART_LCR_CONF_MODE_B);
+-	serial_out(up, UART_EFR, efr);
+-	serial_out(up, UART_LCR, 0);
+-
+-	pm_runtime_mark_last_busy(port->dev);
+-	pm_runtime_put_autosuspend(port->dev);
+-}
+-
+ static void omap_serial_fill_features_erratas(struct uart_8250_port *up,
+ 					      struct omap8250_priv *priv)
+ {
+@@ -1171,7 +1149,6 @@ static int omap8250_probe(struct platform_device *pdev)
+ #endif
+ 	up.port.set_termios = omap_8250_set_termios;
+ 	up.port.set_mctrl = omap8250_set_mctrl;
+-	up.port.pm = omap_8250_pm;
+ 	up.port.startup = omap_8250_startup;
+ 	up.port.shutdown = omap_8250_shutdown;
+ 	up.port.throttle = omap_8250_throttle;
+diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
+index e32c51d..5a595a7 100644
+--- a/drivers/tty/serial/8250/8250_port.c
++++ b/drivers/tty/serial/8250/8250_port.c
+@@ -585,16 +585,12 @@ void serial8250_clear_and_reinit_fifos(struct uart_8250_port *p)
+ 
+ void serial8250_rpm_get(struct uart_8250_port *p)
+ {
+-	if (!(p->capabilities & UART_CAP_RPM))
+-		return;
+ 	pm_runtime_get_sync(p->port.dev);
+ }
+ EXPORT_SYMBOL_GPL(serial8250_rpm_get);
+ 
+ void serial8250_rpm_put(struct uart_8250_port *p)
+ {
+-	if (!(p->capabilities & UART_CAP_RPM))
+-		return;
+ 	pm_runtime_mark_last_busy(p->port.dev);
+ 	pm_runtime_put_autosuspend(p->port.dev);
+ }
+@@ -678,13 +674,15 @@ void serial8250_rpm_get_tx(struct uart_8250_port *p)
+ {
+ 	unsigned char rpm_active;
+ 
+-	if (!(p->capabilities & UART_CAP_RPM))
+-		return;
+-
+ 	rpm_active = xchg(&p->rpm_tx_active, 1);
+ 	if (rpm_active)
+ 		return;
+-	pm_runtime_get_sync(p->port.dev);
++	/*
++	 * Device has to be powered on at this point. Here we just increase
++	 * reference count to prevent autosuspend until the TX FIFO becomes
++	 * empty. See also a comment in serial8250_tx_chars().
++	 */
++	pm_runtime_get_noresume(p->port.dev);
+ }
+ EXPORT_SYMBOL_GPL(serial8250_rpm_get_tx);
+ 
+@@ -692,9 +690,6 @@ void serial8250_rpm_put_tx(struct uart_8250_port *p)
+ {
+ 	unsigned char rpm_active;
+ 
+-	if (!(p->capabilities & UART_CAP_RPM))
+-		return;
+-
+ 	rpm_active = xchg(&p->rpm_tx_active, 0);
+ 	if (!rpm_active)
+ 		return;
+@@ -718,11 +713,10 @@ static void serial8250_set_sleep(struct uart_8250_port *p, int sleep)
+ 	 * offset but the UART channel may only write to the corresponding
+ 	 * bit.
+ 	 */
+-	serial8250_rpm_get(p);
+ 	if ((p->port.type == PORT_XR17V35X) ||
+ 	   (p->port.type == PORT_XR17D15X)) {
+ 		serial_out(p, UART_EXAR_SLEEP, sleep ? 0xff : 0);
+-		goto out;
++		return;
+ 	}
+ 
+ 	if (p->capabilities & UART_CAP_SLEEP) {
+@@ -740,8 +734,6 @@ static void serial8250_set_sleep(struct uart_8250_port *p, int sleep)
+ 			serial_out(p, UART_LCR, lcr);
+ 		}
+ 	}
+-out:
+-	serial8250_rpm_put(p);
+ }
+ 
+ #ifdef CONFIG_SERIAL_8250_RSA
+@@ -1432,13 +1424,9 @@ static void serial8250_stop_rx(struct uart_port *port)
+ {
+ 	struct uart_8250_port *up = up_to_u8250p(port);
+ 
+-	serial8250_rpm_get(up);
+-
+ 	up->ier &= ~(UART_IER_RLSI | UART_IER_RDI);
+ 	up->port.read_status_mask &= ~UART_LSR_DR;
+ 	serial_port_out(port, UART_IER, up->ier);
+-
+-	serial8250_rpm_put(up);
+ }
+ 
+ static void __do_stop_tx_rs485(struct uart_8250_port *p)
+@@ -1539,7 +1527,6 @@ static void serial8250_stop_tx(struct uart_port *port)
+ {
+ 	struct uart_8250_port *up = up_to_u8250p(port);
+ 
+-	serial8250_rpm_get(up);
+ 	__stop_tx(up);
+ 
+ 	/*
+@@ -1549,7 +1536,6 @@ static void serial8250_stop_tx(struct uart_port *port)
+ 		up->acr |= UART_ACR_TXDIS;
+ 		serial_icr_write(up, UART_ACR, up->acr);
+ 	}
+-	serial8250_rpm_put(up);
+ }
+ 
+ static inline void __start_tx(struct uart_port *port)
+@@ -1682,9 +1668,7 @@ static void serial8250_enable_ms(struct uart_port *port)
+ 
+ 	up->ier |= UART_IER_MSI;
+ 
+-	serial8250_rpm_get(up);
+ 	serial_port_out(port, UART_IER, up->ier);
+-	serial8250_rpm_put(up);
+ }
+ 
+ static void serial8250_read_char(struct uart_8250_port *up, unsigned char lsr)
+@@ -1815,8 +1799,6 @@ void serial8250_tx_chars(struct uart_8250_port *up)
+ 	 * HW can go idle. So we get here once again with empty FIFO and disable
+ 	 * the interrupt and RPM in __stop_tx()
+ 	 */
+-	if (uart_circ_empty(xmit) && !(up->capabilities & UART_CAP_RPM))
+-		__stop_tx(up);
+ }
+ EXPORT_SYMBOL_GPL(serial8250_tx_chars);
+ 
+@@ -1889,17 +1871,19 @@ int serial8250_handle_irq(struct uart_port *port, unsigned int iir)
+ 
+ static int serial8250_default_handle_irq(struct uart_port *port)
+ {
+-	struct uart_8250_port *up = up_to_u8250p(port);
+ 	unsigned int iir;
+-	int ret;
+ 
+-	serial8250_rpm_get(up);
++	/*
++	 * The IRQ might be shared with other peripherals so we must first
++	 * check that are we RPM suspended or not. If we are we assume that
++	 * the IRQ was not for us (we shouldn't be RPM suspended when the
++	 * interrupt is enabled).
++	 */
++	if (pm_runtime_suspended(port->dev))
++		return 0;
+ 
+ 	iir = serial_port_in(port, UART_IIR);
+-	ret = serial8250_handle_irq(port, iir);
+-
+-	serial8250_rpm_put(up);
+-	return ret;
++	return serial8250_handle_irq(port, iir);
+ }
+ 
+ /*
+@@ -1932,15 +1916,11 @@ static unsigned int serial8250_tx_empty(struct uart_port *port)
+ 	unsigned long flags;
+ 	unsigned int lsr;
+ 
+-	serial8250_rpm_get(up);
+-
+ 	spin_lock_irqsave(&port->lock, flags);
+ 	lsr = serial_port_in(port, UART_LSR);
+ 	up->lsr_saved_flags |= lsr & LSR_SAVE_FLAGS;
+ 	spin_unlock_irqrestore(&port->lock, flags);
+ 
+-	serial8250_rpm_put(up);
+-
+ 	return (lsr & BOTH_EMPTY) == BOTH_EMPTY ? TIOCSER_TEMT : 0;
+ }
+ 
+@@ -1950,9 +1930,7 @@ unsigned int serial8250_do_get_mctrl(struct uart_port *port)
+ 	unsigned int status;
+ 	unsigned int ret;
+ 
+-	serial8250_rpm_get(up);
+ 	status = serial8250_modem_status(up);
+-	serial8250_rpm_put(up);
+ 
+ 	ret = 0;
+ 	if (status & UART_MSR_DCD)
+@@ -2009,7 +1987,6 @@ static void serial8250_break_ctl(struct uart_port *port, int break_state)
+ 	struct uart_8250_port *up = up_to_u8250p(port);
+ 	unsigned long flags;
+ 
+-	serial8250_rpm_get(up);
+ 	spin_lock_irqsave(&port->lock, flags);
+ 	if (break_state == -1)
+ 		up->lcr |= UART_LCR_SBC;
+@@ -2017,7 +1994,6 @@ static void serial8250_break_ctl(struct uart_port *port, int break_state)
+ 		up->lcr &= ~UART_LCR_SBC;
+ 	serial_port_out(port, UART_LCR, up->lcr);
+ 	spin_unlock_irqrestore(&port->lock, flags);
+-	serial8250_rpm_put(up);
+ }
+ 
+ /*
+@@ -2064,21 +2040,12 @@ static int serial8250_get_poll_char(struct uart_port *port)
+ {
+ 	struct uart_8250_port *up = up_to_u8250p(port);
+ 	unsigned char lsr;
+-	int status;
+-
+-	serial8250_rpm_get(up);
+ 
+ 	lsr = serial_port_in(port, UART_LSR);
++	if (!(lsr & UART_LSR_DR))
++		return NO_POLL_CHAR;
+ 
+-	if (!(lsr & UART_LSR_DR)) {
+-		status = NO_POLL_CHAR;
+-		goto out;
+-	}
+-
+-	status = serial_port_in(port, UART_RX);
+-out:
+-	serial8250_rpm_put(up);
+-	return status;
++	return serial_port_in(port, UART_RX);
+ }
+ 
+ 
+@@ -2088,7 +2055,6 @@ static void serial8250_put_poll_char(struct uart_port *port,
+ 	unsigned int ier;
+ 	struct uart_8250_port *up = up_to_u8250p(port);
+ 
+-	serial8250_rpm_get(up);
+ 	/*
+ 	 *	First save the IER then disable the interrupts
+ 	 */
+@@ -2110,7 +2076,6 @@ static void serial8250_put_poll_char(struct uart_port *port,
+ 	 */
+ 	wait_for_xmitr(up, BOTH_EMPTY);
+ 	serial_port_out(port, UART_IER, ier);
+-	serial8250_rpm_put(up);
+ }
+ 
+ #endif /* CONFIG_CONSOLE_POLL */
+@@ -2133,7 +2098,6 @@ int serial8250_do_startup(struct uart_port *port)
+ 	if (port->iotype != up->cur_iotype)
+ 		set_io_from_upio(port);
+ 
+-	serial8250_rpm_get(up);
+ 	if (port->type == PORT_16C950) {
+ 		/* Wake up and initialize UART */
+ 		up->acr = 0;
+@@ -2216,8 +2180,7 @@ int serial8250_do_startup(struct uart_port *port)
+ 	    (serial_port_in(port, UART_LSR) == 0xff)) {
+ 		printk_ratelimited(KERN_INFO "ttyS%d: LSR safety check engaged!\n",
+ 				   serial_index(port));
+-		retval = -ENODEV;
+-		goto out;
++		return -ENODEV;
+ 	}
+ 
+ 	/*
+@@ -2299,7 +2262,7 @@ int serial8250_do_startup(struct uart_port *port)
+ 
+ 	retval = up->ops->setup_irq(up);
+ 	if (retval)
+-		goto out;
++		return retval;
+ 
+ 	/*
+ 	 * Now, initialize the UART
+@@ -2373,7 +2336,10 @@ int serial8250_do_startup(struct uart_port *port)
+ 	 * Request DMA channels for both RX and TX.
+ 	 */
+ 	if (up->dma) {
+-		retval = serial8250_request_dma(up);
++		if (uart_console(port))
++			retval = -ENXIO;
++		else
++			retval = serial8250_request_dma(up);
+ 		if (retval) {
+ 			pr_warn_ratelimited("ttyS%d - failed to request DMA\n",
+ 					    serial_index(port));
+@@ -2397,10 +2363,7 @@ int serial8250_do_startup(struct uart_port *port)
+ 		outb_p(0x80, icp);
+ 		inb_p(icp);
+ 	}
+-	retval = 0;
+-out:
+-	serial8250_rpm_put(up);
+-	return retval;
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(serial8250_do_startup);
+ 
+@@ -2416,7 +2379,6 @@ void serial8250_do_shutdown(struct uart_port *port)
+ 	struct uart_8250_port *up = up_to_u8250p(port);
+ 	unsigned long flags;
+ 
+-	serial8250_rpm_get(up);
+ 	/*
+ 	 * Disable interrupts from this port
+ 	 */
+@@ -2460,7 +2422,6 @@ void serial8250_do_shutdown(struct uart_port *port)
+ 	 * the IRQ chain.
+ 	 */
+ 	serial_port_in(port, UART_RX);
+-	serial8250_rpm_put(up);
+ 
+ 	up->ops->release_irq(up);
+ }
+@@ -2620,6 +2581,42 @@ static unsigned int serial8250_get_baud_rate(struct uart_port *port,
+ 				  port->uartclk);
+ }
+ 
++void serial8250_do_restore_context(struct uart_port *port)
++{
++	struct uart_8250_port *up = up_to_u8250p(port);
++
++	/* Write extended features at first */
++	if (up->capabilities & UART_CAP_EFR) {
++		serial_port_out(port, UART_LCR, UART_LCR_CONF_MODE_B);
++		if (port->flags & UPF_EXAR_EFR)
++			serial_port_out(port, UART_XR_EFR, up->efr);
++		else
++			serial_port_out(port, UART_EFR, up->efr);
++	}
++
++	serial8250_set_divisor(port, up->baud, up->quot, up->frac);
++
++	/*
++	 * LCR DLAB must be set to enable 64-byte FIFO mode. If the FCR
++	 * is written without DLAB set, this mode will be disabled.
++	 */
++	if (port->type == PORT_16750)
++		serial_port_out(port, UART_FCR, up->fcr);
++
++	serial_port_out(port, UART_LCR, up->lcr);	/* reset DLAB */
++	if (port->type != PORT_16750) {
++		/* emulated UARTs (Lucent Venus 167x) need two steps */
++		if (up->fcr & UART_FCR_ENABLE_FIFO)
++			serial_port_out(port, UART_FCR, UART_FCR_ENABLE_FIFO);
++		serial_port_out(port, UART_FCR, up->fcr);	/* set fcr */
++	}
++	serial8250_set_mctrl(port, port->mctrl);
++
++	/* Enable interrupts at last */
++	serial_port_out(port, UART_IER, up->ier);
++}
++EXPORT_SYMBOL_GPL(serial8250_do_restore_context);
++
+ void
+ serial8250_do_set_termios(struct uart_port *port, struct ktermios *termios,
+ 			  struct ktermios *old)
+@@ -2644,10 +2641,12 @@ static unsigned int serial8250_get_baud_rate(struct uart_port *port,
+ 	 * Ok, we're now changing the port state.  Do it with
+ 	 * interrupts disabled.
+ 	 */
+-	serial8250_rpm_get(up);
+ 	spin_lock_irqsave(&port->lock, flags);
+ 
+ 	up->lcr = cval;					/* Save computed LCR */
++	up->baud = baud;				/* Save baud rate */
++	up->quot = quot;				/* Save quot */
++	up->frac = frac;				/* Save fraction */
+ 
+ 	if (up->capabilities & UART_CAP_FIFO && port->fifosize > 1) {
+ 		/* NOTE: If fifo_bug is not set, a user can set RX_trigger. */
+@@ -2713,8 +2712,6 @@ static unsigned int serial8250_get_baud_rate(struct uart_port *port,
+ 	if (up->capabilities & UART_CAP_RTOIE)
+ 		up->ier |= UART_IER_RTOIE;
+ 
+-	serial_port_out(port, UART_IER, up->ier);
+-
+ 	if (up->capabilities & UART_CAP_EFR) {
+ 		unsigned char efr = 0;
+ 		/*
+@@ -2725,32 +2722,13 @@ static unsigned int serial8250_get_baud_rate(struct uart_port *port,
+ 		if (termios->c_cflag & CRTSCTS)
+ 			efr |= UART_EFR_CTS;
+ 
+-		serial_port_out(port, UART_LCR, UART_LCR_CONF_MODE_B);
+-		if (port->flags & UPF_EXAR_EFR)
+-			serial_port_out(port, UART_XR_EFR, efr);
+-		else
+-			serial_port_out(port, UART_EFR, efr);
++		up->efr = efr;
+ 	}
+ 
+-	serial8250_set_divisor(port, baud, quot, frac);
++	/* Write saved values to the registers */
++	serial8250_do_restore_context(port);
+ 
+-	/*
+-	 * LCR DLAB must be set to enable 64-byte FIFO mode. If the FCR
+-	 * is written without DLAB set, this mode will be disabled.
+-	 */
+-	if (port->type == PORT_16750)
+-		serial_port_out(port, UART_FCR, up->fcr);
+-
+-	serial_port_out(port, UART_LCR, up->lcr);	/* reset DLAB */
+-	if (port->type != PORT_16750) {
+-		/* emulated UARTs (Lucent Venus 167x) need two steps */
+-		if (up->fcr & UART_FCR_ENABLE_FIFO)
+-			serial_port_out(port, UART_FCR, UART_FCR_ENABLE_FIFO);
+-		serial_port_out(port, UART_FCR, up->fcr);	/* set fcr */
+-	}
+-	serial8250_set_mctrl(port, port->mctrl);
+ 	spin_unlock_irqrestore(&port->lock, flags);
+-	serial8250_rpm_put(up);
+ 
+ 	/* Don't rewrite B0 */
+ 	if (tty_termios_baud_rate(termios))
+@@ -2804,16 +2782,6 @@ void serial8250_do_pm(struct uart_port *port, unsigned int state,
+ }
+ EXPORT_SYMBOL(serial8250_do_pm);
+ 
+-static void
+-serial8250_pm(struct uart_port *port, unsigned int state,
+-	      unsigned int oldstate)
+-{
+-	if (port->pm)
+-		port->pm(port, state, oldstate);
+-	else
+-		serial8250_do_pm(port, state, oldstate);
+-}
+-
+ static unsigned int serial8250_port_size(struct uart_8250_port *pt)
+ {
+ 	if (pt->port.mapsize)
+@@ -3125,7 +3093,6 @@ static const char *serial8250_type(struct uart_port *port)
+ 	.shutdown	= serial8250_shutdown,
+ 	.set_termios	= serial8250_set_termios,
+ 	.set_ldisc	= serial8250_set_ldisc,
+-	.pm		= serial8250_pm,
+ 	.type		= serial8250_type,
+ 	.release_port	= serial8250_release_port,
+ 	.request_port	= serial8250_request_port,
+@@ -3211,6 +3178,9 @@ static void serial8250_console_restore(struct uart_8250_port *up)
+  *	any possible real use of the port...
+  *
+  *	The console_lock must be held when we get here.
++ *
++ *	Doing runtime PM is a really bad idea for the kernel console.
++ *	Thus we assume that the function called when device is powered on.
+  */
+ void serial8250_console_write(struct uart_8250_port *up, const char *s,
+ 			      unsigned int count)
+@@ -3222,8 +3192,6 @@ void serial8250_console_write(struct uart_8250_port *up, const char *s,
+ 
+ 	touch_nmi_watchdog();
+ 
+-	serial8250_rpm_get(up);
+-
+ 	if (port->sysrq)
+ 		locked = 0;
+ 	else if (oops_in_progress)
+@@ -3268,7 +3236,6 @@ void serial8250_console_write(struct uart_8250_port *up, const char *s,
+ 
+ 	if (locked)
+ 		spin_unlock_irqrestore(&port->lock, flags);
+-	serial8250_rpm_put(up);
+ }
+ 
+ static unsigned int probe_baud(struct uart_port *port)
+@@ -3292,6 +3259,7 @@ int serial8250_console_setup(struct uart_port *port, char *options, bool probe)
+ 	int bits = 8;
+ 	int parity = 'n';
+ 	int flow = 'n';
++	int ret;
+ 
+ 	if (!port->iobase && !port->membase)
+ 		return -ENODEV;
+@@ -3301,7 +3269,18 @@ int serial8250_console_setup(struct uart_port *port, char *options, bool probe)
+ 	else if (probe)
+ 		baud = probe_baud(port);
+ 
+-	return uart_set_options(port, port->cons, baud, parity, bits, flow);
++	ret = uart_set_options(port, port->cons, baud, parity, bits, flow);
++
++	if (port->dev)
++		pm_runtime_get_noresume(port->dev);
++
++	return ret;
++}
++
++void serial8250_console_exit(struct uart_port *port)
++{
++	if (port->dev)
++		pm_runtime_put_noidle(port->dev);
+ }
+ 
+ #endif /* CONFIG_SERIAL_8250_CONSOLE */
+diff --git a/drivers/tty/serial/atmel_serial.c b/drivers/tty/serial/atmel_serial.c
+index a0b24bc..31154f9 100644
+--- a/drivers/tty/serial/atmel_serial.c
++++ b/drivers/tty/serial/atmel_serial.c
+@@ -1993,41 +1993,6 @@ static void atmel_shutdown(struct uart_port *port)
+ }
+ 
+ /*
+- * Power / Clock management.
+- */
+-static void atmel_serial_pm(struct uart_port *port, unsigned int state,
+-			    unsigned int oldstate)
+-{
+-	struct atmel_uart_port *atmel_port = to_atmel_uart_port(port);
+-
+-	switch (state) {
+-	case 0:
+-		/*
+-		 * Enable the peripheral clock for this serial port.
+-		 * This is called on uart_open() or a resume event.
+-		 */
+-		clk_prepare_enable(atmel_port->clk);
+-
+-		/* re-enable interrupts if we disabled some on suspend */
+-		atmel_uart_writel(port, ATMEL_US_IER, atmel_port->backup_imr);
+-		break;
+-	case 3:
+-		/* Back up the interrupt mask and disable all interrupts */
+-		atmel_port->backup_imr = atmel_uart_readl(port, ATMEL_US_IMR);
+-		atmel_uart_writel(port, ATMEL_US_IDR, -1);
+-
+-		/*
+-		 * Disable the peripheral clock for this serial port.
+-		 * This is called on uart_close() or a suspend event.
+-		 */
+-		clk_disable_unprepare(atmel_port->clk);
+-		break;
+-	default:
+-		dev_err(port->dev, "atmel_serial: unknown pm %d\n", state);
+-	}
+-}
+-
+-/*
+  * Change the port parameters
+  */
+ static void atmel_set_termios(struct uart_port *port, struct ktermios *termios,
+@@ -2355,7 +2320,6 @@ static void atmel_poll_put_char(struct uart_port *port, unsigned char ch)
+ 	.request_port	= atmel_request_port,
+ 	.config_port	= atmel_config_port,
+ 	.verify_port	= atmel_verify_port,
+-	.pm		= atmel_serial_pm,
+ #ifdef CONFIG_CONSOLE_POLL
+ 	.poll_get_char	= atmel_poll_get_char,
+ 	.poll_put_char	= atmel_poll_put_char,
+diff --git a/drivers/tty/serial/dz.c b/drivers/tty/serial/dz.c
+index ff465ff..2e64c0e 100644
+--- a/drivers/tty/serial/dz.c
++++ b/drivers/tty/serial/dz.c
+@@ -635,26 +635,6 @@ static void dz_set_termios(struct uart_port *uport, struct ktermios *termios,
+ 	spin_unlock_irqrestore(&dport->port.lock, flags);
+ }
+ 
+-/*
+- * Hack alert!
+- * Required solely so that the initial PROM-based console
+- * works undisturbed in parallel with this one.
+- */
+-static void dz_pm(struct uart_port *uport, unsigned int state,
+-		  unsigned int oldstate)
+-{
+-	struct dz_port *dport = to_dport(uport);
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&dport->port.lock, flags);
+-	if (state < 3)
+-		dz_start_tx(&dport->port);
+-	else
+-		dz_stop_tx(&dport->port);
+-	spin_unlock_irqrestore(&dport->port.lock, flags);
+-}
+-
+-
+ static const char *dz_type(struct uart_port *uport)
+ {
+ 	return "DZ";
+@@ -750,7 +730,6 @@ static int dz_verify_port(struct uart_port *uport, struct serial_struct *ser)
+ 	.startup	= dz_startup,
+ 	.shutdown	= dz_shutdown,
+ 	.set_termios	= dz_set_termios,
+-	.pm		= dz_pm,
+ 	.type		= dz_type,
+ 	.release_port	= dz_release_port,
+ 	.request_port	= dz_request_port,
+@@ -778,6 +757,7 @@ static void __init dz_init_ports(void)
+ 		struct uart_port *uport = &dport->port;
+ 
+ 		dport->mux	= &dz_mux;
++		spin_lock_init(&uport->lock);
+ 
+ 		uport->irq	= dec_interrupt[DEC_IRQ_DZ11];
+ 		uport->fifosize	= 1;
+@@ -874,10 +854,7 @@ static int __init dz_console_setup(struct console *co, char *options)
+ 	if (ret)
+ 		return ret;
+ 
+-	spin_lock_init(&dport->port.lock);	/* For dz_pm().  */
+-
+ 	dz_reset(dport);
+-	dz_pm(uport, 0, -1);
+ 
+ 	if (options)
+ 		uart_parse_options(options, &baud, &parity, &bits, &flow);
+diff --git a/drivers/tty/serial/mpc52xx_uart.c b/drivers/tty/serial/mpc52xx_uart.c
+index 791c4c7..a7caa65 100644
+--- a/drivers/tty/serial/mpc52xx_uart.c
++++ b/drivers/tty/serial/mpc52xx_uart.c
+@@ -1359,7 +1359,6 @@ static u8 mpc5125_psc_get_mr1(struct uart_port *port)
+ 	.startup	= mpc52xx_uart_startup,
+ 	.shutdown	= mpc52xx_uart_shutdown,
+ 	.set_termios	= mpc52xx_uart_set_termios,
+-/*	.pm		= mpc52xx_uart_pm,		Not supported yet */
+ 	.type		= mpc52xx_uart_type,
+ 	.release_port	= mpc52xx_uart_release_port,
+ 	.request_port	= mpc52xx_uart_request_port,
+diff --git a/drivers/tty/serial/msm_serial.c b/drivers/tty/serial/msm_serial.c
+index 1db79ee..23fdc32 100644
+--- a/drivers/tty/serial/msm_serial.c
++++ b/drivers/tty/serial/msm_serial.c
+@@ -1387,25 +1387,6 @@ static int msm_verify_port(struct uart_port *port, struct serial_struct *ser)
+ 	return 0;
+ }
+ 
+-static void msm_power(struct uart_port *port, unsigned int state,
+-		      unsigned int oldstate)
+-{
+-	struct msm_port *msm_port = UART_TO_MSM(port);
+-
+-	switch (state) {
+-	case 0:
+-		clk_prepare_enable(msm_port->clk);
+-		clk_prepare_enable(msm_port->pclk);
+-		break;
+-	case 3:
+-		clk_disable_unprepare(msm_port->clk);
+-		clk_disable_unprepare(msm_port->pclk);
+-		break;
+-	default:
+-		pr_err("msm_serial: Unknown PM state %d\n", state);
+-	}
+-}
+-
+ #ifdef CONFIG_CONSOLE_POLL
+ static int msm_poll_get_char_single(struct uart_port *port)
+ {
+@@ -1525,7 +1506,6 @@ static void msm_poll_put_char(struct uart_port *port, unsigned char c)
+ 	.request_port = msm_request_port,
+ 	.config_port = msm_config_port,
+ 	.verify_port = msm_verify_port,
+-	.pm = msm_power,
+ #ifdef CONFIG_CONSOLE_POLL
+ 	.poll_get_char	= msm_poll_get_char,
+ 	.poll_put_char	= msm_poll_put_char,
+diff --git a/drivers/tty/serial/omap-serial.c b/drivers/tty/serial/omap-serial.c
+index 26a22b1..377635e 100644
+--- a/drivers/tty/serial/omap-serial.c
++++ b/drivers/tty/serial/omap-serial.c
+@@ -1101,30 +1101,6 @@ static void serial_omap_uart_qos_work(struct work_struct *work)
+ 	dev_dbg(up->port.dev, "serial_omap_set_termios+%d\n", up->port.line);
+ }
+ 
+-static void
+-serial_omap_pm(struct uart_port *port, unsigned int state,
+-	       unsigned int oldstate)
+-{
+-	struct uart_omap_port *up = to_uart_omap_port(port);
+-	unsigned char efr;
+-
+-	dev_dbg(up->port.dev, "serial_omap_pm+%d\n", up->port.line);
+-
+-	pm_runtime_get_sync(up->dev);
+-	serial_out(up, UART_LCR, UART_LCR_CONF_MODE_B);
+-	efr = serial_in(up, UART_EFR);
+-	serial_out(up, UART_EFR, efr | UART_EFR_ECB);
+-	serial_out(up, UART_LCR, 0);
+-
+-	serial_out(up, UART_IER, (state != 0) ? UART_IERX_SLEEP : 0);
+-	serial_out(up, UART_LCR, UART_LCR_CONF_MODE_B);
+-	serial_out(up, UART_EFR, efr);
+-	serial_out(up, UART_LCR, 0);
+-
+-	pm_runtime_mark_last_busy(up->dev);
+-	pm_runtime_put_autosuspend(up->dev);
+-}
+-
+ static void serial_omap_release_port(struct uart_port *port)
+ {
+ 	dev_dbg(port->dev, "serial_omap_release_port+\n");
+@@ -1463,7 +1439,6 @@ static inline void serial_omap_add_console_port(struct uart_omap_port *up)
+ 	.startup	= serial_omap_startup,
+ 	.shutdown	= serial_omap_shutdown,
+ 	.set_termios	= serial_omap_set_termios,
+-	.pm		= serial_omap_pm,
+ 	.type		= serial_omap_type,
+ 	.release_port	= serial_omap_release_port,
+ 	.request_port	= serial_omap_request_port,
+diff --git a/drivers/tty/serial/pch_uart.c b/drivers/tty/serial/pch_uart.c
+index d9123f9..36740ad 100644
+--- a/drivers/tty/serial/pch_uart.c
++++ b/drivers/tty/serial/pch_uart.c
+@@ -1611,7 +1611,6 @@ static void pch_uart_put_poll_char(struct uart_port *port,
+ 	.startup = pch_uart_startup,
+ 	.shutdown = pch_uart_shutdown,
+ 	.set_termios = pch_uart_set_termios,
+-/*	.pm		= pch_uart_pm,		Not supported yet */
+ 	.type = pch_uart_type,
+ 	.release_port = pch_uart_release_port,
+ 	.request_port = pch_uart_request_port,
+diff --git a/drivers/tty/serial/pxa.c b/drivers/tty/serial/pxa.c
+index 905631d..fe4cec4 100644
+--- a/drivers/tty/serial/pxa.c
++++ b/drivers/tty/serial/pxa.c
+@@ -551,18 +551,6 @@ static void serial_pxa_shutdown(struct uart_port *port)
+ 	spin_unlock_irqrestore(&up->port.lock, flags);
+ }
+ 
+-static void
+-serial_pxa_pm(struct uart_port *port, unsigned int state,
+-	      unsigned int oldstate)
+-{
+-	struct uart_pxa_port *up = (struct uart_pxa_port *)port;
+-
+-	if (!state)
+-		clk_prepare_enable(up->clk);
+-	else
+-		clk_disable_unprepare(up->clk);
+-}
+-
+ static void serial_pxa_release_port(struct uart_port *port)
+ {
+ }
+@@ -774,7 +762,6 @@ static void serial_pxa_put_poll_char(struct uart_port *port,
+ 	.startup	= serial_pxa_startup,
+ 	.shutdown	= serial_pxa_shutdown,
+ 	.set_termios	= serial_pxa_set_termios,
+-	.pm		= serial_pxa_pm,
+ 	.type		= serial_pxa_type,
+ 	.release_port	= serial_pxa_release_port,
+ 	.request_port	= serial_pxa_request_port,
+diff --git a/drivers/tty/serial/sa1100.c b/drivers/tty/serial/sa1100.c
+index fd3d132..a22cea2 100644
+--- a/drivers/tty/serial/sa1100.c
++++ b/drivers/tty/serial/sa1100.c
+@@ -660,7 +660,6 @@ void sa1100_register_uart_fns(struct sa1100_port_fns *fns)
+ 	if (fns->set_mctrl)
+ 		sa1100_pops.set_mctrl = fns->set_mctrl;
+ 
+-	sa1100_pops.pm       = fns->pm;
+ 	/*
+ 	 * FIXME: fns->set_wake is unused - this should be called from
+ 	 * the suspend() callback if device_may_wakeup(dev)) is set.
+diff --git a/drivers/tty/serial/samsung.c b/drivers/tty/serial/samsung.c
+index 8aca18c..0bf1af3 100644
+--- a/drivers/tty/serial/samsung.c
++++ b/drivers/tty/serial/samsung.c
+@@ -1082,39 +1082,6 @@ static int s3c64xx_serial_startup(struct uart_port *port)
+ 	return ret;
+ }
+ 
+-/* power power management control */
+-
+-static void s3c24xx_serial_pm(struct uart_port *port, unsigned int level,
+-			      unsigned int old)
+-{
+-	struct s3c24xx_uart_port *ourport = to_ourport(port);
+-	int timeout = 10000;
+-
+-	ourport->pm_level = level;
+-
+-	switch (level) {
+-	case 3:
+-		while (--timeout && !s3c24xx_serial_txempty_nofifo(port))
+-			udelay(100);
+-
+-		if (!IS_ERR(ourport->baudclk))
+-			clk_disable_unprepare(ourport->baudclk);
+-
+-		clk_disable_unprepare(ourport->clk);
+-		break;
+-
+-	case 0:
+-		clk_prepare_enable(ourport->clk);
+-
+-		if (!IS_ERR(ourport->baudclk))
+-			clk_prepare_enable(ourport->baudclk);
+-
+-		break;
+-	default:
+-		dev_err(port->dev, "s3c24xx_serial: unknown pm %d\n", level);
+-	}
+-}
+-
+ /* baud rate calculation
+  *
+  * The UARTs on the S3C2410/S3C2440 can take their clocks from a number
+@@ -1470,7 +1437,6 @@ static void s3c24xx_serial_put_poll_char(struct uart_port *port,
+ #endif
+ 
+ static struct uart_ops s3c24xx_serial_ops = {
+-	.pm		= s3c24xx_serial_pm,
+ 	.tx_empty	= s3c24xx_serial_tx_empty,
+ 	.get_mctrl	= s3c24xx_serial_get_mctrl,
+ 	.set_mctrl	= s3c24xx_serial_set_mctrl,
+diff --git a/drivers/tty/serial/sc16is7xx.c b/drivers/tty/serial/sc16is7xx.c
+index ca54ce0..3dbe98c 100644
+--- a/drivers/tty/serial/sc16is7xx.c
++++ b/drivers/tty/serial/sc16is7xx.c
+@@ -1064,12 +1064,6 @@ static int sc16is7xx_verify_port(struct uart_port *port,
+ 	return 0;
+ }
+ 
+-static void sc16is7xx_pm(struct uart_port *port, unsigned int state,
+-			 unsigned int oldstate)
+-{
+-	sc16is7xx_power(port, (state == UART_PM_STATE_ON) ? 1 : 0);
+-}
+-
+ static void sc16is7xx_null_void(struct uart_port *port)
+ {
+ 	/* Do nothing */
+@@ -1091,7 +1085,6 @@ static void sc16is7xx_null_void(struct uart_port *port)
+ 	.release_port	= sc16is7xx_null_void,
+ 	.config_port	= sc16is7xx_config_port,
+ 	.verify_port	= sc16is7xx_verify_port,
+-	.pm		= sc16is7xx_pm,
+ };
+ 
+ #ifdef CONFIG_GPIOLIB
+diff --git a/drivers/tty/serial/serial_core.c b/drivers/tty/serial/serial_core.c
+index c8cb0b3..f029659 100644
+--- a/drivers/tty/serial/serial_core.c
++++ b/drivers/tty/serial/serial_core.c
+@@ -35,6 +35,7 @@
+ #include <linux/serial_core.h>
+ #include <linux/delay.h>
+ #include <linux/mutex.h>
++#include <linux/pm_runtime.h>
+ 
+ #include <linux/irq.h>
+ #include <linux/uaccess.h>
+@@ -55,8 +56,6 @@
+ static void uart_change_speed(struct tty_struct *tty, struct uart_state *state,
+ 					struct ktermios *old_termios);
+ static void uart_wait_until_sent(struct tty_struct *tty, int timeout);
+-static void uart_change_pm(struct uart_state *state,
+-			   enum uart_pm_state pm_state);
+ 
+ static void uart_port_shutdown(struct tty_port *port);
+ 
+@@ -65,15 +64,32 @@ static int uart_dcd_enabled(struct uart_port *uport)
+ 	return !!(uport->status & UPSTAT_DCD_ENABLE);
+ }
+ 
+-static inline struct uart_port *uart_port_ref(struct uart_state *state)
++static inline struct uart_port *uart_port_ref_no_rpm(struct uart_state *state)
+ {
+ 	if (atomic_add_unless(&state->refcount, 1, 0))
+ 		return state->uart_port;
+ 	return NULL;
+ }
+ 
++static inline void uart_port_deref_no_rpm(struct uart_port *uport)
++{
++	if (atomic_dec_and_test(&uport->state->refcount))
++		wake_up(&uport->state->remove_wait);
++}
++
++static inline struct uart_port *uart_port_ref(struct uart_state *state)
++{
++	if (atomic_add_unless(&state->refcount, 1, 0)) {
++		pm_runtime_get_sync(state->uart_port->dev);
++		return state->uart_port;
++	}
++	return NULL;
++}
++
+ static inline void uart_port_deref(struct uart_port *uport)
+ {
++	pm_runtime_mark_last_busy(uport->dev);
++	pm_runtime_put_autosuspend(uport->dev);
+ 	if (atomic_dec_and_test(&uport->state->refcount))
+ 		wake_up(&uport->state->remove_wait);
+ }
+@@ -154,12 +170,15 @@ static void uart_start(struct tty_struct *tty)
+ 	unsigned long flags;
+ 	unsigned int old;
+ 
++	pm_runtime_get_sync(port->dev);
+ 	spin_lock_irqsave(&port->lock, flags);
+ 	old = port->mctrl;
+ 	port->mctrl = (old & ~clear) | set;
+ 	if (old != port->mctrl)
+ 		port->ops->set_mctrl(port, port->mctrl);
+ 	spin_unlock_irqrestore(&port->lock, flags);
++	pm_runtime_mark_last_busy(port->dev);
++	pm_runtime_put_autosuspend(port->dev);
+ }
+ 
+ #define uart_set_mctrl(port, set)	uart_update_mctrl(port, set, 0)
+@@ -201,11 +220,6 @@ static int uart_port_startup(struct tty_struct *tty, struct uart_state *state,
+ 		return 1;
+ 
+ 	/*
+-	 * Make sure the device is in D0 state.
+-	 */
+-	uart_change_pm(state, UART_PM_STATE_ON);
+-
+-	/*
+ 	 * Initialise and allocate the transmit and temporary
+ 	 * buffer.
+ 	 */
+@@ -219,7 +233,11 @@ static int uart_port_startup(struct tty_struct *tty, struct uart_state *state,
+ 		uart_circ_clear(&state->xmit);
+ 	}
+ 
++	pm_runtime_get_sync(uport->dev);
+ 	retval = uport->ops->startup(uport);
++	pm_runtime_mark_last_busy(uport->dev);
++	pm_runtime_put_autosuspend(uport->dev);
++
+ 	if (retval == 0) {
+ 		if (uart_console(uport) && uport->cons->cflag) {
+ 			tty->termios.c_cflag = uport->cons->cflag;
+@@ -507,6 +525,8 @@ static void uart_change_speed(struct tty_struct *tty, struct uart_state *state,
+ 		return;
+ 
+ 	termios = &tty->termios;
++
++	pm_runtime_get_sync(uport->dev);
+ 	uport->ops->set_termios(uport, termios, old_termios);
+ 
+ 	/*
+@@ -535,6 +555,8 @@ static void uart_change_speed(struct tty_struct *tty, struct uart_state *state,
+ 			__uart_start(tty);
+ 	}
+ 	spin_unlock_irq(&uport->lock);
++	pm_runtime_mark_last_busy(uport->dev);
++	pm_runtime_put_autosuspend(uport->dev);
+ }
+ 
+ static int uart_put_char(struct tty_struct *tty, unsigned char c)
+@@ -549,13 +571,18 @@ static int uart_put_char(struct tty_struct *tty, unsigned char c)
+ 	if (!circ->buf)
+ 		return 0;
+ 
+-	port = uart_port_lock(state, flags);
+-	if (port && uart_circ_chars_free(circ) != 0) {
++	port = uart_port_ref_no_rpm(state);
++	if (!port)
++		return 0;
++
++	spin_lock_irqsave(&port->lock, flags);
++	if (uart_circ_chars_free(circ) != 0) {
+ 		circ->buf[circ->head] = c;
+ 		circ->head = (circ->head + 1) & (UART_XMIT_SIZE - 1);
+ 		ret = 1;
+ 	}
+-	uart_port_unlock(port, flags);
++	spin_unlock_irqrestore(&port->lock, flags);
++	uart_port_deref_no_rpm(port);
+ 	return ret;
+ }
+ 
+@@ -586,7 +613,11 @@ static int uart_write(struct tty_struct *tty,
+ 	if (!circ->buf)
+ 		return 0;
+ 
+-	port = uart_port_lock(state, flags);
++	port = uart_port_ref_no_rpm(state);
++	if (!port)
++		return 0;
++
++	spin_lock_irqsave(&port->lock, flags);
+ 	while (port) {
+ 		c = CIRC_SPACE_TO_END(circ->head, circ->tail, UART_XMIT_SIZE);
+ 		if (count < c)
+@@ -601,7 +632,8 @@ static int uart_write(struct tty_struct *tty,
+ 	}
+ 
+ 	__uart_start(tty);
+-	uart_port_unlock(port, flags);
++	spin_unlock_irqrestore(&port->lock, flags);
++	uart_port_deref_no_rpm(port);
+ 	return ret;
+ }
+ 
+@@ -612,9 +644,17 @@ static int uart_write_room(struct tty_struct *tty)
+ 	unsigned long flags;
+ 	int ret;
+ 
+-	port = uart_port_lock(state, flags);
++	if (!state->xmit.buf)
++		return 0;
++
++	port = uart_port_ref_no_rpm(state);
++	if (!port)
++		return 0;
++
++	spin_lock_irqsave(&port->lock, flags);
+ 	ret = uart_circ_chars_free(&state->xmit);
+-	uart_port_unlock(port, flags);
++	spin_unlock_irqrestore(&port->lock, flags);
++	uart_port_deref_no_rpm(port);
+ 	return ret;
+ }
+ 
+@@ -625,9 +665,17 @@ static int uart_chars_in_buffer(struct tty_struct *tty)
+ 	unsigned long flags;
+ 	int ret;
+ 
+-	port = uart_port_lock(state, flags);
++	if (!state->xmit.buf)
++		return 0;
++
++	port = uart_port_ref_no_rpm(state);
++	if (!port)
++		return 0;
++
++	spin_lock_irqsave(&port->lock, flags);
+ 	ret = uart_circ_chars_pending(&state->xmit);
+-	uart_port_unlock(port, flags);
++	spin_unlock_irqrestore(&port->lock, flags);
++	uart_port_deref_no_rpm(port);
+ 	return ret;
+ }
+ 
+@@ -1031,7 +1079,10 @@ static int uart_get_lsr_info(struct tty_struct *tty,
+ 	struct uart_port *uport = uart_port_check(state);
+ 	unsigned int result;
+ 
++	pm_runtime_get_sync(uport->dev);
+ 	result = uport->ops->tx_empty(uport);
++	pm_runtime_mark_last_busy(uport->dev);
++	pm_runtime_put_autosuspend(uport->dev);
+ 
+ 	/*
+ 	 * If we're about to load something into the transmit
+@@ -1061,9 +1112,13 @@ static int uart_tiocmget(struct tty_struct *tty)
+ 
+ 	if (!tty_io_error(tty)) {
+ 		result = uport->mctrl;
++
++		pm_runtime_get_sync(uport->dev);
+ 		spin_lock_irq(&uport->lock);
+ 		result |= uport->ops->get_mctrl(uport);
+ 		spin_unlock_irq(&uport->lock);
++		pm_runtime_mark_last_busy(uport->dev);
++		pm_runtime_put_autosuspend(uport->dev);
+ 	}
+ out:
+ 	mutex_unlock(&port->mutex);
+@@ -1104,8 +1159,11 @@ static int uart_break_ctl(struct tty_struct *tty, int break_state)
+ 	if (!uport)
+ 		goto out;
+ 
++	pm_runtime_get_sync(uport->dev);
+ 	if (uport->type != PORT_UNKNOWN)
+ 		uport->ops->break_ctl(uport, break_state);
++	pm_runtime_mark_last_busy(uport->dev);
++	pm_runtime_put_autosuspend(uport->dev);
+ 	ret = 0;
+ out:
+ 	mutex_unlock(&port->mutex);
+@@ -1154,7 +1212,10 @@ static int uart_do_autoconfig(struct tty_struct *tty,struct uart_state *state)
+ 		 * This will claim the ports resources if
+ 		 * a port is found.
+ 		 */
++		pm_runtime_get_sync(uport->dev);
+ 		uport->ops->config_port(uport, flags);
++		pm_runtime_mark_last_busy(uport->dev);
++		pm_runtime_put_autosuspend(uport->dev);
+ 
+ 		ret = uart_startup(tty, state, 1);
+ 		if (ret == 0)
+@@ -1250,13 +1311,13 @@ static int uart_get_icount(struct tty_struct *tty,
+ 	struct uart_icount cnow;
+ 	struct uart_port *uport;
+ 
+-	uport = uart_port_ref(state);
++	uport = uart_port_ref_no_rpm(state);
+ 	if (!uport)
+ 		return -EIO;
+ 	spin_lock_irq(&uport->lock);
+ 	memcpy(&cnow, &uport->icount, sizeof(struct uart_icount));
+ 	spin_unlock_irq(&uport->lock);
+-	uart_port_deref(uport);
++	uart_port_deref_no_rpm(uport);
+ 
+ 	icount->cts         = cnow.cts;
+ 	icount->dsr         = cnow.dsr;
+@@ -1416,8 +1477,12 @@ static void uart_set_ldisc(struct tty_struct *tty)
+ 
+ 	mutex_lock(&state->port.mutex);
+ 	uport = uart_port_check(state);
+-	if (uport && uport->ops->set_ldisc)
++	if (uport && uport->ops->set_ldisc) {
++		pm_runtime_get_sync(uport->dev);
+ 		uport->ops->set_ldisc(uport, &tty->termios);
++		pm_runtime_mark_last_busy(uport->dev);
++		pm_runtime_put_autosuspend(uport->dev);
++	}
+ 	mutex_unlock(&state->port.mutex);
+ }
+ 
+@@ -1517,9 +1582,12 @@ static void uart_tty_port_shutdown(struct tty_port *port)
+ 	if (WARN(!uport, "detached port still initialized!\n"))
+ 		return;
+ 
++	pm_runtime_get_sync(uport->dev);
+ 	spin_lock_irq(&uport->lock);
+ 	uport->ops->stop_rx(uport);
+ 	spin_unlock_irq(&uport->lock);
++	pm_runtime_mark_last_busy(uport->dev);
++	pm_runtime_put_autosuspend(uport->dev);
+ 
+ 	uart_port_shutdown(port);
+ 
+@@ -1529,9 +1597,6 @@ static void uart_tty_port_shutdown(struct tty_port *port)
+ 	 * we don't try to resume a port that has been shutdown.
+ 	 */
+ 	tty_port_set_suspended(port, 0);
+-
+-	uart_change_pm(state, UART_PM_STATE_OFF);
+-
+ }
+ 
+ static void uart_wait_until_sent(struct tty_struct *tty, int timeout)
+@@ -1622,8 +1687,6 @@ static void uart_hangup(struct tty_struct *tty)
+ 		spin_unlock_irqrestore(&port->lock, flags);
+ 		tty_port_set_active(port, 0);
+ 		tty_port_tty_set(port, NULL);
+-		if (uport && !uart_console(uport))
+-			uart_change_pm(state, UART_PM_STATE_OFF);
+ 		wake_up_interruptible(&port->open_wait);
+ 		wake_up_interruptible(&port->delta_msr_wait);
+ 	}
+@@ -1648,8 +1711,12 @@ static void uart_port_shutdown(struct tty_port *port)
+ 	/*
+ 	 * Free the IRQ and disable the port.
+ 	 */
+-	if (uport)
++	if (uport) {
++		pm_runtime_get_sync(uport->dev);
+ 		uport->ops->shutdown(uport);
++		pm_runtime_mark_last_busy(uport->dev);
++		pm_runtime_put_autosuspend(uport->dev);
++	}
+ 
+ 	/*
+ 	 * Ensure that the IRQ handler isn't running on another CPU.
+@@ -1756,7 +1823,6 @@ static void uart_line_info(struct seq_file *m, struct uart_driver *drv, int i)
+ {
+ 	struct uart_state *state = drv->state + i;
+ 	struct tty_port *port = &state->port;
+-	enum uart_pm_state pm_state;
+ 	struct uart_port *uport;
+ 	char stat_buf[32];
+ 	unsigned int status;
+@@ -1781,14 +1847,12 @@ static void uart_line_info(struct seq_file *m, struct uart_driver *drv, int i)
+ 	}
+ 
+ 	if (capable(CAP_SYS_ADMIN)) {
+-		pm_state = state->pm_state;
+-		if (pm_state != UART_PM_STATE_ON)
+-			uart_change_pm(state, UART_PM_STATE_ON);
++		pm_runtime_get_sync(uport->dev);
+ 		spin_lock_irq(&uport->lock);
+ 		status = uport->ops->get_mctrl(uport);
+ 		spin_unlock_irq(&uport->lock);
+-		if (pm_state != UART_PM_STATE_ON)
+-			uart_change_pm(state, pm_state);
++		pm_runtime_mark_last_busy(uport->dev);
++		pm_runtime_put_autosuspend(uport->dev);
+ 
+ 		seq_printf(m, " tx:%d rx:%d",
+ 				uport->icount.tx, uport->icount.rx);
+@@ -2044,7 +2108,15 @@ int uart_parse_earlycon(char *p, unsigned char *iotype, resource_size_t *addr,
+ 	 */
+ 	port->mctrl |= TIOCM_DTR;
+ 
+-	port->ops->set_termios(port, &termios, &dummy);
++	/* At early stage device is not created yet, we can't do PM */
++	if (port->dev) {
++		pm_runtime_get_sync(port->dev);
++		port->ops->set_termios(port, &termios, &dummy);
++		pm_runtime_mark_last_busy(port->dev);
++		pm_runtime_put_autosuspend(port->dev);
++	} else
++		port->ops->set_termios(port, &termios, &dummy);
++
+ 	/*
+ 	 * Allow the setting of the UART parameters with a NULL console
+ 	 * too:
+@@ -2057,26 +2129,6 @@ int uart_parse_earlycon(char *p, unsigned char *iotype, resource_size_t *addr,
+ EXPORT_SYMBOL_GPL(uart_set_options);
+ #endif /* CONFIG_SERIAL_CORE_CONSOLE */
+ 
+-/**
+- * uart_change_pm - set power state of the port
+- *
+- * @state: port descriptor
+- * @pm_state: new state
+- *
+- * Locking: port->mutex has to be held
+- */
+-static void uart_change_pm(struct uart_state *state,
+-			   enum uart_pm_state pm_state)
+-{
+-	struct uart_port *port = uart_port_check(state);
+-
+-	if (state->pm_state != pm_state) {
+-		if (port && port->ops->pm)
+-			port->ops->pm(port, pm_state, state->pm_state);
+-		state->pm_state = pm_state;
+-	}
+-}
+-
+ struct uart_match {
+ 	struct uart_port *port;
+ 	struct uart_driver *driver;
+@@ -2123,11 +2175,14 @@ int uart_suspend_port(struct uart_driver *drv, struct uart_port *uport)
+ 		tty_port_set_suspended(port, 1);
+ 		tty_port_set_initialized(port, 0);
+ 
++		pm_runtime_get_sync(uport->dev);
+ 		spin_lock_irq(&uport->lock);
+ 		ops->stop_tx(uport);
+ 		ops->set_mctrl(uport, 0);
+ 		ops->stop_rx(uport);
+ 		spin_unlock_irq(&uport->lock);
++		pm_runtime_mark_last_busy(uport->dev);
++		pm_runtime_put_autosuspend(uport->dev);
+ 
+ 		/*
+ 		 * Wait for the transmitter to empty.
+@@ -2138,7 +2193,10 @@ int uart_suspend_port(struct uart_driver *drv, struct uart_port *uport)
+ 			dev_err(uport->dev, "%s: Unable to drain transmitter\n",
+ 				uport->name);
+ 
++		pm_runtime_get_sync(uport->dev);
+ 		ops->shutdown(uport);
++		pm_runtime_mark_last_busy(uport->dev);
++		pm_runtime_put_autosuspend(uport->dev);
+ 	}
+ 
+ 	/*
+@@ -2146,8 +2204,6 @@ int uart_suspend_port(struct uart_driver *drv, struct uart_port *uport)
+ 	 */
+ 	if (uart_console(uport))
+ 		console_stop(uport->cons);
+-
+-	uart_change_pm(state, UART_PM_STATE_OFF);
+ unlock:
+ 	mutex_unlock(&port->mutex);
+ 
+@@ -2191,9 +2247,11 @@ int uart_resume_port(struct uart_driver *drv, struct uart_port *uport)
+ 		if (port->tty && termios.c_cflag == 0)
+ 			termios = port->tty->termios;
+ 
+-		if (console_suspend_enabled)
+-			uart_change_pm(state, UART_PM_STATE_ON);
++		pm_runtime_get_sync(uport->dev);
+ 		uport->ops->set_termios(uport, &termios, NULL);
++		pm_runtime_mark_last_busy(uport->dev);
++		pm_runtime_put_autosuspend(uport->dev);
++
+ 		if (console_suspend_enabled)
+ 			console_start(uport->cons);
+ 	}
+@@ -2202,21 +2260,31 @@ int uart_resume_port(struct uart_driver *drv, struct uart_port *uport)
+ 		const struct uart_ops *ops = uport->ops;
+ 		int ret;
+ 
+-		uart_change_pm(state, UART_PM_STATE_ON);
++		pm_runtime_get_sync(uport->dev);
+ 		spin_lock_irq(&uport->lock);
+ 		ops->set_mctrl(uport, 0);
+ 		spin_unlock_irq(&uport->lock);
++		pm_runtime_mark_last_busy(uport->dev);
++		pm_runtime_put_autosuspend(uport->dev);
++
+ 		if (console_suspend_enabled || !uart_console(uport)) {
+ 			/* Protected by port mutex for now */
+ 			struct tty_struct *tty = port->tty;
++
++			pm_runtime_get_sync(uport->dev);
+ 			ret = ops->startup(uport);
++			pm_runtime_mark_last_busy(uport->dev);
++			pm_runtime_put_autosuspend(uport->dev);
+ 			if (ret == 0) {
+ 				if (tty)
+ 					uart_change_speed(tty, state, NULL);
++				pm_runtime_get_sync(uport->dev);
+ 				spin_lock_irq(&uport->lock);
+ 				ops->set_mctrl(uport, uport->mctrl);
+ 				ops->start_tx(uport);
+ 				spin_unlock_irq(&uport->lock);
++				pm_runtime_mark_last_busy(uport->dev);
++				pm_runtime_put_autosuspend(uport->dev);
+ 				tty_port_set_initialized(port, 1);
+ 			} else {
+ 				/*
+@@ -2302,17 +2370,17 @@ int uart_resume_port(struct uart_driver *drv, struct uart_port *uport)
+ 
+ 		uart_report_port(drv, port);
+ 
+-		/* Power up port for set_mctrl() */
+-		uart_change_pm(state, UART_PM_STATE_ON);
+-
+ 		/*
+ 		 * Ensure that the modem control lines are de-activated.
+ 		 * keep the DTR setting that is set in uart_set_options()
+ 		 * We probably don't need a spinlock around this, but
+ 		 */
++		pm_runtime_get_sync(port->dev);
+ 		spin_lock_irqsave(&port->lock, flags);
+ 		port->ops->set_mctrl(port, port->mctrl & TIOCM_DTR);
+ 		spin_unlock_irqrestore(&port->lock, flags);
++		pm_runtime_mark_last_busy(port->dev);
++		pm_runtime_put_autosuspend(port->dev);
+ 
+ 		/*
+ 		 * If this driver supports console, and it hasn't been
+@@ -2321,13 +2389,6 @@ int uart_resume_port(struct uart_driver *drv, struct uart_port *uport)
+ 		 */
+ 		if (port->cons && !(port->cons->flags & CON_ENABLED))
+ 			register_console(port->cons);
+-
+-		/*
+-		 * Power down all ports by default, except the
+-		 * console if we have one.
+-		 */
+-		if (!uart_console(port))
+-			uart_change_pm(state, UART_PM_STATE_OFF);
+ 	}
+ }
+ 
+@@ -2755,7 +2816,6 @@ int uart_add_one_port(struct uart_driver *drv, struct uart_port *uport)
+ 	state->uart_port = uport;
+ 	uport->state = state;
+ 
+-	state->pm_state = UART_PM_STATE_UNDEFINED;
+ 	uport->cons = drv->cons;
+ 	uport->minor = drv->tty_driver->minor_start + uport->line;
+ 	uport->name = kasprintf(GFP_KERNEL, "%s%d", drv->dev_name,
+@@ -2974,6 +3034,7 @@ void uart_handle_cts_change(struct uart_port *uport, unsigned int status)
+ 	uport->icount.cts++;
+ 
+ 	if (uart_softcts_mode(uport)) {
++		pm_runtime_get_sync(uport->dev);
+ 		if (uport->hw_stopped) {
+ 			if (status) {
+ 				uport->hw_stopped = 0;
+@@ -2986,6 +3047,8 @@ void uart_handle_cts_change(struct uart_port *uport, unsigned int status)
+ 				uport->ops->stop_tx(uport);
+ 			}
+ 		}
++		pm_runtime_mark_last_busy(uport->dev);
++		pm_runtime_put_autosuspend(uport->dev);
+ 
+ 	}
+ }
+diff --git a/drivers/tty/serial/serial_txx9.c b/drivers/tty/serial/serial_txx9.c
+index f80fead..c81ecc5 100644
+--- a/drivers/tty/serial/serial_txx9.c
++++ b/drivers/tty/serial/serial_txx9.c
+@@ -734,22 +734,6 @@ static void serial_txx9_shutdown(struct uart_port *port)
+ 	spin_unlock_irqrestore(&up->port.lock, flags);
+ }
+ 
+-static void
+-serial_txx9_pm(struct uart_port *port, unsigned int state,
+-	      unsigned int oldstate)
+-{
+-	/*
+-	 * If oldstate was -1 this is called from
+-	 * uart_configure_port().  In this case do not initialize the
+-	 * port now, because the port was already initialized (for
+-	 * non-console port) or should not be initialized here (for
+-	 * console port).  If we initialized the port here we lose
+-	 * serial console settings.
+-	 */
+-	if (state == 0 && oldstate != -1)
+-		serial_txx9_initialize(port);
+-}
+-
+ static int serial_txx9_request_resource(struct uart_txx9_port *up)
+ {
+ 	unsigned int size = TXX9_REGION_SIZE;
+@@ -856,7 +840,6 @@ static void serial_txx9_config_port(struct uart_port *port, int uflags)
+ 	.startup	= serial_txx9_startup,
+ 	.shutdown	= serial_txx9_shutdown,
+ 	.set_termios	= serial_txx9_set_termios,
+-	.pm		= serial_txx9_pm,
+ 	.type		= serial_txx9_type,
+ 	.release_port	= serial_txx9_release_port,
+ 	.request_port	= serial_txx9_request_port,
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 22f6023..8759a06 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -2478,21 +2478,6 @@ static void sci_set_termios(struct uart_port *port, struct ktermios *termios,
+ 		sci_enable_ms(port);
+ }
+ 
+-static void sci_pm(struct uart_port *port, unsigned int state,
+-		   unsigned int oldstate)
+-{
+-	struct sci_port *sci_port = to_sci_port(port);
+-
+-	switch (state) {
+-	case UART_PM_STATE_OFF:
+-		sci_port_disable(sci_port);
+-		break;
+-	default:
+-		sci_port_enable(sci_port);
+-		break;
+-	}
+-}
+-
+ static const char *sci_type(struct uart_port *port)
+ {
+ 	switch (port->type) {
+@@ -2607,7 +2592,6 @@ static int sci_verify_port(struct uart_port *port, struct serial_struct *ser)
+ 	.shutdown	= sci_shutdown,
+ 	.flush_buffer	= sci_flush_buffer,
+ 	.set_termios	= sci_set_termios,
+-	.pm		= sci_pm,
+ 	.type		= sci_type,
+ 	.release_port	= sci_release_port,
+ 	.request_port	= sci_request_port,
+diff --git a/drivers/tty/serial/sirfsoc_uart.c b/drivers/tty/serial/sirfsoc_uart.c
+index 684cb8d..2f79ab4 100644
+--- a/drivers/tty/serial/sirfsoc_uart.c
++++ b/drivers/tty/serial/sirfsoc_uart.c
+@@ -882,16 +882,6 @@ static void sirfsoc_uart_set_termios(struct uart_port *port,
+ 	spin_unlock_irqrestore(&port->lock, flags);
+ }
+ 
+-static void sirfsoc_uart_pm(struct uart_port *port, unsigned int state,
+-			      unsigned int oldstate)
+-{
+-	struct sirfsoc_uart_port *sirfport = to_sirfport(port);
+-	if (!state)
+-		clk_prepare_enable(sirfport->clk);
+-	else
+-		clk_disable_unprepare(sirfport->clk);
+-}
+-
+ static int sirfsoc_uart_startup(struct uart_port *port)
+ {
+ 	struct sirfsoc_uart_port *sirfport	= to_sirfport(port);
+@@ -1073,7 +1063,6 @@ static void sirfsoc_uart_config_port(struct uart_port *port, int flags)
+ 	.startup	= sirfsoc_uart_startup,
+ 	.shutdown	= sirfsoc_uart_shutdown,
+ 	.set_termios	= sirfsoc_uart_set_termios,
+-	.pm		= sirfsoc_uart_pm,
+ 	.type		= sirfsoc_uart_type,
+ 	.release_port	= sirfsoc_uart_release_port,
+ 	.request_port	= sirfsoc_uart_request_port,
+diff --git a/drivers/tty/serial/sn_console.c b/drivers/tty/serial/sn_console.c
+index 9e0e658..e076d1a 100644
+--- a/drivers/tty/serial/sn_console.c
++++ b/drivers/tty/serial/sn_console.c
+@@ -391,7 +391,6 @@ static void snp_config_port(struct uart_port *port, int flags)
+ 	.startup = snp_startup,
+ 	.shutdown = snp_shutdown,
+ 	.set_termios = snp_set_termios,
+-	.pm = NULL,
+ 	.type = snp_type,
+ 	.release_port = snp_release_port,
+ 	.request_port = snp_request_port,
+diff --git a/drivers/tty/serial/st-asc.c b/drivers/tty/serial/st-asc.c
+index b313a79..93f40cb 100644
+--- a/drivers/tty/serial/st-asc.c
++++ b/drivers/tty/serial/st-asc.c
+@@ -483,32 +483,6 @@ static void asc_shutdown(struct uart_port *port)
+ 	free_irq(port->irq, port);
+ }
+ 
+-static void asc_pm(struct uart_port *port, unsigned int state,
+-		unsigned int oldstate)
+-{
+-	struct asc_port *ascport = to_asc_port(port);
+-	unsigned long flags = 0;
+-	u32 ctl;
+-
+-	switch (state) {
+-	case UART_PM_STATE_ON:
+-		clk_prepare_enable(ascport->clk);
+-		break;
+-	case UART_PM_STATE_OFF:
+-		/*
+-		 * Disable the ASC baud rate generator, which is as close as
+-		 * we can come to turning it off. Note this is not called with
+-		 * the port spinlock held.
+-		 */
+-		spin_lock_irqsave(&port->lock, flags);
+-		ctl = asc_in(port, ASC_CTL) & ~ASC_CTL_RUN;
+-		asc_out(port, ASC_CTL, ctl);
+-		spin_unlock_irqrestore(&port->lock, flags);
+-		clk_disable_unprepare(ascport->clk);
+-		break;
+-	}
+-}
+-
+ static void asc_set_termios(struct uart_port *port, struct ktermios *termios,
+ 			    struct ktermios *old)
+ {
+@@ -715,7 +689,6 @@ static void asc_put_poll_char(struct uart_port *port, unsigned char c)
+ 	.request_port	= asc_request_port,
+ 	.config_port	= asc_config_port,
+ 	.verify_port	= asc_verify_port,
+-	.pm		= asc_pm,
+ #ifdef CONFIG_CONSOLE_POLL
+ 	.poll_get_char = asc_get_poll_char,
+ 	.poll_put_char = asc_put_poll_char,
+diff --git a/drivers/tty/serial/stm32-usart.c b/drivers/tty/serial/stm32-usart.c
+index 03a58326..8800a8a 100644
+--- a/drivers/tty/serial/stm32-usart.c
++++ b/drivers/tty/serial/stm32-usart.c
+@@ -626,28 +626,6 @@ static void stm32_config_port(struct uart_port *port, int flags)
+ 	return -EINVAL;
+ }
+ 
+-static void stm32_pm(struct uart_port *port, unsigned int state,
+-		unsigned int oldstate)
+-{
+-	struct stm32_port *stm32port = container_of(port,
+-			struct stm32_port, port);
+-	struct stm32_usart_offsets *ofs = &stm32port->info->ofs;
+-	struct stm32_usart_config *cfg = &stm32port->info->cfg;
+-	unsigned long flags = 0;
+-
+-	switch (state) {
+-	case UART_PM_STATE_ON:
+-		clk_prepare_enable(stm32port->clk);
+-		break;
+-	case UART_PM_STATE_OFF:
+-		spin_lock_irqsave(&port->lock, flags);
+-		stm32_clr_bits(port, ofs->cr1, BIT(cfg->uart_enable_bit));
+-		spin_unlock_irqrestore(&port->lock, flags);
+-		clk_disable_unprepare(stm32port->clk);
+-		break;
+-	}
+-}
+-
+ static const struct uart_ops stm32_uart_ops = {
+ 	.tx_empty	= stm32_tx_empty,
+ 	.set_mctrl	= stm32_set_mctrl,
+@@ -661,7 +639,6 @@ static void stm32_pm(struct uart_port *port, unsigned int state,
+ 	.startup	= stm32_startup,
+ 	.shutdown	= stm32_shutdown,
+ 	.set_termios	= stm32_set_termios,
+-	.pm		= stm32_pm,
+ 	.type		= stm32_type,
+ 	.release_port	= stm32_release_port,
+ 	.request_port	= stm32_request_port,
+diff --git a/drivers/tty/serial/vr41xx_siu.c b/drivers/tty/serial/vr41xx_siu.c
+index 439057e..b538a61 100644
+--- a/drivers/tty/serial/vr41xx_siu.c
++++ b/drivers/tty/serial/vr41xx_siu.c
+@@ -594,32 +594,6 @@ static void siu_set_termios(struct uart_port *port, struct ktermios *new,
+ 	spin_unlock_irqrestore(&port->lock, flags);
+ }
+ 
+-static void siu_pm(struct uart_port *port, unsigned int state, unsigned int oldstate)
+-{
+-	switch (state) {
+-	case 0:
+-		switch (port->type) {
+-		case PORT_VR41XX_SIU:
+-			vr41xx_supply_clock(SIU_CLOCK);
+-			break;
+-		case PORT_VR41XX_DSIU:
+-			vr41xx_supply_clock(DSIU_CLOCK);
+-			break;
+-		}
+-		break;
+-	case 3:
+-		switch (port->type) {
+-		case PORT_VR41XX_SIU:
+-			vr41xx_mask_clock(SIU_CLOCK);
+-			break;
+-		case PORT_VR41XX_DSIU:
+-			vr41xx_mask_clock(DSIU_CLOCK);
+-			break;
+-		}
+-		break;
+-	}
+-}
+-
+ static const char *siu_type(struct uart_port *port)
+ {
+ 	return siu_type_name(port);
+@@ -693,7 +667,6 @@ static int siu_verify_port(struct uart_port *port, struct serial_struct *serial)
+ 	.startup	= siu_startup,
+ 	.shutdown	= siu_shutdown,
+ 	.set_termios	= siu_set_termios,
+-	.pm		= siu_pm,
+ 	.type		= siu_type,
+ 	.release_port	= siu_release_port,
+ 	.request_port	= siu_request_port,
+diff --git a/drivers/tty/serial/xilinx_uartps.c b/drivers/tty/serial/xilinx_uartps.c
+index 31a630a..cf96aa3 100644
+--- a/drivers/tty/serial/xilinx_uartps.c
++++ b/drivers/tty/serial/xilinx_uartps.c
+@@ -1065,20 +1065,6 @@ static void cdns_uart_poll_put_char(struct uart_port *port, unsigned char c)
+ }
+ #endif
+ 
+-static void cdns_uart_pm(struct uart_port *port, unsigned int state,
+-		   unsigned int oldstate)
+-{
+-	switch (state) {
+-	case UART_PM_STATE_OFF:
+-		pm_runtime_mark_last_busy(port->dev);
+-		pm_runtime_put_autosuspend(port->dev);
+-		break;
+-	default:
+-		pm_runtime_get_sync(port->dev);
+-		break;
+-	}
+-}
+-
+ static const struct uart_ops cdns_uart_ops = {
+ 	.set_mctrl	= cdns_uart_set_mctrl,
+ 	.get_mctrl	= cdns_uart_get_mctrl,
+@@ -1090,7 +1076,6 @@ static void cdns_uart_pm(struct uart_port *port, unsigned int state,
+ 	.set_termios	= cdns_uart_set_termios,
+ 	.startup	= cdns_uart_startup,
+ 	.shutdown	= cdns_uart_shutdown,
+-	.pm		= cdns_uart_pm,
+ 	.type		= cdns_uart_type,
+ 	.verify_port	= cdns_uart_verify_port,
+ 	.request_port	= cdns_uart_request_port,
+diff --git a/drivers/tty/serial/zs.c b/drivers/tty/serial/zs.c
+index d32bd49..cce33ad 100644
+--- a/drivers/tty/serial/zs.c
++++ b/drivers/tty/serial/zs.c
+@@ -958,24 +958,6 @@ static void zs_set_termios(struct uart_port *uport, struct ktermios *termios,
+ 	spin_unlock_irqrestore(&scc->zlock, flags);
+ }
+ 
+-/*
+- * Hack alert!
+- * Required solely so that the initial PROM-based console
+- * works undisturbed in parallel with this one.
+- */
+-static void zs_pm(struct uart_port *uport, unsigned int state,
+-		  unsigned int oldstate)
+-{
+-	struct zs_port *zport = to_zport(uport);
+-
+-	if (state < 3)
+-		zport->regs[5] |= TxENAB;
+-	else
+-		zport->regs[5] &= ~TxENAB;
+-	write_zsreg(zport, R5, zport->regs[5]);
+-}
+-
+-
+ static const char *zs_type(struct uart_port *uport)
+ {
+ 	return "Z85C30 SCC";
+@@ -1057,7 +1039,6 @@ static int zs_verify_port(struct uart_port *uport, struct serial_struct *ser)
+ 	.startup	= zs_startup,
+ 	.shutdown	= zs_shutdown,
+ 	.set_termios	= zs_set_termios,
+-	.pm		= zs_pm,
+ 	.type		= zs_type,
+ 	.release_port	= zs_release_port,
+ 	.request_port	= zs_request_port,
+@@ -1211,7 +1192,6 @@ static int __init zs_console_setup(struct console *co, char *options)
+ 		return ret;
+ 
+ 	zs_reset(zport);
+-	zs_pm(uport, 0, -1);
+ 
+ 	if (options)
+ 		uart_parse_options(options, &baud, &parity, &bits, &flow);
+diff --git a/drivers/usb/Kconfig b/drivers/usb/Kconfig
+index 72eb3e4..5a0b2e6 100644
+--- a/drivers/usb/Kconfig
++++ b/drivers/usb/Kconfig
+@@ -168,6 +168,8 @@ endif # USB
+ 
+ source "drivers/usb/phy/Kconfig"
+ 
++source "drivers/usb/mux/Kconfig"
++
+ source "drivers/usb/gadget/Kconfig"
+ 
+ source "drivers/usb/typec/Kconfig"
+diff --git a/drivers/usb/Makefile b/drivers/usb/Makefile
+index 060643a..8ddfcb9 100644
+--- a/drivers/usb/Makefile
++++ b/drivers/usb/Makefile
+@@ -7,6 +7,7 @@
+ 
+ obj-$(CONFIG_USB)		+= core/
+ obj-$(CONFIG_USB_SUPPORT)	+= phy/
++obj-$(CONFIG_USB_SUPPORT)	+= mux/
+ 
+ obj-$(CONFIG_USB_DWC3)		+= dwc3/
+ obj-$(CONFIG_USB_DWC2)		+= dwc2/
+diff --git a/drivers/usb/core/Kconfig b/drivers/usb/core/Kconfig
+index 4d75d9a..8a7005b 100644
+--- a/drivers/usb/core/Kconfig
++++ b/drivers/usb/core/Kconfig
+@@ -90,3 +90,11 @@ config USB_LEDS_TRIGGER_USBPORT
+ 	  This driver allows LEDs to be controlled by USB events. Enabling this
+ 	  trigger allows specifying list of USB ports that should turn on LED
+ 	  when some USB device gets connected.
++
++config USB_OC_NOTIFICATION
++	bool "Enable Over Current Notification"
++	default n
++	help
++	  Say Y here if you want to send uevent to userland for
++	  over current condition on USB ports and ports coming to
++	  normal state after over current condition is over.
+diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+index 90c5294..a5019ed 100644
+--- a/drivers/usb/core/hub.c
++++ b/drivers/usb/core/hub.c
+@@ -5034,6 +5034,16 @@ static void hub_port_connect_change(struct usb_hub *hub, int port1,
+ 	usb_lock_port(port_dev);
+ }
+ 
++#ifdef CONFIG_USB_OC_NOTIFICATION
++char oc_event[] = "OVERCURRENT=1";
++char oc_port[10];
++char *oc_envp[] = {oc_event, oc_port, NULL};
++char nc_event[] = "OVERCURRENT=0";
++char nc_port[10];
++char *nc_envp[] = {nc_event, nc_port, NULL};
++static int oc_flag;
++#endif
++
+ static void port_event(struct usb_hub *hub, int port1)
+ 		__must_hold(&port_dev->status_lock)
+ {
+@@ -5077,13 +5087,42 @@ static void port_event(struct usb_hub *hub, int port1)
+ 		u16 status = 0, unused;
+ 
+ 		dev_dbg(&port_dev->dev, "over-current change\n");
++#ifdef CONFIG_USB_OC_NOTIFICATION
++		if (oc_flag & BIT(port1 - 1)) {
++			/*
++			 * Send event to userland for overcurrent condition
++			 * change at port with port number.
++			 */
++			snprintf(oc_port, sizeof(oc_port), "NPORT=%d", port1);
++			if (kobject_uevent_env(&hub->intfdev->kobj,
++						KOBJ_CHANGE, nc_envp))
++				dev_err(&port_dev->dev,
++					"failed to send change OC event.\n");
++			/* Clear port's oc_flag. */
++			oc_flag &= ~(BIT(port1 - 1));
++		}
++#endif
+ 		usb_clear_port_feature(hdev, port1,
+ 				USB_PORT_FEAT_C_OVER_CURRENT);
+ 		msleep(100);	/* Cool down */
+ 		hub_power_on(hub, true);
+ 		hub_port_status(hub, port1, &status, &unused);
+-		if (status & USB_PORT_STAT_OVERCURRENT)
++		if (status & USB_PORT_STAT_OVERCURRENT) {
+ 			dev_err(&port_dev->dev, "over-current condition\n");
++#ifdef CONFIG_USB_OC_NOTIFICATION
++			/*
++			 * Send event to userland for overcurrent condition
++			 * with port number.
++			 */
++			snprintf(oc_port, sizeof(oc_port), "OCPORT=%d", port1);
++			if (kobject_uevent_env(&hub->intfdev->kobj,
++						KOBJ_CHANGE, oc_envp))
++				dev_err(&port_dev->dev,
++					"failed to send OC event.\n");
++			/* Set port's oc_flag. */
++			oc_flag |= BIT(port1 - 1);
++#endif
++		}
+ 	}
+ 
+ 	if (portchange & USB_PORT_STAT_C_RESET) {
+diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
+index c3f3f1a..49bd4b6 100644
+--- a/drivers/usb/dwc3/core.c
++++ b/drivers/usb/dwc3/core.c
+@@ -207,6 +207,36 @@ u32 dwc3_core_fifo_space(struct dwc3_ep *dep, u8 type)
+ }
+ 
+ /**
++ * WORKAROUND: We let BIOS issues the core soft reset to Device
++ * controller for Intel Apollo Lake, via _DSM method.
++ *
++ * The issue is, if core soft reset is issued while Intel Apollo Lake
++ * USB mux is in Host role mode, it takes close to 7 minutes before
++ * we are able to switch USB mux from Host mode to Device mode.
++ */
++static int dwc3_pci_dsm_soft_reset(struct device *dev)
++{
++	guid_t			guid;
++	int			ret = -ETIMEDOUT;
++	union acpi_object	*obj;
++
++	guid_parse("732b85d5-b7a7-4a1b-9ba0-4bbd00ffd511", &guid);
++
++	obj = acpi_evaluate_dsm(ACPI_HANDLE(dev), &guid, 1, 6, NULL);
++	if (!obj) {
++		dev_err(dev, "failed to evaluate _DSM\n");
++		return -EIO;
++	}
++
++	if (obj->type == ACPI_TYPE_INTEGER)
++		ret = (obj->integer.value == 0) ? 0 : -ETIMEDOUT;
++	dev_dbg(dev, "dwc3_pci_dsm_soft_reset() ret= %d\n", ret);
++
++	ACPI_FREE(obj);
++	return ret;
++}
++
++/**
+  * dwc3_core_soft_reset - Issues core soft reset and PHY reset
+  * @dwc: pointer to our context structure
+  */
+@@ -236,6 +266,11 @@ static int dwc3_core_soft_reset(struct dwc3 *dwc)
+ 	if (dwc->dr_mode == USB_DR_MODE_HOST)
+ 		return 0;
+ 
++	if (dwc->has_dsm_for_softreset) {
++		dev_dbg(dwc->dev, "calling dwc3_pci_dsm_soft_reset()");
++		return dwc3_pci_dsm_soft_reset(dwc->dev);
++	}
++
+ 	reg = dwc3_readl(dwc->regs, DWC3_DCTL);
+ 	reg |= DWC3_DCTL_CSFTRST;
+ 	dwc3_writel(dwc->regs, DWC3_DCTL, reg);
+@@ -1075,6 +1110,9 @@ static void dwc3_get_properties(struct dwc3 *dwc)
+ 	device_property_read_u32(dev, "snps,quirk-frame-length-adjustment",
+ 				 &dwc->fladj);
+ 
++	dwc->has_dsm_for_softreset = device_property_read_bool(dev,
++				"has_dsm_for_softreset");
++
+ 	dwc->lpm_nyet_threshold = lpm_nyet_threshold;
+ 	dwc->tx_de_emphasis = tx_de_emphasis;
+ 
+diff --git a/drivers/usb/dwc3/core.h b/drivers/usb/dwc3/core.h
+index fc28819..506dda4 100644
+--- a/drivers/usb/dwc3/core.h
++++ b/drivers/usb/dwc3/core.h
+@@ -867,6 +867,7 @@ struct dwc3_scratchpad_array {
+  * 	3	- Reserved
+  * @imod_interval: set the interrupt moderation interval in 250ns
+  *                 increments or 0 to disable.
++ * @has_dsm_for_softreset: set if we want to use BIOS to do core soft reset
+  */
+ struct dwc3 {
+ 	struct work_struct	drd_work;
+@@ -1019,6 +1020,7 @@ struct dwc3 {
+ 	unsigned		tx_de_emphasis:2;
+ 
+ 	u16			imod_interval;
++	unsigned		has_dsm_for_softreset:1;
+ };
+ 
+ #define work_to_dwc(w)		(container_of((w), struct dwc3, drd_work))
+diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
+index e11e39b..c9d9156 100644
+--- a/drivers/usb/dwc3/dwc3-pci.c
++++ b/drivers/usb/dwc3/dwc3-pci.c
+@@ -120,7 +120,17 @@ static int dwc3_pci_quirks(struct dwc3_pci *dwc)
+ 			return ret;
+ 
+ 		if (pdev->device == PCI_DEVICE_ID_INTEL_BXT ||
+-				pdev->device == PCI_DEVICE_ID_INTEL_BXT_M) {
++		    pdev->device == PCI_DEVICE_ID_INTEL_BXT_M ||
++		    pdev->device == PCI_DEVICE_ID_INTEL_APL) {
++			struct property_entry properties[] = {
++				PROPERTY_ENTRY_BOOL("has_dsm_for_softreset"),
++				{}
++			};
++
++			ret = platform_device_add_properties(dwc3, properties);
++			if (ret < 0)
++				return ret;
++
+ 			guid_parse(PCI_INTEL_BXT_DSM_GUID, &dwc->guid);
+ 			dwc->has_dsm_for_pm = true;
+ 		}
+@@ -132,7 +142,6 @@ static int dwc3_pci_quirks(struct dwc3_pci *dwc)
+ 				return -ENOMEM;
+ 		}
+ 
+-
+ 		if (pdev->device == PCI_DEVICE_ID_INTEL_BYT) {
+ 			struct gpio_desc *gpio;
+ 
+diff --git a/drivers/usb/host/pci-quirks.c b/drivers/usb/host/pci-quirks.c
+index fd46432..107f162 100644
+--- a/drivers/usb/host/pci-quirks.c
++++ b/drivers/usb/host/pci-quirks.c
+@@ -16,10 +16,11 @@
+ #include <linux/acpi.h>
+ #include <linux/dmi.h>
+ #include <linux/extcon/intel_usb_mux.h>
++#include <linux/platform_device.h>
++
+ #include "pci-quirks.h"
+ #include "xhci-ext-caps.h"
+ 
+-
+ #define UHCI_USBLEGSUP		0xc0		/* legacy support */
+ #define UHCI_USBCMD		0		/* command register */
+ #define UHCI_USBINTR		4		/* interrupt register */
+@@ -88,6 +89,8 @@
+ #define ASMT_FLOWCTL_DATA	0xBA
+ #define ASMT_PSEUDO_DATA	0
+ 
++#define DEVICE_ID_INTEL_BROXTON_P_XHCI		0x5aa8
++
+ /*
+  * amd_chipset_gen values represent AMD different chipset generations
+  */
+@@ -1018,6 +1021,38 @@ void usb_disable_xhci_ports(struct pci_dev *xhci_pdev)
+ }
+ EXPORT_SYMBOL_GPL(usb_disable_xhci_ports);
+ 
++static void create_intel_usb_mux_device(struct pci_dev *xhci_pdev,
++					void __iomem *base)
++{
++	struct platform_device *plat_dev;
++	int ret;
++
++	struct property_entry pentry[] = {
++		PROPERTY_ENTRY_U64("reg-start",
++				   pci_resource_start(xhci_pdev, 0) + 0x80d8),
++		PROPERTY_ENTRY_U64("reg-size", 8),
++		{ },
++	};
++
++	if (!xhci_find_next_ext_cap(base, 0, XHCI_EXT_CAPS_INTEL_USB_MUX))
++		return;
++
++	plat_dev = platform_device_alloc("intel-mux-drcfg",
++					 PLATFORM_DEVID_NONE);
++	if (!plat_dev)
++		return;
++
++	plat_dev->dev.parent = &xhci_pdev->dev;
++	platform_device_add_properties(plat_dev, pentry);
++	ret = platform_device_add(plat_dev);
++	if (ret) {
++		dev_warn(&xhci_pdev->dev,
++			 "failed to create mux device with error %d",
++				ret);
++		platform_device_put(plat_dev);
++	}
++}
++
+ /**
+  * PCI Quirks for xHCI.
+  *
+@@ -1095,6 +1130,9 @@ static void quirk_usb_handoff_xhci(struct pci_dev *pdev)
+ 	if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
+ 		usb_enable_intel_xhci_ports(pdev);
+ 
++		if (pdev->device == DEVICE_ID_INTEL_BROXTON_P_XHCI)
++			create_intel_usb_mux_device(pdev, base);
++
+ 		/*
+ 		 * Initialize the internal mux that shares a port between USB
+ 		 * Device Controller and xHCI on platforms that have it.
+diff --git a/drivers/usb/host/xhci-ext-caps.h b/drivers/usb/host/xhci-ext-caps.h
+index 28deea5..20586f2 100644
+--- a/drivers/usb/host/xhci-ext-caps.h
++++ b/drivers/usb/host/xhci-ext-caps.h
+@@ -51,6 +51,8 @@
+ #define XHCI_EXT_CAPS_ROUTE	5
+ /* IDs 6-9 reserved */
+ #define XHCI_EXT_CAPS_DEBUG	10
++/* Vendor defined 192-255 */
++#define XHCI_EXT_CAPS_INTEL_USB_MUX	192
+ /* USB Legacy Support Capability - section 7.1.1 */
+ #define XHCI_HC_BIOS_OWNED	(1 << 16)
+ #define XHCI_HC_OS_OWNED	(1 << 24)
+diff --git a/drivers/usb/mux/Kconfig b/drivers/usb/mux/Kconfig
+new file mode 100644
+index 0000000..ae3f746
+--- /dev/null
++++ b/drivers/usb/mux/Kconfig
+@@ -0,0 +1,30 @@
++#
++# USB port mux driver configuration
++#
++
++menu "USB Port MUX drivers"
++config USB_PORTMUX
++	select EXTCON
++	def_bool n
++	help
++	  Generic USB dual role port mux support.
++
++config INTEL_MUX_GPIO
++	tristate "Intel dual role port mux controlled by GPIOs"
++	depends on GPIOLIB
++	depends on REGULATOR
++	depends on X86 && ACPI
++	select USB_PORTMUX
++	help
++	  Say Y here to enable support for Intel dual role port mux
++	  controlled by GPIOs.
++
++config INTEL_MUX_DRCFG
++	tristate "Intel dual role port mux controlled by register"
++	depends on X86
++	select USB_PORTMUX
++	help
++	  Say Y here to enable support for Intel dual role port mux
++	  controlled by the Dual Role Configuration Register.
++
++endmenu
+diff --git a/drivers/usb/mux/Makefile b/drivers/usb/mux/Makefile
+new file mode 100644
+index 0000000..0f102b5
+--- /dev/null
++++ b/drivers/usb/mux/Makefile
+@@ -0,0 +1,6 @@
++#
++# Makefile for USB port mux drivers
++#
++obj-$(CONFIG_USB_PORTMUX)		+= portmux-core.o
++obj-$(CONFIG_INTEL_MUX_GPIO)		+= portmux-intel-gpio.o
++obj-$(CONFIG_INTEL_MUX_DRCFG)		+= portmux-intel-drcfg.o
+diff --git a/drivers/usb/mux/portmux-core.c b/drivers/usb/mux/portmux-core.c
+new file mode 100644
+index 0000000..1631cd2
+--- /dev/null
++++ b/drivers/usb/mux/portmux-core.c
+@@ -0,0 +1,231 @@
++/**
++ * intel_mux.c - USB Port Mux support
++ *
++ * Copyright (C) 2016 Intel Corporation
++ *
++ * Author: Lu Baolu <baolu.lu@linux.intel.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++#include <linux/slab.h>
++#include <linux/notifier.h>
++#include <linux/extcon.h>
++#include <linux/err.h>
++#include <linux/usb/portmux.h>
++
++static int usb_mux_change_state(struct portmux_dev *pdev, int state)
++{
++	int ret;
++	struct device *dev = &pdev->dev;
++
++	dev_WARN_ONCE(dev,
++		      !mutex_is_locked(&pdev->mux_mutex),
++		      "mutex is unlocked\n");
++
++	pdev->mux_state = state;
++
++	if (pdev->mux_state)
++		ret = pdev->desc->ops->cable_set_cb(pdev->dev.parent);
++	else
++		ret = pdev->desc->ops->cable_unset_cb(pdev->dev.parent);
++
++	return ret;
++}
++
++static int usb_mux_notifier(struct notifier_block *nb,
++			    unsigned long event, void *ptr)
++{
++	struct portmux_dev *pdev;
++	int state;
++	int ret = NOTIFY_DONE;
++
++	pdev = container_of(nb, struct portmux_dev, nb);
++
++	state = extcon_get_state(pdev->edev, EXTCON_USB_HOST);
++	if (state < 0)
++		return state;
++
++	mutex_lock(&pdev->mux_mutex);
++	ret = usb_mux_change_state(pdev, state);
++	mutex_unlock(&pdev->mux_mutex);
++
++	return ret;
++}
++
++static ssize_t state_show(struct device *dev,
++			  struct device_attribute *attr,
++			  char *buf)
++{
++	struct portmux_dev *pdev = dev_get_drvdata(dev);
++
++	return sprintf(buf, "%s\n", pdev->mux_state ? "host" : "peripheral");
++}
++
++static ssize_t state_store(struct device *dev,
++			   struct device_attribute *attr,
++			   const char *buf, size_t count)
++{
++	struct portmux_dev *pdev = dev_get_drvdata(dev);
++	int state;
++
++	if (sysfs_streq(buf, "peripheral"))
++		state = 0;
++	else if (sysfs_streq(buf, "host"))
++		state = 1;
++	else
++		return -EINVAL;
++
++	mutex_lock(&pdev->mux_mutex);
++	usb_mux_change_state(pdev, state);
++	mutex_unlock(&pdev->mux_mutex);
++
++	return count;
++}
++static DEVICE_ATTR_RW(state);
++
++static ssize_t name_show(struct device *dev,
++			 struct device_attribute *attr,
++			 char *buf)
++{
++	struct portmux_dev *pdev = dev_get_drvdata(dev);
++
++	return sprintf(buf, "%s\n", pdev->desc->name);
++}
++static DEVICE_ATTR_RO(name);
++
++static struct attribute *portmux_attrs[] = {
++	&dev_attr_state.attr,
++	&dev_attr_name.attr,
++	NULL,
++};
++
++static struct attribute_group portmux_attr_grp = {
++	.attrs = portmux_attrs,
++};
++
++static const struct attribute_group *portmux_group[] = {
++	&portmux_attr_grp,
++	NULL,
++};
++
++static void portmux_release(struct device *dev)
++{
++	/* dummy release() */
++}
++
++/**
++ * portmux_register - register a port mux
++ * @dev: device the mux belongs to
++ * @desc: the descriptor of this port mux
++ *
++ * Called by port mux drivers to register a mux.
++ * Returns a valid pointer to struct portmux_dev on success
++ * or an ERR_PTR() on error.
++ */
++struct portmux_dev *portmux_register(struct portmux_desc *desc)
++{
++	static atomic_t portmux_no = ATOMIC_INIT(-1);
++	struct portmux_dev *pdev;
++	struct extcon_dev *edev = NULL;
++	struct device *dev;
++	int ret;
++
++	/* parameter sanity check */
++	if (!desc || !desc->name || !desc->ops || !desc->dev ||
++	    !desc->ops->cable_set_cb || !desc->ops->cable_unset_cb)
++		return ERR_PTR(-EINVAL);
++
++	dev = desc->dev;
++
++	if (desc->extcon_name) {
++		edev = extcon_get_extcon_dev(desc->extcon_name);
++		if (IS_ERR_OR_NULL(edev))
++			return ERR_PTR(-EPROBE_DEFER);
++	}
++
++	pdev = kzalloc(sizeof(*pdev), GFP_KERNEL);
++	if (!pdev)
++		return ERR_PTR(-ENOMEM);
++
++	pdev->desc = desc;
++	pdev->edev = edev;
++	pdev->nb.notifier_call = usb_mux_notifier;
++	mutex_init(&pdev->mux_mutex);
++
++	pdev->dev.parent = dev;
++	dev_set_name(&pdev->dev, "portmux.%lu",
++		     (unsigned long)atomic_inc_return(&portmux_no));
++	pdev->dev.groups = portmux_group;
++	pdev->dev.release = portmux_release;
++	ret = device_register(&pdev->dev);
++	if (ret)
++		goto cleanup_mem;
++
++	dev_set_drvdata(&pdev->dev, pdev);
++
++	if (edev) {
++		ret = extcon_register_notifier(edev, EXTCON_USB_HOST,
++					       &pdev->nb);
++		if (ret < 0) {
++			dev_err(dev, "failed to register extcon notifier\n");
++			goto cleanup_dev;
++		}
++	}
++
++	if (desc->initial_state == -1) {
++		usb_mux_notifier(&pdev->nb, 0, NULL);
++	} else {
++		mutex_lock(&pdev->mux_mutex);
++		ret = usb_mux_change_state(pdev, !!desc->initial_state);
++		mutex_unlock(&pdev->mux_mutex);
++	}
++
++	return pdev;
++
++cleanup_dev:
++	device_unregister(&pdev->dev);
++cleanup_mem:
++	kfree(pdev);
++
++	return ERR_PTR(ret);
++}
++EXPORT_SYMBOL_GPL(portmux_register);
++
++/**
++ * portmux_unregister - unregister a port mux
++ * @pdev: the port mux device
++ *
++ * Called by port mux drivers to release a mux.
++ */
++void portmux_unregister(struct portmux_dev *pdev)
++{
++	if (pdev->edev)
++		extcon_unregister_notifier(pdev->edev,
++					   EXTCON_USB_HOST, &pdev->nb);
++	device_unregister(&pdev->dev);
++	kfree(pdev);
++}
++EXPORT_SYMBOL_GPL(portmux_unregister);
++
++#ifdef CONFIG_PM_SLEEP
++/**
++ * portmux_complete - refresh port state during system resumes back
++ * @pdev: the port mux device
++ *
++ * Called by port mux drivers to refresh port state during system
++ * resumes back.
++ */
++void portmux_complete(struct portmux_dev *pdev)
++{
++	if (pdev->edev) {
++		usb_mux_notifier(&pdev->nb, 0, NULL);
++	} else {
++		mutex_lock(&pdev->mux_mutex);
++		usb_mux_change_state(pdev, pdev->mux_state);
++		mutex_unlock(&pdev->mux_mutex);
++	}
++}
++EXPORT_SYMBOL_GPL(portmux_complete);
++#endif
+diff --git a/drivers/usb/mux/portmux-intel-drcfg.c b/drivers/usb/mux/portmux-intel-drcfg.c
+new file mode 100644
+index 0000000..0b6de17
+--- /dev/null
++++ b/drivers/usb/mux/portmux-intel-drcfg.c
+@@ -0,0 +1,189 @@
++/**
++ * intel-mux-drcfg.c - Driver for Intel USB mux via register
++ *
++ * Copyright (C) 2016 Intel Corporation
++ * Author: Heikki Krogerus <heikki.krogerus@linux.intel.com>
++ * Author: Lu Baolu <baolu.lu@linux.intel.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/slab.h>
++#include <linux/module.h>
++#include <linux/property.h>
++#include <linux/platform_device.h>
++#include <linux/usb.h>
++#include <linux/usb/portmux.h>
++
++#define INTEL_MUX_CFG0		0x00
++#define INTEL_MUX_CFG1		0x04
++#define CFG0_SW_IDPIN		BIT(20)
++#define CFG0_SW_IDPIN_EN	BIT(21)
++#define CFG0_SW_VBUS_VALID	BIT(24)
++#define CFG1_MODE		BIT(29)
++
++struct intel_mux_drcfg {
++	struct portmux_desc desc;
++	struct device *dev;
++	void __iomem *regs;
++	struct portmux_dev *pdev;
++};
++
++static int usb0_init_state = -1;
++module_param(usb0_init_state, int, S_IRUGO);
++MODULE_PARM_DESC(usb0_init_state, "APL USB port 0 init state 0:device, 1:host");
++
++static int usb0_auto_role = -1;
++module_param(usb0_auto_role, int, S_IRUGO);
++MODULE_PARM_DESC(usb0_auto_role, "APL USB port 0 automatic role switching");
++
++static inline int intel_mux_drcfg_switch(struct device *dev, bool host)
++{
++	u32 data;
++	struct intel_mux_drcfg *mux;
++
++	mux = dev_get_drvdata(dev);
++
++	if (usb0_auto_role == 1) {
++		dev_info(dev, "USB port 0 mux is in automatic role mode.\n");
++		return 0;
++	}
++
++	/* Check and set mux to SW controlled mode */
++	data = readl(mux->regs + INTEL_MUX_CFG0);
++	if (!(data & CFG0_SW_IDPIN_EN)) {
++		data |= CFG0_SW_IDPIN_EN;
++		writel(data, mux->regs + INTEL_MUX_CFG0);
++		dev_dbg(dev, "Set SW_IDPIN_EN bit\n");
++	}
++
++	/*
++	 * Configure CFG0 to switch the mux and VBUS_VALID bit is
++	 * required for device mode.
++	 */
++	data = readl(mux->regs + INTEL_MUX_CFG0);
++	if (host)
++		data &= ~(CFG0_SW_IDPIN | CFG0_SW_VBUS_VALID);
++	else
++		data |= (CFG0_SW_IDPIN | CFG0_SW_VBUS_VALID);
++	writel(data, mux->regs + INTEL_MUX_CFG0);
++
++	return 0;
++}
++
++static int intel_mux_drcfg_cable_set(struct device *dev)
++{
++	dev_dbg(dev, "drcfg mux switch to HOST\n");
++
++	return intel_mux_drcfg_switch(dev, true);
++}
++
++static int intel_mux_drcfg_cable_unset(struct device *dev)
++{
++	dev_dbg(dev, "drcfg mux switch to DEVICE\n");
++
++	return intel_mux_drcfg_switch(dev, false);
++}
++
++static const struct portmux_ops drcfg_ops = {
++	.cable_set_cb = intel_mux_drcfg_cable_set,
++	.cable_unset_cb = intel_mux_drcfg_cable_unset,
++};
++
++static int intel_mux_drcfg_probe(struct platform_device *pdev)
++{
++	struct intel_mux_drcfg *mux;
++	struct device *dev = &pdev->dev;
++	const char *extcon_name = NULL;
++	u64 start, size;
++	int ret;
++
++	mux = devm_kzalloc(dev, sizeof(*mux), GFP_KERNEL);
++	if (!mux)
++		return -ENOMEM;
++
++	ret = device_property_read_u64(dev, "reg-start", &start);
++	ret |= device_property_read_u64(dev, "reg-size", &size);
++	if (ret)
++		return -ENODEV;
++
++	ret = device_property_read_string(dev, "extcon-name", &extcon_name);
++	if (!ret)
++		mux->desc.extcon_name = extcon_name;
++
++	mux->regs = devm_ioremap_nocache(dev, start, size);
++	if (!mux->regs)
++		return -ENOMEM;
++
++	mux->desc.dev = dev;
++	mux->desc.name = "intel-mux-drcfg";
++	mux->desc.ops = &drcfg_ops;
++	mux->desc.initial_state = (usb0_init_state == -1) ?
++			!!(readl(mux->regs + INTEL_MUX_CFG1) & CFG1_MODE) :
++			(usb0_init_state ? 1 : 0);
++	dev_set_drvdata(dev, mux);
++	mux->pdev = portmux_register(&mux->desc);
++
++	if (usb0_auto_role == 1)
++		writel(0x800, mux->regs + INTEL_MUX_CFG0);
++
++	return PTR_ERR_OR_ZERO(mux->pdev);
++}
++
++static int intel_mux_drcfg_remove(struct platform_device *pdev)
++{
++	struct intel_mux_drcfg *mux;
++
++	mux = platform_get_drvdata(pdev);
++	portmux_unregister(mux->pdev);
++
++	return 0;
++}
++
++#ifdef CONFIG_PM_SLEEP
++/*
++ * In case a micro A cable was plugged in while device was sleeping,
++ * we missed the interrupt. We need to poll usb id state when waking
++ * the driver to detect the missed event.
++ * We use 'complete' callback to give time to all extcon listeners to
++ * resume before we send new events.
++ */
++static void intel_mux_drcfg_complete(struct device *dev)
++{
++	struct intel_mux_drcfg *mux;
++
++	mux = dev_get_drvdata(dev);
++	portmux_complete(mux->pdev);
++}
++
++static const struct dev_pm_ops intel_mux_drcfg_pm_ops = {
++	.complete = intel_mux_drcfg_complete,
++};
++#endif
++
++static const struct platform_device_id intel_mux_drcfg_platform_ids[] = {
++	{ .name = "intel-mux-drcfg", },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(platform, intel_mux_drcfg_platform_ids);
++
++static struct platform_driver intel_mux_drcfg_driver = {
++	.probe		= intel_mux_drcfg_probe,
++	.remove		= intel_mux_drcfg_remove,
++	.driver		= {
++		.name	= "intel-mux-drcfg",
++#ifdef CONFIG_PM_SLEEP
++		.pm	= &intel_mux_drcfg_pm_ops,
++#endif
++	},
++	.id_table = intel_mux_drcfg_platform_ids,
++};
++
++module_platform_driver(intel_mux_drcfg_driver);
++
++MODULE_AUTHOR("Heikki Krogerus <heikki.krogerus@linux.intel.com>");
++MODULE_AUTHOR("Lu Baolu <baolu.lu@linux.intel.com>");
++MODULE_DESCRIPTION("Intel USB drcfg mux driver");
++MODULE_LICENSE("GPL v2");
+diff --git a/drivers/usb/mux/portmux-intel-gpio.c b/drivers/usb/mux/portmux-intel-gpio.c
+new file mode 100644
+index 0000000..6478d7a
+--- /dev/null
++++ b/drivers/usb/mux/portmux-intel-gpio.c
+@@ -0,0 +1,150 @@
++/*
++ * USB Dual Role Port Mux driver controlled by gpios
++ *
++ * Copyright (c) 2016, Intel Corporation.
++ * Author: David Cohen <david.a.cohen@linux.intel.com>
++ * Author: Lu Baolu <baolu.lu@linux.intel.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#include <linux/module.h>
++#include <linux/acpi.h>
++#include <linux/gpio/consumer.h>
++#include <linux/platform_device.h>
++#include <linux/usb/portmux.h>
++#include <linux/regulator/consumer.h>
++
++struct vuport {
++	struct portmux_desc desc;
++	struct portmux_dev *pdev;
++	struct regulator *regulator;
++	struct gpio_desc *gpio_usb_mux;
++};
++
++/*
++ * id == 0, HOST connected, USB port should be set to peripheral
++ * id == 1, HOST disconnected, USB port should be set to host
++ *
++ * Peripheral: set USB mux to peripheral and disable VBUS
++ * Host: set USB mux to host and enable VBUS
++ */
++static inline int vuport_set_port(struct device *dev, int id)
++{
++	struct vuport *vup;
++
++	dev_dbg(dev, "USB PORT ID: %s\n", id ? "HOST" : "PERIPHERAL");
++
++	vup = dev_get_drvdata(dev);
++
++	gpiod_set_value_cansleep(vup->gpio_usb_mux, !id);
++
++	if (!id ^ regulator_is_enabled(vup->regulator))
++		return id ? regulator_disable(vup->regulator) :
++				regulator_enable(vup->regulator);
++
++	return 0;
++}
++
++static int vuport_cable_set(struct device *dev)
++{
++	return vuport_set_port(dev, 1);
++}
++
++static int vuport_cable_unset(struct device *dev)
++{
++	return vuport_set_port(dev, 0);
++}
++
++static const struct portmux_ops vuport_ops = {
++	.cable_set_cb = vuport_cable_set,
++	.cable_unset_cb = vuport_cable_unset,
++};
++
++static int vuport_probe(struct platform_device *pdev)
++{
++	struct device *dev = &pdev->dev;
++	struct vuport *vup;
++
++	vup = devm_kzalloc(dev, sizeof(*vup), GFP_KERNEL);
++	if (!vup)
++		return -ENOMEM;
++
++	vup->regulator = devm_regulator_get_exclusive(dev,
++						      "regulator-usb-gpio");
++	if (IS_ERR(vup->regulator))
++		return -EPROBE_DEFER;
++
++	vup->gpio_usb_mux = devm_gpiod_get_optional(dev,
++				"usb_mux", GPIOD_ASIS);
++	if (IS_ERR(vup->gpio_usb_mux))
++		return PTR_ERR(vup->gpio_usb_mux);
++
++	vup->desc.dev = dev;
++	vup->desc.name = "intel-mux-gpio";
++	vup->desc.extcon_name = "extcon-usb-gpio";
++	vup->desc.ops = &vuport_ops;
++	vup->desc.initial_state = -1;
++	dev_set_drvdata(dev, vup);
++	vup->pdev = portmux_register(&vup->desc);
++
++	return PTR_ERR_OR_ZERO(vup->pdev);
++}
++
++static int vuport_remove(struct platform_device *pdev)
++{
++	struct vuport *vup;
++
++	vup = platform_get_drvdata(pdev);
++	portmux_unregister(vup->pdev);
++
++	return 0;
++}
++
++#ifdef CONFIG_PM_SLEEP
++/*
++ * In case a micro A cable was plugged in while device was sleeping,
++ * we missed the interrupt. We need to poll usb id gpio when waking the
++ * driver to detect the missed event.
++ * We use 'complete' callback to give time to all extcon listeners to
++ * resume before we send new events.
++ */
++static void vuport_complete(struct device *dev)
++{
++	struct vuport *vup;
++
++	vup = dev_get_drvdata(dev);
++	portmux_complete(vup->pdev);
++}
++
++static const struct dev_pm_ops vuport_pm_ops = {
++	.complete = vuport_complete,
++};
++#endif
++
++static const struct platform_device_id vuport_platform_ids[] = {
++	{ .name = "intel-mux-gpio", },
++	{ /* sentinel */ }
++};
++MODULE_DEVICE_TABLE(platform, vuport_platform_ids);
++
++static struct platform_driver vuport_driver = {
++	.driver = {
++		.name = "intel-mux-gpio",
++#ifdef CONFIG_PM_SLEEP
++		.pm = &vuport_pm_ops,
++#endif
++	},
++	.probe = vuport_probe,
++	.remove = vuport_remove,
++	.id_table = vuport_platform_ids,
++};
++
++module_platform_driver(vuport_driver);
++
++MODULE_AUTHOR("David Cohen <david.a.cohen@linux.intel.com>");
++MODULE_AUTHOR("Lu Baolu <baolu.lu@linux.intel.com>");
++MODULE_DESCRIPTION("Intel USB gpio mux driver");
++MODULE_LICENSE("GPL v2");
+diff --git a/include/linux/console.h b/include/linux/console.h
+index b8920a0..56dd8e9 100644
+--- a/include/linux/console.h
++++ b/include/linux/console.h
+@@ -141,6 +141,7 @@ struct console {
+ 	struct tty_driver *(*device)(struct console *, int *);
+ 	void	(*unblank)(void);
+ 	int	(*setup)(struct console *, char *);
++	void	(*exit)(struct console *);
+ 	int	(*match)(struct console *, char *name, int idx, char *options);
+ 	short	flags;
+ 	short	index;
 diff --git a/include/linux/hid-sensor-ids.h b/include/linux/hid-sensor-ids.h
 index 76033e0..20b89a5 100644
 --- a/include/linux/hid-sensor-ids.h
@@ -1308,6 +5492,304 @@ index 76033e0..20b89a5 100644
  
  /* Power state enumerations */
  #define HID_USAGE_SENSOR_PROP_POWER_STATE_UNDEFINED_ENUM	0x200850
+diff --git a/include/linux/platform_data/sbi_apl.h b/include/linux/platform_data/sbi_apl.h
+new file mode 100644
+index 0000000..7cd6889
+--- /dev/null
++++ b/include/linux/platform_data/sbi_apl.h
+@@ -0,0 +1,67 @@
++#ifndef SBI_APL_H
++#define SBI_APL_H
++
++#define SBI_ADDR_OFFSET 0xD0
++#define SBI_DATA_OFFSET 0xD4
++#define SBI_STAT_OFFSET 0xD8
++#define SBI_ROUT_OFFSET 0xDA
++#define SBI_EADD_OFFSET 0xDC
++
++/* Status register */
++#define SBI_STAT_POSTED_MASK      0x01
++#define SBI_STAT_STATUS_MASK      0x03
++#define SBI_STAT_BYTE_ENABLE_MASK 0x0F
++#define SBI_STAT_BAR_MASK         0x07
++#define SBI_STAT_BUSY_MASK        0x01
++
++#define SBI_APL_SET_POSTED(msg, val) \
++	((msg)->posted = ((val) & SBI_STAT_POSTED_MASK))
++#define SBI_APL_SET_STATUS(msg, val) \
++	((msg)->status = ((val) & SBI_STAT_STATUS_MASK))
++#define SBI_APL_SET_BYTE_ENABLE(msg, val) \
++	((msg)->byte_enable = ((val) & SBI_STAT_BYTE_ENABLE_MASK))
++#define SBI_APL_SET_BAR(msg, val) \
++	((msg)->base_address_register = ((val) & SBI_STAT_BAR_MASK))
++
++#define SBI_APL_SET(msg, port, reg, data, opcode, \
++		posted, status, be, bar, funct, eaddr) \
++	do { \
++		(msg)->port_address = (port); \
++		(msg)->register_offset = (reg); \
++		(msg)->data = (data); \
++		SBI_APL_SET_POSTED(msg, opcode); \
++		SBI_STAT_STATUS_MASK(msg, status); \
++		SBI_APL_SET_BYTE_ENABLE(msg, be); \
++		SBI_APL_SET_BAR(msg, bar); \
++		(msg)->function_id = (funct); \
++		(msg)->extended_register_address = (eaddr); \
++	} while (0)
++
++struct sbi_platform_data {
++	const char *name;
++	unsigned int version;
++	unsigned int bus;
++	unsigned int p2sb;
++	struct mutex *lock;
++};
++
++struct sbi_apl_message {
++	u8  port_address;
++	u16 register_offset;
++	u32 data;
++	u8  opcode;
++	/* 1-bit */
++	u8  posted;
++	/* 2-bit */
++	u8  status;
++	/* 4-bit */
++	u8  byte_enable;
++	/* 3-bit */
++	u8  base_address_register;
++	u8  function_id;
++	u32 extended_register_address;
++};
++
++int sbi_apl_commit(struct sbi_apl_message *args);
++
++#endif
+diff --git a/include/linux/serial_8250.h b/include/linux/serial_8250.h
+index a27ef5f..776dafc 100644
+--- a/include/linux/serial_8250.h
++++ b/include/linux/serial_8250.h
+@@ -40,8 +40,6 @@ struct plat_serial8250_port {
+ 				     struct ktermios *);
+ 	unsigned int	(*get_mctrl)(struct uart_port *);
+ 	int		(*handle_irq)(struct uart_port *);
+-	void		(*pm)(struct uart_port *, unsigned int state,
+-			      unsigned old);
+ 	void		(*handle_break)(struct uart_port *);
+ };
+ 
+@@ -102,6 +100,7 @@ struct uart_8250_port {
+ 	bool			fifo_bug;	/* min RX trigger if enabled */
+ 	unsigned int		tx_loadsz;	/* transmit fifo load size */
+ 	unsigned char		acr;
++	unsigned char		efr;
+ 	unsigned char		fcr;
+ 	unsigned char		ier;
+ 	unsigned char		lcr;
+@@ -110,6 +109,9 @@ struct uart_8250_port {
+ 	unsigned char		mcr_force;	/* mask of forced bits */
+ 	unsigned char		cur_iotype;	/* Running I/O type */
+ 	unsigned int		rpm_tx_active;
++	unsigned int		baud;
++	unsigned int		quot;
++	unsigned int		frac;
+ 	unsigned char		canary;		/* non-zero during system sleep
+ 						 *   if no_console_suspend
+ 						 */
+@@ -150,6 +152,7 @@ static inline struct uart_8250_port *up_to_u8250p(struct uart_port *up)
+ 
+ extern int early_serial8250_setup(struct earlycon_device *device,
+ 					 const char *options);
++void serial8250_do_restore_context(struct uart_port *port);
+ extern void serial8250_do_set_termios(struct uart_port *port,
+ 		struct ktermios *termios, struct ktermios *old);
+ extern void serial8250_do_set_ldisc(struct uart_port *port,
+@@ -170,6 +173,7 @@ extern void serial8250_do_pm(struct uart_port *port, unsigned int state,
+ void serial8250_console_write(struct uart_8250_port *up, const char *s,
+ 			      unsigned int count);
+ int serial8250_console_setup(struct uart_port *port, char *options, bool probe);
++void serial8250_console_exit(struct uart_port *port);
+ 
+ extern void serial8250_set_isa_configurator(void (*v)
+ 					(int port, struct uart_port *up,
+diff --git a/include/linux/serial_core.h b/include/linux/serial_core.h
+index 74fc82d..4942459 100644
+--- a/include/linux/serial_core.h
++++ b/include/linux/serial_core.h
+@@ -64,8 +64,6 @@ struct uart_ops {
+ 	void		(*set_termios)(struct uart_port *, struct ktermios *new,
+ 				       struct ktermios *old);
+ 	void		(*set_ldisc)(struct uart_port *, struct ktermios *);
+-	void		(*pm)(struct uart_port *, unsigned int state,
+-			      unsigned int oldstate);
+ 
+ 	/*
+ 	 * Return a string describing the type of the port
+@@ -265,25 +263,12 @@ static inline void serial_port_out(struct uart_port *up, int offset, int value)
+ 	up->serial_out(up, offset, value);
+ }
+ 
+-/**
+- * enum uart_pm_state - power states for UARTs
+- * @UART_PM_STATE_ON: UART is powered, up and operational
+- * @UART_PM_STATE_OFF: UART is powered off
+- * @UART_PM_STATE_UNDEFINED: sentinel
+- */
+-enum uart_pm_state {
+-	UART_PM_STATE_ON = 0,
+-	UART_PM_STATE_OFF = 3, /* number taken from ACPI */
+-	UART_PM_STATE_UNDEFINED,
+-};
+-
+ /*
+  * This is the state information which is persistent across opens.
+  */
+ struct uart_state {
+ 	struct tty_port		port;
+ 
+-	enum uart_pm_state	pm_state;
+ 	struct circ_buf		xmit;
+ 
+ 	atomic_t		refcount;
+diff --git a/include/linux/spi/pxa2xx_spi.h b/include/linux/spi/pxa2xx_spi.h
+index 9ec4c14..1af35cf 100644
+--- a/include/linux/spi/pxa2xx_spi.h
++++ b/include/linux/spi/pxa2xx_spi.h
+@@ -47,6 +47,7 @@ struct pxa2xx_spi_chip {
+ 	u8 enable_loopback;
+ 	int gpio_cs;
+ 	void (*cs_control)(u32 command);
++	u32 pio_dma_threshold;
+ };
+ 
+ #if defined(CONFIG_ARCH_PXA) || defined(CONFIG_ARCH_MMP)
+diff --git a/include/linux/usb/portmux.h b/include/linux/usb/portmux.h
+new file mode 100644
+index 0000000..9250028
+--- /dev/null
++++ b/include/linux/usb/portmux.h
+@@ -0,0 +1,78 @@
++/**
++ * intel_mux.h - USB Port Mux definitions
++ *
++ * Copyright (C) 2016 Intel Corporation
++ *
++ * Author: Lu Baolu <baolu.lu@linux.intel.com>
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 as
++ * published by the Free Software Foundation.
++ */
++
++#ifndef __LINUX_USB_PORTMUX_H
++#define __LINUX_USB_PORTMUX_H
++
++/**
++ * struct portmux_ops - ops two switch the port
++ *
++ * @cable_set_cb: function to switch port to host
++ * @cable_unset_cb: function to switch port to device
++ */
++struct portmux_ops {
++	int (*cable_set_cb)(struct device *dev);
++	int (*cable_unset_cb)(struct device *dev);
++};
++
++/**
++ * struct portmux_desc - port mux device descriptor
++ *
++ * @name: the name of the mux device
++ * @extcon_name: the name of extcon device, set to NULL if the mux
++ *               is not connected to any extcon cable  and control
++ *               purely by user through sysfs.
++ * @dev: the parent of the mux device
++ * @ops: ops to switch the port role
++ * @initial_state: the initial state of the mux, set to -1 if the
++ *                 initial state is unknown, set to 0 for device
++ *                 and 1 for host.
++ */
++struct portmux_desc {
++	const char *name;
++	const char *extcon_name;
++	struct device *dev;
++	const struct portmux_ops *ops;
++	int initial_state;
++};
++
++/**
++ * struct portmux_dev - A mux device
++ *
++ * @desc: the descriptor of the mux
++ * @dev: device of this mux
++ * @edev: the extcon device bound to this mux
++ * @nb: notifier of extcon state change
++ * @mux_mutex: lock to serialize port switch operation
++ * @mux_state: state of the mux, could be set to below values
++ *             -1: before initialization
++ *              0: port switched to device
++ *              1: port switched to host
++ */
++struct portmux_dev {
++	const struct portmux_desc *desc;
++	struct device dev;
++	struct extcon_dev *edev;
++	struct notifier_block nb;
++
++	 /* lock for mux_state */
++	struct mutex mux_mutex;
++	int mux_state;
++};
++
++struct portmux_dev *portmux_register(struct portmux_desc *desc);
++void portmux_unregister(struct portmux_dev *pdev);
++#ifdef CONFIG_PM_SLEEP
++void portmux_complete(struct portmux_dev *pdev);
++#endif
++
++#endif /* __LINUX_USB_PORTMUX_H */
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 571ddb4..8657ee3 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -72,6 +72,21 @@ enum scsi_device_event {
+ 	SDEV_EVT_MAXBITS	= SDEV_EVT_LAST + 1
+ };
+ 
++/**
++ * SCSI media change event reasons
++ * @SDEV_MEDIA_ATTACH: a valid medium has been inserted
++ * @SDEV_MEDIA_BAD: an unreadable medium has been inserted into the drive
++ * @SDEV_MEDIA_DETACH: a medium has been removed
++ * @SDEV_MEDIA_UNDEF: no valid reason has been detected
++ */
++enum scsi_media_change_reason {
++	SDEV_MEDIA_ATTACH = 1,
++	SDEV_MEDIA_BAD,
++	SDEV_MEDIA_DETACH,
++	SDEV_MEDIA_UNDEF,
++	SDEV_MEDIA_REASON_MAX = SDEV_MEDIA_UNDEF
++};
++
+ struct scsi_event {
+ 	enum scsi_device_event	evt_type;
+ 	struct list_head	node;
+@@ -191,6 +206,7 @@ struct scsi_device {
+ 	unsigned is_visible:1;	/* is the device visible in sysfs */
+ 	unsigned wce_default_on:1;	/* Cache is ON by default */
+ 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
++	unsigned add_change_reason:1; /* Add media change reason? */
+ 	unsigned broken_fua:1;		/* Don't set FUA bit */
+ 	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
+ 	unsigned unmap_limit_for_ws:1;	/* Use the UNMAP limit for WRITE SAME */
+@@ -221,6 +237,8 @@ struct scsi_device {
+ 	unsigned char		access_state;
+ 	struct mutex		state_mutex;
+ 	enum scsi_device_state sdev_state;
++
++	enum scsi_media_change_reason	last_change_reason;
+ 	unsigned long		sdev_data[0];
+ } __attribute__((aligned(sizeof(unsigned long))));
+ 
 diff --git a/include/uapi/linux/intel-ishtp-clients.h b/include/uapi/linux/intel-ishtp-clients.h
 new file mode 100644
 index 0000000..ac47a55
@@ -1383,3 +5865,17 @@ index 0000000..ac47a55
 +};
 +
 +#endif /* _INTEL_ISHTP_CLIENTS_H */
+diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
+index 512f7c2..5a2675c 100644
+--- a/kernel/printk/printk.c
++++ b/kernel/printk/printk.c
+@@ -2596,6 +2596,9 @@ int unregister_console(struct console *console)
+ 	if (console_drivers != NULL && console->flags & CON_CONSDEV)
+ 		console_drivers->flags |= CON_CONSDEV;
+ 
++	if (console->exit)
++		console->exit(console);
++
+ 	console->flags &= ~CON_ENABLED;
+ 	console_unlock();
+ 	console_sysfs_notify();
