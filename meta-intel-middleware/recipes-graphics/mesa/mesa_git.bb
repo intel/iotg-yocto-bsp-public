@@ -10,7 +10,7 @@ SRC_URI = "git://anongit.freedesktop.org/mesa/mesa;branch=18.0 \
            file://0001-Fix-wayland-protocols-lookup.patch \
           "
 
-PV = "18.1.0-devel"
+PV = "18.2.0-devel"
 
 S = "${WORKDIR}/git"
 
