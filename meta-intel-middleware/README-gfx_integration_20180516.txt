@@ -4,8 +4,8 @@ mesa
 Base: git://anongit.freedesktop.org/mesa/mesa
 Tag: mesa-18.0.0
 Commit ID: d23dc99cc8ab9a31853db66d2bf09c1ff7f2594e
-Patch: 1e3dd150d3d69ff1b94c06e6889aa35bb2d9d3e0 @ https://github.com/intel/external-mesa stable branch
-Version: 18.1.0-devel
+Patch: c3cd0558747f35f74db852b8a5985dee7d0a339d @ https://github.com/intel/external-mesa stable branch
+Version: 18.2.0-devel
 
 libdrm
 ==========================
