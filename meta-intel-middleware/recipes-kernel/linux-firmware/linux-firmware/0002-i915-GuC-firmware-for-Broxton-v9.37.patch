@@ -1,7 +1,7 @@
-From c0d50fa225e438f09eae334aef1b961d9a7f5856 Mon Sep 17 00:00:00 2001
+From 49be3b3d5650b5280c5b2e7d9a5c07dcbc33afd0 Mon Sep 17 00:00:00 2001
 From: Jeff McGee <jeff.mcgee@intel.com>
 Date: Thu, 26 Oct 2017 14:57:49 -0700
-Subject: [PATCH] i915: GuC firmware for Broxton v9.37
+Subject: [PATCH 2/2] i915: GuC firmware for Broxton v9.37
 
 This update includes (since v9.29):
 
@@ -27,12 +27,12 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  create mode 100644 i915/bxt_guc_ver9_37.bin
 
 diff --git a/WHENCE b/WHENCE
-index 7b987b7..f994a5d 100644
+index cf3b041..74a7ceb 100644
 --- a/WHENCE
 +++ b/WHENCE
-@@ -3278,6 +3278,9 @@ Version: Huc API/ABI ver 1 - release 07 for Broxton
- File: i915/bxt_guc_ver9_29.bin
- Version: Guc API/APB ver 9 - release 29 for Broxton
+@@ -3492,6 +3492,9 @@ Version: DMC API/ABI ver 1 - release 07 for Cannonlake
+ File: i915/bxt_huc_ver01_07_2013.bin
+ Version: Huc API/ABI ver 1 - release 07 for Broxton
  
 +File: i915/bxt_guc_ver9_37.bin
 +Version: Guc API/APB ver 9 - release 37 for Broxton

@@ -1,4 +1,4 @@
-From 3c10791070fa114c54824a1314130fabb3f69c04 Mon Sep 17 00:00:00 2001
+From a56be780608d973a7d9856b4eb1ff2dca9256296 Mon Sep 17 00:00:00 2001
 From: Ryan <ryan.wu@intel.com>
 Date: Fri, 23 Sep 2016 14:09:06 -0700
 Subject: [PATCH 1/2] linux-firmware/i915: HuC firmware for Broxton v1.7
@@ -9,19 +9,20 @@ Signed-off-by: Ryan <ryan.wu@intel.com>
 Signed-off-by: Jeff McGee <jeff.mcgee@intel.com>
 Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
 ---
- WHENCE                         |   3 +++
+ WHENCE                         |   4 ++++
  i915/bxt_huc_ver01_07_2013.bin | Bin 0 -> 144768 bytes
- 2 files changed, 3 insertions(+)
+ 2 files changed, 4 insertions(+)
  create mode 100644 i915/bxt_huc_ver01_07_2013.bin
 
 diff --git a/WHENCE b/WHENCE
-index 44b3a81..ae41d26 100644
+index 2fb6048..cf3b041 100644
 --- a/WHENCE
 +++ b/WHENCE
-@@ -3272,6 +3272,9 @@ Version: Guc API/APB ver 8 - release 7 for Broxton
- File: i915/kbl_guc_ver9_14.bin
- Version: Guc API/APB ver 9 release 14 for Kabylake
+@@ -3488,6 +3488,10 @@ Version: DMC API/ABI ver 1 - release 06 for Cannonlake
  
+ File: i915/cnl_dmc_ver1_07.bin
+ Version: DMC API/ABI ver 1 - release 07 for Cannonlake
++
 +File: i915/bxt_huc_ver01_07_2013.bin
 +Version: Huc API/ABI ver 1 - release 07 for Broxton
 +
