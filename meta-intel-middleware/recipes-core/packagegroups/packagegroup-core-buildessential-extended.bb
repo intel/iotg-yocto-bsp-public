@@ -41,7 +41,7 @@ RDEPENDS_packagegroup-core-buildessential-extended = "\
     gtk+3 \
     imagemagick \
     intltool \
-    libpthread-stubs \
+    libpthread-stubs-dev \
     libssp \
     libstdc++ \
     libstdc++-dev \
