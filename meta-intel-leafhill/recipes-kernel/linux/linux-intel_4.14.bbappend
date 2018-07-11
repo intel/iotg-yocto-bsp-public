@@ -4,10 +4,12 @@ SRC_URI_append = " file://leafhill.scc \
            ${@bb.utils.contains('AUDIO_FEATURES', 'ssp', 'file://snd_ssp_intel.scc', '', d)} \
 "
 
-KMETA_BRANCH = "yocto-4.13"
-SRCREV_machine = "b700ffafd0dc5e7a81da64b5e220128330000efd"
-SRCREV_meta = "71dec2980bdda27ba85714b756146c84cfdafeb7"
-LINUX_VERSION = "4.14.40"
+KBRANCH = "4.14/yocto/base"
+SRCREV_machine = "e304288ff17ddf0062d1262ae7ccaa57a40c433d"
+LINUX_VERSION = "4.14.52"
+
+# Enable i2c-dev autoload
+INTEL_COMMON_AUTOLOAD += "i2c-dev"
 
 do_shared_workdir_append() {
        oe_runmake CC="${KERNEL_CC}" LD="${KERNEL_LD}" AR="${KERNEL_AR}" \

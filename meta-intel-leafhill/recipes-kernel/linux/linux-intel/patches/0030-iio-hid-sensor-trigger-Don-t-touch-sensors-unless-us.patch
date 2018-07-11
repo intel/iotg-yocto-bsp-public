@@ -1,0 +1,107 @@
+From 0324d6bc7a74a433d7aed6a224094d0a55ae3c74 Mon Sep 17 00:00:00 2001
+From: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+Date: Wed, 11 Oct 2017 09:35:01 -0700
+Subject: [PATCH 30/43] iio: hid-sensor-trigger: Don't touch sensors unless
+ user space requests
+
+One of the user complained that on his system Thinkpad Yoga S1, with
+commit f1664eaacec3 ("iio: hid-sensor-trigger: Fix the race with user
+space powering up sensors") causes the system to resume immediately
+on suspend (S3 operation). On this system the sensor hub is on USB
+and is a wake up device from S3. So if any sensor sends data on
+motion, the system will wake up. This can be a legitimate use case
+to wake up device motion, but that needs proper user space support
+to set right thresholds.
+
+In fact the above commit didn't cause this regression, but any operation
+which cause sensors to wake up would have caused the same issue. So if
+user reads the raw sensor data, same issue occurs, with or without this
+commit. Only difference is that the above commit by default will trigger
+a power up and power down of sensors as part of runtime pm enable
+(runtime enable will cause a runtime resume callback followed by
+runtime_suspend callback). Previously user has to do some action on
+sensors.
+
+On investigation it was observed that the current driver correctly
+changing the state of all sensors to power off but then also some sensor
+will still send some data. Only option is to never power up any sensor.
+
+Only good option is to:
+- Using sysfs interface disable USB as a wakeup device (This will not
+need any driver change)
+
+Since some user don't care about sensors. So for those users this change
+brings back old functionality. As long as they don't cause any operation
+to power up sensors (like raw read or start iio-sensor-proxy service),
+the sensors will not be to touched. This is done by delaying run time
+enable till user space does some operation with sensors.
+
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=196853
+Signed-off-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+Signed-off-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+(cherry picked from commit ad7532cefd11d11a0814a75fb814c205ee3d9d4c)
+Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+---
+ drivers/iio/common/hid-sensors/hid-sensor-trigger.c | 12 +++++++++---
+ include/linux/hid-sensor-hub.h                      |  1 +
+ 2 files changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/iio/common/hid-sensors/hid-sensor-trigger.c b/drivers/iio/common/hid-sensors/hid-sensor-trigger.c
+index 0e4b379..2c25ff3 100644
+--- a/drivers/iio/common/hid-sensors/hid-sensor-trigger.c
++++ b/drivers/iio/common/hid-sensors/hid-sensor-trigger.c
+@@ -179,6 +179,10 @@ int hid_sensor_power_state(struct hid_sensor_common *st, bool state)
+ 	int ret;
+ 
+ 	atomic_set(&st->user_requested_state, state);
++
++	if (atomic_add_unless(&st->runtime_pm_enable, 1, 1))
++		pm_runtime_enable(&st->pdev->dev);
++
+ 	if (state)
+ 		ret = pm_runtime_get_sync(&st->pdev->dev);
+ 	else {
+@@ -221,7 +225,8 @@ static void hid_sensor_set_power_work(struct work_struct *work)
+ 	if (attrb->latency_ms > 0)
+ 		hid_sensor_set_report_latency(attrb, attrb->latency_ms);
+ 
+-	_hid_sensor_power_state(attrb, true);
++	if (atomic_read(&attrb->user_requested_state))
++		_hid_sensor_power_state(attrb, true);
+ }
+ 
+ static int hid_sensor_data_rdy_trigger_set_state(struct iio_trigger *trig,
+@@ -232,7 +237,9 @@ static int hid_sensor_data_rdy_trigger_set_state(struct iio_trigger *trig,
+ 
+ void hid_sensor_remove_trigger(struct hid_sensor_common *attrb)
+ {
+-	pm_runtime_disable(&attrb->pdev->dev);
++	if (atomic_read(&attrb->runtime_pm_enable))
++		pm_runtime_disable(&attrb->pdev->dev);
++
+ 	pm_runtime_set_suspended(&attrb->pdev->dev);
+ 	pm_runtime_put_noidle(&attrb->pdev->dev);
+ 
+@@ -283,7 +290,6 @@ int hid_sensor_setup_trigger(struct iio_dev *indio_dev, const char *name,
+ 	INIT_WORK(&attrb->work, hid_sensor_set_power_work);
+ 
+ 	pm_suspend_ignore_children(&attrb->pdev->dev, true);
+-	pm_runtime_enable(&attrb->pdev->dev);
+ 	/* Default to 3 seconds, but can be changed from sysfs */
+ 	pm_runtime_set_autosuspend_delay(&attrb->pdev->dev,
+ 					 3000);
+diff --git a/include/linux/hid-sensor-hub.h b/include/linux/hid-sensor-hub.h
+index fc7aae6..331dc37 100644
+--- a/include/linux/hid-sensor-hub.h
++++ b/include/linux/hid-sensor-hub.h
+@@ -231,6 +231,7 @@ struct hid_sensor_common {
+ 	unsigned usage_id;
+ 	atomic_t data_ready;
+ 	atomic_t user_requested_state;
++	atomic_t runtime_pm_enable;
+ 	int poll_interval;
+ 	int raw_hystersis;
+ 	int latency_ms;
+-- 
+1.9.1
+

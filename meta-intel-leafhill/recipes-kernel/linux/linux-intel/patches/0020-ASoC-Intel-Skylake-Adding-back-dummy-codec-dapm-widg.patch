@@ -1,0 +1,81 @@
+From 2e39072817837df9042edc3e5e2d66159211d9fb Mon Sep 17 00:00:00 2001
+From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
+Date: Wed, 20 Jul 2016 16:28:19 +0800
+Subject: [PATCH 20/31] ASoC: Intel: Skylake: Adding back dummy codec dapm
+ widget for all machine drivers
+
+This commit attempts to add back DAPM widgets for all machine
+drivers including dummy codec, WM8731 and also TLV320AIC3107.
+Previous with the removal of DAPM widgets, there will be
+failure on no sink/source widget found, causing no audio
+playback signal.
+
+Signed-off-by: Ho, Yu Xin <yu.xin.ho@intel.com>
+---
+ sound/soc/intel/boards/apli_lhcrb_aic3107M.c | 4 ++++
+ sound/soc/intel/boards/apli_lhcrb_aic3107S.c | 4 ++++
+ sound/soc/intel/boards/apli_lhcrb_dummy.c    | 4 ++++
+ sound/soc/intel/boards/apli_lhcrb_wm8731.c   | 2 ++
+ 4 files changed, 14 insertions(+)
+
+diff --git a/sound/soc/intel/boards/apli_lhcrb_aic3107M.c b/sound/soc/intel/boards/apli_lhcrb_aic3107M.c
+index a1a360b..0e4fc9a 100644
+--- a/sound/soc/intel/boards/apli_lhcrb_aic3107M.c
++++ b/sound/soc/intel/boards/apli_lhcrb_aic3107M.c
+@@ -75,6 +75,10 @@ static int apli_lfcrb_aic3107M_startup(struct snd_pcm_substream *substream)
+ static const struct snd_soc_dapm_widget apli_widgets[] = {
+ 	SND_SOC_DAPM_SPK("SSP1 Speaker", NULL),
+ 	SND_SOC_DAPM_MIC("SSP1 Mic", NULL),
++	SND_SOC_DAPM_SPK("SSP2 Speaker", NULL),
++	SND_SOC_DAPM_MIC("SSP2 Mic", NULL),
++	SND_SOC_DAPM_SPK("SSP4 Speaker", NULL),
++	SND_SOC_DAPM_MIC("SSP4 Mic", NULL),
+ 	SND_SOC_DAPM_HP("Headphone Jack", NULL),
+ 	SND_SOC_DAPM_MIC("Mic Jack", NULL),
+ 	SND_SOC_DAPM_LINE("Line In", NULL),
+diff --git a/sound/soc/intel/boards/apli_lhcrb_aic3107S.c b/sound/soc/intel/boards/apli_lhcrb_aic3107S.c
+index 2921b16..24cf147 100644
+--- a/sound/soc/intel/boards/apli_lhcrb_aic3107S.c
++++ b/sound/soc/intel/boards/apli_lhcrb_aic3107S.c
+@@ -75,6 +75,10 @@ static int apli_lfcrb_aic3107S_startup(struct snd_pcm_substream *substream)
+ static const struct snd_soc_dapm_widget apli_widgets[] = {
+ 	SND_SOC_DAPM_SPK("SSP1 Speaker", NULL),
+ 	SND_SOC_DAPM_MIC("SSP1 Mic", NULL),
++	SND_SOC_DAPM_SPK("SSP2 Speaker", NULL),
++	SND_SOC_DAPM_MIC("SSP2 Mic", NULL),
++	SND_SOC_DAPM_SPK("SSP4 Speaker", NULL),
++	SND_SOC_DAPM_MIC("SSP4 Mic", NULL),
+ 	SND_SOC_DAPM_HP("Headphone Jack", NULL),
+ 	SND_SOC_DAPM_MIC("Mic Jack", NULL),
+ 	SND_SOC_DAPM_LINE("Line In", NULL),
+diff --git a/sound/soc/intel/boards/apli_lhcrb_dummy.c b/sound/soc/intel/boards/apli_lhcrb_dummy.c
+index 546270b..21308cb 100644
+--- a/sound/soc/intel/boards/apli_lhcrb_dummy.c
++++ b/sound/soc/intel/boards/apli_lhcrb_dummy.c
+@@ -69,6 +69,10 @@ static int apli_lfcrb_dummy_startup(struct snd_pcm_substream *substream)
+ };
+ 
+ static const struct snd_soc_dapm_widget apli_widgets[] = {
++	SND_SOC_DAPM_SPK("SSP2 Speaker", NULL),
++	SND_SOC_DAPM_MIC("SSP2 Mic", NULL),
++	SND_SOC_DAPM_SPK("SSP4 Speaker", NULL),
++	SND_SOC_DAPM_MIC("SSP4 Mic", NULL),
+ };
+ 
+ static const struct snd_soc_dapm_route apli_lhcrb_dummy_map[] = {
+diff --git a/sound/soc/intel/boards/apli_lhcrb_wm8731.c b/sound/soc/intel/boards/apli_lhcrb_wm8731.c
+index f9538f4..b9b7bf5 100644
+--- a/sound/soc/intel/boards/apli_lhcrb_wm8731.c
++++ b/sound/soc/intel/boards/apli_lhcrb_wm8731.c
+@@ -72,6 +72,8 @@ static int apli_lfcrb_wm8731_startup(struct snd_pcm_substream *substream)
+ };
+ 
+ static const struct snd_soc_dapm_widget apli_widgets[] = {
++	SND_SOC_DAPM_SPK("SSP2 Speaker", NULL),
++	SND_SOC_DAPM_MIC("SSP2 Mic", NULL),
+ 	SND_SOC_DAPM_SPK("SSP4 Speaker", NULL),
+ 	SND_SOC_DAPM_MIC("SSP4 Mic", NULL),
+ 	SND_SOC_DAPM_HP("Headphone Jack", NULL),
+-- 
+1.9.1
+

@@ -1,0 +1,39 @@
+From 49097e5f7639d7d039ba7334985cfcbc902d6921 Mon Sep 17 00:00:00 2001
+From: Even Xu <even.xu@intel.com>
+Date: Mon, 26 Dec 2016 15:06:52 +0800
+Subject: [PATCH 39/40] misc: intel-ish-clients: Fix reset hang while client
+ connecting
+
+Add ishtp_cl_unlink() in reset handler callback before re-allocated
+an ishtp_cl.
+
+Signed-off-by: Even Xu <even.xu@intel.com>
+Signed-off-by: Ooi, Joyce <joyce.ooi@intel.com>
+Signed-off-by: Ruslan, Rusaimi Amira <rusaimi.amira.ruslan@intel.com>
+---
+ drivers/misc/intel-ish-client/intel-ishtp-clients.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/misc/intel-ish-client/intel-ishtp-clients.c b/drivers/misc/intel-ish-client/intel-ishtp-clients.c
+index 71c8b1a..3d8de4b 100644
+--- a/drivers/misc/intel-ish-client/intel-ishtp-clients.c
++++ b/drivers/misc/intel-ish-client/intel-ishtp-clients.c
+@@ -20,6 +20,7 @@
+ #include <linux/fs.h>
+ #include <linux/interrupt.h>
+ #include <linux/intel-ishtp-clients.h>
++#include <linux/sched/signal.h>
+ #include <linux/ioctl.h>
+ #include <linux/kernel.h>
+ #include <linux/miscdevice.h>
+@@ -668,6 +669,7 @@ static void ishtp_cl_reset_handler(struct work_struct *work)
+ 
+ 	cl = ishtp_cl_misc->cl;
+ 	if (cl) {
++		ishtp_cl_unlink(cl);
+ 		ishtp_cl_flush_queues(cl);
+ 		ishtp_cl_free(cl);
+ 
+-- 
+1.9.1
+

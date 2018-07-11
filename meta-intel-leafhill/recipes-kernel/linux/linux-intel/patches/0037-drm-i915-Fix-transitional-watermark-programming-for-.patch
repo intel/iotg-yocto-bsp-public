@@ -1,0 +1,32 @@
+From 13959e897f63e70e63aa1f3ec6ab281a08dd5cfa Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Fri, 22 Jun 2018 15:02:34 -0700
+Subject: [PATCH 37/41] drm/i915: Fix transitional watermark programming for
+ !gvt
+
+The OTC production kernel integrated some buggy GVT code that included a
+copy/paste error for the !gvt branch of an #ifdef; instead of
+programming the transitional watermark as upstream does, it tried to
+program an (invalid) extra level of regular plane watermarks.
+
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_pm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
+index bf3980d..9e97a2f 100644
+--- a/drivers/gpu/drm/i915/intel_pm.c
++++ b/drivers/gpu/drm/i915/intel_pm.c
+@@ -4907,7 +4907,7 @@ static void skl_write_plane_wm(struct intel_crtc *intel_crtc,
+ 				&wm->trans_wm);
+ 	}
+ #else
+-	skl_write_wm_level(dev_priv, PLANE_WM(pipe, plane_id, level),
++	skl_write_wm_level(dev_priv, PLANE_WM_TRANS(pipe, plane_id),
+ 			&wm->trans_wm);
+ #endif
+ 
+-- 
+1.9.1
+

@@ -1,0 +1,56 @@
+From d841e5e3d9182132ef98e80e170cea431b909efe Mon Sep 17 00:00:00 2001
+From: Joshua Wong Weng Onn <joshua.weng.onn.wong@intel.com>
+Date: Tue, 3 Jul 2018 09:07:21 +0800
+Subject: [PATCH 23/96] ASoC: Intel: Revert "ASoC: Intel: Skylake: Remove
+ unused soc component and topology param definition that causes kernel crash"
+
+This reverts commit a4dbe6c82fe6654930489d978994112399e4e1f9
+
+This patch is reverted to enable snd_controls so that dsp log level selection
+and sampling rate settings can be adjusted via alsamixer.
+
+Signed-off-by: Joshua Wong Weng Onn <joshua.weng.onn.wong@intel.com>
+---
+ sound/soc/intel/skylake/skl-pcm.c      |  4 ++--
+ sound/soc/intel/skylake/skl-topology.c | 10 +++++-----
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index bcb3aed..cf4469f 100755
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -2391,8 +2391,8 @@ static int skl_platform_soc_probe(struct snd_soc_platform *platform)
+ 
+ static const struct snd_soc_component_driver skl_component = {
+ 	.name           = "pcm",
+-	// .controls	= skl_controls,
+-	// .num_controls	= ARRAY_SIZE(skl_controls),
++	.controls	= skl_controls,
++	.num_controls	= ARRAY_SIZE(skl_controls),
+ };
+ 
+ /*
+diff --git a/sound/soc/intel/skylake/skl-topology.c b/sound/soc/intel/skylake/skl-topology.c
+index 65b83e8..6c457c8 100755
+--- a/sound/soc/intel/skylake/skl-topology.c
++++ b/sound/soc/intel/skylake/skl-topology.c
+@@ -3285,11 +3285,11 @@ int skl_tplg_change_notification_get(struct snd_kcontrol *kcontrol,
+ 		.get = skl_tplg_mic_control_get,
+ 		.put = skl_tplg_mic_control_set,
+ 	},
+-	// {
+-		// .id = SKL_CONTROL_TYPE_MULTI_IO_SELECT,
+-		// .get = skl_tplg_multi_config_get,
+-		// .put = skl_tplg_multi_config_set,
+-	// },
++	{
++		.id = SKL_CONTROL_TYPE_MULTI_IO_SELECT,
++		.get = skl_tplg_multi_config_get,
++		.put = skl_tplg_multi_config_set,
++	},
+ 	{
+ 		.id = SKL_CONTROL_TYPE_VOLUME,
+ 		.info = skl_tplg_volume_ctl_info,
+-- 
+1.9.1
+

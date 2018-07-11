@@ -1,0 +1,73 @@
+From 6103d3bfd09e19f6ff6152f20de3cb76d46c0cdf Mon Sep 17 00:00:00 2001
+From: Even Xu <even.xu@intel.com>
+Date: Fri, 23 Dec 2016 09:22:23 +0800
+Subject: [PATCH 02/43] hid: intel-ish-hid: ishtp: add helper function for
+ driver data get/set
+
+Add helper function ishtp_set_drvdata() and ishtp_get_drvdata() for
+different ISH client drivers to set/get private driver data.
+
+Signed-off-by: Even Xu <even.xu@intel.com>
+Reviewed-by: Andriy Shevchenko <andriy.shevchenko@intel.com>
+Acked-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+Signed-off-by: Ruslan, Rusaimi Amira <rusaimi.amira.ruslan@intel.com>
+---
+ drivers/hid/intel-ish-hid/ishtp/bus.c | 27 +++++++++++++++++++++++++++
+ drivers/hid/intel-ish-hid/ishtp/bus.h |  3 +++
+ 2 files changed, 30 insertions(+)
+
+diff --git a/drivers/hid/intel-ish-hid/ishtp/bus.c b/drivers/hid/intel-ish-hid/ishtp/bus.c
+index f272cdd..3fef73a 100644
+--- a/drivers/hid/intel-ish-hid/ishtp/bus.c
++++ b/drivers/hid/intel-ish-hid/ishtp/bus.c
+@@ -564,6 +564,33 @@ void ishtp_put_device(struct ishtp_cl_device *cl_device)
+ EXPORT_SYMBOL(ishtp_put_device);
+ 
+ /**
++ * ishtp_set_drvdata() - set client driver data
++ * @cl_device:	client device instance
++ * @data:	driver data need to be set
++ *
++ * Set client driver data to cl_device->driver_data.
++ */
++void ishtp_set_drvdata(struct ishtp_cl_device *cl_device, void *data)
++{
++	cl_device->driver_data = data;
++}
++EXPORT_SYMBOL(ishtp_set_drvdata);
++
++/**
++ * ishtp_get_drvdata() - get client driver data
++ * @cl_device:	client device instance
++ *
++ * Get client driver data from cl_device->driver_data.
++ *
++ * Return: pointer of driver data
++ */
++void *ishtp_get_drvdata(struct ishtp_cl_device *cl_device)
++{
++	return cl_device->driver_data;
++}
++EXPORT_SYMBOL(ishtp_get_drvdata);
++
++/**
+  * ishtp_bus_new_client() - Create a new client
+  * @dev:	ISHTP device instance
+  *
+diff --git a/drivers/hid/intel-ish-hid/ishtp/bus.h b/drivers/hid/intel-ish-hid/ishtp/bus.h
+index a1ffae7..8888331 100644
+--- a/drivers/hid/intel-ish-hid/ishtp/bus.h
++++ b/drivers/hid/intel-ish-hid/ishtp/bus.h
+@@ -101,6 +101,9 @@ void	ishtp_bus_remove_all_clients(struct ishtp_device *ishtp_dev,
+ void	ishtp_put_device(struct ishtp_cl_device *);
+ void	ishtp_get_device(struct ishtp_cl_device *);
+ 
++void	ishtp_set_drvdata(struct ishtp_cl_device *cl_device, void *data);
++void	*ishtp_get_drvdata(struct ishtp_cl_device *cl_device);
++
+ int	__ishtp_cl_driver_register(struct ishtp_cl_driver *driver,
+ 				   struct module *owner);
+ #define ishtp_cl_driver_register(driver)		\
+-- 
+1.9.1
+

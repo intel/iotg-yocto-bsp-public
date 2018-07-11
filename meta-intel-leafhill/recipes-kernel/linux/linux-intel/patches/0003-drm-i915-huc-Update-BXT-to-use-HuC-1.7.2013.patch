@@ -1,0 +1,27 @@
+From b2c82b09675b366f727c060929af7da9262e3ef4 Mon Sep 17 00:00:00 2001
+From: Jeff McGee <jeff.mcgee@intel.com>
+Date: Tue, 7 Mar 2017 08:42:32 -0800
+Subject: [PATCH 03/41] drm/i915/huc: Update BXT to use HuC 1.7.2013
+
+Signed-off-by: Jeff McGee <jeff.mcgee@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_huc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_huc.c b/drivers/gpu/drm/i915/intel_huc.c
+index 637c8d5..cf2296f 100644
+--- a/drivers/gpu/drm/i915/intel_huc.c
++++ b/drivers/gpu/drm/i915/intel_huc.c
+@@ -42,7 +42,7 @@
+ 
+ #define BXT_HUC_FW_MAJOR 01
+ #define BXT_HUC_FW_MINOR 07
+-#define BXT_BLD_NUM 1398
++#define BXT_BLD_NUM 2013
+ 
+ #define SKL_HUC_FW_MAJOR 01
+ #define SKL_HUC_FW_MINOR 07
+-- 
+1.9.1
+

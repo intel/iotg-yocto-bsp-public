@@ -1,0 +1,48 @@
+From 39ce8a9663aa4e17a49b860ffec62880605bf268 Mon Sep 17 00:00:00 2001
+From: Craig Kewley <craigx.kewley@intel.com>
+Date: Fri, 30 Jun 2017 15:00:23 +0100
+Subject: [PATCH 68/96] ASoC: Intel: Boards: remove dependency on TDF8532 codec
+
+The TDF8532 codec driver has been removed. Remove the dependency in the
+machine driver DAI link and machine driver kernel config.
+
+Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
+
+Conflicts:
+	sound/soc/intel/Kconfig
+---
+ sound/soc/intel/boards/Kconfig     | 2 +-
+ sound/soc/intel/boards/bxt_gpmrb.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
+index ca1f1f0..eb62359 100644
+--- a/sound/soc/intel/boards/Kconfig
++++ b/sound/soc/intel/boards/Kconfig
+@@ -377,7 +377,7 @@ config SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH
+ 	   If unsure select "N".
+ 
+ config SND_SOC_INTEL_BXT_GPMRB_MACH
+-	tristate "ASoC Audio driver for BXT IVI GP MRB"
++	tristate "ASoC Audio driver for BXT IVI GP MRB with Dummy codec"
+ 	select SND_SOC_INTEL_SST
+ 	select SND_SOC_TDF8532
+ 	select SND_SOC_COMPRESS
+diff --git a/sound/soc/intel/boards/bxt_gpmrb.c b/sound/soc/intel/boards/bxt_gpmrb.c
+index 83fbd94..42a36cc 100644
+--- a/sound/soc/intel/boards/bxt_gpmrb.c
++++ b/sound/soc/intel/boards/bxt_gpmrb.c
+@@ -492,8 +492,8 @@ static int broxton_gpmrb_tdf8532_startup(struct snd_pcm_substream *substream)
+ 		.name = "SSP4-Codec",
+ 		.be_id = 0,
+ 		.cpu_dai_name = "SSP4 Pin",
+-		.codec_name = "i2c-INT34C3:00",
+-		.codec_dai_name = "tdf8532-hifi",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
+ 		.platform_name = "0000:00:0e.0",
+ 		.dpcm_playback = 1,
+ 		.no_pcm = 1,
+-- 
+1.9.1
+

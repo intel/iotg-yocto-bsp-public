@@ -1,0 +1,143 @@
+From 5bde4ccf1bc7c9ef649f230a63c14db5174f88db Mon Sep 17 00:00:00 2001
+From: Damien Lespiau <damien.lespiau@intel.com>
+Date: Mon, 7 May 2018 13:32:07 -0700
+Subject: [PATCH 06/41] drm: Introduce the blend-func property (v3)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+We'd like to be able to program the blending modes of display planes.
+Ville suggested to use something similar to the GL blend states, which
+does seem like a good idea.
+
+For now, we only consider blend factors, but room is left for
+extensions: blend equation, separate rgb/alpha blend factors, blend
+color.
+
+V2: Added the belnd func property support in get property.
+
+v3 (by Matt):
+ - Move checking to intel_plane_atomic_check()
+ - Reject garbage bits in the blending function value
+ - Add DRM_DEBUG_KMS() messages on check failures
+ - Make property atomic-only
+
+Suggested-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Signed-off-by: Damien Lespiau <damien.lespiau@intel.com>
+Signed-off-by: Vandita Kulkarni <vandita.kulkarni@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
+Signed-off-by: Paauwe, Bob J <bob.j.paauwe@intel.com>
+---
+ drivers/gpu/drm/drm_atomic.c      |  4 ++++
+ drivers/gpu/drm/drm_mode_config.c |  6 ++++++
+ include/drm/drm_blend.h           | 13 +++++++++++++
+ include/drm/drm_mode_config.h     |  5 +++++
+ include/drm/drm_plane.h           |  7 +++++++
+ 5 files changed, 35 insertions(+)
+
+diff --git a/drivers/gpu/drm/drm_atomic.c b/drivers/gpu/drm/drm_atomic.c
+index e4b8373..3e7221c 100644
+--- a/drivers/gpu/drm/drm_atomic.c
++++ b/drivers/gpu/drm/drm_atomic.c
+@@ -783,6 +783,8 @@ static int drm_atomic_plane_set_property(struct drm_plane *plane,
+ 		state->rotation = val;
+ 	} else if (property == plane->zpos_property) {
+ 		state->zpos = val;
++	} else if (property == config->prop_blend_func) {
++		state->blend_mode.func = val;
+ 	} else if (plane->funcs->atomic_set_property) {
+ 		return plane->funcs->atomic_set_property(plane, state,
+ 				property, val);
+@@ -842,6 +844,8 @@ static int drm_atomic_plane_set_property(struct drm_plane *plane,
+ 		*val = state->rotation;
+ 	} else if (property == plane->zpos_property) {
+ 		*val = state->zpos;
++	} else if (property == config->prop_blend_func) {
++		*val = state->blend_mode.func;
+ 	} else if (plane->funcs->atomic_get_property) {
+ 		return plane->funcs->atomic_get_property(plane, state, property, val);
+ 	} else {
+diff --git a/drivers/gpu/drm/drm_mode_config.c b/drivers/gpu/drm/drm_mode_config.c
+index 47647bc..18cdd46 100644
+--- a/drivers/gpu/drm/drm_mode_config.c
++++ b/drivers/gpu/drm/drm_mode_config.c
+@@ -351,6 +351,12 @@ static int drm_mode_create_standard_properties(struct drm_device *dev)
+ 		return -ENOMEM;
+ 	dev->mode_config.modifiers_property = prop;
+ 
++	prop = drm_property_create_range(dev, DRM_MODE_PROP_ATOMIC,
++					 "blend_func", 0, U32_MAX);
++	if (!prop)
++		return -ENOMEM;
++	dev->mode_config.prop_blend_func = prop;
++
+ 	return 0;
+ }
+ 
+diff --git a/include/drm/drm_blend.h b/include/drm/drm_blend.h
+index 6a810da..7482986 100644
+--- a/include/drm/drm_blend.h
++++ b/include/drm/drm_blend.h
+@@ -154,4 +154,17 @@ int drm_atomic_normalize_zpos(struct drm_device *dev,
+ #define DRM_RGBA_BLUEBITS(c, bits)  drm_rgba_bits(c, 16, bits)
+ #define DRM_RGBA_ALPHABITS(c, bits) drm_rgba_bits(c, 0, bits)
+ 
++enum drm_blend_factor {
++	DRM_BLEND_FACTOR_AUTO,
++	DRM_BLEND_FACTOR_ZERO,
++	DRM_BLEND_FACTOR_ONE,
++	DRM_BLEND_FACTOR_SRC_ALPHA,
++	DRM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
++};
++
++#define DRM_BLEND_FUNC(src_factor, dst_factor)         \
++	(DRM_BLEND_FACTOR_##src_factor << 16 | DRM_BLEND_FACTOR_##dst_factor)
++#define DRM_BLEND_FUNC_SRC_FACTOR(val) (((val) >> 16) & 0xffff)
++#define DRM_BLEND_FUNC_DST_FACTOR(val) ((val) & 0xffff)
++
+ #endif
+diff --git a/include/drm/drm_mode_config.h b/include/drm/drm_mode_config.h
+index f1aefd5..219fcdb 100644
+--- a/include/drm/drm_mode_config.h
++++ b/include/drm/drm_mode_config.h
+@@ -741,6 +741,11 @@ struct drm_mode_config {
+ 	struct drm_property *gamma_lut_size_property;
+ 
+ 	/**
++	 * @prop_blend_func: GL-style plane blending factors
++	 */
++	struct drm_property *prop_blend_func;
++
++	/**
+ 	 * @suggested_x_property: Optional connector property with a hint for
+ 	 * the position of the output on the host's screen.
+ 	 */
+diff --git a/include/drm/drm_plane.h b/include/drm/drm_plane.h
+index 73f90f9d..ad553c3 100644
+--- a/include/drm/drm_plane.h
++++ b/include/drm/drm_plane.h
+@@ -31,6 +31,10 @@
+ struct drm_printer;
+ struct drm_modeset_acquire_ctx;
+ 
++struct drm_blend_mode {
++	uint64_t func;
++};
++
+ /**
+  * struct drm_plane_state - mutable plane state
+  * @plane: backpointer to the plane
+@@ -108,6 +112,9 @@ struct drm_plane_state {
+ 	/* Plane rotation */
+ 	unsigned int rotation;
+ 
++	/* GL-style plane blending factors */
++	struct drm_blend_mode blend_mode;
++
+ 	/* Plane zpos */
+ 	unsigned int zpos;
+ 	unsigned int normalized_zpos;
+-- 
+1.9.1
+

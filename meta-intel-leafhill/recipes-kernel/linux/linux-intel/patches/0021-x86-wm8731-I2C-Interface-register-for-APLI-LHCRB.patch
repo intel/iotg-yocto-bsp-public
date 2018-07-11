@@ -1,0 +1,132 @@
+From c75746d7b0a3b60af868a42d3f4a38e83f02e186 Mon Sep 17 00:00:00 2001
+From: "SengKai,Tan" <seng.kai.tan@intel.com>
+Date: Mon, 4 Jul 2016 17:44:07 +0800
+Subject: [PATCH 21/31] x86: wm8731 I2C Interface register for APLI LHCRB
+
+This commit register I2C bus 3 for wm8731 codec specific for
+Apollo Lake-I Leaf Hill CRB
+
+Signed-off-by: Tan, Seng Kai <seng.kai.tan@intel.com>
+---
+ arch/x86/Kconfig                                   |  8 +++
+ arch/x86/platform/Makefile                         |  1 +
+ arch/x86/platform/apli_lhcrb/Makefile              |  1 +
+ .../platform/apli_lhcrb/apli_lhcrb_wm8731_i2c.c    | 70 ++++++++++++++++++++++
+ 4 files changed, 80 insertions(+)
+ create mode 100644 arch/x86/platform/apli_lhcrb/Makefile
+ create mode 100644 arch/x86/platform/apli_lhcrb/apli_lhcrb_wm8731_i2c.c
+
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index b4d015e..7985fbb 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -672,6 +672,14 @@ config X86_32_NON_STANDARD
+ 	  kernel. If you select them all, kernel will probe it one by
+ 	  one and will fallback to default.
+ 
++config X86_INTEL_APLI_LHCRB_WM8731
++	tristate "Intel Apollo Lake-I Leaf Hill I2C Interface for WM8731 Codec "
++	depends on X86_INTEL_LPSS
++	---help---
++	  This option enables Apollo Lake-I Leaf Hill CRB I2C interface
++	  bus 3 access for wm8731 codec.
++	  If you do not have one of these chips, you should say N here.
++
+ # Alphabetically sorted list of Non standard 32 bit platforms
+ 
+ config X86_SUPPORTS_MEMORY_FAILURE
+diff --git a/arch/x86/platform/Makefile b/arch/x86/platform/Makefile
+index d0e8354..f55cbb0 100644
+--- a/arch/x86/platform/Makefile
++++ b/arch/x86/platform/Makefile
+@@ -14,3 +14,4 @@ obj-y	+= scx200/
+ obj-y	+= sfi/
+ obj-y	+= ts5500/
+ obj-y	+= uv/
++obj-y	+= apli_lhcrb/
+diff --git a/arch/x86/platform/apli_lhcrb/Makefile b/arch/x86/platform/apli_lhcrb/Makefile
+new file mode 100644
+index 0000000..5812671
+--- /dev/null
++++ b/arch/x86/platform/apli_lhcrb/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_X86_INTEL_APLI_LHCRB_WM8731) += apli_lhcrb_wm8731_i2c.o
+diff --git a/arch/x86/platform/apli_lhcrb/apli_lhcrb_wm8731_i2c.c b/arch/x86/platform/apli_lhcrb/apli_lhcrb_wm8731_i2c.c
+new file mode 100644
+index 0000000..c47971f
+--- /dev/null
++++ b/arch/x86/platform/apli_lhcrb/apli_lhcrb_wm8731_i2c.c
+@@ -0,0 +1,70 @@
++/*
++ * I2C Platform initialize for Apollo Lake Machine Driver
++ * Copyright (c) 2016, Intel Corporation.
++ *
++ * This program is free software; you can redistribute it and/or modify it
++ * under the terms and conditions of the GNU General Public License,
++ * version 2, as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope it will be useful, but WITHOUT
++ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
++ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
++ * more details.
++ *
++ */
++
++#include <linux/module.h>
++#include <linux/init.h>
++#include <linux/i2c.h>
++
++
++#define WM8731_I2C_ADDRESS	0x1a
++#define AUDIO_I2C_CHANNEL	3
++
++static struct i2c_client *client;
++
++static const struct i2c_board_info i2c_bus_info[] __initconst = {
++	{ I2C_BOARD_INFO("wm8731", WM8731_I2C_ADDRESS) },
++};
++
++static int __init apli_lhcrb_wm8731_i2c_init(void)
++{
++	int i;
++	struct i2c_adapter *adapter = NULL;
++
++	adapter = i2c_get_adapter(AUDIO_I2C_CHANNEL);
++	if (!adapter) {
++		pr_warn("i2c adapter not found\n");
++		goto exit;
++	}
++
++	client = i2c_new_device(adapter, &i2c_bus_info[0]);
++	if (client == NULL) {
++		pr_warn("i2c new device failed\n");
++		goto exit;
++	}
++
++	i2c_put_adapter(adapter);
++
++	return 0;
++
++exit:
++	i2c_put_adapter(adapter);
++	if (client)
++		i2c_unregister_device(client);
++	return -EIO;
++
++}
++
++static void __exit apli_lhcrb_wm8731_i2c_exit(void)
++{
++	if (client)
++		i2c_unregister_device(client);
++}
++
++device_initcall(apli_lhcrb_wm8731_i2c_init);
++module_exit(apli_lhcrb_wm8731_i2c_exit);
++
++MODULE_DESCRIPTION("Intel Apolo Lake-I Leaf Hill ASoC Machine Driver Init");
++MODULE_LICENSE("GPL v2");
++MODULE_ALIAS("platform:lfcrb_wm8731_i2s");
+-- 
+1.9.1
+

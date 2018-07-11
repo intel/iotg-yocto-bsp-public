@@ -1,0 +1,141 @@
+From e2fb97b917a17b8392d22bb24a1a98eaa903b6e1 Mon Sep 17 00:00:00 2001
+From: lmcneilx <lornax.mcneil@intel.com>
+Date: Tue, 27 Mar 2018 11:31:26 +0100
+Subject: [PATCH 94/96] ASoC: TDF8532: add macro to reduce code size
+
+Repeated code has been replaced by a macro call, reducing the code size
+and making code less complex
+
+Signed-off-by: lmcneilx <lornax.mcneil@intel.com>
+---
+ sound/soc/codecs/tdf8532.c | 38 +++++++++++++++-----------------------
+ sound/soc/codecs/tdf8532.h |  7 ++++---
+ 2 files changed, 19 insertions(+), 26 deletions(-)
+
+diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
+index 067bad2..b7b4151 100644
+--- a/sound/soc/codecs/tdf8532.c
++++ b/sound/soc/codecs/tdf8532.c
+@@ -21,6 +21,9 @@
+ #include <sound/pcm_params.h>
+ #include "tdf8532.h"
+ 
++/* forward declarations */
++static int tdf8532_check_dev_error(struct tdf8532_priv *dev_data);
++
+ static int __tdf8532_build_pkt(struct tdf8532_priv *dev_data, va_list valist,
+ 					u8 *payload)
+ {
+@@ -49,7 +52,7 @@ static int __tdf8532_build_pkt(struct tdf8532_priv *dev_data, va_list valist,
+ }
+ 
+ /* Use macro instead */
+-static int __tdf8532_single_write(struct tdf8532_priv *dev_data,
++static int __tdf8532_single_write(struct tdf8532_priv *dev_data, int check_err,
+ 					int dummy, ...)
+ {
+ 	struct device *dev = &(dev_data->i2c->dev);
+@@ -72,12 +75,15 @@ static int __tdf8532_single_write(struct tdf8532_priv *dev_data,
+ 		dev_err(dev, "i2c send packet returned: %d\n", ret);
+ 
+ 	mdelay(2);
++
++	if (check_err)
++		ret = tdf8532_check_dev_error(dev_data);
++
+ 	dev_data->pkt_id++;
+ 
+ 	return ret;
+ }
+ 
+-
+ static uint8_t tdf8532_read_wait_ack(struct tdf8532_priv *dev_data,
+ 						unsigned long timeout_val)
+ {
+@@ -185,7 +191,7 @@ static int tdf8532_get_state(struct tdf8532_priv *dev_data, u8 *state)
+ 	return ret;
+ }
+ 
+-static int tdf8532_dump_dev_error(struct tdf8532_priv *dev_data)
++static int tdf8532_check_dev_error(struct tdf8532_priv *dev_data)
+ {
+ 	struct device *dev = &(dev_data->i2c->dev);
+ 	char *repl_buff = NULL;
+@@ -248,24 +254,17 @@ static int tdf8532_start_play(struct tdf8532_priv *tdf8532)
+ {
+ 	int ret;
+ 
+-	ret = tdf8532_amp_write(tdf8532, SET_CHNL_ENABLE,
++	ret = tdf8532_amp_write_check_err(tdf8532, SET_CHNL_ENABLE,
+ 			CHNL_MASK(tdf8532->channels));
+ 
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	ret = tdf8532_dump_dev_error(tdf8532);
+-	if (ret < 0)
+-		return ret;
+-
+-	ret = tdf8532_amp_write(tdf8532, SET_CLK_STATE, CLK_CONNECT);
++	ret = tdf8532_amp_write_check_err(tdf8532, SET_CLK_STATE, CLK_CONNECT);
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	ret = tdf8532_dump_dev_error(tdf8532);
+-
+-	if (ret >= 0)
+-		ret = tdf8532_wait_state_or_higher(tdf8532, STATE_PLAY,
++	ret = tdf8532_wait_state_or_higher(tdf8532, STATE_PLAY,
+ 				ACK_TIMEOUT);
+ 
+ 	return ret;
+@@ -276,24 +275,17 @@ static int tdf8532_stop_play(struct tdf8532_priv *tdf8532)
+ {
+ 	int ret;
+ 
+-	ret = tdf8532_amp_write(tdf8532, SET_CHNL_DISABLE,
++	ret = tdf8532_amp_write_check_err(tdf8532, SET_CHNL_DISABLE,
+ 			CHNL_MASK(tdf8532->channels));
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = tdf8532_dump_dev_error(tdf8532);
+-	if (ret < 0)
+-		goto out;
+-
+ 	ret = tdf8532_wait_state(tdf8532, STATE_STBY, ACK_TIMEOUT);
+ 	if (ret < 0)
+ 		goto out;
+ 
+-	ret = tdf8532_amp_write(tdf8532, SET_CLK_STATE, CLK_DISCONNECT);
+-	if (ret < 0)
+-		goto out;
+-
+-	ret = tdf8532_dump_dev_error(tdf8532);
++	ret = tdf8532_amp_write_check_err(tdf8532, SET_CLK_STATE,
++						CLK_DISCONNECT);
+ 	if (ret < 0)
+ 		goto out;
+ 
+diff --git a/sound/soc/codecs/tdf8532.h b/sound/soc/codecs/tdf8532.h
+index 2805e7c..ba988fb 100644
+--- a/sound/soc/codecs/tdf8532.h
++++ b/sound/soc/codecs/tdf8532.h
+@@ -86,10 +86,11 @@ struct get_dev_status_repl {
+ 
+ /* Helpers */
+ #define CHNL_MASK(channels) (u8)((0x00FF << channels) >> 8)
+-
++#define DUMMY 0
+ #define tdf8532_amp_write(dev_data, ...)\
+-	__tdf8532_single_write(dev_data, 0, AMP_MOD, __VA_ARGS__, END)
+-
++	__tdf8532_single_write(dev_data, 0, DUMMY, AMP_MOD, __VA_ARGS__, END)
++#define tdf8532_amp_write_check_err(dev_data, ...)\
++	__tdf8532_single_write(dev_data, 1, DUMMY, AMP_MOD, __VA_ARGS__, END)
+ #define tdf8532_wait_state(dev_data, state, tm)\
+ 	__tdf8532_wait_state(dev_data, state, tm, 0)
+ 
+-- 
+1.9.1
+

@@ -1,0 +1,38 @@
+From b60d7b1e31cee4400df0ff824690c84163b4bbbe Mon Sep 17 00:00:00 2001
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Date: Sun, 27 Nov 2016 20:21:23 +0200
+Subject: [PATCH 28/43] serial: 8250_port: Disable DMA operations for kernel
+ console
+
+[Taken from https://bitbucket.org/andy-shev/linux/branch/topic/uart/rpm]
+
+It will be too tricky and error prone to allow DMA operations on kernel
+console.
+
+Disable any kind of DMA operations in such case.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+---
+ drivers/tty/serial/8250/8250_port.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
+index 1a991bf..d8aad98 100644
+--- a/drivers/tty/serial/8250/8250_port.c
++++ b/drivers/tty/serial/8250/8250_port.c
+@@ -2374,7 +2374,10 @@ int serial8250_do_startup(struct uart_port *port)
+ 	 * Request DMA channels for both RX and TX.
+ 	 */
+ 	if (up->dma) {
+-		retval = serial8250_request_dma(up);
++		if (uart_console(port))
++			retval = -ENXIO;
++		else
++			retval = serial8250_request_dma(up);
+ 		if (retval) {
+ 			pr_warn_ratelimited("ttyS%d - failed to request DMA\n",
+ 					    serial_index(port));
+-- 
+1.9.1
+

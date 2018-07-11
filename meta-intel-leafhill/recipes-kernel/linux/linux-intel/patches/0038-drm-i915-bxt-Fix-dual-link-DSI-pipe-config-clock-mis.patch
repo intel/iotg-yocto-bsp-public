@@ -1,0 +1,65 @@
+From eb99638b1ad05bfb117a20463b1cd1e5fbb286c0 Mon Sep 17 00:00:00 2001
+From: Bob Paauwe <bob.j.paauwe@intel.com>
+Date: Tue, 20 Dec 2016 10:24:23 -0800
+Subject: [PATCH 38/41] drm/i915/bxt: Fix dual-link DSI pipe config clock
+ mismatch.
+
+When using a dual link DSI panel, the port clock is programed to
+approximately half of crtc clock specified by the mode. When we
+read back the hardware value and compare it to the state we need
+to account for this.
+
+[drm:intel_pipe_config_compare [i915]] *ERROR* mismatch in base.adjusted_mode.crtc_clock (expected 268630, found 134400)
+[drm:intel_pipe_config_compare [i915]] *ERROR* mismatch in port_clock (expected 268630, found 134400)
+
+Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_dsi.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_dsi.c b/drivers/gpu/drm/i915/intel_dsi.c
+index 954d424..0557721 100644
+--- a/drivers/gpu/drm/i915/intel_dsi.c
++++ b/drivers/gpu/drm/i915/intel_dsi.c
+@@ -1233,23 +1233,31 @@ static void bxt_dsi_get_pipe_config(struct intel_encoder *encoder,
+ 					adjusted_mode_sw->crtc_hblank_end;
+ }
+ 
+-static void intel_dsi_get_config(struct intel_encoder *encoder,
++static void intel_dsi_get_config(struct intel_encoder *intel_encoder,
+ 				 struct intel_crtc_state *pipe_config)
+ {
+-	struct drm_i915_private *dev_priv = to_i915(encoder->base.dev);
++	struct drm_i915_private *dev_priv = to_i915(intel_encoder->base.dev);
++	struct drm_encoder *encoder = &intel_encoder->base;
++	struct intel_dsi *intel_dsi = enc_to_intel_dsi(encoder);
+ 	u32 pclk;
+ 	DRM_DEBUG_KMS("\n");
+ 
+ 	if (IS_GEN9_LP(dev_priv))
+-		bxt_dsi_get_pipe_config(encoder, pipe_config);
++		bxt_dsi_get_pipe_config(intel_encoder, pipe_config);
+ 
+-	pclk = intel_dsi_get_pclk(encoder, pipe_config->pipe_bpp,
++	pclk = intel_dsi_get_pclk(intel_encoder, pipe_config->pipe_bpp,
+ 				  pipe_config);
+ 	if (!pclk)
+ 		return;
+ 
+-	pipe_config->base.adjusted_mode.crtc_clock = pclk;
+-	pipe_config->port_clock = pclk;
++	/* dual link pclk is about 1/2 of crtc clock */
++	if (IS_BROXTON(dev_priv) && (intel_dsi->dual_link)) {
++		pipe_config->base.adjusted_mode.crtc_clock = pclk * 2;
++		pipe_config->port_clock = pclk * 2;
++	} else {
++		pipe_config->base.adjusted_mode.crtc_clock = pclk;
++		pipe_config->port_clock = pclk;
++	}
+ }
+ 
+ static enum drm_mode_status
+-- 
+1.9.1
+

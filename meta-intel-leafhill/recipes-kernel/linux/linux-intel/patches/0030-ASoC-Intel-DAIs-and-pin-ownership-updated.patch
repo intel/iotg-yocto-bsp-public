@@ -1,0 +1,147 @@
+From 182a29325de0e69e91b694857ef77151d3db41a5 Mon Sep 17 00:00:00 2001
+From: Markus Schweikhardt <markus.schweikhardt@intel.com>
+Date: Wed, 10 Feb 2016 08:49:25 +0100
+Subject: [PATCH 30/96] ASoC: Intel: DAIs and pin ownership updated
+
+* platform Dais adapted to GP MRB needs
+* Pin ownership workaround fixed in gp mrb machine driver
+
+Signed-off-by: Markus Schweikhardt <markus.schweikhardt@intel.com>
+---
+ sound/soc/intel/boards/bxt_gpmrb.c | 65 ++++++++++++++++++++------------------
+ 1 file changed, 35 insertions(+), 30 deletions(-)
+
+diff --git a/sound/soc/intel/boards/bxt_gpmrb.c b/sound/soc/intel/boards/bxt_gpmrb.c
+index de1baae..dfe8c22 100644
+--- a/sound/soc/intel/boards/bxt_gpmrb.c
++++ b/sound/soc/intel/boards/bxt_gpmrb.c
+@@ -327,20 +327,21 @@ static int broxton_gpmrb_hw_params(struct snd_pcm_substream *substream,
+ static int broxton_audio_probe(struct platform_device *pdev)
+ {
+ 	char *gpio_addr, *mclk_addr;
++    u32 gpio_value = 0;
++    u32 mclk_value = 0;
+ 
+ 	/*
+-	 *  WORKAROUND
+-	 *  Set Pin ownership to SSP 5
+-	 */
+-	u32 gpio_value = 0x44000800;
+-	u32 mclk_value = 0x44000400;
++	*  WORKAROUND
++	*  Set Pin ownership to SSP 0
++	*/
++    gpio_value = 0x40900500;
+ 
+-	gpio_addr = (void *)ioremap_nocache(0xd0c70580, 0x30);
+-	mclk_addr = (void *)ioremap_nocache(0xd0c40660, 0x30);
++	gpio_addr = (void *)ioremap_nocache(0xD0C40618, 0x30);
+ 
+ 	printk(KERN_DEBUG "%p has %#x\n", gpio_addr, *(u32 *)gpio_addr);
+ 
+ 	memcpy_toio(gpio_addr, &gpio_value, sizeof(gpio_value));
++	gpio_value = 0x44000600;
+ 	memcpy_toio(gpio_addr + 0x8, &gpio_value, sizeof(gpio_value));
+ 	memcpy_toio(gpio_addr + 0x10, &gpio_value, sizeof(gpio_value));
+ 	memcpy_toio(gpio_addr + 0x18, &gpio_value, sizeof(gpio_value));
+@@ -350,20 +351,15 @@ static int broxton_audio_probe(struct platform_device *pdev)
+ 	printk(KERN_DEBUG "%p has %#x\n", gpio_addr + 0x10, *(u32 *)(gpio_addr + 0x10));
+ 	printk(KERN_DEBUG "%p has %#x\n", gpio_addr + 0x18, *(u32 *)(gpio_addr + 0x18));
+ 
+-	printk(KERN_DEBUG "MCLK %p has %#x\n", mclk_addr, *(u32 *)mclk_addr);
+-	memcpy_toio(mclk_addr, &mclk_value, sizeof(mclk_value));
+-	printk(KERN_DEBUG "MCLK after %p has %#x\n", mclk_addr, *(u32 *)mclk_addr);
+-
+ 	iounmap(gpio_addr);
+-	iounmap(mclk_addr);
+ 
+ 	/*
+-	 *  WORKAROUND
+-	 *  Set Pin ownership to SSP 5
+-	 */
+-	gpio_value = 0x44000A00;
++	*  WORKAROUND
++	*  Set Pin ownership to SSP 1
++	*/
++	gpio_value = 0x44000400;
+ 
+-	gpio_addr = (void *)ioremap_nocache(0xD0C705A0, 0x30);
++	gpio_addr = (void *)ioremap_nocache(0xD0C40668, 0x30);
+ 
+ 	printk(KERN_DEBUG "%p has %#x\n", gpio_addr, *(u32 *)gpio_addr);
+ 
+@@ -380,9 +376,9 @@ static int broxton_audio_probe(struct platform_device *pdev)
+ 	iounmap(gpio_addr);
+ 
+ 	/*
+-	 *  WORKAROUND
+-	 *  Set Pin ownership to SSP 3
+-	 */
++	*  WORKAROUND
++	*  Set Pin ownership to SSP 3
++	*/
+ 	gpio_value = 0x44000800;
+ 
+ 	gpio_addr = (void *)ioremap_nocache(0xD0C40638, 0x30);
+@@ -402,18 +398,19 @@ static int broxton_audio_probe(struct platform_device *pdev)
+ 	iounmap(gpio_addr);
+ 
+ 	/*
+-	 *  WORKAROUND
+-	 *  Set Pin ownership to SSP 1
+-	 */
+-	gpio_value = 0x44000400;
++	*  WORKAROUND
++	*  Set Pin ownership to SSP 4
++	*/
++	gpio_value = 0x44000A00;
+ 
+-	gpio_addr = (void *)ioremap_nocache(0xD0C40668, 0x30);
++	gpio_addr = (void *)ioremap_nocache(0xD0C705A0, 0x30);
+ 
+ 	printk(KERN_DEBUG "%p has %#x\n", gpio_addr, *(u32 *)gpio_addr);
+ 
+ 	memcpy_toio(gpio_addr, &gpio_value, sizeof(gpio_value));
+ 	memcpy_toio(gpio_addr + 0x8, &gpio_value, sizeof(gpio_value));
+ 	memcpy_toio(gpio_addr + 0x10, &gpio_value, sizeof(gpio_value));
++	gpio_value = 0x44000800;
+ 	memcpy_toio(gpio_addr + 0x18, &gpio_value, sizeof(gpio_value));
+ 
+ 	printk(KERN_DEBUG "%p has %#x\n", gpio_addr, *(u32 *)gpio_addr);
+@@ -424,12 +421,14 @@ static int broxton_audio_probe(struct platform_device *pdev)
+ 	iounmap(gpio_addr);
+ 
+ 	/*
+-	 *  WORKAROUND
+-	 *  Set Pin ownership to SSP 0
+-	 */
+-	gpio_value = 0x40900500;
++	*  WORKAROUND
++	*  Set Pin ownership to SSP 5
++	*/
++	gpio_value = 0x44000800;
++	mclk_value = 0x44000400;
+ 
+-	gpio_addr = (void *)ioremap_nocache(0xD0C40618, 0x30);
++	gpio_addr = (void *)ioremap_nocache(0xd0c70580, 0x30);
++	mclk_addr = (void *)ioremap_nocache(0xd0c40660, 0x30);
+ 
+ 	printk(KERN_DEBUG "%p has %#x\n", gpio_addr, *(u32 *)gpio_addr);
+ 
+@@ -443,7 +442,13 @@ static int broxton_audio_probe(struct platform_device *pdev)
+ 	printk(KERN_DEBUG "%p has %#x\n", gpio_addr + 0x10, *(u32 *)(gpio_addr + 0x10));
+ 	printk(KERN_DEBUG "%p has %#x\n", gpio_addr + 0x18, *(u32 *)(gpio_addr + 0x18));
+ 
++	printk(KERN_DEBUG "MCLK %p has %#x\n", mclk_addr, *(u32 *)mclk_addr);
++	memcpy_toio(mclk_addr, &mclk_value, sizeof(mclk_value));
++	printk(KERN_DEBUG "MCLK after %p has %#x\n", mclk_addr, *(u32 *)mclk_addr);
++
+ 	iounmap(gpio_addr);
++	iounmap(mclk_addr);
++
+ 
+ 	broxton_gpmrb.dev = &pdev->dev;
+ 	return snd_soc_register_card(&broxton_gpmrb);
+-- 
+1.9.1
+

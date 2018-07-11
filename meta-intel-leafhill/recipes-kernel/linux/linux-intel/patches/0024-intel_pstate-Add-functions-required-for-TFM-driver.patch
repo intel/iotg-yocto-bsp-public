@@ -1,0 +1,83 @@
+From a5d397d66a85975628a707574ed5f3de45c2186f Mon Sep 17 00:00:00 2001
+From: "Tunik, Raman" <Raman_Tunik@mentor.com>
+Date: Tue, 14 Mar 2017 17:16:12 +0100
+Subject: [PATCH 24/43] intel_pstate: Add functions required for TFM driver
+
+The following entry points are added:
+ - pstate_cpu_pstate2freq(); Returns frequency in kHz, corresponding to
+   pstate
+
+ - pstate_cpu_get_max_pstate(); Returns maximum possible CPU pstate
+
+ - pstate_cpu_get_sample(); Returns a sample rate for CPU
+   notifications in ms
+
+Signed-off-by: Tunik, Raman <Raman_Tunik@mentor.com>
+Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+---
+ drivers/cpufreq/intel_pstate.c | 49 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 49 insertions(+)
+
+diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
+index 5da8ed7..2c55df6 100644
+--- a/drivers/cpufreq/intel_pstate.c
++++ b/drivers/cpufreq/intel_pstate.c
+@@ -855,6 +855,55 @@ int pstate_cpu_disable_turbo_usage(void)
+ }
+ EXPORT_SYMBOL_GPL(pstate_cpu_disable_turbo_usage);
+ 
++/**
++ * pstate_cpu_pstate2freq – convert perf state to frequency value
++ *
++ * convert a performance state number to the matching clock
++ * frequency in kHz
++ *
++ * @pstate – the perf index number to be mapped to a frequency
++ * Return frequency value in kHz, -1 if pstate is out of range
++ */
++int pstate_cpu_pstate2freq(int pstate)
++{
++	/* Check if intel_pstate driver disabled */
++	if (!all_cpu_data)
++		return -1;
++
++	if (pstate < pstate_funcs.get_min() ||
++		pstate > pstate_funcs.get_turbo())
++		return -1;
++
++	return pstate * pstate_funcs.get_scaling();
++}
++EXPORT_SYMBOL_GPL(pstate_cpu_pstate2freq);
++
++/**
++ * pstate_cpu_get_max_pstate() - get the highest possible pstate number
++ *
++ * Return the maximum number of available P-States for CPU
++ */
++int pstate_cpu_get_max_pstate(void)
++{
++	/* Check if intel_pstate driver disabled */
++	if (!all_cpu_data)
++		return -1;
++
++	return pstate_funcs.get_turbo();
++}
++EXPORT_SYMBOL_GPL(pstate_cpu_get_max_pstate);
++
++/**
++ * pstate_cpu_get_sample() - get the cpu notifications sample rate
++ *
++ * Return the maximum sample rate for cpu notifications in ms
++ */
++int pstate_cpu_get_sample(void)
++{
++	return NUM_CYCLES * 10;
++}
++EXPORT_SYMBOL_GPL(pstate_cpu_get_sample);
++
+ /************************** sysfs begin ************************/
+ #define show_one(file_name, object)					\
+ 	static ssize_t show_##file_name					\
+-- 
+1.9.1
+

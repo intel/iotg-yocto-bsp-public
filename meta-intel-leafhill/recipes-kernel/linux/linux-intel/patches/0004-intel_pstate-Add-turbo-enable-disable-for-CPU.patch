@@ -1,0 +1,74 @@
+From c77e4a3ff16e0e4b74f489b018000686bb62bd95 Mon Sep 17 00:00:00 2001
+From: "Tunik, Raman" <Raman_Tunik@mentor.com>
+Date: Tue, 14 Mar 2017 17:01:42 +0100
+Subject: [PATCH 04/43] intel_pstate: Add turbo enable/disable for CPU
+
+Add functions for enabling/disabling CPU turbo mode
+by changing no_turbo variable.
+
+Signed-off-by: Tunik, Raman <Raman_Tunik@mentor.com>
+Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+---
+ drivers/cpufreq/intel_pstate.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
+
+diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
+index 20226d4..c1b459d 100644
+--- a/drivers/cpufreq/intel_pstate.c
++++ b/drivers/cpufreq/intel_pstate.c
+@@ -698,6 +698,7 @@ static void intel_pstate_get_hwp_max(unsigned int cpu, int *phy_max,
+ 	*phy_max = HWP_HIGHEST_PERF(cap);
+ }
+ 
++
+ static void intel_pstate_hwp_set(unsigned int cpu)
+ {
+ 	struct cpudata *cpu_data = all_cpu_data[cpu];
+@@ -807,6 +808,44 @@ static void intel_pstate_update_policies(void)
+ 		cpufreq_update_policy(cpu);
+ }
+ 
++/**
++ * pstate_cpu_enable_turbo_usage - enable cpu turbo mode
++ *
++ * Enable turbo mode for all cpu cores by changing
++ * no_turbo variable
++ *
++ * Return 0 on success, otherwise errno
++ */
++int pstate_cpu_enable_turbo_usage(void)
++{
++	update_turbo_state();
++	if (global.turbo_disabled) {
++		pr_warn("intel_pstate: Turbo disabled by BIOS or unavailable on processor\n");
++		return -EPERM;
++	}
++
++	global.no_turbo = 0;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pstate_cpu_enable_turbo_usage);
++
++/**
++ * pstate_cpu_disable_turbo_usage - disable cpu turbo mode
++ *
++ * Disable turbo mode for all cpu cores by changing
++ * no_turbo variable
++ *
++ * Return 0 on success, otherwise errno
++ */
++int pstate_cpu_disable_turbo_usage(void)
++{
++	global.no_turbo = 1;
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(pstate_cpu_disable_turbo_usage);
++
+ /************************** sysfs begin ************************/
+ #define show_one(file_name, object)					\
+ 	static ssize_t show_##file_name					\
+-- 
+1.9.1
+

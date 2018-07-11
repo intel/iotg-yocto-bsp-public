@@ -1,0 +1,38 @@
+From a24321da3f06a88e7ee6e0a211c00fc07357e294 Mon Sep 17 00:00:00 2001
+From: Markus Schweikhardt <markus.schweikhardt@intel.com>
+Date: Thu, 19 Nov 2015 07:49:43 +0100
+Subject: [PATCH 25/96] ASoC: Intel: Skylake: [WORKAROUND] Disable the ACPI
+ dependencies
+
+ ACPI function calls to retrieve the NHLT table disabled.
+
+Signed-off-by: Markus Schweikhardt <markus.schweikhardt@intel.com>
+---
+ sound/soc/intel/skylake/skl-nhlt.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/sound/soc/intel/skylake/skl-nhlt.c b/sound/soc/intel/skylake/skl-nhlt.c
+index 99a8bc0..b33b27d 100644
+--- a/sound/soc/intel/skylake/skl-nhlt.c
++++ b/sound/soc/intel/skylake/skl-nhlt.c
+@@ -45,6 +45,9 @@ int skl_get_nhlt_version(struct device *dev)
+ 
+ struct nhlt_acpi_table *skl_nhlt_init(struct device *dev)
+ {
++/* Workaround: Disable ACPI dependencies */
++#if 0
++
+ 	acpi_handle handle;
+ 	union acpi_object *obj;
+ 	struct nhlt_resource_desc  *nhlt_ptr = NULL;
+@@ -75,6 +78,7 @@ struct nhlt_acpi_table *skl_nhlt_init(struct device *dev)
+ 	}
+ 
+ 	dev_err(dev, "device specific method to extract NHLT blob failed\n");
++#endif
+ 	return NULL;
+ }
+ 
+-- 
+1.9.1
+

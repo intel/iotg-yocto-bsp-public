@@ -1,0 +1,118 @@
+From 225d0fce3f08af601b8bab6704bb9ef73f81a4e0 Mon Sep 17 00:00:00 2001
+From: Imre Deak <imre.deak@intel.com>
+Date: Mon, 2 Oct 2017 10:55:57 +0300
+Subject: [PATCH 21/41] drm/i915/glk, cnl: Implement WaDisableScalarClockGating
+
+On GLK and CNL enabling a pipe with its pipe scaler enabled will result
+in a FIFO underrun. This happens only once after driver loading or
+system/runtime resume, more specifically after power well 1 gets
+enabled; subsequent modesets seem to be free of underruns. The BSpec
+workaround for this is to disable the pipe scaler clock gating for the
+duration of modeset. Based on my tests disabling clock gating must be
+done before enabling pipe scaling and we can re-enable it after the pipe
+is enabled and one vblank has passed.
+
+For consistency I also checked if plane scaling would cause the same
+problem, but that doesn't seem to trigger this problem.
+
+The patch is based on an earlier version from Ander.
+
+v2 (Rodrigo):
+- Set also CLKGATE_DIS_PSL bits 8 and 9.
+- Add also the BSpec workaround ID.
+
+Cc: Ander Conselvan de Oliveira <conselvan2@gmail.com>
+Cc: Rodrigo Vivi <rodrigo.vivi@intel.com>
+Bugzilla: https://bugs.freedesktop.org/show_bug.cgi?id=100302
+Signed-off-by: Imre Deak <imre.deak@intel.com>
+Reviewed-by: Rodrigo Vivi <rodrigo.vivi@intel.com>
+Link: https://patchwork.freedesktop.org/patch/msgid/20171002075557.32615-1-imre.deak@intel.com
+(cherry picked from commit ed69cd40685c949ec9c65701758bbf9e6840240f)
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/i915_reg.h      | 10 ++++++++++
+ drivers/gpu/drm/i915/intel_display.c | 26 ++++++++++++++++++++++++++
+ 2 files changed, 36 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/i915_reg.h b/drivers/gpu/drm/i915/i915_reg.h
+index 7ecced6..e3cee87 100644
+--- a/drivers/gpu/drm/i915/i915_reg.h
++++ b/drivers/gpu/drm/i915/i915_reg.h
+@@ -3809,6 +3809,16 @@ enum {
+ #define   PWM2_GATING_DIS		(1 << 14)
+ #define   PWM1_GATING_DIS		(1 << 13)
+ 
++#define _CLKGATE_DIS_PSL_A		0x46520
++#define _CLKGATE_DIS_PSL_B		0x46524
++#define _CLKGATE_DIS_PSL_C		0x46528
++#define   DPF_GATING_DIS		(1 << 10)
++#define   DPF_RAM_GATING_DIS		(1 << 9)
++#define   DPFR_GATING_DIS		(1 << 8)
++
++#define CLKGATE_DIS_PSL(pipe) \
++	_MMIO_PIPE(pipe, _CLKGATE_DIS_PSL_A, _CLKGATE_DIS_PSL_B)
++
+ /*
+  * GEN10 clock gating regs
+  */
+diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
+index b7daed8..f742d8d 100644
+--- a/drivers/gpu/drm/i915/intel_display.c
++++ b/drivers/gpu/drm/i915/intel_display.c
+@@ -5556,6 +5556,20 @@ static bool hsw_crtc_supports_ips(struct intel_crtc *crtc)
+ 	return HAS_IPS(to_i915(crtc->base.dev)) && crtc->pipe == PIPE_A;
+ }
+ 
++static void glk_pipe_scaler_clock_gating_wa(struct drm_i915_private *dev_priv,
++					    enum pipe pipe, bool apply)
++{
++	u32 val = I915_READ(CLKGATE_DIS_PSL(pipe));
++	u32 mask = DPF_GATING_DIS | DPF_RAM_GATING_DIS | DPFR_GATING_DIS;
++
++	if (apply)
++		val |= mask;
++	else
++		val &= ~mask;
++
++	I915_WRITE(CLKGATE_DIS_PSL(pipe), val);
++}
++
+ static void haswell_crtc_enable(struct intel_crtc_state *pipe_config,
+ 				struct drm_atomic_state *old_state)
+ {
+@@ -5566,6 +5580,7 @@ static void haswell_crtc_enable(struct intel_crtc_state *pipe_config,
+ 	enum transcoder cpu_transcoder = intel_crtc->config->cpu_transcoder;
+ 	struct intel_atomic_state *old_intel_state =
+ 		to_intel_atomic_state(old_state);
++	bool psl_clkgate_wa;
+ 
+ 	if (WARN_ON(intel_crtc->active))
+ 		return;
+@@ -5619,6 +5634,12 @@ static void haswell_crtc_enable(struct intel_crtc_state *pipe_config,
+ 	if (!transcoder_is_dsi(cpu_transcoder))
+ 		intel_ddi_enable_pipe_clock(pipe_config);
+ 
++	/* Display WA #1180: WaDisableScalarClockGating: glk, cnl */
++	psl_clkgate_wa = (IS_GEMINILAKE(dev_priv) || IS_CANNONLAKE(dev_priv)) &&
++			 intel_crtc->config->pch_pfit.enabled;
++	if (psl_clkgate_wa)
++		glk_pipe_scaler_clock_gating_wa(dev_priv, pipe, true);
++
+ 	if (INTEL_GEN(dev_priv) >= 9)
+ 		skylake_pfit_enable(intel_crtc);
+ 	else
+@@ -5652,6 +5673,11 @@ static void haswell_crtc_enable(struct intel_crtc_state *pipe_config,
+ 
+ 	intel_encoders_enable(crtc, pipe_config, old_state);
+ 
++	if (psl_clkgate_wa) {
++		intel_wait_for_vblank(dev_priv, pipe);
++		glk_pipe_scaler_clock_gating_wa(dev_priv, pipe, false);
++	}
++
+ 	if (intel_crtc->config->has_pch_encoder) {
+ 		intel_wait_for_vblank(dev_priv, pipe);
+ 		intel_wait_for_vblank(dev_priv, pipe);
+-- 
+1.9.1
+

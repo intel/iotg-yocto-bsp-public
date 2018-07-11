@@ -1,0 +1,49 @@
+From 5ae650102fc3e69bb5e204300fe3203204aaa19e Mon Sep 17 00:00:00 2001
+From: Kai Chen <kai.chen@intel.com>
+Date: Fri, 14 Apr 2017 15:04:02 -0700
+Subject: [PATCH 11/38] drm/i915: Raise RPS FUp Interrupt Limiter for GEN9LP
+ above softmax (v7)
+
+On GEN9LP, raise the RPS FUp Interrupt Limiter above softmax so that the HW
+won't miss interrupt when requested max_freq is set back to RP0 value.
+
+v7: Just use one condition (max_freq == rp0_freq) for applying
+    the increment (Bob).
+
+HSD: 1504396381
+Signed-off-by: Kai Chen <kai.chen@intel.com>
+Reviewed-by: Bob Paauwe <bob.j.paauwe@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_pm.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
+index 5f55577..4538f77 100644
+--- a/drivers/gpu/drm/i915/intel_pm.c
++++ b/drivers/gpu/drm/i915/intel_pm.c
+@@ -6063,7 +6063,20 @@ static u32 intel_rps_limits(struct drm_i915_private *dev_priv, u8 val)
+ 	 * frequency, if the down threshold expires in that window we will not
+ 	 * receive a down interrupt. */
+ 	if (INTEL_GEN(dev_priv) >= 9) {
+-		limits = (dev_priv->rps.max_freq_softlimit) << 23;
++		int max_freq = dev_priv->rps.max_freq_softlimit;
++		int rp0_freq = dev_priv->rps.rp0_freq;
++
++		if (IS_GEN9_LP(dev_priv) && (max_freq == rp0_freq))
++			/*
++			 * For GEN9_LP, it is suggested to increase the upper
++			 * interrupt limiter by 1 (16.6MHz) so that the HW will
++			 * generate an interrupt when we are near or just below
++			 * the upper limit.
++			 */
++			limits = (dev_priv->rps.max_freq_softlimit + 1) << 23;
++		else
++			limits = (dev_priv->rps.max_freq_softlimit) << 23;
++
+ 		if (val <= dev_priv->rps.min_freq_softlimit)
+ 			limits |= (dev_priv->rps.min_freq_softlimit) << 14;
+ 	} else {
+-- 
+1.9.1
+

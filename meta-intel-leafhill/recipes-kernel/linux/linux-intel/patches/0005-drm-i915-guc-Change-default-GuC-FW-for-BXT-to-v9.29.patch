@@ -1,0 +1,68 @@
+From 903a3dc2a0f69eabd5dae1653fbbd447ed848be3 Mon Sep 17 00:00:00 2001
+From: Sagar Arun Kamble <sagar.a.kamble@intel.com>
+Date: Thu, 23 Mar 2017 13:50:57 -0700
+Subject: [PATCH 05/38] drm/i915/guc: Change default GuC FW for BXT to v9.29
+
+This patch makes v9.29 firmware as default firmware for BXT.
+This update includes (since v8.7):
+
+- Added support to log media reset count for host to read it
+- BXT WA for fixing MTP hangs. WaDisableDOPRenderClkGatingAtSubmit
+- Sub-feature level control for power management features.
+- Minor clean-up for power management interface.
+- Unified power management interface and scheduler interface into
+  1 file using same version.
+- Bug Fix for multi context scheduler flag.
+- DCC spec changes for BXT + DCT enabling
+- Springboard based Pre-ETM/ETM flow enabling for debug signed GuC/HuC
+- Moving GuC non_critical r/w data to lower SRAM 64KB
+- Enabled IBC for BXT
+- Media engine Reset fix.  Correctly marking context for resubmission in
+  Media Reset case.
+- SLPC Dynamic RPe fix to resolve issues where incorrect frequency was set.
+- ABT Disable bug fix. Disabled Evaluation mode on context change.
+- GuC clean up to align developer build in line to production build.
+- Disable ARAT interrupt before programming ARAT delta.
+- Memory range check in Parse to avoid failure due to overflow.
+- Clear forcewake in CSB when SQ is empty.
+- SLPC IBC 1.6 for APL to ensure multiplier does not cap IA below Pe.
+- Move UkGuckmdInterface.h file from 2016 folders to common 2016 folder.
+- This is file location change. No functional change done as part of this
+  check in.
+- 3 tries of wake request needed from GuC2CSME for ME to wake up. Request
+  has come from ME spec
+- During reset one parameter was not getting accounted
+- Enabling Guc Log changes for ultra low logging for OCA
+- Disable build.bat redundant prints.
+- Move few least used functions to non-critical section.
+- Rearrange GuC documentation folder structure.
+- Fixing Issue with Default Guc Log changes for OCA using special Control Bit
+
+Cc: Arkadiusz Hiler <arkadiusz.hiler@intel.com>
+Cc: Spotswood John A <john.a.spotswood@intel.com>
+Signed-off-by: Jeff McGee <jeff.mcgee@intel.com>
+Signed-off-by: Sagar Arun Kamble <sagar.a.kamble@intel.com>
+Signed-off-by: Jeff McGee <jeff.mcgee@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_guc_loader.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_guc_loader.c b/drivers/gpu/drm/i915/intel_guc_loader.c
+index adfeafc..f453344 100644
+--- a/drivers/gpu/drm/i915/intel_guc_loader.c
++++ b/drivers/gpu/drm/i915/intel_guc_loader.c
+@@ -55,8 +55,8 @@
+ #define SKL_FW_MAJOR 6
+ #define SKL_FW_MINOR 1
+ 
+-#define BXT_FW_MAJOR 8
+-#define BXT_FW_MINOR 7
++#define BXT_FW_MAJOR 9
++#define BXT_FW_MINOR 29
+ 
+ #define KBL_FW_MAJOR 9
+ #define KBL_FW_MINOR 14
+-- 
+1.9.1
+

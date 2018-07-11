@@ -1,0 +1,155 @@
+From 8eb532d52aed4c239a847f2b690fc8541e7b52bb Mon Sep 17 00:00:00 2001
+From: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Date: Sat, 12 May 2018 03:03:12 +0530
+Subject: [PATCH 23/41] drm/i915: Enable display workaround 827 for all planes,
+ v2.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+The workaround was applied only to the primary plane, but is required
+on all planes. Iterate over all planes in the crtc atomic check to see
+if the workaround is enabled, and only perform the actual toggling in
+the pre/post plane update functions.
+
+Changes since v1:
+- Track active NV12 planes in a nv12_planes bitmask. (Ville)
+
+v2: Removing BROXTON support for NV12 due to WA826
+
+Signed-off-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Cc: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Reviewed-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Signed-off-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Link: https://patchwork.freedesktop.org/patch/msgid/1526074397-10457-2-git-send-email-vidya.srinivas@intel.com
+(cherry picked from commit 8e021151948c56eddf68affc6817965dabbcaddd)
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_atomic_plane.c |  7 ++++-
+ drivers/gpu/drm/i915/intel_display.c      | 43 +++++++++++++++++++------------
+ drivers/gpu/drm/i915/intel_drv.h          |  1 +
+ 3 files changed, 33 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_atomic_plane.c b/drivers/gpu/drm/i915/intel_atomic_plane.c
+index 1a1ec0f..c5d8c7b 100644
+--- a/drivers/gpu/drm/i915/intel_atomic_plane.c
++++ b/drivers/gpu/drm/i915/intel_atomic_plane.c
+@@ -194,7 +194,7 @@ int intel_plane_atomic_check_with_state(struct intel_crtc_state *crtc_state,
+ 	}
+ 
+ 	/* FIXME pre-g4x don't work like this */
+-	if (intel_state->base.visible)
++	if (state->visible)
+ 		crtc_state->active_planes |= BIT(intel_plane->id);
+ 	else
+ 		crtc_state->active_planes &= ~BIT(intel_plane->id);
+@@ -213,6 +213,11 @@ int intel_plane_atomic_check_with_state(struct intel_crtc_state *crtc_state,
+ 		return -EINVAL;
+ 	}
+ 
++	if (state->visible && state->fb->format->format == DRM_FORMAT_NV12)
++		crtc_state->nv12_planes |= BIT(intel_plane->id);
++	else
++		crtc_state->nv12_planes &= ~BIT(intel_plane->id);
++
+ 	return intel_plane_atomic_calc_changes(&crtc_state->base, state);
+ }
+ 
+diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
+index b4bdb8b..3a67a59 100644
+--- a/drivers/gpu/drm/i915/intel_display.c
++++ b/drivers/gpu/drm/i915/intel_display.c
+@@ -5206,6 +5206,22 @@ static void intel_crtc_dpms_overlay_disable(struct intel_crtc *intel_crtc)
+ 		intel_wait_for_vblank(dev_priv, pipe);
+ }
+ 
++static bool needs_nv12_wa(struct drm_i915_private *dev_priv,
++			  const struct intel_crtc_state *crtc_state)
++{
++	if (!crtc_state->nv12_planes)
++		return false;
++
++	if (IS_SKYLAKE(dev_priv) || IS_BROXTON(dev_priv))
++		return false;
++
++	if ((INTEL_GEN(dev_priv) == 9 && !IS_GEMINILAKE(dev_priv)) ||
++	    IS_CANNONLAKE(dev_priv))
++		return true;
++
++	return false;
++}
++
+ static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
+ {
+ 	struct intel_crtc *crtc = to_intel_crtc(old_crtc_state->base.crtc);
+@@ -5228,7 +5244,6 @@ static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
+ 			to_intel_plane_state(primary->state);
+ 		struct intel_plane_state *old_primary_state =
+ 			to_intel_plane_state(old_pri_state);
+-		struct drm_framebuffer *fb = primary_state->base.fb;
+ 
+ 		intel_fbc_post_update(crtc);
+ 
+@@ -5236,15 +5251,12 @@ static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
+ 		    (needs_modeset(&pipe_config->base) ||
+ 		     !old_primary_state->base.visible))
+ 			intel_post_enable_primary(&crtc->base);
+-
+-		/* Display WA 827 */
+-		if ((INTEL_GEN(dev_priv) == 9 && !IS_GEMINILAKE(dev_priv)) ||
+-		    IS_CANNONLAKE(dev_priv)) {
+-			if (fb && fb->format->format == DRM_FORMAT_NV12)
+-				skl_wa_clkgate(dev_priv, crtc->pipe, false);
+-		}
+-
+ 	}
++
++	/* Display WA 827 */
++	if (needs_nv12_wa(dev_priv, old_crtc_state) &&
++	    !needs_nv12_wa(dev_priv, pipe_config))
++		skl_wa_clkgate(dev_priv, crtc->pipe, false);
+ }
+ 
+ static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
+@@ -5266,14 +5278,6 @@ static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
+ 			to_intel_plane_state(primary->state);
+ 		struct intel_plane_state *old_primary_state =
+ 			to_intel_plane_state(old_pri_state);
+-		struct drm_framebuffer *fb = primary_state->base.fb;
+-
+-		/* Display WA 827 */
+-		if ((INTEL_GEN(dev_priv) == 9 && !IS_GEMINILAKE(dev_priv)) ||
+-		    IS_CANNONLAKE(dev_priv)) {
+-			if (fb && fb->format->format == DRM_FORMAT_NV12)
+-				skl_wa_clkgate(dev_priv, crtc->pipe, true);
+-		}
+ 
+ 		intel_fbc_pre_update(crtc, pipe_config, primary_state);
+ 
+@@ -5282,6 +5286,11 @@ static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
+ 			intel_pre_disable_primary(&crtc->base);
+ 	}
+ 
++	/* Display WA 827 */
++	if (!needs_nv12_wa(dev_priv, old_crtc_state) &&
++	    needs_nv12_wa(dev_priv, pipe_config))
++		skl_wa_clkgate(dev_priv, crtc->pipe, true);
++
+ 	/*
+ 	 * Vblank time updates from the shadow to live plane control register
+ 	 * are blocked if the memory self-refresh mode is active at that
+diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
+index 143f1ca..55ac6d7 100644
+--- a/drivers/gpu/drm/i915/intel_drv.h
++++ b/drivers/gpu/drm/i915/intel_drv.h
+@@ -867,6 +867,7 @@ struct intel_crtc_state {
+ 
+ 	/* bitmask of visible planes (enum plane_id) */
+ 	u8 active_planes;
++	u8 nv12_planes;
+ 
+ 	/* HDMI scrambling status */
+ 	bool hdmi_scrambling;
+-- 
+1.9.1
+

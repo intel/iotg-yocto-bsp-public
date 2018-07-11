@@ -1,0 +1,48 @@
+From 94eb9e464f3ae74bd9152c99020257c98123862b Mon Sep 17 00:00:00 2001
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Date: Wed, 23 Nov 2016 17:04:16 +0200
+Subject: [PATCH 26/43] console: introduce ->exit() callback
+
+[Taken from https://bitbucket.org/andy-shev/linux/branch/topic/uart/rpm]
+
+Some consoles might require special operations on unregistering. For example,
+serial console, when registered in the kernel, keeps power on for entire time,
+until it gets unregistered. For such cases to have a balance we would provide
+->exit() callback.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+---
+ include/linux/console.h | 1 +
+ kernel/printk/printk.c  | 3 +++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/include/linux/console.h b/include/linux/console.h
+index b8920a0..56dd8e9 100644
+--- a/include/linux/console.h
++++ b/include/linux/console.h
+@@ -141,6 +141,7 @@ struct console {
+ 	struct tty_driver *(*device)(struct console *, int *);
+ 	void	(*unblank)(void);
+ 	int	(*setup)(struct console *, char *);
++	void	(*exit)(struct console *);
+ 	int	(*match)(struct console *, char *name, int idx, char *options);
+ 	short	flags;
+ 	short	index;
+diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
+index 512f7c2..5a2675c 100644
+--- a/kernel/printk/printk.c
++++ b/kernel/printk/printk.c
+@@ -2596,6 +2596,9 @@ int unregister_console(struct console *console)
+ 	if (console_drivers != NULL && console->flags & CON_CONSDEV)
+ 		console_drivers->flags |= CON_CONSDEV;
+ 
++	if (console->exit)
++		console->exit(console);
++
+ 	console->flags &= ~CON_ENABLED;
+ 	console_unlock();
+ 	console_sysfs_notify();
+-- 
+1.9.1
+

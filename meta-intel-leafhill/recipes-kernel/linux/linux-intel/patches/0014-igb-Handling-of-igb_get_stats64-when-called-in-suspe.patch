@@ -1,0 +1,48 @@
+From 2cacf7b7885f3025ab2496f84ed45c7c68c82662 Mon Sep 17 00:00:00 2001
+From: Jayasankar <jayasankarx.nara@intel.com>
+Date: Thu, 29 Dec 2016 11:40:59 +0800
+Subject: [PATCH 14/43] igb: Handling of igb_get_stats64 when called in
+ suspended state
+
+In igb_get_stats64() function, it invokes pm_runtime_get()
+to resume the driver. After finished updating the statistics,
+then schedule runtime suspend.
+
+Signed-off-by: Jayasankar <jayasankarx.nara@intel.com>
+Signed-off-by: Lai, Poey Seng <poey.seng.lai@intel.com>
+Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
+---
+ drivers/net/ethernet/intel/igb/igb_main.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
+index a952f03..2b420e7 100644
+--- a/drivers/net/ethernet/intel/igb/igb_main.c
++++ b/drivers/net/ethernet/intel/igb/igb_main.c
+@@ -5880,11 +5880,23 @@ static void igb_get_stats64(struct net_device *netdev,
+ 			    struct rtnl_link_stats64 *stats)
+ {
+ 	struct igb_adapter *adapter = netdev_priv(netdev);
++	struct pci_dev *pdev = adapter->pdev;
+ 
++	pm_runtime_get(&pdev->dev);
+ 	spin_lock(&adapter->stats64_lock);
+ 	igb_update_stats(adapter);
+ 	memcpy(stats, &adapter->stats64, sizeof(*stats));
+ 	spin_unlock(&adapter->stats64_lock);
++
++	/* Schedule the suspend if netif_carrier_ok returns true
++	 * else let watchdog task schedule the suspend.
++	 */
++	if (netif_carrier_ok(adapter->netdev)) {
++		pm_runtime_mark_last_busy(&pdev->dev);
++		pm_runtime_put_autosuspend(&pdev->dev);
++	} else {
++		pm_runtime_put_noidle(&pdev->dev);
++	}
+ }
+ 
+ /**
+-- 
+1.9.1
+

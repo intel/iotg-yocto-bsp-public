@@ -1,0 +1,31 @@
+From 4cf0d4ebbcb3b00cfcc38b17da98eeecde2733fd Mon Sep 17 00:00:00 2001
+From: Craig Kewley <craigx.kewley@intel.com>
+Date: Wed, 13 Jul 2016 09:18:04 +0100
+Subject: [PATCH 40/96] Arch: x86: Clean up Kconfig after GP MRB board driver
+ was removed
+
+Remove leftover Kconfig option after GP MRB board driver was removed.
+
+Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
+
+Conflicts:
+	arch/x86/Kconfig
+---
+ arch/x86/Kconfig | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 75f445e..90c8c82 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -1,7 +1,4 @@
+ # SPDX-License-Identifier: GPL-2.0
+-config GPMRB_BRD
+-    bool "Support for GP I2C registration"
+-
+ # Select 32 or 64 bit
+ config 64BIT
+ 	bool "64-bit kernel" if ARCH = "x86"
+-- 
+1.9.1
+

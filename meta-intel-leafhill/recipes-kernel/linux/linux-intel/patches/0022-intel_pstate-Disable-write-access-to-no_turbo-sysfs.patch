@@ -1,0 +1,57 @@
+From 8ae1fa516f2c35786ecb372e2cdf1a5e00823fc7 Mon Sep 17 00:00:00 2001
+From: "Tunik, Raman" <Raman_Tunik@mentor.com>
+Date: Tue, 14 Mar 2017 17:04:32 +0100
+Subject: [PATCH 22/43] intel_pstate: Disable write access to no_turbo sysfs
+
+Whenever any kernel process registered to intel_pstate notifications,
+disable write access to no_turbo sysfs entry and intel_pstate
+debugfs entries. Enable writing again, as soon as unregistered.
+
+Signed-off-by: Tunik, Raman <Raman_Tunik@mentor.com>
+Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+---
+ drivers/cpufreq/intel_pstate.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
+index 06e5364..0c0b030 100644
+--- a/drivers/cpufreq/intel_pstate.c
++++ b/drivers/cpufreq/intel_pstate.c
+@@ -59,6 +59,8 @@
+ 
+ static ATOMIC_NOTIFIER_HEAD(pstate_freq_notifier_list);
+ 
++static int notification_registered_flag;
++
+ static inline int32_t mul_fp(int32_t x, int32_t y)
+ {
+ 	return ((int64_t)x * (int64_t)y) >> FRAC_BITS;
+@@ -982,6 +984,9 @@ static ssize_t store_no_turbo(struct kobject *a, struct attribute *b,
+ 		return -EPERM;
+ 	}
+ 
++	if (notification_registered_flag)
++		return -EAGAIN;
++
+ 	global.no_turbo = clamp_t(int, input, 0, 1);
+ 
+ 	if (global.no_turbo) {
+@@ -1383,6 +1388,7 @@ static int intel_pstate_get_base_pstate(struct cpudata *cpu)
+  */
+ int pstate_register_freq_notify(struct notifier_block *nb)
+ {
++	notification_registered_flag++;
+ 	return atomic_notifier_chain_register(&pstate_freq_notifier_list, nb);
+ }
+ EXPORT_SYMBOL_GPL(pstate_register_freq_notify);
+@@ -1393,6 +1399,7 @@ int pstate_register_freq_notify(struct notifier_block *nb)
+  */
+ int pstate_unregister_freq_notify(struct notifier_block *nb)
+ {
++	notification_registered_flag--;
+ 	return atomic_notifier_chain_unregister(&pstate_freq_notifier_list, nb);
+ }
+ EXPORT_SYMBOL_GPL(pstate_unregister_freq_notify);
+-- 
+1.9.1
+

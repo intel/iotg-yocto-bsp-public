@@ -1,0 +1,42 @@
+From d2b200a3b44a831a02562714245c2f25d03f8f7e Mon Sep 17 00:00:00 2001
+From: Mahesh Kumar <mahesh1.kumar@intel.com>
+Date: Mon, 9 Apr 2018 09:11:02 +0530
+Subject: [PATCH 14/41] drm/i915/skl+: add NV12 in skl_format_to_fourcc
+
+Add support of recognizing DRM_FORMAT_NV12 from plane_format
+register value.
+
+v2: Added reviewed by tag from Mika Kahola
+
+v3: Added reviewed by from Juha-Pekka Heikkila
+
+v4: Rebased the series
+
+Reviewed-by: Juha-Pekka Heikkila <juhapekka.heikkila@gmail.com>
+Reviewed-by: Mika Kahola <mika.kahola@intel.com>
+Reviewed-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Signed-off-by: Mahesh Kumar <mahesh1.kumar@intel.com>
+Signed-off-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Link: https://patchwork.freedesktop.org/patch/msgid/1523245273-30264-4-git-send-email-vidya.srinivas@intel.com
+(cherry picked from commit f34a291c0a9f141728b2ad852066322ca38d3cdb)
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_display.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
+index a2e8083..dca7cab 100644
+--- a/drivers/gpu/drm/i915/intel_display.c
++++ b/drivers/gpu/drm/i915/intel_display.c
+@@ -2658,6 +2658,8 @@ static int skl_format_to_fourcc(int format, bool rgb_order, bool alpha)
+ 	switch (format) {
+ 	case PLANE_CTL_FORMAT_RGB_565:
+ 		return DRM_FORMAT_RGB565;
++	case PLANE_CTL_FORMAT_NV12:
++		return DRM_FORMAT_NV12;
+ 	default:
+ 	case PLANE_CTL_FORMAT_XRGB_8888:
+ 		if (rgb_order) {
+-- 
+1.9.1
+

@@ -1,0 +1,64 @@
+From 005e4bc58b66eea09bb412c6b043b83f8adf2aea Mon Sep 17 00:00:00 2001
+From: JakubX Dorzak <jakubx.dorzak@intel.com>
+Date: Fri, 4 Nov 2016 09:14:53 +0000
+Subject: [PATCH 48/96] Revert "ASoC: Intel: Board: Rename BXT-P ANC machine"
+
+This reverts commit 91c63ff159ec7e10c2c8f047d3b23ed65f551bce.
+
+Conflicts:
+	sound/soc/intel/Kconfig
+	sound/soc/intel/boards/Makefile
+---
+ sound/soc/intel/boards/Kconfig                          | 6 ++++--
+ sound/soc/intel/boards/Makefile                         | 4 ++++
+ sound/soc/intel/boards/{bxt_ivi_ull.c => bxt_ivi_anc.c} | 0
+ 3 files changed, 8 insertions(+), 2 deletions(-)
+ rename sound/soc/intel/boards/{bxt_ivi_ull.c => bxt_ivi_anc.c} (100%)
+
+diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
+index 33660d7..ef8c02f 100644
+--- a/sound/soc/intel/boards/Kconfig
++++ b/sound/soc/intel/boards/Kconfig
+@@ -329,9 +329,11 @@ config SND_SOC_SDW_AGGM1M2
+ 	help
+ 	  Say Y to enable SoundWire aggregation on Master1 and Master2.
+ 
+-config SND_SOC_INTEL_BXT_ULL_MACH
+-        tristate "Reference ASoC Machine driver for BXT ULL machine"
++config SND_SOC_INTEL_BXT_ANC_MACH
++        tristate "Reference ASoC Machine driver for BXT with ANC loop"
+         depends on X86 && ACPI && I2C
++        select SND_SOC_RT298
++        select SND_SOC_DMIC
+         select SND_SOC_COMPRESS
+         help
+            This adds support for ASoC machine driver for Broxton ULL GP MRB platform
+diff --git a/sound/soc/intel/boards/Makefile b/sound/soc/intel/boards/Makefile
+index 7cb2975..03d83fb 100644
+--- a/sound/soc/intel/boards/Makefile
++++ b/sound/soc/intel/boards/Makefile
+@@ -29,6 +29,9 @@ snd-soc-bxtp_ivi_rse_rt298-objs := bxtp_ivi_rse_rt298.o
+ snd-soc-bxtp_ivi_hu_rt298-objs := bxtp_ivi_hu_rt298.o
+ snd-soc-bxtp_ivi_m3-objs := bxtp_ivi_m3.o
+ snd-soc-bxtp_ivi_generic-objs := bxtp_ivi_generic.o
++snd-soc-bxt_gpmrb-objs := bxt_gpmrb.o
++snd-soc-bxt_ivi_anc-objs := bxt_ivi_anc.o
++snd-soc-bxt_hsboard-objs := bxt_hsboard.o
+ snd-soc-apli_lhcrb_dummy-objs := apli_lhcrb_dummy.o
+ snd-soc-apli_lhcrb_wm8731-objs := apli_lhcrb_wm8731.o
+ snd-soc-apli_lhcrb_aic3107M-objs := apli_lhcrb_aic3107M.o
+@@ -66,6 +69,7 @@ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_RSE_MACH) += snd-soc-bxtp_ivi_rse_rt298.o
+ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_HU_MACH) += snd-soc-bxtp_ivi_hu_rt298.o
+ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_M3_MACH) += snd-soc-bxtp_ivi_m3.o
+ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH) += snd-soc-bxtp_ivi_generic.o
++obj-$(CONFIG_SND_SOC_INTEL_BXT_ANC_MACH) += snd-soc-bxt_ivi_anc.o
+ obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_DUMMY_MACH) += snd-soc-apli_lhcrb_dummy.o
+ obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH) += snd-soc-apli_lhcrb_wm8731.o
+ obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH) += snd-soc-apli_lhcrb_aic3107M.o
+diff --git a/sound/soc/intel/boards/bxt_ivi_ull.c b/sound/soc/intel/boards/bxt_ivi_anc.c
+similarity index 100%
+rename from sound/soc/intel/boards/bxt_ivi_ull.c
+rename to sound/soc/intel/boards/bxt_ivi_anc.c
+-- 
+1.9.1
+

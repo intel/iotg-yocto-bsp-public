@@ -1,0 +1,79 @@
+From 1fcacd52d12e9407ab6ed2e3010504d1198f7b3c Mon Sep 17 00:00:00 2001
+From: "Ooi, Joyce" <joyce.ooi@intel.com>
+Date: Tue, 21 Jun 2016 11:42:11 +0800
+Subject: [PATCH 01/37] iio: light and pressure: Change data fields for ambient
+ light and pressure sensor
+
+Sensitivity Percent Relative is added for ambient light sensor as it is
+used based on HID Sensor Usages specifications (Chapter 4.3.6 for Ambient
+Light).
+
+Other changes include changing to HID_USAGE_SENSOR_LIGHT_ILLUM and
+HID_USAGE_SENSOR_ATMOSPHERIC_PRESSURE for ambient light and pressure
+sensor respectively to be in sync with HID Sensor Usages specifications.
+
+Signed-off-by: Ooi, Joyce <joyce.ooi@intel.com>
+Signed-off-by: Ruslan, Rusaimi Amira <rusaimi.amira.ruslan@intel.com>
+---
+ drivers/iio/light/hid-sensor-als.c      | 10 ++++++++++
+ drivers/iio/pressure/hid-sensor-press.c | 10 ++++++++++
+ include/linux/hid-sensor-ids.h          |  1 +
+ 3 files changed, 21 insertions(+)
+
+diff --git a/drivers/iio/light/hid-sensor-als.c b/drivers/iio/light/hid-sensor-als.c
+index 059d964..aba3073 100644
+--- a/drivers/iio/light/hid-sensor-als.c
++++ b/drivers/iio/light/hid-sensor-als.c
+@@ -270,6 +270,16 @@ static int als_parse_report(struct platform_device *pdev,
+ 			st->common_attributes.sensitivity.index,
+ 			st->common_attributes.sensitivity.report_id);
+ 	}
++	if (st->common_attributes.sensitivity.index < 0) {
++		sensor_hub_input_get_attribute_info(hsdev,
++			HID_FEATURE_REPORT, usage_id,
++			HID_USAGE_SENSOR_DATA_MOD_CHANGE_SENSITIVITY_REL_PCT |
++			HID_USAGE_SENSOR_LIGHT_ILLUM,
++			&st->common_attributes.sensitivity);
++		dev_dbg(&pdev->dev, "Sensitivity index:report %d:%d\n",
++			st->common_attributes.sensitivity.index,
++			st->common_attributes.sensitivity.report_id);
++	}
+ 	return ret;
+ }
+ 
+diff --git a/drivers/iio/pressure/hid-sensor-press.c b/drivers/iio/pressure/hid-sensor-press.c
+index 6848d8c..4cbbf88 100644
+--- a/drivers/iio/pressure/hid-sensor-press.c
++++ b/drivers/iio/pressure/hid-sensor-press.c
+@@ -249,6 +249,16 @@ static int press_parse_report(struct platform_device *pdev,
+ 			st->common_attributes.sensitivity.index,
+ 			st->common_attributes.sensitivity.report_id);
+ 	}
++	if (st->common_attributes.sensitivity.index < 0) {
++		sensor_hub_input_get_attribute_info(hsdev,
++			HID_FEATURE_REPORT, usage_id,
++			HID_USAGE_SENSOR_DATA_MOD_CHANGE_SENSITIVITY_ABS |
++			HID_USAGE_SENSOR_ATMOSPHERIC_PRESSURE,
++			&st->common_attributes.sensitivity);
++		dev_dbg(&pdev->dev, "Sensitivity index:report %d:%d\n",
++			st->common_attributes.sensitivity.index,
++			st->common_attributes.sensitivity.report_id);
++	}
+ 	return ret;
+ }
+ 
+diff --git a/include/linux/hid-sensor-ids.h b/include/linux/hid-sensor-ids.h
+index 76033e0..20b89a5 100644
+--- a/include/linux/hid-sensor-ids.h
++++ b/include/linux/hid-sensor-ids.h
+@@ -158,6 +158,7 @@
+ /* Per data field properties */
+ #define HID_USAGE_SENSOR_DATA_MOD_NONE					0x00
+ #define HID_USAGE_SENSOR_DATA_MOD_CHANGE_SENSITIVITY_ABS		0x1000
++#define HID_USAGE_SENSOR_DATA_MOD_CHANGE_SENSITIVITY_REL_PCT		0xE000
+ 
+ /* Power state enumerations */
+ #define HID_USAGE_SENSOR_PROP_POWER_STATE_UNDEFINED_ENUM	0x200850
+-- 
+1.9.1
+

@@ -1,0 +1,64 @@
+From 23f4533ba5a2cae5d4a7bdd2fdaa5cad1f452b2d Mon Sep 17 00:00:00 2001
+From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
+Date: Fri, 13 Oct 2017 19:11:14 +0800
+Subject: [PATCH 21/96] ASoC: Intel: Skylake: Remove unused soc component and
+ topology param definition that causes kernel crash
+
+Remove skl_controls and topology back end parameter definition that
+causes kernel crash during boot up and also when commanding
+amixer -c0.
+
+Signed-off-by: Ho, Yu Xin <yu.xin.ho@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl-topology.c
+---
+ sound/soc/intel/skylake/skl-pcm.c      |  4 ++--
+ sound/soc/intel/skylake/skl-topology.c | 10 +++++-----
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+ mode change 100644 => 100755 sound/soc/intel/skylake/skl-pcm.c
+ mode change 100644 => 100755 sound/soc/intel/skylake/skl-topology.c
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+old mode 100644
+new mode 100755
+index cf4469f..bcb3aed
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -2391,8 +2391,8 @@ static int skl_platform_soc_probe(struct snd_soc_platform *platform)
+ 
+ static const struct snd_soc_component_driver skl_component = {
+ 	.name           = "pcm",
+-	.controls	= skl_controls,
+-	.num_controls	= ARRAY_SIZE(skl_controls),
++	// .controls	= skl_controls,
++	// .num_controls	= ARRAY_SIZE(skl_controls),
+ };
+ 
+ /*
+diff --git a/sound/soc/intel/skylake/skl-topology.c b/sound/soc/intel/skylake/skl-topology.c
+old mode 100644
+new mode 100755
+index 6c457c8..65b83e8
+--- a/sound/soc/intel/skylake/skl-topology.c
++++ b/sound/soc/intel/skylake/skl-topology.c
+@@ -3285,11 +3285,11 @@ int skl_tplg_change_notification_get(struct snd_kcontrol *kcontrol,
+ 		.get = skl_tplg_mic_control_get,
+ 		.put = skl_tplg_mic_control_set,
+ 	},
+-	{
+-		.id = SKL_CONTROL_TYPE_MULTI_IO_SELECT,
+-		.get = skl_tplg_multi_config_get,
+-		.put = skl_tplg_multi_config_set,
+-	},
++	// {
++		// .id = SKL_CONTROL_TYPE_MULTI_IO_SELECT,
++		// .get = skl_tplg_multi_config_get,
++		// .put = skl_tplg_multi_config_set,
++	// },
+ 	{
+ 		.id = SKL_CONTROL_TYPE_VOLUME,
+ 		.info = skl_tplg_volume_ctl_info,
+-- 
+1.9.1
+

@@ -1,0 +1,103 @@
+From c846e026b58e4a75bf57e78e3154653f7c4e4c68 Mon Sep 17 00:00:00 2001
+From: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Date: Sat, 12 May 2018 03:03:14 +0530
+Subject: [PATCH 27/38] drm/i915: Add skl_check_nv12_surface for NV12
+
+We skip src trunction/adjustments for
+NV12 case and handle the sizes directly.
+Without this, pipe fifo underruns are seen on APL/KBL.
+
+v2: For NV12, making the src coordinates multiplier of 4
+
+v3: Moving all the src coords handling code for NV12
+to skl_check_nv12_surface
+
+v4: Added RB from Mika
+
+v5: Rebased the series. Removed checks of mult of 4 in
+skl_update_scaler, Added NV12 condition in intel_check_sprite_plane
+where src x/w is being checked for mult of 2 for yuv planes.
+
+v6: Made changes to skl_check_nv12_surface as per WA#1106
+
+Reviewed-by: Mika Kahola <mika.kahola@intel.com>
+Signed-off-by: Vidya Srinivas <vidya.srinivas@intel.com>
+Signed-off-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Link: https://patchwork.freedesktop.org/patch/msgid/1526074397-10457-4-git-send-email-vidya.srinivas@intel.com
+(cherry picked from commit 5d794288fc562fd584c33a0834b45c134d6202c8)
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_display.c | 28 ++++++++++++++++++++++++++--
+ drivers/gpu/drm/i915/intel_sprite.c  |  3 ++-
+ 2 files changed, 28 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
+index 705fd91..e5f25fc 100644
+--- a/drivers/gpu/drm/i915/intel_display.c
++++ b/drivers/gpu/drm/i915/intel_display.c
+@@ -3071,6 +3071,28 @@ static int skl_check_main_surface(struct intel_plane_state *plane_state)
+ 	return 0;
+ }
+ 
++static int
++skl_check_nv12_surface(struct intel_plane_state *plane_state)
++{
++	/* Display WA #1106 */
++	if (plane_state->base.rotation !=
++	    (DRM_MODE_REFLECT_X | DRM_MODE_ROTATE_90) &&
++	    plane_state->base.rotation != DRM_MODE_ROTATE_270)
++		return 0;
++
++	/*
++	 * src coordinates are rotated here.
++	 * We check height but report it as width
++	 */
++	if (((drm_rect_height(&plane_state->base.src) >> 16) % 4) != 0) {
++		DRM_DEBUG_KMS("src width must be multiple "
++			      "of 4 for rotated NV12\n");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ static int skl_check_nv12_aux_surface(struct intel_plane_state *plane_state)
+ {
+ 	const struct drm_framebuffer *fb = plane_state->base.fb;
+@@ -3163,6 +3185,9 @@ int skl_check_plane_surface(struct intel_plane_state *plane_state)
+ 	 * the main surface setup depends on it.
+ 	 */
+ 	if (fb->format->format == DRM_FORMAT_NV12) {
++		ret = skl_check_nv12_surface(plane_state);
++		if (ret)
++			return ret;
+ 		ret = skl_check_nv12_aux_surface(plane_state);
+ 		if (ret)
+ 			return ret;
+@@ -4896,8 +4921,7 @@ static void cpt_verify_modeset(struct drm_device *dev, int pipe)
+ 	}
+ 
+ 	if (plane_scaler_check && pixel_format == DRM_FORMAT_NV12 &&
+-	    (src_h < SKL_MIN_YUV_420_SRC_H || (src_w % 4) != 0 ||
+-	     (src_h % 4) != 0)) {
++	    (src_h < SKL_MIN_YUV_420_SRC_H || src_w < SKL_MIN_YUV_420_SRC_W)) {
+ 		DRM_DEBUG_KMS("NV12: src dimensions not met\n");
+ 		return -EINVAL;
+ 	}
+diff --git a/drivers/gpu/drm/i915/intel_sprite.c b/drivers/gpu/drm/i915/intel_sprite.c
+index 2399119..730ce15 100644
+--- a/drivers/gpu/drm/i915/intel_sprite.c
++++ b/drivers/gpu/drm/i915/intel_sprite.c
+@@ -1071,7 +1071,8 @@ static u32 g4x_sprite_ctl(const struct intel_crtc_state *crtc_state,
+ 		src_y = src->y1 >> 16;
+ 		src_h = drm_rect_height(src) >> 16;
+ 
+-		if (format_is_yuv(fb->format->format)) {
++		if (format_is_yuv(fb->format->format) &&
++		    fb->format->format != DRM_FORMAT_NV12) {
+ 			src_x &= ~1;
+ 			src_w &= ~1;
+ 
+-- 
+1.9.1
+

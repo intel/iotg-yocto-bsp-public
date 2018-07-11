@@ -1,0 +1,41 @@
+From 3e858469d3a663460be245756589198aa880be6d Mon Sep 17 00:00:00 2001
+From: Jayasankar <jayasankarx.nara@intel.com>
+Date: Tue, 6 Dec 2016 11:18:21 +0800
+Subject: [PATCH 21/43] igb: Make igb_runtime_idle to autosuspend irregardless
+ of link status for RTD3
+
+igb_runtime_idle change is meant for RTD3, that is why we are
+making it autosuspend irregardless of link status.
+
+Signed-off-by: Jayasankar <jayasankarx.nara@intel.com>
+Signed-off-by: Lai, Poey Seng <poey.seng.lai@intel.com>
+Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
+---
+ drivers/net/ethernet/intel/igb/igb_main.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
+index d7b42d6..6821d0e 100644
+--- a/drivers/net/ethernet/intel/igb/igb_main.c
++++ b/drivers/net/ethernet/intel/igb/igb_main.c
+@@ -8718,13 +8718,10 @@ static int __maybe_unused igb_resume(struct device *dev)
+ 
+ static int __maybe_unused igb_runtime_idle(struct device *dev)
+ {
+-	struct pci_dev *pdev = to_pci_dev(dev);
+-	struct net_device *netdev = pci_get_drvdata(pdev);
+-	struct igb_adapter *adapter = netdev_priv(netdev);
+-
+-	if (!igb_has_link(adapter))
+-		pm_schedule_suspend(dev, MSEC_PER_SEC * 5);
+-
++	/* suspending even when cable is connected for rtd3
++	 * support
++	 */
++	pm_request_autosuspend(dev);
+ 	return -EBUSY;
+ }
+ 
+-- 
+1.9.1
+

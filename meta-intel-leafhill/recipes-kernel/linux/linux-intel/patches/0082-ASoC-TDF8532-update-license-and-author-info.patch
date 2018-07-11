@@ -1,0 +1,64 @@
+From a50d0847161910c480ab7b87f7b292908bb54f91 Mon Sep 17 00:00:00 2001
+From: Craig Kewley <craigx.kewley@intel.com>
+Date: Tue, 19 Sep 2017 12:52:30 +0100
+Subject: [PATCH 82/96] ASoC: TDF8532: update license and author info
+
+Update license and author info.
+
+Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
+---
+ sound/soc/codecs/tdf8532.c | 12 ++++++------
+ sound/soc/codecs/tdf8532.h | 11 +++++++++++
+ 2 files changed, 17 insertions(+), 6 deletions(-)
+
+diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
+index fa02186..c86ff51 100644
+--- a/sound/soc/codecs/tdf8532.c
++++ b/sound/soc/codecs/tdf8532.c
+@@ -1,13 +1,12 @@
+ /*
+  * tdf8532.c  --  driver for NXP Semiconductors TDF8532
+  *
+- * Copyright (C) 2016 Intel Corp.
+- * Author: Steffen Wagner <steffen.wagner@intel.com>
++ * Copyright (C) 2017 Intel Corp.
+  *
+- *  This program is free software; you can redistribute  it and/or modify it
+- *  under  the terms of  the GNU General  Public License as published by the
+- *  Free Software Foundation;  either version 2 of the  License, or (at your
+- *  option) any later version.
++ * This program is free software; you can redistribute  it and/or modify it
++ * under  the terms of  the GNU General  Public License as published by the
++ * Free Software Foundation;  either version 2 of the  License, or (at your
++ * option) any later version.
+  *
+  */
+ #include <linux/module.h>
+@@ -443,4 +442,5 @@ static int tdf8532_i2c_remove(struct i2c_client *i2c)
+ 
+ MODULE_DESCRIPTION("ASoC NXP Semiconductors TDF8532 driver");
+ MODULE_AUTHOR("Steffen Wagner <steffen.wagner@intel.com>");
++MODULE_AUTHOR("Craig Kewley <craigx.kewley@intel.com>");
+ MODULE_LICENSE("GPL");
+diff --git a/sound/soc/codecs/tdf8532.h b/sound/soc/codecs/tdf8532.h
+index 2ba3208..2805e7c 100644
+--- a/sound/soc/codecs/tdf8532.h
++++ b/sound/soc/codecs/tdf8532.h
+@@ -1,3 +1,14 @@
++/*
++ * tdf8532.c  --  driver for NXP Semiconductors TDF8532
++ *
++ * Copyright (C) 2017 Intel Corp.
++ *
++ * This program is free software; you can redistribute  it and/or modify it
++ * under  the terms of  the GNU General  Public License as published by the
++ * Free Software Foundation;  either version 2 of the  License, or (at your
++ * option) any later version.
++ *
++ */
+ #ifndef __TDF8532_H_
+ #define __TDF8532_H_
+ 
+-- 
+1.9.1
+

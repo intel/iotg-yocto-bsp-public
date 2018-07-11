@@ -1,0 +1,268 @@
+From 9376022f22b646b8d244266918d8ac7922c39253 Mon Sep 17 00:00:00 2001
+From: Chandra Konduru <chandra.konduru@intel.com>
+Date: Mon, 9 Apr 2018 09:11:13 +0530
+Subject: [PATCH 26/38] drm/i915: Upscale scaler max scale for NV12
+
+This patch updates scaler max limit support for NV12
+
+v2: Rebased (me)
+
+v3: Rebased (me)
+
+v4: Missed the Tested-by/Reviewed-by in the previous series
+Adding the same to commit message in this version.
+
+v5: Addressed review comments from Ville and rebased
+- calculation of max_scale to be made
+less convoluted by splitting it up a bit
+- Indentation errors to be fixed in the series
+
+v6: Rebased (me)
+Fixed review comments from Paauwe, Bob J
+Previous version, where a split of calculation
+was done, was wrong. Fixed that issue here.
+
+v7: Rebased (me)
+
+v8: Rebased (me)
+
+v9: Rebased (me)
+
+v10: Rebased (me)
+
+v11: Addressed review comments from Shashank Sharma
+Alignment issues fixed.
+When call to skl_update_scaler is made, 0 was being
+sent instead of pixel_format.
+When crtc update scaler is called, we dont have the
+fb to derive the pixel format. Added the function
+parameter bool plane_scaler_check to account for this.
+
+v12: Fixed failure in IGT debugfs_test.
+fb is NULL in skl_update_scaler_plane
+Due to this, accessing fb->format caused failure.
+Patch checks fb before using.
+
+v13: In the previous version there was a flaw.
+In skl_update_scaler during plane_scaler_check
+if the format was non-NV12, it would set need_scaling
+to false. This could reset the previously set need_scaling
+from a previous condition check. Patch fixes this.
+Patch also adds minimum src height for YUV 420 formats
+to 16 (as defined in BSpec) and adds for checking this
+range.
+
+v14: Addressed review comments from Maarten
+Just add a check for NV12 min src height in
+skl_update_scaler and retain the remaining checks
+as is. Added Reviewed By from Juha-Pekka Heikkila.
+
+v15: Rebased the series.
+
+v16: Changed fb height restriction to be >= 16 as per
+Bspec. Earlier it was > 16.
+
+v17: Adding src width and height to be mult of 4 restriction
+to avoid pipe fifo underruns for NV12.
+
+Credits-to: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Tested-by: Clinton Taylor <clinton.a.taylor@intel.com>
+Reviewed-by: Clinton Taylor <clinton.a.taylor@intel.com>
+Reviewed-by: Juha-Pekka Heikkila <juhapekka.heikkila@gmail.com>
+Signed-off-by: Chandra Konduru <chandra.konduru@intel.com>
+Signed-off-by: Nabendu Maiti <nabendu.bikash.maiti@intel.com>
+Signed-off-by: Vidya Srinivas <vidya.srinivas@intel.com>
+Reviewed-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Signed-off-by: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Link: https://patchwork.freedesktop.org/patch/msgid/1523245273-30264-15-git-send-email-vidya.srinivas@intel.com
+(cherry picked from commit 77224cd59eae67acfc1259f0756957b10ec7c3b5)
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_display.c | 48 +++++++++++++++++++++++++++---------
+ drivers/gpu/drm/i915/intel_drv.h     |  5 +++-
+ drivers/gpu/drm/i915/intel_sprite.c  |  6 ++++-
+ 3 files changed, 46 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
+index e4022a4..705fd91 100644
+--- a/drivers/gpu/drm/i915/intel_display.c
++++ b/drivers/gpu/drm/i915/intel_display.c
+@@ -3505,6 +3505,8 @@ static u32 skl_plane_ctl_format(uint32_t pixel_format, enum i915_alpha alpha)
+ 		return PLANE_CTL_FORMAT_YUV422 | PLANE_CTL_YUV422_UYVY;
+ 	case DRM_FORMAT_VYUY:
+ 		return PLANE_CTL_FORMAT_YUV422 | PLANE_CTL_YUV422_VYUY;
++	case DRM_FORMAT_NV12:
++		return PLANE_CTL_FORMAT_NV12;
+ 	default:
+ 		MISSING_CASE(pixel_format);
+ 	}
+@@ -4830,7 +4832,9 @@ static void cpt_verify_modeset(struct drm_device *dev, int pipe)
+ static int
+ skl_update_scaler(struct intel_crtc_state *crtc_state, bool force_detach,
+ 		  unsigned int scaler_user, int *scaler_id,
+-		  int src_w, int src_h, int dst_w, int dst_h)
++		  int src_w, int src_h, int dst_w, int dst_h,
++		  bool plane_scaler_check,
++		  uint32_t pixel_format)
+ {
+ 	struct intel_crtc_scaler_state *scaler_state =
+ 		&crtc_state->scaler_state;
+@@ -4848,6 +4852,10 @@ static void cpt_verify_modeset(struct drm_device *dev, int pipe)
+ 	 */
+ 	need_scaling = src_w != dst_w || src_h != dst_h;
+ 
++	if (plane_scaler_check)
++		if (pixel_format == DRM_FORMAT_NV12)
++			need_scaling = true;
++
+ 	if (crtc_state->ycbcr420 && scaler_user == SKL_CRTC_INDEX)
+ 		need_scaling = true;
+ 
+@@ -4887,6 +4895,13 @@ static void cpt_verify_modeset(struct drm_device *dev, int pipe)
+ 		return 0;
+ 	}
+ 
++	if (plane_scaler_check && pixel_format == DRM_FORMAT_NV12 &&
++	    (src_h < SKL_MIN_YUV_420_SRC_H || (src_w % 4) != 0 ||
++	     (src_h % 4) != 0)) {
++		DRM_DEBUG_KMS("NV12: src dimensions not met\n");
++		return -EINVAL;
++	}
++
+ 	/* range checks */
+ 	if (src_w < SKL_MIN_SRC_W || src_h < SKL_MIN_SRC_H ||
+ 		dst_w < SKL_MIN_DST_W || dst_h < SKL_MIN_DST_H ||
+@@ -4923,9 +4938,10 @@ int skl_update_scaler_crtc(struct intel_crtc_state *state)
+ 	const struct drm_display_mode *adjusted_mode = &state->base.adjusted_mode;
+ 
+ 	return skl_update_scaler(state, !state->base.active, SKL_CRTC_INDEX,
+-		&state->scaler_state.scaler_id,
+-		state->pipe_src_w, state->pipe_src_h,
+-		adjusted_mode->crtc_hdisplay, adjusted_mode->crtc_vdisplay);
++				 &state->scaler_state.scaler_id,
++				 state->pipe_src_w, state->pipe_src_h,
++				 adjusted_mode->crtc_hdisplay,
++				 adjusted_mode->crtc_vdisplay, false, 0);
+ }
+ 
+ /**
+@@ -4955,7 +4971,8 @@ static int skl_update_scaler_plane(struct intel_crtc_state *crtc_state,
+ 				drm_rect_width(&plane_state->base.src) >> 16,
+ 				drm_rect_height(&plane_state->base.src) >> 16,
+ 				drm_rect_width(&plane_state->base.dst),
+-				drm_rect_height(&plane_state->base.dst));
++				drm_rect_height(&plane_state->base.dst),
++				fb ? true : false, fb ? fb->format->format : 0);
+ 
+ 	if (ret || plane_state->scaler_id < 0)
+ 		return ret;
+@@ -4981,6 +4998,7 @@ static int skl_update_scaler_plane(struct intel_crtc_state *crtc_state,
+ 	case DRM_FORMAT_YVYU:
+ 	case DRM_FORMAT_UYVY:
+ 	case DRM_FORMAT_VYUY:
++	case DRM_FORMAT_NV12:
+ 		break;
+ 	default:
+ 		DRM_DEBUG_KMS("[PLANE:%d:%s] FB:%d unsupported scaling format 0x%x\n",
+@@ -13144,11 +13162,13 @@ static int intel_atomic_commit(struct drm_device *dev,
+ }
+ 
+ int
+-skl_max_scale(struct intel_crtc *intel_crtc, struct intel_crtc_state *crtc_state)
++skl_max_scale(struct intel_crtc *intel_crtc,
++	      struct intel_crtc_state *crtc_state,
++	      uint32_t pixel_format)
+ {
+ 	struct drm_i915_private *dev_priv;
+-	int max_scale;
+-	int crtc_clock, max_dotclk;
++	int max_scale, mult;
++	int crtc_clock, max_dotclk, tmpclk1, tmpclk2;
+ 
+ 	if (!intel_crtc || !crtc_state->base.enable)
+ 		return DRM_PLANE_HELPER_NO_SCALING;
+@@ -13170,8 +13190,10 @@ static int intel_atomic_commit(struct drm_device *dev,
+ 	 *            or
+ 	 *    cdclk/crtc_clock
+ 	 */
+-	max_scale = min((1 << 16) * 3 - 1,
+-			(1 << 8) * ((max_dotclk << 8) / crtc_clock));
++	mult = pixel_format == DRM_FORMAT_NV12 ? 2 : 3;
++	tmpclk1 = (1 << 16) * mult - 1;
++	tmpclk2 = (1 << 8) * ((max_dotclk << 8) / crtc_clock);
++	max_scale = min(tmpclk1, tmpclk2);
+ 
+ 	return max_scale;
+ }
+@@ -13187,12 +13209,16 @@ static int intel_atomic_commit(struct drm_device *dev,
+ 	int max_scale = DRM_PLANE_HELPER_NO_SCALING;
+ 	bool can_position = false;
+ 	int ret;
++	uint32_t pixel_format = 0;
+ 
+ 	if (INTEL_GEN(dev_priv) >= 9) {
+ 		/* use scaler when colorkey is not required */
+ 		if (state->ckey.flags == I915_SET_COLORKEY_NONE) {
+ 			min_scale = 1;
+-			max_scale = skl_max_scale(to_intel_crtc(crtc), crtc_state);
++			if (state->base.fb)
++				pixel_format = state->base.fb->format->format;
++			max_scale = skl_max_scale(to_intel_crtc(crtc),
++						  crtc_state, pixel_format);
+ 		}
+ 		can_position = true;
+ 	}
+diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
+index 55ac6d7..c009937 100644
+--- a/drivers/gpu/drm/i915/intel_drv.h
++++ b/drivers/gpu/drm/i915/intel_drv.h
+@@ -547,6 +547,8 @@ struct intel_initial_plane_config {
+ #define SKL_MAX_DST_W 4096
+ #define SKL_MIN_DST_H 8
+ #define SKL_MAX_DST_H 4096
++#define SKL_MIN_YUV_420_SRC_W 16
++#define SKL_MIN_YUV_420_SRC_H 16
+ 
+ struct intel_scaler {
+ 	int in_use;
+@@ -1569,7 +1571,8 @@ void intel_mode_from_pipe_config(struct drm_display_mode *mode,
+ 				 struct intel_crtc_state *pipe_config);
+ 
+ int skl_update_scaler_crtc(struct intel_crtc_state *crtc_state);
+-int skl_max_scale(struct intel_crtc *crtc, struct intel_crtc_state *crtc_state);
++int skl_max_scale(struct intel_crtc *crtc, struct intel_crtc_state *crtc_state,
++		  uint32_t pixel_format);
+ 
+ static inline u32 intel_plane_ggtt_offset(const struct intel_plane_state *state)
+ {
+diff --git a/drivers/gpu/drm/i915/intel_sprite.c b/drivers/gpu/drm/i915/intel_sprite.c
+index 740efac..2399119 100644
+--- a/drivers/gpu/drm/i915/intel_sprite.c
++++ b/drivers/gpu/drm/i915/intel_sprite.c
+@@ -962,6 +962,7 @@ static u32 g4x_sprite_ctl(const struct intel_crtc_state *crtc_state,
+ 	int max_scale, min_scale;
+ 	bool can_scale;
+ 	int ret;
++	uint32_t pixel_format = 0;
+ 
+ 	*src = drm_plane_state_src(&state->base);
+ 	*dst = drm_plane_state_dest(&state->base);
+@@ -985,11 +986,14 @@ static u32 g4x_sprite_ctl(const struct intel_crtc_state *crtc_state,
+ 
+ 	/* setup can_scale, min_scale, max_scale */
+ 	if (INTEL_GEN(dev_priv) >= 9) {
++		if (state->base.fb)
++			pixel_format = state->base.fb->format->format;
+ 		/* use scaler when colorkey is not required */
+ 		if (state->ckey.flags == I915_SET_COLORKEY_NONE) {
+ 			can_scale = 1;
+ 			min_scale = 1;
+-			max_scale = skl_max_scale(crtc, crtc_state);
++			max_scale =
++				skl_max_scale(crtc, crtc_state, pixel_format);
+ 		} else {
+ 			can_scale = 0;
+ 			min_scale = DRM_PLANE_HELPER_NO_SCALING;
+-- 
+1.9.1
+

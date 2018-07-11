@@ -1,0 +1,40 @@
+From daa31f062a2abfb9e41691c17c7b83c4c974746a Mon Sep 17 00:00:00 2001
+From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
+Date: Thu, 12 Oct 2017 18:28:05 +0800
+Subject: [PATCH 29/31] ASoC: Intel: Skylake: Checking the dapm widgtet before
+ the recursive call
+
+Kernel was crashing due to NULL pointer dereference of dapm widget pointer
+while playing the audio file with multiple pipeline configuration topology
+
+This patch is to make sure to check the dapm widget pointer before the
+every recursive call.
+
+Signed-off-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl-topology.c
+---
+ sound/soc/intel/skylake/skl-topology.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/sound/soc/intel/skylake/skl-topology.c b/sound/soc/intel/skylake/skl-topology.c
+index fe677b7..6c457c8 100644
+--- a/sound/soc/intel/skylake/skl-topology.c
++++ b/sound/soc/intel/skylake/skl-topology.c
+@@ -1660,7 +1660,11 @@ static int skl_tplg_bind_sinks(struct snd_soc_dapm_widget *w,
+ 		}
+ 	}
+ 
+-	if (!sink && next_sink)
++	/* NOTE: While selecting the multiple pipeline confguration next_sink
++	 * become NULL. So sink and next_sink checking is required for muliple
++	 * pipeline configuration.
++	 */
++	if ((!sink) && (next_sink))
+ 		return skl_tplg_bind_sinks(next_sink, skl, src_w, src_mconfig);
+ 
+ 	return 0;
+-- 
+1.9.1
+

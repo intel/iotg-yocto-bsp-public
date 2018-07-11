@@ -1,0 +1,40 @@
+From 4bfd9312d84723fddf031827d50db1b093898432 Mon Sep 17 00:00:00 2001
+From: CraigX Kewley <craigx.kewley@intel.com>
+Date: Wed, 22 Feb 2017 11:47:22 +0000
+Subject: [PATCH 53/96] ASoC: Intel: Skylake: Add HDMI capture support
+
+GPMRB contains HDMI capture device, add support in platform driver DAI.
+
+Signed-off-by: CraigX Kewley <craigx.kewley@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl-pcm.c
+---
+ sound/soc/intel/skylake/skl-pcm.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index 15f6290..91a30e3 100755
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -1276,6 +1276,17 @@ struct skl_dsp_notify_ops cb_ops = {
+ 			SNDRV_PCM_FMTBIT_S32_LE,
+ 		.sig_bits = 32,
+ 	},
++	.capture = {
++		.stream_name = "HDMI2 Capture",
++		.channels_min = HDA_STEREO,
++		.channels_max = 8,
++		.rates = SNDRV_PCM_RATE_32000 | SNDRV_PCM_RATE_44100 |
++			SNDRV_PCM_RATE_48000 | SNDRV_PCM_RATE_88200 |
++			SNDRV_PCM_RATE_96000 | SNDRV_PCM_RATE_176400 |
++			SNDRV_PCM_RATE_192000,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE |
++			SNDRV_PCM_FMTBIT_S32_LE,
++	},
+ },
+ {
+ 	.name = "HDMI3 Pin",
+-- 
+1.9.1
+

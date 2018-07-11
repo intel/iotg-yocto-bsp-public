@@ -1,0 +1,1280 @@
+From 5953560b03fe9c4ce7dd81337fc120fc70f484fb Mon Sep 17 00:00:00 2001
+From: Markus Schweikhardt <markus.schweikhardt@intel.com>
+Date: Tue, 16 Feb 2016 10:26:40 +0100
+Subject: [PATCH 31/96] ASoC: Codecs: Add codec driver for TDF8532
+
+ I2C based codec driver for TDF8532 added. Driver
+ sends enable/disbale command via I2C in dai_trigger callback.
+
+Signed-off-by: Markus Schweikhardt <markus.schweikhardt@intel.com>
+
+Conflicts:
+	arch/x86/Kconfig
+	arch/x86/platform/bxt/Makefile
+	sound/soc/codecs/Kconfig
+	sound/soc/codecs/Makefile
+	sound/soc/codecs/tdf8532.c
+	sound/soc/intel/Kconfig
+---
+ arch/x86/Kconfig                    |   3 +
+ arch/x86/platform/bxt/Makefile      |   1 +
+ arch/x86/platform/bxt/gpmrb-board.c |  23 ++
+ sound/soc/codecs/Kconfig            |   2 +-
+ sound/soc/codecs/Makefile           |   2 +
+ sound/soc/codecs/tdf8532.c          | 424 +++++-----------------------
+ sound/soc/intel/boards/Kconfig      |   2 +
+ sound/soc/intel/boards/bxt_gpmrb.c  | 544 ++++++++++++++++++------------------
+ 8 files changed, 379 insertions(+), 622 deletions(-)
+ create mode 100644 arch/x86/platform/bxt/Makefile
+ create mode 100644 arch/x86/platform/bxt/gpmrb-board.c
+
+diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
+index 90c8c82..75f445e 100644
+--- a/arch/x86/Kconfig
++++ b/arch/x86/Kconfig
+@@ -1,4 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0
++config GPMRB_BRD
++    bool "Support for GP I2C registration"
++
+ # Select 32 or 64 bit
+ config 64BIT
+ 	bool "64-bit kernel" if ARCH = "x86"
+diff --git a/arch/x86/platform/bxt/Makefile b/arch/x86/platform/bxt/Makefile
+new file mode 100644
+index 0000000..2dc47f6
+--- /dev/null
++++ b/arch/x86/platform/bxt/Makefile
+@@ -0,0 +1 @@
++obj-$(CONFIG_GPMRB_BRD) += gpmrb-board.o
+diff --git a/arch/x86/platform/bxt/gpmrb-board.c b/arch/x86/platform/bxt/gpmrb-board.c
+new file mode 100644
+index 0000000..d77dec8
+--- /dev/null
++++ b/arch/x86/platform/bxt/gpmrb-board.c
+@@ -0,0 +1,23 @@
++#include <linux/init.h>
++#include <linux/module.h>
++#include <linux/device.h>
++#include <linux/kernel.h>
++#include <linux/i2c.h>
++
++static const struct i2c_board_info i2c_bus_info[] = {
++
++ { I2C_BOARD_INFO("tdf8532", 0xD8>>1) },
++
++};
++
++static int __init gpmrb_board_init(void)
++{
++  int ret;
++  printk("Init gpmrb board\n");
++  ret = i2c_register_board_info(4, &i2c_bus_info[0], 1);
++  printk("Init gpmrb board: i2c_register function returned: %d\n",ret);
++  return ret;
++}
++
++arch_initcall(gpmrb_board_init);
++MODULE_LICENSE(GPL);
+diff --git a/sound/soc/codecs/Kconfig b/sound/soc/codecs/Kconfig
+index 2346497..a8e287c 100644
+--- a/sound/soc/codecs/Kconfig
++++ b/sound/soc/codecs/Kconfig
+@@ -903,7 +903,7 @@ config SND_SOC_TAS5720
+ 	  Class-D audio power amplifiers.
+ 
+ config SND_SOC_TDF8532
+-        tristate
++        tristate "NXP Semiconductors TDF8532 Codec"
+         depends on I2C
+ 
+ config SND_SOC_TFA9879
+diff --git a/sound/soc/codecs/Makefile b/sound/soc/codecs/Makefile
+index 8a6ee2c..fedef12 100644
+--- a/sound/soc/codecs/Makefile
++++ b/sound/soc/codecs/Makefile
+@@ -71,6 +71,7 @@ snd-soc-da9055-objs := da9055.o
+ snd-soc-dmic-objs := dmic.o
+ snd-soc-es7134-objs := es7134.o
+ snd-soc-es8316-objs := es8316.o
++snd-soc-tdf8532-objs := tdf8532.o
+ snd-soc-es8328-objs := es8328.o
+ snd-soc-es8328-i2c-objs := es8328-i2c.o
+ snd-soc-es8328-spi-objs := es8328-spi.o
+@@ -316,6 +317,7 @@ obj-$(CONFIG_SND_SOC_DA9055)	+= snd-soc-da9055.o
+ obj-$(CONFIG_SND_SOC_DMIC)	+= snd-soc-dmic.o
+ obj-$(CONFIG_SND_SOC_ES7134)	+= snd-soc-es7134.o
+ obj-$(CONFIG_SND_SOC_ES8316)    += snd-soc-es8316.o
++obj-$(CONFIG_SND_SOC_TDF8532) += snd-soc-tdf8532.o
+ obj-$(CONFIG_SND_SOC_ES8328)	+= snd-soc-es8328.o
+ obj-$(CONFIG_SND_SOC_ES8328_I2C)+= snd-soc-es8328-i2c.o
+ obj-$(CONFIG_SND_SOC_ES8328_SPI)+= snd-soc-es8328-spi.o
+diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
+index ccad958..2a5848a 100644
+--- a/sound/soc/codecs/tdf8532.c
++++ b/sound/soc/codecs/tdf8532.c
+@@ -1,429 +1,153 @@
+ /*
+- * Codec driver for NXP Semiconductors - TDF8532
+- * Copyright (c) 2017, Intel Corporation.
++ * tdf8532.c  --  driver for NXP Semiconductors TDF8532
+  *
+- * This program is free software; you can redistribute it and/or modify it
+- * under the terms and conditions of the GNU General Public License,
+- * version 2, as published by the Free Software Foundation.
++ * Copyright (C) 2016 Intel Corp.
++ * Author: Steffen Wagner <steffen.wagner@intel.com>
++ *
++ *  This program is free software; you can redistribute  it and/or modify it
++ *  under  the terms of  the GNU General  Public License as published by the
++ *  Free Software Foundation;  either version 2 of the  License, or (at your
++ *  option) any later version.
+  *
+- * This program is distributed in the hope it will be useful, but WITHOUT
+- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+- * more details.
+  */
+ 
++#define DEBUG
++
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/i2c.h>
+-#include <linux/jiffies.h>
+-#include <linux/time.h>
+-#include <linux/acpi.h>
++#include <linux/regmap.h>
+ #include <sound/soc.h>
+ #include <sound/tlv.h>
+ #include <sound/pcm_params.h>
+-#include "tdf8532.h"
+-
+-static int __tdf8532_build_pkt(struct tdf8532_priv *dev_data,
+-				va_list valist,	u8 *payload)
+-{
+-	int param;
+-	u8 len;
+-	u8 *cmd_payload;
+-	const u8 cmd_offset = 3;
+-
+-	payload[HEADER_TYPE] = MSG_TYPE_STX;
+-	payload[HEADER_PKTID] = dev_data->pkt_id;
+-
+-	cmd_payload = &(payload[cmd_offset]);
+-
+-	param = va_arg(valist, int);
+-	len = 0;
+-
+-	while (param != END) {
+-		cmd_payload[len] = param;
+ 
+-		len++;
+-
+-		param = va_arg(valist, int);
+-	}
+-
+-	payload[HEADER_LEN] = len;
++struct tdf8532_priv{
++	struct i2c_client* tdf8532_i2c_client;
++};
+ 
+-	return len + cmd_offset;
+-}
++struct tdf8532_priv tdf8532;
+ 
+-static int __tdf8532_single_write(struct tdf8532_priv *dev_data,
+-						int dummy, ...)
++static int tdf8532_dai_startup(struct snd_pcm_substream *substream,
++		struct snd_soc_dai *dai)
+ {
+-	va_list valist;
+-	int ret;
+-	u8 len;
+-	u8 payload[255];
+-
+-	va_start(valist, dummy);
+-
+-	len = __tdf8532_build_pkt(dev_data, valist, payload);
+-
+-	va_end(valist);
+-
+-	print_hex_dump_debug("tdf8532-codec: Tx:", DUMP_PREFIX_NONE, 32, 1,
+-			payload, len, false);
+-	ret = i2c_master_send(dev_data->i2c, payload, len);
+-
+-	dev_data->pkt_id++;
+-
+-	if (ret < 0) {
+-		dev_err(&(dev_data->i2c->dev),
+-				"i2c send packet returned: %d\n", ret);
+-
+-		return ret;
+-	}
+-
++	printk(KERN_DEBUG "%s\n",__func__);
+ 	return 0;
+ }
+ 
+-
+-static uint8_t tdf8532_read_wait_ack(struct tdf8532_priv *dev_data,
+-						unsigned long timeout)
+-{
+-	uint8_t ack_repl[HEADER_SIZE] = {0, 0, 0};
+-	unsigned long timeout_point = jiffies + timeout;
+-	int ret;
+-
+-	usleep_range(10000,20000);
+-	do {
+-		ret = i2c_master_recv(dev_data->i2c, ack_repl, HEADER_SIZE);
+-		if (ret < 0)
+-			goto out;
+-	} while (time_before(jiffies, timeout_point) &&
+-			ack_repl[0] != MSG_TYPE_ACK);
+-
+-	if (ack_repl[0] != MSG_TYPE_ACK)
+-		return -ETIME;
+-	else
+-		return ack_repl[2];
+-
+-out:
+-	return ret;
+-}
+-
+-static uint8_t tdf8532_single_read(struct tdf8532_priv *dev_data,
+-						char **repl_buff)
+-{
+-	int ret;
+-	uint8_t len;
+-
+-	struct device *dev = &(dev_data->i2c->dev);
+-
+-	ret = tdf8532_read_wait_ack(dev_data, msecs_to_jiffies(ACK_TIMEOUT));
+-
+-	if (ret < 0) {
+-		dev_err(dev,
+-				"Error waiting for ACK reply: %d\n", ret);
+-		goto out;
+-	}
+-
+-	len = ret + HEADER_SIZE;
+-
+-	*repl_buff = kzalloc(len, GFP_KERNEL);
+-
+-	ret = i2c_master_recv(dev_data->i2c, *repl_buff, len);
+-
+-	print_hex_dump_debug("tdf8532-codec: Rx:", DUMP_PREFIX_NONE, 32, 1,
+-			*repl_buff, len, false);
+-
+-	if (ret < 0 || ret != len) {
+-		dev_err(dev,
+-				"i2c recv packet returned: %d (expected: %d)\n",
+-				ret, len);
+-		goto out_free;
+-	}
+-
+-	return len;
+-
+-out_free:
+-	kfree(*repl_buff);
+-	repl_buff = NULL;
+-out:
+-	return ret;
+-}
+-
+-static int tdf8532_get_state(struct tdf8532_priv *dev_data,
+-		struct get_dev_status_repl **status_repl)
+-{
+-	int ret = 0;
+-	char *repl_buff = NULL;
+-
+-	ret = tdf8532_amp_write(dev_data, GET_DEV_STATUS);
+-	if (ret < 0)
+-		goto out;
+-
+-	ret = tdf8532_single_read(dev_data, &repl_buff);
+-	if (ret < 0)
+-		goto out;
+-
+-	*status_repl = (struct get_dev_status_repl *) repl_buff;
+-
+-out:
+-	return ret;
+-}
+-
+-static int tdf8532_wait_state(struct tdf8532_priv *dev_data, u8 req_state,
+-							unsigned long timeout)
+-{
+-	unsigned long timeout_point = jiffies + msecs_to_jiffies(timeout);
+-	int ret;
+-	struct get_dev_status_repl *status_repl = NULL;
+-	struct device *dev = &(dev_data->i2c->dev);
+-
+-	do {
+-		ret = tdf8532_get_state(dev_data, &status_repl);
+-		if (ret < 0)
+-			goto out;
+-
+-		print_hex_dump_debug("tdf8532-codec: wait_state: ",
+-				DUMP_PREFIX_NONE, 32, 1, status_repl,
+-				6, false);
+-	} while (time_before(jiffies, timeout_point)
+-			&& status_repl->state != req_state);
+-
+-	if (status_repl->state == req_state)
+-		return 0;
+-
+-	ret = -ETIME;
+-
+-	dev_err(dev, "tdf8532-codec: state: %u, req_state: %u, ret: %d\n",
+-			status_repl->state, req_state, ret);
+-
+-out:
+-	kfree(status_repl);
+-	return ret;
+-}
+-
+-static int tdf8532_start_play(struct tdf8532_priv *tdf8532)
+-{
+-	int ret;
+-
+-	ret = tdf8532_amp_write(tdf8532, SET_CLK_STATE, CLK_CONNECT);
+-	if (ret < 0)
+-		return ret;
+-
+-	ret = tdf8532_amp_write(tdf8532, SET_CHNL_ENABLE,
+-			CHNL_MASK(tdf8532->channels));
+-
+-	if (ret >= 0)
+-		ret = tdf8532_wait_state(tdf8532, STATE_PLAY, ACK_TIMEOUT);
+-
+-	return ret;
+-}
+-
+-
+-static int tdf8532_stop_play(struct tdf8532_priv *tdf8532)
++static int tdf8532_dai_hw_params(struct snd_pcm_substream *substream,
++		struct snd_pcm_hw_params *params,
++		struct snd_soc_dai *dai)
+ {
+-	int ret;
+-
+-	ret = tdf8532_amp_write(tdf8532, SET_CHNL_DISABLE,
+-			CHNL_MASK(tdf8532->channels));
+-	if (ret < 0)
+-		goto out;
+-
+-	ret = tdf8532_wait_state(tdf8532, STATE_STBY, ACK_TIMEOUT);
+-
+-	if (ret < 0)
+-		goto out;
+-
+-	ret = tdf8532_amp_write(tdf8532, SET_CLK_STATE, CLK_DISCONNECT);
+-	if (ret < 0)
+-		goto out;
+-
+-	ret = tdf8532_wait_state(tdf8532, STATE_IDLE, ACK_TIMEOUT);
+-
+-out:
+-#if IS_ENABLED(CONFIG_SND_SOC_SOF_INTEL)
+-	/*
+-	 * FIXME: this is only work around to fix the stop failed issue on SOF,
+-	 * return success always to make the next start successfully.
+-	 */
+-	ret = 0;
+-#endif
+-	return ret;
++	printk(KERN_DEBUG "%s\n",__func__);
++	return 0;
+ }
+ 
+-
+ static int tdf8532_dai_trigger(struct snd_pcm_substream *substream, int cmd,
+ 		struct snd_soc_dai *dai)
+ {
+ 	int ret = 0;
+-	struct snd_soc_codec *codec = dai->codec;
+-	struct tdf8532_priv *tdf8532 = snd_soc_codec_get_drvdata(codec);
+-
+-	dev_dbg(codec->dev, "%s: cmd = %d\n", __func__, cmd);
++	unsigned char data[6] = {0x02, 0x00, 0x03, 0x80, 0x1A, 0x01};
++	printk(KERN_DEBUG "%s: cmd = %d\n",__func__, cmd);
+ 
+ 	switch (cmd) {
+ 	case SNDRV_PCM_TRIGGER_START:
+ 	case SNDRV_PCM_TRIGGER_PAUSE_RELEASE:
+ 	case SNDRV_PCM_TRIGGER_RESUME:
+-		ret = tdf8532_start_play(tdf8532);
++		data[5]=0x01;
+ 		break;
++
+ 	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
+ 	case SNDRV_PCM_TRIGGER_SUSPEND:
+ 	case SNDRV_PCM_TRIGGER_STOP:
+-		ret = tdf8532_stop_play(tdf8532);
++		data[5]=0x00;
+ 		break;
+ 	}
+-
+-	return ret;
++	ret = i2c_master_send(tdf8532.tdf8532_i2c_client, data, 6);
++	printk(KERN_DEBUG "%s: return value of i2c master send: %d\n",__func__,ret);
++	if(ret <= 0){
++		return ret;
++	}
++	return 0;
+ }
+ 
+-static int tdf8532_mute(struct snd_soc_dai *dai, int mute)
++static int tdf8532_dai_prepare(struct snd_pcm_substream *substream,struct snd_soc_dai *dai)
+ {
+-	struct snd_soc_codec *codec = dai->codec;
+-	struct tdf8532_priv *tdf8532 = snd_soc_codec_get_drvdata(dai->codec);
+-
+-	dev_dbg(codec->dev, "%s\n", __func__);
+-
+-	if (mute)
+-		return tdf8532_amp_write(tdf8532, SET_CHNL_MUTE,
+-				CHNL_MASK(CHNL_MAX));
+-	else
+-		return tdf8532_amp_write(tdf8532, SET_CHNL_UNMUTE,
+-				CHNL_MASK(CHNL_MAX));
++	printk(KERN_DEBUG "%s\n",__func__);
++	return 0;
+ }
+ 
++
+ static const struct snd_soc_dai_ops tdf8532_dai_ops = {
+-	.trigger  = tdf8532_dai_trigger,
+-	.digital_mute = tdf8532_mute,
++		.startup  = tdf8532_dai_startup,
++		.hw_params  = tdf8532_dai_hw_params,
++		.trigger  = tdf8532_dai_trigger,
++		.prepare  = tdf8532_dai_prepare,
+ };
+ 
+ static struct snd_soc_codec_driver soc_codec_tdf8532;
+ 
++#define TDF8532_RATES SNDRV_PCM_RATE_48000
++#define TDF8532_FORMATS SNDRV_PCM_FMTBIT_S16_LE
++
+ static struct snd_soc_dai_driver tdf8532_dai[] = {
+-	{
+-		.name = "tdf8532-hifi",
+-		.playback = {
+-			.stream_name = "Playback",
+-			.channels_min = 4,
+-			.channels_max = 4,
+-			.rates = SNDRV_PCM_RATE_48000,
+-			.formats = SNDRV_PCM_FMTBIT_S16_LE,
+-		},
+-		.ops = &tdf8532_dai_ops,
+-	}
++		{
++				.name = "tdf8532-hifi",
++				.playback = {
++						.stream_name = "Playback",
++						.channels_min = 1,
++						.channels_max = 4,
++						.rates = TDF8532_RATES,
++						.formats = TDF8532_FORMATS, },
++						.ops = &tdf8532_dai_ops,
++		}
+ };
+ 
++
+ static int tdf8532_i2c_probe(struct i2c_client *i2c,
+ 		const struct i2c_device_id *id)
+ {
+-	int ret;
+-	struct tdf8532_priv *dev_data;
+-	struct device *dev = &(i2c->dev);
+-	u8 payload[16];
+-	int ret1;
+-
+-	dev_dbg(&i2c->dev, "%s\n", __func__);
+-
+-	dev_data = devm_kzalloc(dev, sizeof(struct tdf8532_priv), GFP_KERNEL);
+-
+-	if (!dev_data) {
+-		ret = -ENOMEM;
+-		goto out;
+-	}
+-
+-	dev_data->i2c = i2c;
+-	dev_data->pkt_id = 0;
+-	dev_data->channels = 4;
+ 
+-	i2c_set_clientdata(i2c, dev_data);
++	int ret;
++	tdf8532.tdf8532_i2c_client = i2c;
+ 
++	printk(KERN_DEBUG "%s\n",__func__);
+ 	ret = snd_soc_register_codec(&i2c->dev, &soc_codec_tdf8532,
+ 			tdf8532_dai, ARRAY_SIZE(tdf8532_dai));
+-	if (ret != 0) {
+-		dev_err(&i2c->dev, "Failed to register codec: %d\n", ret);
+-		goto out;
++	if(ret!= 0)
++	{
++		dev_err(&i2c->dev,"%s failed!!\n",__func__);
++		return ret;
+ 	}
+ 
+-#if IS_ENABLED(CONFIG_SND_SOC_SOF_INTEL)
+-	/* We support 2 channels, 16bit 48KHz for SOF only at the moment */
+-	dev_data->channels = 2;
+-	/* set format */
+-	payload[0] = 0x02;
+-	payload[1] = 0x00;
+-	payload[2] = 0x08;
+-	payload[3] = 0x80;/* ModuleId */
+-	payload[4] = 0x1c;/* CmdId, SetAudioConfig_cmd */
+-	payload[5] = 0;/* rfa */
+-	payload[6] = 0x01;/* SamplingFrequency, 48KHz */
+-	payload[7] = 0x00;/* FrameSize, 2 slots per I2S frame */
+-	payload[8] = 0x00;/* SlotSize, 16bit */
+-	/* TDMFrameSync, TDM frame starts at rising edge frame sync */
+-	payload[9] = 0x1;
+-	payload[10] = 0x1;/* BitClockDelay, no delay */
+-	ret1 = i2c_master_send(dev_data->i2c, payload, 11);
+-
+-	/* set routing */
+-	payload[0] = 0x02;
+-	payload[1] = 0x00;
+-	payload[2] = 0x06;
+-	payload[3] = 0x80;/* ModuleId */
+-	payload[4] = 0x28;/* CmdId, SetAudioRoutingConfig_cmd */
+-	/* channel 0 */
+-	payload[5] = 0;/* AudioSource, SDI1 */
+-	payload[6] = 0x00;/* SlotNr, Slot 0 */
+-	/* channel 1 */
+-	payload[7] = 0;/* AudioSource, SDI1 */
+-	payload[8] = 0x01;/* SlotNr, Slot 1 */
+-	ret1 = i2c_master_send(dev_data->i2c, payload, 9);
+-
+-	/* initial to disable all channels */
+-	ret = tdf8532_amp_write(dev_data, SET_CHNL_DISABLE,
+-			CHNL_MASK(8));
+-
+-#endif
+-
+-	if (ret < 0)
+-		dev_err(&i2c->dev,
+-			"i2c send set format packet returned:%d\n", ret);
++	return 0;
+ 
+-out:
+-	return ret;
+ }
+ 
+ static int tdf8532_i2c_remove(struct i2c_client *i2c)
+ {
+ 	snd_soc_unregister_codec(&i2c->dev);
+-
+ 	return 0;
+ }
+ 
+ static const struct i2c_device_id tdf8532_i2c_id[] = {
+-	{ "tdf8532", 0 },
+-	{ }
++		{ "tdf8532", 0 },
++		{ }
+ };
+ 
+ MODULE_DEVICE_TABLE(i2c, tdf8532_i2c_id);
+ 
+-#if CONFIG_ACPI
+-static const struct acpi_device_id tdf8532_acpi_match[] = {
+-	{"INT34C3", 0},
+-	{},
+-};
+-
+-MODULE_DEVICE_TABLE(acpi, tdf8532_acpi_match);
+-#endif
+-
+ static struct i2c_driver tdf8532_i2c_driver = {
+-	.driver = {
+-		.name = "tdf8532-codec",
+-		.owner = THIS_MODULE,
+-		.acpi_match_table = ACPI_PTR(tdf8532_acpi_match),
+-	},
+-	.probe =    tdf8532_i2c_probe,
+-	.remove =   tdf8532_i2c_remove,
+-	.id_table = tdf8532_i2c_id,
++		.driver = {
++				.name = "tdf8532-codec",
++				.owner = THIS_MODULE,
++		},
++		.probe =    tdf8532_i2c_probe,
++		.remove =   tdf8532_i2c_remove,
++		.id_table = tdf8532_i2c_id,
+ };
+ 
+ module_i2c_driver(tdf8532_i2c_driver);
+ 
+ MODULE_DESCRIPTION("ASoC NXP Semiconductors TDF8532 driver");
+ MODULE_AUTHOR("Steffen Wagner <steffen.wagner@intel.com>");
+-MODULE_LICENSE("GPL v2");
++MODULE_LICENSE("GPL");
+diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
+index 9e7743c..be7d533 100644
+--- a/sound/soc/intel/boards/Kconfig
++++ b/sound/soc/intel/boards/Kconfig
+@@ -377,6 +377,8 @@ config SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH
+ config SND_SOC_INTEL_BXT_GPMRB_MACH
+ 	tristate "ASoC Audio driver for BXT IVI GP MRB"
+ 	select SND_SOC_INTEL_SST
++	select SND_SOC_TDF8532
++	select GPMRB_BRD
+ 	default n
+ 	help
+ 	   This adds support for ASoC machine driver for Broxton IVI GP MRB platform
+diff --git a/sound/soc/intel/boards/bxt_gpmrb.c b/sound/soc/intel/boards/bxt_gpmrb.c
+index dfe8c22..4557aad 100644
+--- a/sound/soc/intel/boards/bxt_gpmrb.c
++++ b/sound/soc/intel/boards/bxt_gpmrb.c
+@@ -22,14 +22,16 @@
+ #include <sound/pcm.h>
+ #include <sound/soc.h>
+ #include <linux/gpio.h>
++#include <linux/i2c.h>
+ #include <sound/pcm_params.h>
+ 
+ /* NXP TDF8532 Amplifier Mute Pin */
+ #define GPIO_AMP_MUTE 322
+ 
+ 
++
+ static const struct snd_kcontrol_new broxton_controls[] = {
+-	SOC_DAPM_PIN_SWITCH("Speaker"),
++		SOC_DAPM_PIN_SWITCH("Speaker"),
+ };
+ 
+ /* mute speaker amplifier on/off depending on use */
+@@ -40,55 +42,55 @@ static int amp_event(struct snd_soc_dapm_widget *w, struct snd_kcontrol *k, int
+ }
+ 
+ static const struct snd_soc_dapm_widget broxton_widgets[] = {
+-	SND_SOC_DAPM_SPK("Speaker", amp_event),
+-	SND_SOC_DAPM_MIC("DiranaCp", NULL),
+-	SND_SOC_DAPM_HP("DiranaPb", NULL),
+-	SND_SOC_DAPM_MIC("HdmiIn", NULL),
+-	SND_SOC_DAPM_MIC("TestPinCp", NULL),
+-	SND_SOC_DAPM_HP("TestPinPb", NULL),
+-	SND_SOC_DAPM_MIC("BtHfpDl", NULL),
+-	SND_SOC_DAPM_HP("BtHfpUl", NULL),
+-	SND_SOC_DAPM_MIC("ModemDl", NULL),
+-	SND_SOC_DAPM_HP("ModemUl", NULL),
++		SND_SOC_DAPM_SPK("Speaker", amp_event),
++		SND_SOC_DAPM_MIC("DiranaCp", NULL),
++		SND_SOC_DAPM_HP("DiranaPb", NULL),
++		SND_SOC_DAPM_MIC("HdmiIn", NULL),
++		SND_SOC_DAPM_MIC("TestPinCp", NULL),
++		SND_SOC_DAPM_HP("TestPinPb", NULL),
++		SND_SOC_DAPM_MIC("BtHfpDl", NULL),
++		SND_SOC_DAPM_HP("BtHfpUl", NULL),
++		SND_SOC_DAPM_MIC("ModemDl", NULL),
++		SND_SOC_DAPM_HP("ModemUl", NULL),
+ };
+ 
+ static const struct snd_soc_dapm_route broxton_gpmrb_map[] = {
+ 
+-	/* Speaker BE connections */
+-	{ "Speaker", NULL, "ssp4 Tx"},
+-	{ "ssp4 Tx", NULL, "codec0_out"},
++		/* Speaker BE connections */
++		{ "Speaker", NULL, "ssp4 Tx"},
++		{ "ssp4 Tx", NULL, "codec0_out"},
+ 
+-	{ "dirana_in", NULL, "ssp2 Rx"},
+-	{ "ssp2 Rx", NULL, "DiranaCp"},
++		{ "dirana_in", NULL, "ssp2 Rx"},
++		{ "ssp2 Rx", NULL, "DiranaCp"},
+ 
+-	{ "DiranaPb", NULL, "ssp2 Tx"},
+-	{ "ssp2 Tx", NULL, "dirana_out"},
++		{ "DiranaPb", NULL, "ssp2 Tx"},
++		{ "ssp2 Tx", NULL, "dirana_out"},
+ 
+-	{ "hdmi_ssp1_in", NULL, "ssp1 Rx"},
+-	{ "ssp1 Rx", NULL, "HdmiIn"},
++		{ "hdmi_ssp1_in", NULL, "ssp1 Rx"},
++		{ "ssp1 Rx", NULL, "HdmiIn"},
+ 
+-	{ "TestPin_ssp5_in", NULL, "ssp5 Rx"},
+-	{ "ssp5 Rx", NULL, "TestPinCp"},
++		{ "TestPin_ssp5_in", NULL, "ssp5 Rx"},
++		{ "ssp5 Rx", NULL, "TestPinCp"},
+ 
+-	{ "TestPinPb", NULL, "ssp5 Tx"},
+-	{ "ssp5 Tx", NULL, "TestPin_ssp5_out"},
++		{ "TestPinPb", NULL, "ssp5 Tx"},
++		{ "ssp5 Tx", NULL, "TestPin_ssp5_out"},
+ 
+-	{ "BtHfp_ssp0_in", NULL, "ssp0 Rx"},
+-	{ "ssp0 Rx", NULL, "BtHfpDl"},
++		{ "BtHfp_ssp0_in", NULL, "ssp0 Rx"},
++		{ "ssp0 Rx", NULL, "BtHfpDl"},
+ 
+-	{ "BtHfpUl", NULL, "ssp0 Tx"},
+-	{ "ssp0 Tx", NULL, "BtHfp_ssp0_out"},
++		{ "BtHfpUl", NULL, "ssp0 Tx"},
++		{ "ssp0 Tx", NULL, "BtHfp_ssp0_out"},
+ 
+-	{ "Modem_ssp3_in", NULL, "ssp3 Rx"},
+-	{ "ssp3 Rx", NULL, "ModemDl"},
++		{ "Modem_ssp3_in", NULL, "ssp3 Rx"},
++		{ "ssp3 Rx", NULL, "ModemDl"},
+ 
+-	{ "ModemUl", NULL, "ssp3 Tx"},
+-	{ "ssp3 Tx", NULL, "Modem_ssp3_out"},
++		{ "ModemUl", NULL, "ssp3 Tx"},
++		{ "ssp3 Tx", NULL, "Modem_ssp3_out"},
+ };
+ 
+ 
+ static int broxton_gpmrb_hw_params(struct snd_pcm_substream *substream,
+-	struct snd_pcm_hw_params *params)
++		struct snd_pcm_hw_params *params)
+ {
+ 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+ 	int ret = 0;
+@@ -97,229 +99,229 @@ static int broxton_gpmrb_hw_params(struct snd_pcm_substream *substream,
+ }
+ 
+ static struct snd_soc_ops broxton_gpmrb_ops = {
+-	.hw_params = broxton_gpmrb_hw_params,
++		.hw_params = broxton_gpmrb_hw_params,
+ };
+ 
+ /* broxton digital audio interface glue - connects codec <--> CPU */
+ static struct snd_soc_dai_link broxton_gpmrb_dais[] = {
+-	/* Front End DAI links */
+-	{
+-		.name = "Speaker Port",
+-		.stream_name = "Speaker",
+-		.cpu_dai_name = "Speaker Pin",
+-		.platform_name = "0000:00:0e.0",
+-		.nonatomic = 1,
+-		.dynamic = 1,
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
+-		.dpcm_playback = 1,
+-	},
+-	{
+-		.name = "Dirana Cp Port",
+-		.stream_name = "Dirana Cp",
+-		.cpu_dai_name = "Dirana Cp Pin",
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.platform_name = "0000:00:0e.0",
+-		.init = NULL,
+-		.dpcm_capture = 1,
+-		.ignore_suspend = 1,
+-		.nonatomic = 1,
+-		.dynamic = 1,
+-	},
+-	{
+-		.name = "Dirana Pb Port",
+-		.stream_name = "Dirana Pb",
+-		.cpu_dai_name = "Dirana Pb Pin",
+-		.platform_name = "0000:00:0e.0",
+-		.nonatomic = 1,
+-		.dynamic = 1,
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
+-		.dpcm_playback = 1,
+-	},
+-	{
+-		.name = "TestPin Cp Port",
+-		.stream_name = "TestPin Cp",
+-		.cpu_dai_name = "TestPin Cp Pin",
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.platform_name = "0000:00:0e.0",
+-		.init = NULL,
+-		.dpcm_capture = 1,
+-		.ignore_suspend = 1,
+-		.nonatomic = 1,
+-		.dynamic = 1,
+-	},
+-	{
+-		.name = "TestPin Pb Port",
+-		.stream_name = "TestPin Pb",
+-		.cpu_dai_name = "TestPin Pb Pin",
+-		.platform_name = "0000:00:0e.0",
+-		.nonatomic = 1,
+-		.dynamic = 1,
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
+-		.dpcm_playback = 1,
+-	},
+-	{
+-		.name = "BtHfp Cp Port",
+-		.stream_name = "BtHfp Cp",
+-		.cpu_dai_name = "BtHfp Cp Pin",
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.platform_name = "0000:00:0e.0",
+-		.init = NULL,
+-		.dpcm_capture = 1,
+-		.ignore_suspend = 1,
+-		.nonatomic = 1,
+-		.dynamic = 1,
+-	},
+-	{
+-		.name = "BtHfp Pb Port",
+-		.stream_name = "BtHfp Pb",
+-		.cpu_dai_name = "BtHfp Pb Pin",
+-		.platform_name = "0000:00:0e.0",
+-		.nonatomic = 1,
+-		.dynamic = 1,
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
+-		.dpcm_playback = 1,
+-	},
+-	{
+-		.name = "Modem Cp Port",
+-		.stream_name = "Modem Cp",
+-		.cpu_dai_name = "Modem Cp Pin",
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.platform_name = "0000:00:0e.0",
+-		.init = NULL,
+-		.dpcm_capture = 1,
+-		.ignore_suspend = 1,
+-		.nonatomic = 1,
+-		.dynamic = 1,
+-	},
+-	{
+-		.name = "Modem Pb Port",
+-		.stream_name = "Modem Pb",
+-		.cpu_dai_name = "Modem Pb Pin",
+-		.platform_name = "0000:00:0e.0",
+-		.nonatomic = 1,
+-		.dynamic = 1,
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
+-		.dpcm_playback = 1,
+-	},
+-	{
+-		.name = "HDMI Cp Port",
+-		.stream_name = "HDMI Cp",
+-		.cpu_dai_name = "HDMI Cp Pin",
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.platform_name = "0000:00:0e.0",
+-		.init = NULL,
+-		.dpcm_capture = 1,
+-		.ignore_suspend = 1,
+-		.nonatomic = 1,
+-		.dynamic = 1,
+-	},
+-	/* Back End DAI links */
+-	{
+-		/* SSP0 - BT */
+-		.name = "SSP0-Codec",
+-		.be_id = 1,
+-		.cpu_dai_name = "SSP0 Pin",
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.platform_name = "0000:00:0e.0",
+-		.ignore_suspend = 1,
+-		.dpcm_capture = 1,
+-		.dpcm_playback = 1,
+-		.no_pcm = 1,
+-	},
+-	{
+-		/* SSP1 - HDMI-In */
+-		.name = "SSP1-Codec",
+-		.be_id = 1,
+-		.cpu_dai_name = "SSP1 Pin",
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.platform_name = "0000:00:0e.0",
+-		.ignore_suspend = 1,
+-		.dpcm_capture = 1,
+-		.no_pcm = 1,
+-	},
+-	{
+-		/* SSP2 - Dirana */
+-		.name = "SSP2-Codec",
+-		.be_id = 1,
+-		.cpu_dai_name = "SSP2 Pin",
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.platform_name = "0000:00:0e.0",
+-		.ignore_suspend = 1,
+-		.dpcm_capture = 1,
+-		.dpcm_playback = 1,
+-		.no_pcm = 1,
+-	},
+-	{
+-		/* SSP3 - Modem */
+-		.name = "SSP3-Codec",
+-		.be_id = 1,
+-		.cpu_dai_name = "SSP3 Pin",
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.platform_name = "0000:00:0e.0",
+-		.ignore_suspend = 1,
+-		.dpcm_capture = 1,
+-		.dpcm_playback = 1,
+-		.no_pcm = 1,
+-	},
+-	{
+-		/* SSP4 - Amplifier */
+-		.name = "SSP4-Codec",
+-		.be_id = 0,
+-		.cpu_dai_name = "SSP4 Pin",
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.platform_name = "0000:00:0e.0",
+-		.ignore_suspend = 1,
+-		.dpcm_playback = 1,
+-		.no_pcm = 1,
+-	},
+-	{
+-		/* SSP5 - TestPin */
+-		.name = "SSP5-Codec",
+-		.be_id = 1,
+-		.cpu_dai_name = "SSP5 Pin",
+-		.codec_name = "snd-soc-dummy",
+-		.codec_dai_name = "snd-soc-dummy-dai",
+-		.platform_name = "0000:00:0e.0",
+-		.ignore_suspend = 1,
+-		.dpcm_capture = 1,
+-		.dpcm_playback = 1,
+-		.no_pcm = 1,
+-	},
++		/* Front End DAI links */
++		{
++				.name = "Speaker Port",
++				.stream_name = "Speaker",
++				.cpu_dai_name = "Speaker Pin",
++				.platform_name = "0000:00:0e.0",
++				.nonatomic = 1,
++				.dynamic = 1,
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
++				.dpcm_playback = 1,
++		},
++		{
++				.name = "Dirana Cp Port",
++				.stream_name = "Dirana Cp",
++				.cpu_dai_name = "Dirana Cp Pin",
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.platform_name = "0000:00:0e.0",
++				.init = NULL,
++				.dpcm_capture = 1,
++				.ignore_suspend = 1,
++				.nonatomic = 1,
++				.dynamic = 1,
++		},
++		{
++				.name = "Dirana Pb Port",
++				.stream_name = "Dirana Pb",
++				.cpu_dai_name = "Dirana Pb Pin",
++				.platform_name = "0000:00:0e.0",
++				.nonatomic = 1,
++				.dynamic = 1,
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
++				.dpcm_playback = 1,
++		},
++		{
++				.name = "TestPin Cp Port",
++				.stream_name = "TestPin Cp",
++				.cpu_dai_name = "TestPin Cp Pin",
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.platform_name = "0000:00:0e.0",
++				.init = NULL,
++				.dpcm_capture = 1,
++				.ignore_suspend = 1,
++				.nonatomic = 1,
++				.dynamic = 1,
++		},
++		{
++				.name = "TestPin Pb Port",
++				.stream_name = "TestPin Pb",
++				.cpu_dai_name = "TestPin Pb Pin",
++				.platform_name = "0000:00:0e.0",
++				.nonatomic = 1,
++				.dynamic = 1,
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
++				.dpcm_playback = 1,
++		},
++		{
++				.name = "BtHfp Cp Port",
++				.stream_name = "BtHfp Cp",
++				.cpu_dai_name = "BtHfp Cp Pin",
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.platform_name = "0000:00:0e.0",
++				.init = NULL,
++				.dpcm_capture = 1,
++				.ignore_suspend = 1,
++				.nonatomic = 1,
++				.dynamic = 1,
++		},
++		{
++				.name = "BtHfp Pb Port",
++				.stream_name = "BtHfp Pb",
++				.cpu_dai_name = "BtHfp Pb Pin",
++				.platform_name = "0000:00:0e.0",
++				.nonatomic = 1,
++				.dynamic = 1,
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
++				.dpcm_playback = 1,
++		},
++		{
++				.name = "Modem Cp Port",
++				.stream_name = "Modem Cp",
++				.cpu_dai_name = "Modem Cp Pin",
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.platform_name = "0000:00:0e.0",
++				.init = NULL,
++				.dpcm_capture = 1,
++				.ignore_suspend = 1,
++				.nonatomic = 1,
++				.dynamic = 1,
++		},
++		{
++				.name = "Modem Pb Port",
++				.stream_name = "Modem Pb",
++				.cpu_dai_name = "Modem Pb Pin",
++				.platform_name = "0000:00:0e.0",
++				.nonatomic = 1,
++				.dynamic = 1,
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.trigger = {SND_SOC_DPCM_TRIGGER_POST, SND_SOC_DPCM_TRIGGER_POST},
++				.dpcm_playback = 1,
++		},
++		{
++				.name = "HDMI Cp Port",
++				.stream_name = "HDMI Cp",
++				.cpu_dai_name = "HDMI Cp Pin",
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.platform_name = "0000:00:0e.0",
++				.init = NULL,
++				.dpcm_capture = 1,
++				.ignore_suspend = 1,
++				.nonatomic = 1,
++				.dynamic = 1,
++		},
++		/* Back End DAI links */
++		{
++				/* SSP0 - BT */
++				.name = "SSP0-Codec",
++				.be_id = 1,
++				.cpu_dai_name = "SSP0 Pin",
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.platform_name = "0000:00:0e.0",
++				.ignore_suspend = 1,
++				.dpcm_capture = 1,
++				.dpcm_playback = 1,
++				.no_pcm = 1,
++		},
++		{
++				/* SSP1 - HDMI-In */
++				.name = "SSP1-Codec",
++				.be_id = 1,
++				.cpu_dai_name = "SSP1 Pin",
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.platform_name = "0000:00:0e.0",
++				.ignore_suspend = 1,
++				.dpcm_capture = 1,
++				.no_pcm = 1,
++		},
++		{
++				/* SSP2 - Dirana */
++				.name = "SSP2-Codec",
++				.be_id = 1,
++				.cpu_dai_name = "SSP2 Pin",
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.platform_name = "0000:00:0e.0",
++				.ignore_suspend = 1,
++				.dpcm_capture = 1,
++				.dpcm_playback = 1,
++				.no_pcm = 1,
++		},
++		{
++				/* SSP3 - Modem */
++				.name = "SSP3-Codec",
++				.be_id = 1,
++				.cpu_dai_name = "SSP3 Pin",
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.platform_name = "0000:00:0e.0",
++				.ignore_suspend = 1,
++				.dpcm_capture = 1,
++				.dpcm_playback = 1,
++				.no_pcm = 1,
++		},
++		{
++				/* SSP4 - Amplifier */
++				.name = "SSP4-Codec",
++				.be_id = 0,
++				.cpu_dai_name = "SSP4 Pin",
++				.codec_name = "tdf8532-codec.4-006c",
++				.codec_dai_name = "tdf8532-hifi",
++				.platform_name = "0000:00:0e.0",
++				.ignore_suspend = 1,
++				.dpcm_playback = 1,
++				.no_pcm = 1,
++		},
++		{
++				/* SSP5 - TestPin */
++				.name = "SSP5-Codec",
++				.be_id = 1,
++				.cpu_dai_name = "SSP5 Pin",
++				.codec_name = "snd-soc-dummy",
++				.codec_dai_name = "snd-soc-dummy-dai",
++				.platform_name = "0000:00:0e.0",
++				.ignore_suspend = 1,
++				.dpcm_capture = 1,
++				.dpcm_playback = 1,
++				.no_pcm = 1,
++		},
+ };
+ 
+ /* broxton audio machine driver for SPT + RT298S */
+ static struct snd_soc_card broxton_gpmrb = {
+-	.name = "broxton-gpmrb",
+-	.owner = THIS_MODULE,
+-	.dai_link = broxton_gpmrb_dais,
+-	.num_links = ARRAY_SIZE(broxton_gpmrb_dais),
+-	.controls = broxton_controls,
+-	.num_controls = ARRAY_SIZE(broxton_controls),
+-	.dapm_widgets = broxton_widgets,
+-	.num_dapm_widgets = ARRAY_SIZE(broxton_widgets),
+-	.dapm_routes = broxton_gpmrb_map,
+-	.num_dapm_routes = ARRAY_SIZE(broxton_gpmrb_map),
+-	.fully_routed = true,
++		.name = "broxton-gpmrb",
++		.owner = THIS_MODULE,
++		.dai_link = broxton_gpmrb_dais,
++		.num_links = ARRAY_SIZE(broxton_gpmrb_dais),
++		.controls = broxton_controls,
++		.num_controls = ARRAY_SIZE(broxton_controls),
++		.dapm_widgets = broxton_widgets,
++		.num_dapm_widgets = ARRAY_SIZE(broxton_widgets),
++		.dapm_routes = broxton_gpmrb_map,
++		.num_dapm_routes = ARRAY_SIZE(broxton_gpmrb_map),
++		.fully_routed = true,
+ };
+ 
+ 
+@@ -327,14 +329,14 @@ static int broxton_gpmrb_hw_params(struct snd_pcm_substream *substream,
+ static int broxton_audio_probe(struct platform_device *pdev)
+ {
+ 	char *gpio_addr, *mclk_addr;
+-    u32 gpio_value = 0;
+-    u32 mclk_value = 0;
++	u32 gpio_value = 0;
++	u32 mclk_value = 0;
+ 
+ 	/*
+-	*  WORKAROUND
+-	*  Set Pin ownership to SSP 0
+-	*/
+-    gpio_value = 0x40900500;
++	 *  WORKAROUND
++	 *  Set Pin ownership to SSP 0
++	 */
++	gpio_value = 0x40900500;
+ 
+ 	gpio_addr = (void *)ioremap_nocache(0xD0C40618, 0x30);
+ 
+@@ -354,9 +356,9 @@ static int broxton_audio_probe(struct platform_device *pdev)
+ 	iounmap(gpio_addr);
+ 
+ 	/*
+-	*  WORKAROUND
+-	*  Set Pin ownership to SSP 1
+-	*/
++	 *  WORKAROUND
++	 *  Set Pin ownership to SSP 1
++	 */
+ 	gpio_value = 0x44000400;
+ 
+ 	gpio_addr = (void *)ioremap_nocache(0xD0C40668, 0x30);
+@@ -376,9 +378,9 @@ static int broxton_audio_probe(struct platform_device *pdev)
+ 	iounmap(gpio_addr);
+ 
+ 	/*
+-	*  WORKAROUND
+-	*  Set Pin ownership to SSP 3
+-	*/
++	 *  WORKAROUND
++	 *  Set Pin ownership to SSP 3
++	 */
+ 	gpio_value = 0x44000800;
+ 
+ 	gpio_addr = (void *)ioremap_nocache(0xD0C40638, 0x30);
+@@ -398,9 +400,9 @@ static int broxton_audio_probe(struct platform_device *pdev)
+ 	iounmap(gpio_addr);
+ 
+ 	/*
+-	*  WORKAROUND
+-	*  Set Pin ownership to SSP 4
+-	*/
++	 *  WORKAROUND
++	 *  Set Pin ownership to SSP 4
++	 */
+ 	gpio_value = 0x44000A00;
+ 
+ 	gpio_addr = (void *)ioremap_nocache(0xD0C705A0, 0x30);
+@@ -421,9 +423,9 @@ static int broxton_audio_probe(struct platform_device *pdev)
+ 	iounmap(gpio_addr);
+ 
+ 	/*
+-	*  WORKAROUND
+-	*  Set Pin ownership to SSP 5
+-	*/
++	 *  WORKAROUND
++	 *  Set Pin ownership to SSP 5
++	 */
+ 	gpio_value = 0x44000800;
+ 	mclk_value = 0x44000400;
+ 
+@@ -461,11 +463,11 @@ static int broxton_audio_remove(struct platform_device *pdev)
+ }
+ 
+ static struct platform_driver broxton_audio = {
+-	.probe = broxton_audio_probe,
+-	.remove = broxton_audio_remove,
+-	.driver = {
+-	.name = "gpmrb_machine",
+-	},
++		.probe = broxton_audio_probe,
++		.remove = broxton_audio_remove,
++		.driver = {
++				.name = "gpmrb_machine",
++		},
+ };
+ 
+ module_platform_driver(broxton_audio)
+-- 
+1.9.1
+

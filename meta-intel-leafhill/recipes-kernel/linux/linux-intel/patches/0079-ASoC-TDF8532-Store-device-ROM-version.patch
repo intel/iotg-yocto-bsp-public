@@ -1,0 +1,80 @@
+From 1216a768b876c81bc7937aab9878461e505671a9 Mon Sep 17 00:00:00 2001
+From: Craig Kewley <craigx.kewley@intel.com>
+Date: Fri, 19 May 2017 13:52:53 +0100
+Subject: [PATCH 79/96] ASoC: TDF8532: Store device ROM version
+
+Different ROM versions require different I2C command flows. Store the
+device ROM version in device data so it can be checked later. Also print
+at debug level during probe.
+
+Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
+---
+ sound/soc/codecs/tdf8532.c | 32 ++++++++++++++++++++++++++++++++
+ sound/soc/codecs/tdf8532.h |  1 +
+ 2 files changed, 33 insertions(+)
+
+diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
+index d7e572f..8d0a407 100644
+--- a/sound/soc/codecs/tdf8532.c
++++ b/sound/soc/codecs/tdf8532.c
+@@ -137,6 +137,30 @@ static uint8_t tdf8532_single_read(struct tdf8532_priv *dev_data,
+ 	return ret;
+ }
+ 
++static int tdf8532_get_dev_info(struct tdf8532_priv *dev_data)
++{
++	int ret;
++	char *repl_buff = NULL;
++	struct get_ident_repl *id;
++
++	ret = tdf8532_amp_write(dev_data, GET_IDENT);
++	if (ret < 0)
++		return ret;
++
++	ret = tdf8532_single_read(dev_data, &repl_buff);
++	if (ret < 0) {
++		kfree(repl_buff);
++		return ret;
++	}
++
++	id = (struct get_ident_repl *)repl_buff;
++
++	dev_data->sw_major = id->sw_major;
++	kfree(repl_buff);
++
++	return 0;
++}
++
+ static int tdf8532_get_state(struct tdf8532_priv *dev_data, u8 *state)
+ {
+ 	int ret = 0;
+@@ -310,6 +334,14 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
+ 
+ 	i2c_set_clientdata(i2c, dev_data);
+ 
++	ret = tdf8532_get_dev_info(dev_data);
++	if (ret < 0) {
++		dev_err(&i2c->dev, "Failed to get device info: %d\n", ret);
++		goto out;
++	}
++
++	dev_dbg(&i2c->dev, "%s: sw_major: %u\n", __func__, dev_data->sw_major);
++
+ 	ret = snd_soc_register_codec(&i2c->dev, &soc_codec_tdf8532,
+ 					tdf8532_dai, ARRAY_SIZE(tdf8532_dai));
+ 	if (ret != 0) {
+diff --git a/sound/soc/codecs/tdf8532.h b/sound/soc/codecs/tdf8532.h
+index 743de7e..62c1daf 100644
+--- a/sound/soc/codecs/tdf8532.h
++++ b/sound/soc/codecs/tdf8532.h
+@@ -83,6 +83,7 @@ struct tdf8532_priv {
+ 	struct i2c_client *i2c;
+ 	u8 channels;
+ 	u8 pkt_id;
++	u8 sw_major;
+ };
+ 
+ #endif
+-- 
+1.9.1
+

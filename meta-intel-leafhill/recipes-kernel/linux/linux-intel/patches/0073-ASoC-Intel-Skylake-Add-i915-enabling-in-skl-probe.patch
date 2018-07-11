@@ -1,0 +1,85 @@
+From ad9f6a070cbd5c3508b8de71c8728650a410ddbf Mon Sep 17 00:00:00 2001
+From: Vinod Koul <vinod.koul@intel.com>
+Date: Wed, 17 Feb 2016 21:34:06 +0530
+Subject: [PATCH 73/96] ASoC: Intel: Skylake: Add i915 enabling in skl probe
+
+The SKL also supports HDMI output so in probe we need to enable
+the HDMI using common i915 APIs to ensure it gets probed on the
+bus
+
+After S3 during the controller resequencing the codec domain need
+to be kept ON for successful reconfiguration of Codec. Once
+configured it will be turned OFF in codec driver.
+
+Signed-off-by: Vinod Koul <vinod.koul@intel.com>
+Signed-off-by: Subhransu S. Prusty <subhransu.s.prusty@intel.com>
+Signed-off-by: Mark Brown <broonie@kernel.org>
+
+Conflicts:
+	sound/soc/intel/skylake/skl.c
+
+Conflicts:
+	sound/soc/intel/skylake/skl.c
+---
+ sound/soc/intel/Kconfig       |  1 +
+ sound/soc/intel/skylake/skl.c | 14 +++++++++++++-
+ 2 files changed, 14 insertions(+), 1 deletion(-)
+
+diff --git a/sound/soc/intel/Kconfig b/sound/soc/intel/Kconfig
+index c4336f5..8c4e6c8 100644
+--- a/sound/soc/intel/Kconfig
++++ b/sound/soc/intel/Kconfig
+@@ -104,6 +104,7 @@ config SND_SOC_INTEL_SKYLAKE
+ 	select SND_HDA_EXT_CORE
+ 	select SND_HDA_DSP_LOADER
+ 	select SND_SOC_TOPOLOGY
++	select SND_HDA_I915
+ 	select SND_SOC_INTEL_SST
+ 	select SND_SOC_COMPRESS
+ 	select SDW
+diff --git a/sound/soc/intel/skylake/skl.c b/sound/soc/intel/skylake/skl.c
+index 2063cd6..f726eae 100644
+--- a/sound/soc/intel/skylake/skl.c
++++ b/sound/soc/intel/skylake/skl.c
+@@ -28,11 +28,12 @@
+ #include <linux/firmware.h>
+ #include <linux/delay.h>
+ #include <sound/pcm.h>
++#include <sound/compress_driver.h>
+ #include <sound/soc-acpi.h>
+ #include <sound/hda_register.h>
+ #include <sound/hdaudio.h>
+ #include <sound/hda_i915.h>
+-#include <sound/compress_driver.h>
++
+ #include "skl.h"
+ #include "skl-sst-dsp.h"
+ #include "skl-sst-ipc.h"
+@@ -874,6 +875,14 @@ static int skl_first_init(struct hdac_ext_bus *ebus)
+ 
+ 	skl_dum_set(ebus);
+ 
++	if (IS_ENABLED(CONFIG_SND_SOC_HDAC_HDMI)) {
++		err = skl_i915_init(bus);
++		if (err < 0)
++			return err;
++	}
++
++	skl_init_chip(bus, true);
++
+ 	return skl_init_chip(bus, true);
+ }
+ 
+@@ -1008,6 +1017,9 @@ static void skl_remove(struct pci_dev *pci)
+ 	struct hdac_ext_bus *ebus = pci_get_drvdata(pci);
+ 	struct skl *skl = ebus_to_skl(ebus);
+ 
++	if (IS_ENABLED(CONFIG_SND_SOC_HDAC_HDMI))
++		snd_hdac_i915_exit(&ebus->bus);
++
+ 	skl_delete_notify_kctl_list(skl->skl_sst);
+ 	release_firmware(skl->tplg);
+ 
+-- 
+1.9.1
+

@@ -1,0 +1,137 @@
+From cc1c2854521d091d1f0689fa1f276eb0ff17184d Mon Sep 17 00:00:00 2001
+From: Michel Thierry <michel.thierry@intel.com>
+Date: Fri, 21 Apr 2017 09:37:29 -0700
+Subject: [PATCH 32/41] drm/i915: Watchdog timeout: Pass GuC shared data
+ structure during param load
+
+For watchdog / media reset, the firmware must know the address of the shared
+data page (the first page of the default context).
+
+This information should be in DWORD 9 of the GUC_CTL structure.
+
+v2: Use guc_ggtt_offset (Chris).
+Store the ggtt offset of the default ctx as we needed for
+suspend/resume/reset (Daniele).
+
+Cc: Chris Wilson <chris@chris-wilson.co.uk>
+Cc: Daniele Ceraolo Spurio <daniele.ceraolospurio@intel.com>
+Signed-off-by: Michel Thierry <michel.thierry@intel.com>
+Reviewed-by: Daniele Ceraolo Spurio <daniele.ceraolospurio@intel.com>
+Signed-off-by: Jeff McGee <jeff.mcgee@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/i915_guc_submission.c | 14 ++++----------
+ drivers/gpu/drm/i915/intel_guc_fwif.h      |  2 +-
+ drivers/gpu/drm/i915/intel_guc_loader.c    | 11 +++++++++++
+ drivers/gpu/drm/i915/intel_uc.h            |  2 ++
+ 4 files changed, 18 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_guc_submission.c b/drivers/gpu/drm/i915/i915_guc_submission.c
+index 4bbc91b..4574649 100644
+--- a/drivers/gpu/drm/i915/i915_guc_submission.c
++++ b/drivers/gpu/drm/i915/i915_guc_submission.c
+@@ -1286,7 +1286,6 @@ void i915_guc_submission_disable(struct drm_i915_private *dev_priv)
+ int intel_guc_suspend(struct drm_i915_private *dev_priv)
+ {
+ 	struct intel_guc *guc = &dev_priv->guc;
+-	struct i915_gem_context *ctx;
+ 	u32 data[3];
+ 
+ 	if (guc->fw.load_status != INTEL_UC_FIRMWARE_SUCCESS)
+@@ -1294,13 +1293,11 @@ int intel_guc_suspend(struct drm_i915_private *dev_priv)
+ 
+ 	gen9_disable_guc_interrupts(dev_priv);
+ 
+-	ctx = dev_priv->kernel_context;
+-
+ 	data[0] = INTEL_GUC_ACTION_ENTER_S_STATE;
+ 	/* any value greater than GUC_POWER_D0 */
+ 	data[1] = GUC_POWER_D1;
+-	/* first page is shared data with GuC */
+-	data[2] = guc_ggtt_offset(ctx->engine[RCS].state) + LRC_GUCSHR_PN * PAGE_SIZE;
++	/* first page of default ctx is shared data with GuC */
++	data[2] = guc->shared_data_offset + LRC_GUCSHR_PN * PAGE_SIZE;
+ 
+ 	return intel_guc_send(guc, data, ARRAY_SIZE(data));
+ }
+@@ -1312,7 +1309,6 @@ int intel_guc_suspend(struct drm_i915_private *dev_priv)
+ int intel_guc_resume(struct drm_i915_private *dev_priv)
+ {
+ 	struct intel_guc *guc = &dev_priv->guc;
+-	struct i915_gem_context *ctx;
+ 	u32 data[3];
+ 
+ 	if (guc->fw.load_status != INTEL_UC_FIRMWARE_SUCCESS)
+@@ -1321,12 +1317,10 @@ int intel_guc_resume(struct drm_i915_private *dev_priv)
+ 	if (i915_modparams.guc_log_level >= 0)
+ 		gen9_enable_guc_interrupts(dev_priv);
+ 
+-	ctx = dev_priv->kernel_context;
+-
+ 	data[0] = INTEL_GUC_ACTION_EXIT_S_STATE;
+ 	data[1] = GUC_POWER_D0;
+-	/* first page is shared data with GuC */
+-	data[2] = guc_ggtt_offset(ctx->engine[RCS].state) + LRC_GUCSHR_PN * PAGE_SIZE;
++	/* first page of default ctx is shared data with GuC */
++	data[2] = guc->shared_data_offset + LRC_GUCSHR_PN * PAGE_SIZE;
+ 
+ 	return intel_guc_send(guc, data, ARRAY_SIZE(data));
+ }
+diff --git a/drivers/gpu/drm/i915/intel_guc_fwif.h b/drivers/gpu/drm/i915/intel_guc_fwif.h
+index 19b48362..d660eca 100644
+--- a/drivers/gpu/drm/i915/intel_guc_fwif.h
++++ b/drivers/gpu/drm/i915/intel_guc_fwif.h
+@@ -136,7 +136,7 @@
+ #define   GUC_ADS_ADDR_SHIFT		11
+ #define   GUC_ADS_ADDR_MASK		0xfffff800
+ 
+-#define GUC_CTL_RSRVD			9
++#define GUC_CTL_SHARED_DATA		9
+ 
+ #define GUC_CTL_MAX_DWORDS		(SOFT_SCRATCH_COUNT - 2) /* [1..14] */
+ 
+diff --git a/drivers/gpu/drm/i915/intel_guc_loader.c b/drivers/gpu/drm/i915/intel_guc_loader.c
+index f453344..5ba0c8e 100644
+--- a/drivers/gpu/drm/i915/intel_guc_loader.c
++++ b/drivers/gpu/drm/i915/intel_guc_loader.c
+@@ -104,6 +104,7 @@ static void guc_params_init(struct drm_i915_private *dev_priv)
+ 	struct intel_guc *guc = &dev_priv->guc;
+ 	struct intel_uc_fw *guc_fw = &dev_priv->guc.fw;
+ 	u32 params[GUC_CTL_MAX_DWORDS];
++	struct i915_gem_context *ctx;
+ 	int i;
+ 	bool enable_critical_logging = false;
+ 
+@@ -170,6 +171,16 @@ static void guc_params_init(struct drm_i915_private *dev_priv)
+ 		params[GUC_CTL_FEATURE] &= ~GUC_CTL_DISABLE_SCHEDULER;
+ 	}
+ 
++	/*
++	 * For watchdog / media reset, GuC must know the address of the shared
++	 * data page, which is the first page of the default context.
++	 * We will also use this page in several places (suspend/resume),
++	 * so save the ggtt offset.
++	 */
++	ctx = dev_priv->kernel_context;
++	guc->shared_data_offset = guc_ggtt_offset(ctx->engine[RCS].state);
++	params[GUC_CTL_SHARED_DATA] = guc->shared_data_offset;
++
+ 	I915_WRITE(SOFT_SCRATCH(0), 0);
+ 
+ 	for (i = 0; i < GUC_CTL_MAX_DWORDS; i++)
+diff --git a/drivers/gpu/drm/i915/intel_uc.h b/drivers/gpu/drm/i915/intel_uc.h
+index 7703c9a..a0b6240 100644
+--- a/drivers/gpu/drm/i915/intel_uc.h
++++ b/drivers/gpu/drm/i915/intel_uc.h
+@@ -177,6 +177,8 @@ struct intel_guc {
+ 	DECLARE_BITMAP(doorbell_bitmap, GUC_NUM_DOORBELLS);
+ 	uint32_t db_cacheline;		/* Cyclic counter mod pagesize	*/
+ 
++	uint32_t shared_data_offset;    /* First page of default ctx */
++
+ 	/* GuC's FW specific registers used in MMIO send */
+ 	struct {
+ 		u32 base;
+-- 
+1.9.1
+

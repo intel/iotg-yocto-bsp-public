@@ -1,0 +1,393 @@
+From abfffde4b085245eda8ec553ae7ec591af048241 Mon Sep 17 00:00:00 2001
+From: "SengKai,Tan" <seng.kai.tan@intel.com>
+Date: Thu, 21 Jul 2016 16:47:49 +0800
+Subject: [PATCH 15/96] ASoC: Intel: Skylake: ACPI example INT343A for LeafHill
+ CRB
+
+BIOS default ACPI setting is set to:-
+INT34C1 - disable
+INT343A - enable
+
+Due to no actual codec in our Leaf Hill board, we have to make INT343A
+as our example to automatic load dummy codec. This only serves as an
+example. In actual application, ACPI ID has to register with uefi.org
+
+This commit also revised typo error from lfcrb to lhcrb (Leaf Hill
+Customer Reference Board)
+
+Signed-off-by: Tan, Seng Kai <seng.kai.tan@intel.com>
+(cherry picked from commit 05730937b7ed527abd734ac51cd8341f0886a02c)
+Signed-off-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl.c
+---
+ .../platform/apli_lhcrb/apli_lhcrb_aic3107_i2c.c   |  4 ++--
+ .../platform/apli_lhcrb/apli_lhcrb_wm8731_i2c.c    |  2 +-
+ sound/soc/intel/boards/apli_lhcrb_aic3107M.c       | 22 +++++++++++-----------
+ sound/soc/intel/boards/apli_lhcrb_aic3107S.c       | 22 +++++++++++-----------
+ sound/soc/intel/boards/apli_lhcrb_dummy.c          | 18 +++++++++---------
+ sound/soc/intel/boards/apli_lhcrb_wm8731.c         | 18 +++++++++---------
+ 6 files changed, 43 insertions(+), 43 deletions(-)
+
+diff --git a/arch/x86/platform/apli_lhcrb/apli_lhcrb_aic3107_i2c.c b/arch/x86/platform/apli_lhcrb/apli_lhcrb_aic3107_i2c.c
+index 8bc5b0b..e2e3833 100644
+--- a/arch/x86/platform/apli_lhcrb/apli_lhcrb_aic3107_i2c.c
++++ b/arch/x86/platform/apli_lhcrb/apli_lhcrb_aic3107_i2c.c
+@@ -66,5 +66,5 @@ static void __exit apli_lhcrb_aic3107_i2c_exit(void)
+ 
+ MODULE_DESCRIPTION("Intel Apollo Lake-I Leaf Hill ASoC Machine Driver Init");
+ MODULE_LICENSE("GPL v2");
+-MODULE_ALIAS("platform:lfcrb_aic3107M_i2s");
+-MODULE_ALIAS("platform:lfcrb_aic3107S_i2s");
++MODULE_ALIAS("platform:lhcrb_aic3107M_i2s");
++MODULE_ALIAS("platform:lhcrb_aic3107S_i2s");
+diff --git a/arch/x86/platform/apli_lhcrb/apli_lhcrb_wm8731_i2c.c b/arch/x86/platform/apli_lhcrb/apli_lhcrb_wm8731_i2c.c
+index 365c86f..d3ce324 100644
+--- a/arch/x86/platform/apli_lhcrb/apli_lhcrb_wm8731_i2c.c
++++ b/arch/x86/platform/apli_lhcrb/apli_lhcrb_wm8731_i2c.c
+@@ -66,4 +66,4 @@ static void __exit apli_lhcrb_wm8731_i2c_exit(void)
+ 
+ MODULE_DESCRIPTION("Intel Apolo Lake-I Leaf Hill ASoC Machine Driver Init");
+ MODULE_LICENSE("GPL v2");
+-MODULE_ALIAS("platform:lfcrb_wm8731_i2s");
++MODULE_ALIAS("platform:lhcrb_wm8731_i2s");
+diff --git a/sound/soc/intel/boards/apli_lhcrb_aic3107M.c b/sound/soc/intel/boards/apli_lhcrb_aic3107M.c
+index 0e4fc9a..ac80546 100644
+--- a/sound/soc/intel/boards/apli_lhcrb_aic3107M.c
++++ b/sound/soc/intel/boards/apli_lhcrb_aic3107M.c
+@@ -25,7 +25,7 @@
+ #include <sound/pcm_params.h>
+ #include "../../codecs/tlv320aic3x.h"
+ 
+-static int apli_lfcrb_aic3107M_startup(struct snd_pcm_substream *substream)
++static int apli_lhcrb_aic3107M_startup(struct snd_pcm_substream *substream)
+ {
+ 	int ret;
+ 	static unsigned int rates[] = { 48000 };
+@@ -61,8 +61,8 @@ static int apli_lfcrb_aic3107M_startup(struct snd_pcm_substream *substream)
+ 	return ret;
+ }
+ 
+-static struct snd_soc_ops apli_lfcrb_aic3107M_ops = {
+-	.startup = apli_lfcrb_aic3107M_startup,
++static struct snd_soc_ops apli_lhcrb_aic3107M_ops = {
++	.startup = apli_lhcrb_aic3107M_startup,
+ };
+ 
+ static const struct snd_kcontrol_new apli_controls[] = {
+@@ -205,7 +205,7 @@ static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+ 		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+ 				SND_SOC_DPCM_TRIGGER_POST},
+ 		.dpcm_playback = 1,
+-		.ops = &apli_lfcrb_aic3107M_ops,
++		.ops = &apli_lhcrb_aic3107M_ops,
+ 	},
+ 	{
+ 		.name = "SSP1 Capture Port",
+@@ -219,7 +219,7 @@ static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+ 		.ignore_suspend = 1,
+ 		.nonatomic = 1,
+ 		.dynamic = 1,
+-		.ops = &apli_lfcrb_aic3107M_ops,
++		.ops = &apli_lhcrb_aic3107M_ops,
+ 	},
+ 	{
+ 		.name = "SSP2 Playback Port",
+@@ -233,7 +233,7 @@ static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+ 		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+ 				SND_SOC_DPCM_TRIGGER_POST},
+ 		.dpcm_playback = 1,
+-		.ops = &apli_lfcrb_aic3107M_ops,
++		.ops = &apli_lhcrb_aic3107M_ops,
+ 	},
+ 	{
+ 		.name = "SSP2 Capture Port",
+@@ -247,7 +247,7 @@ static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+ 		.ignore_suspend = 1,
+ 		.nonatomic = 1,
+ 		.dynamic = 1,
+-		.ops = &apli_lfcrb_aic3107M_ops,
++		.ops = &apli_lhcrb_aic3107M_ops,
+ 	},
+ 	{
+ 		.name = "SSP4 Playback Port",
+@@ -261,7 +261,7 @@ static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+ 		.trigger = {SND_SOC_DPCM_TRIGGER_POST
+ 			, SND_SOC_DPCM_TRIGGER_POST},
+ 		.dpcm_playback = 1,
+-		.ops = &apli_lfcrb_aic3107M_ops,
++		.ops = &apli_lhcrb_aic3107M_ops,
+ 	},
+ 	{
+ 		.name = "SSP4 Capture Port",
+@@ -275,7 +275,7 @@ static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+ 		.ignore_suspend = 1,
+ 		.nonatomic = 1,
+ 		.dynamic = 1,
+-		.ops = &apli_lfcrb_aic3107M_ops,
++		.ops = &apli_lhcrb_aic3107M_ops,
+ 	},
+ 	/* Back End DAI links */
+ 	{
+@@ -390,7 +390,7 @@ static int apli_audio_remove(struct platform_device *pdev)
+ 	.probe = apli_audio_probe,
+ 	.remove = apli_audio_remove,
+ 	.driver = {
+-		.name = "lfcrb_aic3107M_i2s",
++		.name = "lhcrb_aic3107M_i2s",
+ 	},
+ };
+ 
+@@ -399,4 +399,4 @@ static int apli_audio_remove(struct platform_device *pdev)
+ /* Module information */
+ MODULE_DESCRIPTION("Intel Audio aic3170 Machine driver  for APL-I LH CRB");
+ MODULE_LICENSE("GPL v2");
+-MODULE_ALIAS("platform:lfcrb_aic3107M_i2s");
++MODULE_ALIAS("platform:lhcrb_aic3107M_i2s");
+diff --git a/sound/soc/intel/boards/apli_lhcrb_aic3107S.c b/sound/soc/intel/boards/apli_lhcrb_aic3107S.c
+index 24cf147..952eb01 100644
+--- a/sound/soc/intel/boards/apli_lhcrb_aic3107S.c
++++ b/sound/soc/intel/boards/apli_lhcrb_aic3107S.c
+@@ -25,7 +25,7 @@
+ #include <sound/pcm_params.h>
+ #include "../../codecs/tlv320aic3x.h"
+ 
+-static int apli_lfcrb_aic3107S_startup(struct snd_pcm_substream *substream)
++static int apli_lhcrb_aic3107S_startup(struct snd_pcm_substream *substream)
+ {
+ 	int ret;
+ 	static unsigned int rates[] = { 48000 };
+@@ -61,8 +61,8 @@ static int apli_lfcrb_aic3107S_startup(struct snd_pcm_substream *substream)
+ 	return ret;
+ }
+ 
+-static struct snd_soc_ops apli_lfcrb_aic3107S_ops = {
+-	.startup = apli_lfcrb_aic3107S_startup,
++static struct snd_soc_ops apli_lhcrb_aic3107S_ops = {
++	.startup = apli_lhcrb_aic3107S_startup,
+ };
+ 
+ static const struct snd_kcontrol_new apli_controls[] = {
+@@ -205,7 +205,7 @@ static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+ 		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+ 				SND_SOC_DPCM_TRIGGER_POST},
+ 		.dpcm_playback = 1,
+-		.ops = &apli_lfcrb_aic3107S_ops,
++		.ops = &apli_lhcrb_aic3107S_ops,
+ 	},
+ 	{
+ 		.name = "SSP1 Capture Port",
+@@ -219,7 +219,7 @@ static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+ 		.ignore_suspend = 1,
+ 		.nonatomic = 1,
+ 		.dynamic = 1,
+-		.ops = &apli_lfcrb_aic3107S_ops,
++		.ops = &apli_lhcrb_aic3107S_ops,
+ 	},
+ 	{
+ 		.name = "SSP2 Playback Port",
+@@ -233,7 +233,7 @@ static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+ 		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+ 				SND_SOC_DPCM_TRIGGER_POST},
+ 		.dpcm_playback = 1,
+-		.ops = &apli_lfcrb_aic3107S_ops,
++		.ops = &apli_lhcrb_aic3107S_ops,
+ 	},
+ 	{
+ 		.name = "SSP2 Capture Port",
+@@ -247,7 +247,7 @@ static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+ 		.ignore_suspend = 1,
+ 		.nonatomic = 1,
+ 		.dynamic = 1,
+-		.ops = &apli_lfcrb_aic3107S_ops,
++		.ops = &apli_lhcrb_aic3107S_ops,
+ 	},
+ 	{
+ 		.name = "SSP4 Playback Port",
+@@ -261,7 +261,7 @@ static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+ 		.trigger = {SND_SOC_DPCM_TRIGGER_POST
+ 			, SND_SOC_DPCM_TRIGGER_POST},
+ 		.dpcm_playback = 1,
+-		.ops = &apli_lfcrb_aic3107S_ops,
++		.ops = &apli_lhcrb_aic3107S_ops,
+ 	},
+ 	{
+ 		.name = "SSP4 Capture Port",
+@@ -275,7 +275,7 @@ static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
+ 		.ignore_suspend = 1,
+ 		.nonatomic = 1,
+ 		.dynamic = 1,
+-		.ops = &apli_lfcrb_aic3107S_ops,
++		.ops = &apli_lhcrb_aic3107S_ops,
+ 	},
+ 	/* Back End DAI links */
+ 	{
+@@ -390,7 +390,7 @@ static int apli_audio_remove(struct platform_device *pdev)
+ 	.probe = apli_audio_probe,
+ 	.remove = apli_audio_remove,
+ 	.driver = {
+-		.name = "lfcrb_aic3107S_i2s",
++		.name = "lhcrb_aic3107S_i2s",
+ 	},
+ };
+ 
+@@ -399,4 +399,4 @@ static int apli_audio_remove(struct platform_device *pdev)
+ /* Module information */
+ MODULE_DESCRIPTION("Intel Audio aic3107 Machine driver for APL-I LH CRB");
+ MODULE_LICENSE("GPL v2");
+-MODULE_ALIAS("platform:lfcrb_aic3107S_i2s");
++MODULE_ALIAS("platform:lhcrb_aic3107S_i2s");
+diff --git a/sound/soc/intel/boards/apli_lhcrb_dummy.c b/sound/soc/intel/boards/apli_lhcrb_dummy.c
+index 21308cb..a9accc8 100644
+--- a/sound/soc/intel/boards/apli_lhcrb_dummy.c
++++ b/sound/soc/intel/boards/apli_lhcrb_dummy.c
+@@ -25,7 +25,7 @@
+ #include <linux/gpio.h>
+ #include <sound/pcm_params.h>
+ 
+-static int apli_lfcrb_dummy_startup(struct snd_pcm_substream *substream)
++static int apli_lhcrb_dummy_startup(struct snd_pcm_substream *substream)
+ {
+ 	int ret;
+ 	static unsigned int rates[] = { 48000 };
+@@ -61,8 +61,8 @@ static int apli_lfcrb_dummy_startup(struct snd_pcm_substream *substream)
+ 	return ret;
+ }
+ 
+-static struct snd_soc_ops apli_lfcrb_dummy_ops = {
+-	.startup = apli_lfcrb_dummy_startup,
++static struct snd_soc_ops apli_lhcrb_dummy_ops = {
++	.startup = apli_lhcrb_dummy_startup,
+ };
+ 
+ static const struct snd_kcontrol_new apli_controls[] = {
+@@ -107,7 +107,7 @@ static int apli_lfcrb_dummy_startup(struct snd_pcm_substream *substream)
+ 		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+ 				SND_SOC_DPCM_TRIGGER_POST},
+ 		.dpcm_playback = 1,
+-		.ops = &apli_lfcrb_dummy_ops,
++		.ops = &apli_lhcrb_dummy_ops,
+ 	},
+ 	{
+ 		.name = "SSP2 Capture Port",
+@@ -123,7 +123,7 @@ static int apli_lfcrb_dummy_startup(struct snd_pcm_substream *substream)
+ 		.ignore_suspend = 1,
+ 		.nonatomic = 1,
+ 		.dynamic = 1,
+-		.ops = &apli_lfcrb_dummy_ops,
++		.ops = &apli_lhcrb_dummy_ops,
+ 	},
+ 	{
+ 		.name = "SSP4 Playback Port",
+@@ -137,7 +137,7 @@ static int apli_lfcrb_dummy_startup(struct snd_pcm_substream *substream)
+ 		.trigger = {SND_SOC_DPCM_TRIGGER_POST
+ 			, SND_SOC_DPCM_TRIGGER_POST},
+ 		.dpcm_playback = 1,
+-		.ops = &apli_lfcrb_dummy_ops,
++		.ops = &apli_lhcrb_dummy_ops,
+ 	},
+ 	{
+ 		.name = "SSP4 Capture Port",
+@@ -153,7 +153,7 @@ static int apli_lfcrb_dummy_startup(struct snd_pcm_substream *substream)
+ 		.ignore_suspend = 1,
+ 		.nonatomic = 1,
+ 		.dynamic = 1,
+-		.ops = &apli_lfcrb_dummy_ops,
++		.ops = &apli_lhcrb_dummy_ops,
+ 	},
+ 	/* Back End DAI links */
+ 	{
+@@ -223,7 +223,7 @@ static int apli_audio_remove(struct platform_device *pdev)
+ 	.probe = apli_audio_probe,
+ 	.remove = apli_audio_remove,
+ 	.driver = {
+-		.name = "lfcrb_dummy_i2s",
++		.name = "lhcrb_dummy_i2s",
+ 	},
+ };
+ 
+@@ -232,4 +232,4 @@ static int apli_audio_remove(struct platform_device *pdev)
+ /* Module information */
+ MODULE_DESCRIPTION("Intel Audio dummy Machine Driver for APL-I LH CRB");
+ MODULE_LICENSE("GPL v2");
+-MODULE_ALIAS("platform:lfcrb_dummy_i2s");
++MODULE_ALIAS("platform:lhcrb_dummy_i2s");
+diff --git a/sound/soc/intel/boards/apli_lhcrb_wm8731.c b/sound/soc/intel/boards/apli_lhcrb_wm8731.c
+index b9b7bf5..d3c915c 100644
+--- a/sound/soc/intel/boards/apli_lhcrb_wm8731.c
++++ b/sound/soc/intel/boards/apli_lhcrb_wm8731.c
+@@ -26,7 +26,7 @@
+ #include <sound/pcm_params.h>
+ #include "../../codecs/wm8731.h"
+ 
+-static int apli_lfcrb_wm8731_startup(struct snd_pcm_substream *substream)
++static int apli_lhcrb_wm8731_startup(struct snd_pcm_substream *substream)
+ {
+ 	int ret;
+ 	static unsigned int rates[] = { 48000 };
+@@ -62,8 +62,8 @@ static int apli_lfcrb_wm8731_startup(struct snd_pcm_substream *substream)
+ 	return ret;
+ }
+ 
+-static struct snd_soc_ops apli_lfcrb_wm8731_ops = {
+-	.startup = apli_lfcrb_wm8731_startup,
++static struct snd_soc_ops apli_lhcrb_wm8731_ops = {
++	.startup = apli_lhcrb_wm8731_startup,
+ };
+ 
+ static const struct snd_kcontrol_new apli_controls[] = {
+@@ -145,7 +145,7 @@ static int apli_wm8731_hw_params(struct snd_pcm_substream *substream,
+ 		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
+ 				SND_SOC_DPCM_TRIGGER_POST},
+ 		.dpcm_playback = 1,
+-		.ops = &apli_lfcrb_wm8731_ops,
++		.ops = &apli_lhcrb_wm8731_ops,
+ 	},
+ 	{
+ 		.name = "SSP2 Capture Port",
+@@ -159,7 +159,7 @@ static int apli_wm8731_hw_params(struct snd_pcm_substream *substream,
+ 		.ignore_suspend = 1,
+ 		.nonatomic = 1,
+ 		.dynamic = 1,
+-		.ops = &apli_lfcrb_wm8731_ops,
++		.ops = &apli_lhcrb_wm8731_ops,
+ 	},
+ 	{
+ 		.name = "SSP4 Playback Port",
+@@ -173,7 +173,7 @@ static int apli_wm8731_hw_params(struct snd_pcm_substream *substream,
+ 		.trigger = {SND_SOC_DPCM_TRIGGER_POST
+ 			, SND_SOC_DPCM_TRIGGER_POST},
+ 		.dpcm_playback = 1,
+-		.ops = &apli_lfcrb_wm8731_ops,
++		.ops = &apli_lhcrb_wm8731_ops,
+ 	},
+ 	{
+ 		.name = "SSP4 Capture Port",
+@@ -187,7 +187,7 @@ static int apli_wm8731_hw_params(struct snd_pcm_substream *substream,
+ 		.ignore_suspend = 1,
+ 		.nonatomic = 1,
+ 		.dynamic = 1,
+-		.ops = &apli_lfcrb_wm8731_ops,
++		.ops = &apli_lhcrb_wm8731_ops,
+ 	},
+ 	/* Back End DAI links */
+ 	{
+@@ -257,7 +257,7 @@ static int apli_audio_remove(struct platform_device *pdev)
+ 	.probe = apli_audio_probe,
+ 	.remove = apli_audio_remove,
+ 	.driver = {
+-		.name = "lfcrb_wm8731_i2s",
++		.name = "lhcrb_wm8731_i2s",
+ 	},
+ };
+ 
+@@ -266,4 +266,4 @@ static int apli_audio_remove(struct platform_device *pdev)
+ /* Module information */
+ MODULE_DESCRIPTION("Intel Audio WM8731 Machine driver for APL-I LH CRB");
+ MODULE_LICENSE("GPL v2");
+-MODULE_ALIAS("platform:lfcrb_wm8731_i2s");
++MODULE_ALIAS("platform:lhcrb_wm8731_i2s");
+-- 
+1.9.1
+

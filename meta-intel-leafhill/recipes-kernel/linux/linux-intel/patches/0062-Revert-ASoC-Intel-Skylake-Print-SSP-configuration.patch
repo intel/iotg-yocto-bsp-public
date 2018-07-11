@@ -1,0 +1,30 @@
+From 77172fa03c46567ef275ef3a0ac2e4d8dd1f1bd2 Mon Sep 17 00:00:00 2001
+From: Craig Kewley <craigx.kewley@intel.com>
+Date: Wed, 31 May 2017 13:14:15 +0100
+Subject: [PATCH 62/96] Revert "ASoC: Intel: Skylake: Print SSP configuration"
+
+This reverts commit 4b09432387664619328c2b7467549e715f6119cb.
+
+Conflicts:
+	sound/soc/intel/skylake/skl-topology.c
+---
+ sound/soc/intel/skylake/skl-topology.c | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-topology.c b/sound/soc/intel/skylake/skl-topology.c
+index ebb5f95..6c457c8 100755
+--- a/sound/soc/intel/skylake/skl-topology.c
++++ b/sound/soc/intel/skylake/skl-topology.c
+@@ -3001,9 +3001,6 @@ static int skl_tplg_be_fill_pipe_params(struct snd_soc_dai *dai,
+ 		mconfig->formats_config[SKL_PARAM_INIT].caps_size = cfg->size;
+ 		mconfig->formats_config[SKL_PARAM_INIT].caps =
+ 							(u32 *) &cfg->caps;
+-
+-		print_hex_dump_debug("SSP Config:", DUMP_PREFIX_OFFSET, 8, 4,
+-				cfg->caps, cfg->size, false);
+ 	} else {
+ 		dev_err(dai->dev, "Blob NULL for id %x type %d dirn %d\n",
+ 					mconfig->vbus_id, link_type,
+-- 
+1.9.1
+

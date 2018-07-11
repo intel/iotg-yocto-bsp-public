@@ -1,0 +1,48 @@
+From 682d00bf30407251175eb004908888e61c4a0de1 Mon Sep 17 00:00:00 2001
+From: Giribabu Gogineni <giribabux.gogineni@intel.com>
+Date: Fri, 24 Nov 2017 21:14:31 +0530
+Subject: [PATCH 03/31] ASoC: Intel: Skylake: Select BXT-P machine driver based
+ on kernel config
+
+The machine driver id is same for ULL and IVI, Current implementation of
+loading the machine driver is based on machine id, it always look for
+IVI machine driver as this the first entry in the table and
+fails to load ULL machine driver.
+
+Use configuration option to select correct machine driver defined under
+same machine id.
+
+Change-Id: I4d9115db1f5be598db311858dd003526ae97b767
+Tracked-On: https://jira01.devtools.intel.com/browse/OAM-56173
+Signed-off-by: Giribabu Gogineni <giribabux.gogineni@intel.com>
+---
+ sound/soc/intel/skylake/skl.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/sound/soc/intel/skylake/skl.c b/sound/soc/intel/skylake/skl.c
+index e2f15e8..4920612 100644
+--- a/sound/soc/intel/skylake/skl.c
++++ b/sound/soc/intel/skylake/skl.c
+@@ -1067,16 +1067,19 @@ static void skl_remove(struct pci_dev *pci)
+ 		.machine_quirk = snd_soc_acpi_codec_list,
+ 		.quirk_data = &bxt_codecs,
+ 	},
++#if IS_ENABLED(CONFIG_SND_SOC_INTEL_BXT_TDF8532_MACH)
+ 	{
+ 		.id = "INT34C3",
+ 		.drv_name = "bxt_tdf8532",
+ 		.fw_filename = "intel/dsp_fw_bxtn.bin",
+ 	},
++#elif IS_ENABLED(CONFIG_SND_SOC_INTEL_BXT_ULL_MACH)
+ 	{
+ 		.id = "INT34C3",
+ 		.drv_name = "bxt_ivi_ull",
+ 		.fw_filename = "intel/dsp_fw_ull_bxtn.bin",
+ 	},
++#endif
+ 	{}
+ };
+ 
+-- 
+1.9.1
+

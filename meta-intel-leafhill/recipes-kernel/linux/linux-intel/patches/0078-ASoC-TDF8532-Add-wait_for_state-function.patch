@@ -1,0 +1,134 @@
+From bac638ac352f6daab0f9578fc271c984478d7e1d Mon Sep 17 00:00:00 2001
+From: CraigX Kewley <craigx.kewley@intel.com>
+Date: Mon, 6 Feb 2017 12:06:52 +0000
+Subject: [PATCH 78/96] ASoC: TDF8532: Add wait_for_state function
+
+Add wait_for_state function that loops until a given state is reached or a
+timeout occurs. This allows the removal of the overly long mdelay as we can
+just wait until the device reports idle state.
+
+Signed-off-by: CraigX Kewley <craigx.kewley@intel.com>
+---
+ sound/soc/codecs/tdf8532.c | 70 +++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 63 insertions(+), 7 deletions(-)
+
+diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
+index 82d41b1..d7e572f 100644
+--- a/sound/soc/codecs/tdf8532.c
++++ b/sound/soc/codecs/tdf8532.c
+@@ -13,7 +13,6 @@
+ #include <linux/module.h>
+ #include <linux/init.h>
+ #include <linux/i2c.h>
+-#include <linux/delay.h>
+ #include <linux/jiffies.h>
+ #include <linux/time.h>
+ #include <linux/acpi.h>
+@@ -138,6 +137,52 @@ static uint8_t tdf8532_single_read(struct tdf8532_priv *dev_data,
+ 	return ret;
+ }
+ 
++static int tdf8532_get_state(struct tdf8532_priv *dev_data, u8 *state)
++{
++	int ret = 0;
++	char *repl_buff = NULL;
++
++	ret = tdf8532_amp_write(dev_data, GET_DEV_STATUS);
++	if (ret < 0)
++		goto out;
++
++	ret = tdf8532_single_read(dev_data, &repl_buff);
++	if (ret < 0)
++		goto out_free;
++
++	*state = ((struct get_dev_status_repl *)repl_buff)->state;
++
++out_free:
++	kfree(repl_buff);
++out:
++	return ret;
++}
++
++static int tdf8532_wait_state(struct tdf8532_priv *dev_data, u8 req_state,
++					unsigned long timeout_val)
++{
++	int ret;
++	u8 state;
++	struct device *dev = &(dev_data->i2c->dev);
++	unsigned long timeout = jiffies + msecs_to_jiffies(timeout_val);
++
++	do {
++		ret = tdf8532_get_state(dev_data, &state);
++		if (ret < 0)
++			goto out;
++
++	} while (time_before(jiffies, timeout) && state != req_state);
++
++	if (state != req_state) {
++		ret = -ETIME;
++		dev_err(dev, "State: %u, req_state: %u, ret: %d\n", state,
++				req_state, ret);
++	}
++
++out:
++	return ret;
++}
++
+ static int tdf8532_start_play(struct tdf8532_priv *tdf8532)
+ {
+ 	int ret;
+@@ -150,20 +195,33 @@ static int tdf8532_start_play(struct tdf8532_priv *tdf8532)
+ 
+ 	ret = tdf8532_amp_write(tdf8532, SET_CLK_STATE, CLK_CONNECT);
+ 
++	if (ret >= 0)
++		ret = tdf8532_wait_state(tdf8532, STATE_PLAY, ACK_TIMEOUT);
++
+ 	return ret;
+ }
+ 
++
+ static int tdf8532_stop_play(struct tdf8532_priv *tdf8532)
+ {
+ 	int ret;
+ 
++	ret = tdf8532_amp_write(tdf8532, SET_CHNL_DISABLE,
++			CHNL_MASK(tdf8532->channels));
++	if (ret < 0)
++		goto out;
++
++	ret = tdf8532_wait_state(tdf8532, STATE_STBY, ACK_TIMEOUT);
++	if (ret < 0)
++		goto out;
++
+ 	ret = tdf8532_amp_write(tdf8532, SET_CLK_STATE, CLK_DISCONNECT);
+ 	if (ret < 0)
+-		return ret;
++		goto out;
+ 
+-	ret = tdf8532_amp_write(tdf8532, SET_CHNL_DISABLE,
+-			CHNL_MASK(tdf8532->channels));
++	ret = tdf8532_wait_state(tdf8532, STATE_IDLE, ACK_TIMEOUT);
+ 
++out:
+ 	return ret;
+ }
+ 
+@@ -183,13 +241,11 @@ static int tdf8532_dai_trigger(struct snd_pcm_substream *substream, int cmd,
+ 	case SNDRV_PCM_TRIGGER_RESUME:
+ 		ret = tdf8532_start_play(tdf8532);
+ 		break;
++
+ 	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
+ 	case SNDRV_PCM_TRIGGER_SUSPEND:
+ 	case SNDRV_PCM_TRIGGER_STOP:
+ 		ret = tdf8532_stop_play(tdf8532);
+-		/*delay 300ms to allow state change to occur*/
+-		/*TODO: add state check to wait for state change*/
+-		mdelay(300);
+ 		break;
+ 	}
+ 
+-- 
+1.9.1
+
