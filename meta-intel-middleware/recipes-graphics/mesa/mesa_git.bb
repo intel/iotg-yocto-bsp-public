@@ -6,8 +6,12 @@ DEPENDS += "python-mako-native wayland-native wayland wayland-protocols"
 
 SRC_URI = "git://anongit.freedesktop.org/mesa/mesa;branch=18.0 \
            file://mesa_version_diff.patch \
-           file://0001-Simplify-wayland-scanner-lookup.patch \
-           file://0001-Fix-wayland-protocols-lookup.patch \
+           file://disable-asm-on-non-gcc.patch \
+           file://0001-Use-wayland-scanner-in-the-path.patch \
+           file://0002-hardware-gloat.patch \
+           file://llvm-config-version.patch \
+           file://0001-winsys-svga-drm-Include-sys-types.h.patch \
+           file://0001-Makefile.vulkan.am-explictly-add-lib-expat-to-intel-.patch \
           "
 
 PV = "18.2.0-devel"
