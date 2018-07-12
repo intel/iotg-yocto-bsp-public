@@ -1,0 +1,80 @@
+From 14687358d3766a137bac7ac7ea45db7f38a05e8c Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Wed, 21 Oct 2015 17:12:51 -0700
+Subject: [PATCH 12/14] xf86drmMode: Add RGBA property helpers
+
+Now that we've added an RGBA property type to the kernel that handles
+RGBA values with a specific bit layout, let's add a userspace helper to
+allow userspace to easily build values in the proper format.
+
+Cc: dri-devel@lists.freedesktop.org
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ xf86drmMode.c | 35 +++++++++++++++++++++++++++++++++++
+ xf86drmMode.h |  7 +++++++
+ 2 files changed, 42 insertions(+)
+
+diff --git a/xf86drmMode.c b/xf86drmMode.c
+index 9a15b5e..c7d9269 100644
+--- a/xf86drmMode.c
++++ b/xf86drmMode.c
+@@ -1581,3 +1581,38 @@ drmModeRevokeLease(int fd, uint32_t lessee_id)
+ 		return 0;
+ 	return -errno;
+ }
++
++/*
++ * Builds an RGBA 16bpc color value with bits laid out in the format expected
++ * by DRM RGBA properties.  @bpc is the number of bits per component value
++ * being provided as parameters.
++ */
++uint64_t
++drmModeRGBA(unsigned bpc,
++	    uint16_t red,
++	    uint16_t green,
++	    uint16_t blue,
++	    uint16_t alpha)
++{
++	int shift;
++	uint64_t val;
++
++	if (bpc > 16)
++		return -ERANGE;
++
++	/*
++	 * If we were provided with fewer than 16 bpc, shift the value we
++	 * received into the most significant bits.
++	 */
++	shift = 16 - bpc;
++
++	val = red << shift;
++	val <<= 16;
++	val |= green << shift;
++	val <<= 16;
++	val |= blue << shift;
++	val <<= 16;
++	val |= alpha << shift;
++
++	return val;
++}
+diff --git a/xf86drmMode.h b/xf86drmMode.h
+index 3cd27ae..ebb18c0 100644
+--- a/xf86drmMode.h
++++ b/xf86drmMode.h
+@@ -498,6 +498,13 @@ extern int drmModeObjectSetProperty(int fd, uint32_t object_id,
+ 				    uint32_t object_type, uint32_t property_id,
+ 				    uint64_t value);
+ 
++extern uint64_t drmModeRGBA(unsigned bpc,
++			    uint16_t red,
++			    uint16_t green,
++			    uint16_t blue,
++			    uint16_t alpha);
++#define DRM_RGBA8888(r, g, b, a)     drmModeRGBA(8, r, g, b, a)
++#define DRM_RGBA16161616(r, g, b, a) drmModeRGBA(16, r, g, b, a)
+ 
+ typedef struct _drmModeAtomicReq drmModeAtomicReq, *drmModeAtomicReqPtr;
+ 
+-- 
+1.9.1
+

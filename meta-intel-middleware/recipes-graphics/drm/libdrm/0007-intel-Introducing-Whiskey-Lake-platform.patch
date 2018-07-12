@@ -1,0 +1,85 @@
+From 591c1d72abbc1ae67890a50dc107a0e4b9ef13c3 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Jos=C3=A9=20Roberto=20de=20Souza?= <jose.souza@intel.com>
+Date: Tue, 19 Jun 2018 16:45:20 -0700
+Subject: [PATCH 07/14] intel: Introducing Whiskey Lake platform
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Whiskey Lake uses the same gen graphics as Coffe Lake, including some
+ids that were previously marked as reserved on Coffe Lake, but that
+now are moved to WHL page.
+
+So, let's just move them to WHL macros that will feed into CFL macro
+just to keep it better organized to make easier future code review
+but it will be handled as a CFL.
+
+This is a copy of merged i915's
+commit b9be78531d27 ("drm/i915/whl: Introducing Whiskey Lake platform")
+
+Cc: Rodrigo Vivi <rodrigo.vivi@intel.com>
+Signed-off-by: José Roberto de Souza <jose.souza@intel.com>
+Reviewed-by: Rodrigo Vivi <rodrigo.vivi@intel.com>
+Signed-off-by: Rodrigo Vivi <rodrigo.vivi@intel.com>
+---
+ intel/intel_chipset.h | 33 +++++++++++++++++----------------
+ 1 file changed, 17 insertions(+), 16 deletions(-)
+
+diff --git a/intel/intel_chipset.h b/intel/intel_chipset.h
+index 32b2c48..44e65f9 100644
+--- a/intel/intel_chipset.h
++++ b/intel/intel_chipset.h
+@@ -231,16 +231,17 @@
+ #define PCI_CHIP_COFFEELAKE_S_GT2_4     0x3E9A
+ #define PCI_CHIP_COFFEELAKE_H_GT2_1     0x3E9B
+ #define PCI_CHIP_COFFEELAKE_H_GT2_2     0x3E94
+-#define PCI_CHIP_COFFEELAKE_U_GT1_1     0x3EA1
+-#define PCI_CHIP_COFFEELAKE_U_GT1_2     0x3EA4
+-#define PCI_CHIP_COFFEELAKE_U_GT2_1     0x3EA0
+-#define PCI_CHIP_COFFEELAKE_U_GT2_2     0x3EA3
+-#define PCI_CHIP_COFFEELAKE_U_GT2_3     0x3EA9
+-#define PCI_CHIP_COFFEELAKE_U_GT3_1     0x3EA2
+-#define PCI_CHIP_COFFEELAKE_U_GT3_2     0x3EA5
+-#define PCI_CHIP_COFFEELAKE_U_GT3_3     0x3EA6
+-#define PCI_CHIP_COFFEELAKE_U_GT3_4     0x3EA7
+-#define PCI_CHIP_COFFEELAKE_U_GT3_5     0x3EA8
++#define PCI_CHIP_COFFEELAKE_U_GT2_1     0x3EA9
++#define PCI_CHIP_COFFEELAKE_U_GT3_1     0x3EA5
++#define PCI_CHIP_COFFEELAKE_U_GT3_2     0x3EA6
++#define PCI_CHIP_COFFEELAKE_U_GT3_3     0x3EA7
++#define PCI_CHIP_COFFEELAKE_U_GT3_4     0x3EA8
++
++#define PCI_CHIP_WHISKEYLAKE_U_GT1_1     0x3EA1
++#define PCI_CHIP_WHISKEYLAKE_U_GT2_1     0x3EA0
++#define PCI_CHIP_WHISKEYLAKE_U_GT3_1     0x3EA2
++#define PCI_CHIP_WHISKEYLAKE_U_GT3_2     0x3EA3
++#define PCI_CHIP_WHISKEYLAKE_U_GT3_3     0x3EA4
+ 
+ #define PCI_CHIP_CANNONLAKE_0		0x5A51
+ #define PCI_CHIP_CANNONLAKE_1		0x5A59
+@@ -510,16 +511,16 @@
+ #define IS_CFL_H(devid)         ((devid) == PCI_CHIP_COFFEELAKE_H_GT2_1 || \
+                                  (devid) == PCI_CHIP_COFFEELAKE_H_GT2_2)
+ 
+-#define IS_CFL_U(devid)         ((devid) == PCI_CHIP_COFFEELAKE_U_GT1_1 || \
+-                                 (devid) == PCI_CHIP_COFFEELAKE_U_GT1_2 || \
+-                                 (devid) == PCI_CHIP_COFFEELAKE_U_GT2_1 || \
+-                                 (devid) == PCI_CHIP_COFFEELAKE_U_GT2_2 || \
+-                                 (devid) == PCI_CHIP_COFFEELAKE_U_GT2_3 || \
++#define IS_CFL_U(devid)         ((devid) == PCI_CHIP_COFFEELAKE_U_GT2_1 || \
+                                  (devid) == PCI_CHIP_COFFEELAKE_U_GT3_1 || \
+                                  (devid) == PCI_CHIP_COFFEELAKE_U_GT3_2 || \
+                                  (devid) == PCI_CHIP_COFFEELAKE_U_GT3_3 || \
+                                  (devid) == PCI_CHIP_COFFEELAKE_U_GT3_4 || \
+-                                 (devid) == PCI_CHIP_COFFEELAKE_U_GT3_5)
++                                 (devid) == PCI_CHIP_WHISKEYLAKE_U_GT1_1 || \
++                                 (devid) == PCI_CHIP_WHISKEYLAKE_U_GT2_1 || \
++                                 (devid) == PCI_CHIP_WHISKEYLAKE_U_GT3_1 || \
++                                 (devid) == PCI_CHIP_WHISKEYLAKE_U_GT3_2 || \
++                                 (devid) == PCI_CHIP_WHISKEYLAKE_U_GT3_3)
+ 
+ #define IS_COFFEELAKE(devid)   (IS_CFL_S(devid) || \
+ 				IS_CFL_H(devid) || \
+-- 
+1.9.1
+

@@ -1,0 +1,34 @@
+From f34b6942ec5fd7ee3724576b8ee962c2553aad24 Mon Sep 17 00:00:00 2001
+From: Kevin Strasser <kevin.strasser@intel.com>
+Date: Fri, 18 May 2018 12:48:17 -0700
+Subject: [PATCH 01/14] xf86drm: Be sure to closedir before return
+
+removed in commit bb45ce4e3ac751315bfd7fbfd9e1425bf515ec0d
+
+Adding it back as it is still needed in the case where we don't find a
+match.
+
+Signed-off-by: Kevin Strasser <kevin.strasser@intel.com>
+Fixes: bb45ce4e3ac751315bfd "libdrm: Use readdir instead of readdir_r to
+                             avoid build warnings"$
+Reviewed-by: Eric Engestrom <eric.engestrom@intel.com>
+---
+ xf86drm.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/xf86drm.c b/xf86drm.c
+index 3a9d0ed..056dfa4 100644
+--- a/xf86drm.c
++++ b/xf86drm.c
+@@ -2855,6 +2855,8 @@ static char *drmGetMinorNameForFD(int fd, int type)
+             return strdup(dev_name);
+         }
+     }
++
++    closedir(sysdir);
+     return NULL;
+ #else
+     struct stat sbuf;
+-- 
+1.9.1
+

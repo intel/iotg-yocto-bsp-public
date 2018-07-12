@@ -11,15 +11,27 @@ PROVIDES = "drm"
 DEPENDS = "libpthread-stubs libpciaccess"
 
 SRC_URI = "git://anongit.freedesktop.org/mesa/drm \
-           file://libdrm_version_diff.patch \
-           file://0001-intel-New-libdrm-interface-to-create-unbound-wc-user.patch \
+           file://0001-xf86drm-Be-sure-to-closedir-before-return.patch \
+           file://0002-Always-pass-O_CLOEXEC-when-opening-DRM-file-descript.patch \
+           file://0003-amdgpu-Take-a-lock-before-removing-devices-from-fd_t.patch \
+           file://0004-amdgpu-util_hash_table-Add-helper-function-to-count-.patch \
+           file://0005-amdgpu-Destroy-fd_hash-table-when-the-last-device-is.patch \
+           file://0006-freedreno-add-user-ptr-to-fd_ringbuffer.patch \
+           file://0007-intel-Introducing-Whiskey-Lake-platform.patch \
+           file://0008-intel-Introducing-Amber-Lake-platform.patch \
+           file://0009-intel-New-libdrm-interface-to-create-unbound-wc-user.patch \
+           file://0010-intel-add-the-new-bo-emit-reloc2-for-bo-offset.patch \
+           file://0011-intel-Watchdog-timeout-DRM-kernel-interface-to-set-t.patch \
+           file://0012-xf86drmMode-Add-RGBA-property-helpers.patch \
+           file://0013-xf86drmMode-Add-plane-blending-helpers.patch \
+           file://0014-To-disable-hook-dist-gzip-to-dist.patch \
           "
 
-PV = "2.4.91"
+PV = "2.4.92"
 
 S = "${WORKDIR}/git"
 
-SRCREV = "a5d87b1793ce00b4f7d335921a373620895de534"
+SRCREV = "b29dffe750de981e562bb605e5674589f23cfda6"
 
 inherit autotools pkgconfig manpages
 

@@ -1,0 +1,51 @@
+From 712fa0f3f420a7b9b42ae6d6fcb513aca97d541d Mon Sep 17 00:00:00 2001
+From: Jan Vesely <jan.vesely@rutgers.edu>
+Date: Thu, 10 May 2018 19:22:17 -0400
+Subject: [PATCH 03/14] amdgpu: Take a lock before removing devices from fd_tab
+ hash table.
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Close the file descriptors under lock as well.
+v2: close fds after removing from hash table
+
+Signed-off-by: Jan Vesely <jan.vesely@rutgers.edu>
+Reviewed-by: Michel Dänzer <michel.daenzer@amd.com>
+Reviewed-by: Alex Deucher <alexander.deucher@amd.com>
+---
+ amdgpu/amdgpu_device.c | 11 +++++++----
+ 1 file changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/amdgpu/amdgpu_device.c b/amdgpu/amdgpu_device.c
+index 983b19a..e23dd3b 100644
+--- a/amdgpu/amdgpu_device.c
++++ b/amdgpu/amdgpu_device.c
+@@ -126,6 +126,13 @@ static int amdgpu_get_auth(int fd, int *auth)
+ 
+ static void amdgpu_device_free_internal(amdgpu_device_handle dev)
+ {
++	pthread_mutex_lock(&fd_mutex);
++	util_hash_table_remove(fd_tab, UINT_TO_PTR(dev->fd));
++	close(dev->fd);
++	if ((dev->flink_fd >= 0) && (dev->fd != dev->flink_fd))
++		close(dev->flink_fd);
++	pthread_mutex_unlock(&fd_mutex);
++
+ 	amdgpu_vamgr_deinit(&dev->vamgr_32);
+ 	amdgpu_vamgr_deinit(&dev->vamgr);
+ 	amdgpu_vamgr_deinit(&dev->vamgr_high_32);
+@@ -133,10 +140,6 @@ static void amdgpu_device_free_internal(amdgpu_device_handle dev)
+ 	util_hash_table_destroy(dev->bo_flink_names);
+ 	util_hash_table_destroy(dev->bo_handles);
+ 	pthread_mutex_destroy(&dev->bo_table_mutex);
+-	util_hash_table_remove(fd_tab, UINT_TO_PTR(dev->fd));
+-	close(dev->fd);
+-	if ((dev->flink_fd >= 0) && (dev->fd != dev->flink_fd))
+-		close(dev->flink_fd);
+ 	free(dev->marketing_name);
+ 	free(dev);
+ }
+-- 
+1.9.1
+

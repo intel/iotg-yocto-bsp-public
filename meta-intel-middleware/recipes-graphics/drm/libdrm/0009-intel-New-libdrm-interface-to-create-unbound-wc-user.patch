@@ -1,7 +1,7 @@
-From a4893c8c2d4cd53f1b31fc8efd1eed2e70a6260e Mon Sep 17 00:00:00 2001
+From 08154c604f2b26fd8c7168fcaab666ae9d979137 Mon Sep 17 00:00:00 2001
 From: Akash Goel <akash.goel@intel.com>
 Date: Sat, 18 Oct 2014 17:48:34 +0530
-Subject: [PATCH] intel: New libdrm interface to create unbound wc user
+Subject: [PATCH 09/14] intel: New libdrm interface to create unbound wc user
  mappings for objects
 
 A new libdrm interface 'drm_intel_gem_bo_map_wc' is provided by this
@@ -47,7 +47,7 @@ Change-Id: I512c3a9597c0890a9cd8973198766404ec75a01d
  2 files changed, 151 insertions(+)
 
 diff --git a/intel/intel_bufmgr.h b/intel/intel_bufmgr.h
-index 87e299f..bbbe8c9 100644
+index 693472a..50483af 100644
 --- a/intel/intel_bufmgr.h
 +++ b/intel/intel_bufmgr.h
 @@ -183,6 +183,9 @@ void drm_intel_bufmgr_gem_set_vma_cache_size(drm_intel_bufmgr *bufmgr,
@@ -61,10 +61,10 @@ index 87e299f..bbbe8c9 100644
  #define HAVE_DRM_INTEL_GEM_BO_DISABLE_IMPLICIT_SYNC 1
  int drm_intel_bufmgr_gem_can_disable_implicit_sync(drm_intel_bufmgr *bufmgr);
 diff --git a/intel/intel_bufmgr_gem.c b/intel/intel_bufmgr_gem.c
-index 36f6119..e72670e 100644
+index 8c3a4b2..730f425 100644
 --- a/intel/intel_bufmgr_gem.c
 +++ b/intel/intel_bufmgr_gem.c
-@@ -150,6 +150,7 @@ typedef struct _drm_intel_bufmgr_gem {
+@@ -146,6 +146,7 @@ typedef struct _drm_intel_bufmgr_gem {
  	unsigned int no_exec : 1;
  	unsigned int has_vebox : 1;
  	unsigned int has_exec_async : 1;
@@ -72,7 +72,7 @@ index 36f6119..e72670e 100644
  	bool fenced_relocs;
  
  	struct {
-@@ -217,6 +218,8 @@ struct _drm_intel_bo_gem {
+@@ -213,6 +214,8 @@ struct _drm_intel_bo_gem {
  
  	/** Mapped address for the buffer, saved across map/unmap cycles */
  	void *mem_virtual;
@@ -81,7 +81,7 @@ index 36f6119..e72670e 100644
  	/** GTT virtual address for the buffer, saved across map/unmap cycles */
  	void *gtt_virtual;
  	/** WC CPU address for the buffer, saved across map/unmap cycles */
-@@ -1198,6 +1201,10 @@ drm_intel_gem_bo_free(drm_intel_bo *bo)
+@@ -1193,6 +1196,10 @@ drm_intel_gem_bo_free(drm_intel_bo *bo)
  		drm_munmap(bo_gem->gtt_virtual, bo_gem->bo.size);
  		bufmgr_gem->vma_count--;
  	}
@@ -92,7 +92,7 @@ index 36f6119..e72670e 100644
  
  	if (bo_gem->global_name)
  		HASH_DELETE(name_hh, bufmgr_gem->name_table, bo_gem);
-@@ -1228,6 +1235,9 @@ drm_intel_gem_bo_mark_mmaps_incoherent(drm_intel_bo *bo)
+@@ -1223,6 +1230,9 @@ drm_intel_gem_bo_mark_mmaps_incoherent(drm_intel_bo *bo)
  
  	if (bo_gem->gtt_virtual)
  		VALGRIND_MAKE_MEM_NOACCESS(bo_gem->gtt_virtual, bo->size);
@@ -102,7 +102,7 @@ index 36f6119..e72670e 100644
  #endif
  }
  
-@@ -1273,6 +1283,8 @@ static void drm_intel_gem_bo_purge_vma_cache(drm_intel_bufmgr_gem *bufmgr_gem)
+@@ -1268,6 +1278,8 @@ static void drm_intel_gem_bo_purge_vma_cache(drm_intel_bufmgr_gem *bufmgr_gem)
  
  	/* We may need to evict a few entries in order to create new mmaps */
  	limit = bufmgr_gem->vma_max - 2*bufmgr_gem->vma_open;
@@ -111,7 +111,7 @@ index 36f6119..e72670e 100644
  	if (limit < 0)
  		limit = 0;
  
-@@ -1300,6 +1312,11 @@ static void drm_intel_gem_bo_purge_vma_cache(drm_intel_bufmgr_gem *bufmgr_gem)
+@@ -1295,6 +1307,11 @@ static void drm_intel_gem_bo_purge_vma_cache(drm_intel_bufmgr_gem *bufmgr_gem)
  			bo_gem->gtt_virtual = NULL;
  			bufmgr_gem->vma_count--;
  		}
@@ -123,7 +123,7 @@ index 36f6119..e72670e 100644
  	}
  }
  
-@@ -1314,6 +1331,8 @@ static void drm_intel_gem_bo_close_vma(drm_intel_bufmgr_gem *bufmgr_gem,
+@@ -1309,6 +1326,8 @@ static void drm_intel_gem_bo_close_vma(drm_intel_bufmgr_gem *bufmgr_gem,
  		bufmgr_gem->vma_count++;
  	if (bo_gem->gtt_virtual)
  		bufmgr_gem->vma_count++;
@@ -132,7 +132,7 @@ index 36f6119..e72670e 100644
  	drm_intel_gem_bo_purge_vma_cache(bufmgr_gem);
  }
  
-@@ -1328,6 +1347,8 @@ static void drm_intel_gem_bo_open_vma(drm_intel_bufmgr_gem *bufmgr_gem,
+@@ -1323,6 +1342,8 @@ static void drm_intel_gem_bo_open_vma(drm_intel_bufmgr_gem *bufmgr_gem,
  		bufmgr_gem->vma_count--;
  	if (bo_gem->gtt_virtual)
  		bufmgr_gem->vma_count--;
@@ -141,7 +141,7 @@ index 36f6119..e72670e 100644
  	drm_intel_gem_bo_purge_vma_cache(bufmgr_gem);
  }
  
-@@ -1431,6 +1452,123 @@ static void drm_intel_gem_bo_unreference(drm_intel_bo *bo)
+@@ -1426,6 +1447,123 @@ static void drm_intel_gem_bo_unreference(drm_intel_bo *bo)
  	}
  }
  
@@ -265,7 +265,7 @@ index 36f6119..e72670e 100644
  static int drm_intel_gem_bo_map(drm_intel_bo *bo, int write_enable)
  {
  	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
-@@ -1457,6 +1595,7 @@ static int drm_intel_gem_bo_map(drm_intel_bo *bo, int write_enable)
+@@ -1452,6 +1590,7 @@ static int drm_intel_gem_bo_map(drm_intel_bo *bo, int write_enable)
  
  		memclear(mmap_arg);
  		mmap_arg.handle = bo_gem->gem_handle;
@@ -273,7 +273,7 @@ index 36f6119..e72670e 100644
  		mmap_arg.size = bo->size;
  		ret = drmIoctl(bufmgr_gem->fd,
  			       DRM_IOCTL_I915_GEM_MMAP,
-@@ -1715,6 +1854,11 @@ static int drm_intel_gem_bo_unmap(drm_intel_bo *bo)
+@@ -1710,6 +1849,11 @@ static int drm_intel_gem_bo_unmap(drm_intel_bo *bo)
  	return ret;
  }
  
@@ -285,7 +285,7 @@ index 36f6119..e72670e 100644
  int
  drm_intel_gem_bo_unmap_gtt(drm_intel_bo *bo)
  {
-@@ -3750,6 +3894,10 @@ drm_intel_bufmgr_gem_init(int fd, int batch_size)
+@@ -3727,6 +3871,10 @@ drm_intel_bufmgr_gem_init(int fd, int batch_size)
  	if (ret == 0 && *gp.value > 0)
  		bufmgr_gem->bufmgr.bo_set_softpin_offset = drm_intel_gem_bo_set_softpin_offset;
  
@@ -297,5 +297,5 @@ index 36f6119..e72670e 100644
  		gp.param = I915_PARAM_NUM_FENCES_AVAIL;
  		gp.value = &bufmgr_gem->available_fences;
 -- 
-2.9.5
+1.9.1
 
