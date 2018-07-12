@@ -246,16 +246,16 @@ bsp_build () {
 
 	if [ "$image" = "custom" ]; then
 		echo "Building BSP with custom image ..."
-		./build.sh custom $tarball $machine
+		./build.sh custom $machine
 	elif [ "$image" = "sato-sdk" ]; then
 		echo "Building BSP with core-image-sato-sdk image ..."
-		./build.sh sato-sdk $tarball $machine
+		./build.sh sato-sdk $machine
 	elif [ "$image" = "kernel" ]; then
 		echo "Building kernel image only ..."
-		./build.sh kernel $tarball $machine
+		./build.sh kernel $machine
 	else
 		echo "Building BSP with core-image-sato image ..."
-		./build.sh sato $tarball $machine
+		./build.sh sato $machine
 	fi
 
 	cd ${cur_dir}
@@ -384,12 +384,24 @@ build_kernel () {
 	cd ${cur_dir}
 }
 
-echo -e "Build kernel image with CAVS HD Audio driver (Default)"
+echo -e "\nSelect an option: "
+echo -e "1. Build kernel image with CAVS HD Audio driver (Default)\n2. Build kernel image with CAVS SSP Audio driver"
+echo -e "Default option is build kernel image with CAVS HD Audio driver. If no input is received within 20 secs, default will be used."
+read -t 20 -p "" ans_to_patch
 
-
-tarball="CAVS"
-machine="CAVS-HDA"
-
+case $ans_to_patch in
+	1)
+		# CAVS HD Audio
+		machine="CAVS-HDA"
+		;;
+	2)
+		# CAVS SSP Audio
+		machine="CAVS-SSP"
+		;;
+	*)
+		machine="CAVS-HDA"
+		;;
+esac
 
 echo -e "\nSelect an option: \n1. core-image-sato-sdk (Default)\n2. core-image-sato\n3. linux-kernel\n4. custom"
 echo -e "Default build target is core-image-sato-sdk. If no input is received within 20 secs, default target will be built."

@@ -136,8 +136,7 @@ build_kernel () {
 }
 
 target=$1
-tarball=$2
-machine=$3
+machine=$2
 
 case $1 in
 	kernel)		build_kernel;;
