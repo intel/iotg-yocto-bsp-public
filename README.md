@@ -32,21 +32,13 @@ See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/S
 ```
 - This git tree will maintained as single product branch. In order to get code base from previous release, you need to checkout to the specific tag.
 
-   <br> - For Intel Atom E3900 Maintenance Release Version 2:
-```
-      git checkout E3900-MR2
-```
-   <br> - For Intel Atom E3900 Maintenance Release Version 3:
-```
-      git checkout E3900-MR3
-```
    <br> - For Intel Atom E3900 Maintenance Release Version 3.1:
 ```
       git checkout E3900-MR3.1
 ```
-   <br> - For Intel Atom E3900 Maintenance Release Version 4 - Alpha:
+   <br> - For Intel Atom E3900 Maintenance Release Version 4 - Beta:
 ```
-      git checkout E3900-MR4-Alpha
+      git checkout E3900-MR4-Beta
 ```
 - After checking out one of the release tags, you will noticed that you are in 'detached HEAD' state. You can now create a local git branch to host the code.
 ```
@@ -97,9 +89,9 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
 	- check for Linux distro on host machine
 	- check for required software dependencies (this is only performed for Linux Ubuntu 14.04)
 	- test python, network, gitconfig and git proxy
-   b. Prepare sources
-	- download Linux kernel v4.14.36 from Intel Linux Kernel from github.
-	- combolayer downloads Poky Jethro v2.4.2 and other meta layers based on setup/combolayer.conf
+	- Prepare sources
+	- download Linux kernel v4.14.52 from Intel Linux Kernel from github.
+	- combolayer downloads Poky Sumo v2.5.0 and other meta layers based on setup/combolayer.conf
 	- setup bblayers for bitbake build
 	- setup local.conf for bitbake build
 	- prepare environment for bitbake build
@@ -135,7 +127,7 @@ If you need to modify the recipes or configurations, make your customization in 
 ```
 
 ### Kernel Source
-Intel Atom E3900 BSP utilize linux-yocto kernel from Yocto project which is hosted in [Intel Gihub repositories](https://github.com/intel/linux-intel-lts). The branch for Intel Atom E3900 BSP kernel is 4.14/yocto/base.
+Intel Atom E3900 BSP utilize linux-intel kernel from Intel Github which is hosted in [Intel Github repositories](https://github.com/intel/linux-intel-lts). The branch for Intel Atom E3900 BSP kernel is 4.14/yocto/base.
 
 ### Features supported
 To view the full list of supported features, please refer BSP release notes in [Technical Libary for Intel Atom E3900 Series](https://www.intel.com/content/www/us/en/embedded/products/apollo-lake/technical-library.html)
