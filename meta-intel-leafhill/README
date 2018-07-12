@@ -43,11 +43,11 @@ This layer depends on:
 
   URI: git://git.yoctoproject.org/poky
   layers: meta
-  branch: rocko
+  branch: sumo
 
   URI: git://git.yoctoproject.org/meta-intel
   layers: intel
-  branch: rocko
+  branch: sumo
 
 
 Patches
