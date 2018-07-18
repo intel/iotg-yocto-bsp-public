@@ -83,6 +83,9 @@ PACKAGECONFIG_append_pn-gstreamer1.0-plugins-good = "vpx"
 #MULTILIBS = "multilib:lib32"
 #DEFAULTTUNE_virtclass-multilib-lib32 = "corei7-32"
 
+# Install autoconf-archive
+IMAGE_INSTALL_append = " autoconf-archive"
+
 # Install libva
 IMAGE_INSTALL_append = " libva"
 
