@@ -4,8 +4,7 @@ SRC_URI_append = " file://leafhill.scc \
            ${@bb.utils.contains('AUDIO_FEATURES', 'ssp', 'file://snd_ssp_intel.scc', '', d)} \
 "
 
-KBRANCH = "4.14/yocto/base"
-SRCREV_machine = "e304288ff17ddf0062d1262ae7ccaa57a40c433d"
+SRCREV_machine = "c89f345c45c43fbb4c51bf975d3ddcb29cc4f723"
 LINUX_VERSION = "4.14.52"
 
 # Enable i2c-dev autoload
