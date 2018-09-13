@@ -1,7 +1,7 @@
-From 32b298d7150dfc7ef91115c6c7dd8e4aa9903d4a Mon Sep 17 00:00:00 2001
+From 0f9f1708ee6632b158ff1a9251dad7ebe54f0297 Mon Sep 17 00:00:00 2001
 From: "Ruslan, Rusaimi Amira" <rusaimi.amira.ruslan@intel.com>
 Date: Fri, 13 Apr 2018 17:49:19 +0800
-Subject: [PATCH 29/43] misc: intel-ish-clients: Remove linux header file for
+Subject: [PATCH 29/41] misc: intel-ish-clients: Remove linux header file for
  uapi
 
 Remove linux mutex and miscdevice header file, should not expose to userspace.

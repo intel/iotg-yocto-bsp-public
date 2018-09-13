@@ -1,7 +1,7 @@
-From 01ca848a56ec44d8e74de028b82d8ab6ee95c857 Mon Sep 17 00:00:00 2001
+From 73e45cf4830853efe829d9f1d42b2ca9fad76b44 Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:03 +0530
-Subject: [PATCH 15/41] drm/i915/skl+: support verification of DDB HW state for
+Subject: [PATCH 15/44] drm/i915/skl+: support verification of DDB HW state for
  NV12
 
 For YUV 420 Planar formats like NV12,
@@ -37,7 +37,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  3 files changed, 43 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index dca7cab..b7daed8 100644
+index 8d1d812..2ee19e1b 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -2653,7 +2653,7 @@ static int i9xx_format_to_fourcc(int format)
@@ -62,10 +62,10 @@ index 8ec8f7f..e680a74 100644
  /* intel_csr.c */
  void intel_csr_ucode_init(struct drm_i915_private *);
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index d9fad48..52a0d30 100644
+index 2bbad31..4e757e0 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
-@@ -3800,6 +3800,44 @@ static void skl_ddb_entry_init_from_hw(struct skl_ddb_entry *entry, u32 reg)
+@@ -3801,6 +3801,44 @@ static void skl_ddb_entry_init_from_hw(struct skl_ddb_entry *entry, u32 reg)
  		entry->end += 1;
  }
  
@@ -110,7 +110,7 @@ index d9fad48..52a0d30 100644
  void skl_ddb_get_hw_state(struct drm_i915_private *dev_priv,
  			  struct skl_ddb_allocation *ddb /* out */)
  {
-@@ -3816,16 +3854,9 @@ void skl_ddb_get_hw_state(struct drm_i915_private *dev_priv,
+@@ -3817,16 +3855,9 @@ void skl_ddb_get_hw_state(struct drm_i915_private *dev_priv,
  		if (!intel_display_power_get_if_enabled(dev_priv, power_domain))
  			continue;
  

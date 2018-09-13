@@ -1,7 +1,7 @@
-From ad9f6a070cbd5c3508b8de71c8728650a410ddbf Mon Sep 17 00:00:00 2001
+From f0b4ace7c61180c6dbfe2464f1d1e9052748b10f Mon Sep 17 00:00:00 2001
 From: Vinod Koul <vinod.koul@intel.com>
 Date: Wed, 17 Feb 2016 21:34:06 +0530
-Subject: [PATCH 73/96] ASoC: Intel: Skylake: Add i915 enabling in skl probe
+Subject: [PATCH 073/102] ASoC: Intel: Skylake: Add i915 enabling in skl probe
 
 The SKL also supports HDMI output so in probe we need to enable
 the HDMI using common i915 APIs to ensure it gets probed on the
@@ -26,10 +26,10 @@ Conflicts:
  2 files changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/sound/soc/intel/Kconfig b/sound/soc/intel/Kconfig
-index c4336f5..8c4e6c8 100644
+index 545ec59..803d924 100644
 --- a/sound/soc/intel/Kconfig
 +++ b/sound/soc/intel/Kconfig
-@@ -104,6 +104,7 @@ config SND_SOC_INTEL_SKYLAKE
+@@ -107,6 +107,7 @@ config SND_SOC_INTEL_SKYLAKE
  	select SND_HDA_EXT_CORE
  	select SND_HDA_DSP_LOADER
  	select SND_SOC_TOPOLOGY
@@ -38,15 +38,16 @@ index c4336f5..8c4e6c8 100644
  	select SND_SOC_COMPRESS
  	select SDW
 diff --git a/sound/soc/intel/skylake/skl.c b/sound/soc/intel/skylake/skl.c
-index 2063cd6..f726eae 100644
+index a5c833e..0c4bb2e 100644
 --- a/sound/soc/intel/skylake/skl.c
 +++ b/sound/soc/intel/skylake/skl.c
-@@ -28,11 +28,12 @@
+@@ -28,12 +28,13 @@
  #include <linux/firmware.h>
  #include <linux/delay.h>
  #include <sound/pcm.h>
 +#include <sound/compress_driver.h>
  #include <sound/soc-acpi.h>
+ #include <sound/soc-acpi-intel-match.h>
  #include <sound/hda_register.h>
  #include <sound/hdaudio.h>
  #include <sound/hda_i915.h>
@@ -55,7 +56,7 @@ index 2063cd6..f726eae 100644
  #include "skl.h"
  #include "skl-sst-dsp.h"
  #include "skl-sst-ipc.h"
-@@ -874,6 +875,14 @@ static int skl_first_init(struct hdac_ext_bus *ebus)
+@@ -875,6 +876,14 @@ static int skl_first_init(struct hdac_ext_bus *ebus)
  
  	skl_dum_set(ebus);
  
@@ -70,7 +71,7 @@ index 2063cd6..f726eae 100644
  	return skl_init_chip(bus, true);
  }
  
-@@ -1008,6 +1017,9 @@ static void skl_remove(struct pci_dev *pci)
+@@ -1005,6 +1014,9 @@ static void skl_remove(struct pci_dev *pci)
  	struct hdac_ext_bus *ebus = pci_get_drvdata(pci);
  	struct skl *skl = ebus_to_skl(ebus);
  

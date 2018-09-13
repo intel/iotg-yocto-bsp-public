@@ -1,7 +1,7 @@
-From 52a8bdd81a71b5bc3b63daccfb2c4178715ef901 Mon Sep 17 00:00:00 2001
+From 8aacaf6c8e0527a867f614f4bd47afb466227502 Mon Sep 17 00:00:00 2001
 From: Damien Lespiau <damien.lespiau@intel.com>
 Date: Mon, 7 May 2018 13:32:10 -0700
-Subject: [PATCH 09/41] drm/i915/gen9: Add support for color-based blending
+Subject: [PATCH 09/44] drm/i915/gen9: Add support for color-based blending
  modes (v3)
 
 This patch adds support for blending modes involving
@@ -30,10 +30,10 @@ Signed-off-by: Paauwe, Bob J <bob.j.paauwe@intel.com>
  5 files changed, 53 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_reg.h b/drivers/gpu/drm/i915/i915_reg.h
-index 3ce296f..7ecced6 100644
+index 4194ddf..b3cb420 100644
 --- a/drivers/gpu/drm/i915/i915_reg.h
 +++ b/drivers/gpu/drm/i915/i915_reg.h
-@@ -6411,6 +6411,10 @@ enum {
+@@ -6416,6 +6416,10 @@ enum {
  #define PLANE_KEYMAX(pipe, plane)	\
  	_MMIO_PLANE(plane, _PLANE_KEYMAX_1(pipe), _PLANE_KEYMAX_2(pipe))
  
@@ -59,10 +59,10 @@ index 838f01c..1a1ec0f 100644
  
  	return state;
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 32209e9..a2e8083 100644
+index 27b5aa7..601a989 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
-@@ -3565,6 +3565,8 @@ static void skylake_update_primary_plane(struct intel_plane *plane,
+@@ -3620,6 +3620,8 @@ static void skylake_update_primary_plane(struct intel_plane *plane,
  	struct drm_i915_private *dev_priv = to_i915(plane->base.dev);
  	struct intel_crtc *crtc = to_intel_crtc(crtc_state->base.crtc);
  	const struct drm_framebuffer *fb = plane_state->base.fb;
@@ -71,7 +71,7 @@ index 32209e9..a2e8083 100644
  	enum plane_id plane_id = plane->id;
  	enum pipe pipe = plane->pipe;
  	u32 plane_ctl = plane_state->ctl;
-@@ -3638,6 +3640,14 @@ static void skylake_update_primary_plane(struct intel_plane *plane,
+@@ -3700,6 +3702,14 @@ static void skylake_update_primary_plane(struct intel_plane *plane,
  		      (plane_state->aux.offset - surf_addr) | aux_stride);
  	I915_WRITE_FW(PLANE_AUX_OFFSET(pipe, plane_id),
  		      (plane_state->aux.y << 16) | plane_state->aux.x);
@@ -86,7 +86,7 @@ index 32209e9..a2e8083 100644
  
  	if (scaler_id >= 0) {
  		uint32_t ps_ctrl = 0;
-@@ -10521,17 +10531,40 @@ static int intel_plane_state_check_blend(struct drm_plane_state *plane_state)
+@@ -10583,17 +10593,40 @@ static int intel_plane_state_check_blend(struct drm_plane_state *plane_state)
  	case DRM_BLEND_FUNC(ONE, ONE_MINUS_SRC_ALPHA):
  		state->alpha = has_per_pixel_blending ?
  			I915_ALPHA_PREMUL : I915_ALPHA_NONE;
@@ -127,7 +127,7 @@ index 32209e9..a2e8083 100644
  		return -EINVAL;
  	}
  
-@@ -13660,6 +13693,11 @@ void intel_plane_add_blend_properties(struct intel_plane *plane)
+@@ -13722,6 +13755,11 @@ void intel_plane_add_blend_properties(struct intel_plane *plane)
  	if (prop)
  		drm_object_attach_property(&plane->base.base, prop,
  					   DRM_BLEND_FUNC(AUTO, AUTO));
@@ -152,10 +152,10 @@ index 3015572..7e22c4b 100644
  	struct drm_intel_sprite_colorkey ckey;
  };
 diff --git a/drivers/gpu/drm/i915/intel_sprite.c b/drivers/gpu/drm/i915/intel_sprite.c
-index e82cb07..740efac 100644
+index 3abb528..7a4426b 100644
 --- a/drivers/gpu/drm/i915/intel_sprite.c
 +++ b/drivers/gpu/drm/i915/intel_sprite.c
-@@ -300,11 +300,14 @@ void intel_pipe_update_end(struct intel_crtc *crtc)
+@@ -369,11 +369,14 @@ static void pv_update_plane_reg(struct intel_plane *plane,
  			      PLANE_COLOR_PLANE_GAMMA_DISABLE);
  	}
  

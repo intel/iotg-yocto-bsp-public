@@ -1,0 +1,198 @@
+From 1168db01683008e6c0f4cb7f45bd4307d5590a77 Mon Sep 17 00:00:00 2001
+From: kgopala2 <karthik.l.gopalakrishnan@intel.com>
+Date: Tue, 10 Jul 2018 18:16:10 +0800
+Subject: [PATCH 002/129] media: intel-ipu4: [ICI] ACPI functionality for
+ crlmodule-lite sensors
+
+Signed-off-by: kgopala2 <karthik.l.gopalakrishnan@intel.com>
+---
+ drivers/media/i2c/crlmodule-lite/crlmodule-data.c |  2 +
+ drivers/media/pci/intel/ici/ici-isys.c            | 19 ++------
+ drivers/media/platform/intel/ipu4-acpi.c          | 59 +++++++++++++++++++++++
+ 3 files changed, 65 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/media/i2c/crlmodule-lite/crlmodule-data.c b/drivers/media/i2c/crlmodule-lite/crlmodule-data.c
+index db85db5..c22dc1f 100644
+--- a/drivers/media/i2c/crlmodule-lite/crlmodule-data.c
++++ b/drivers/media/i2c/crlmodule-lite/crlmodule-data.c
+@@ -15,6 +15,8 @@
+ 	{ "ADV7481_EVAL", "adv7481_eval", &adv7481_eval_crl_configuration },
+ 	{ "ADV7481B_EVAL", "adv7481b_eval", &adv7481b_eval_crl_configuration },
+ 	{ "MAGNA_TI964", "magna_ti964", &magna_ti964_crl_configuration },
++	{ "i2c-ADV7481A:00", "adv7481_hdmi", &adv7481_hdmi_crl_configuration },
++	{ "i2c-ADV7481B:00", "adv7481_cvbs", &adv7481_cvbs_crl_configuration },
+ };
+ 
+ /*
+diff --git a/drivers/media/pci/intel/ici/ici-isys.c b/drivers/media/pci/intel/ici/ici-isys.c
+index d4ef12cb..466659b 100644
+--- a/drivers/media/pci/intel/ici/ici-isys.c
++++ b/drivers/media/pci/intel/ici/ici-isys.c
+@@ -15,6 +15,7 @@
+ #include <linux/version.h>
+ 
+ #include <media/ipu-isys.h>
++#include <media/ipu4-acpi.h>
+ 
+ #include "ipu.h"
+ #include "ipu-bus.h"
+@@ -346,7 +347,6 @@ static int isys_register_ext_subdev(struct ici_isys *isys,
+ 		}
+ 		rval = 0;
+ 		goto skip_put_adapter;
+-#if 0
+ 		if (!sd_info->acpiname) {
+ 			dev_dbg(&isys->adev->dev,
+ 				 "No name in platform data\n");
+@@ -359,20 +359,18 @@ static int isys_register_ext_subdev(struct ici_isys *isys,
+ 			rval = 0;
+ 			goto skip_put_adapter;
+ 		}
+-#endif
+ 		/* Acpi match found. Continue to reprobe */
+ 	} else if (client) {
+ 		dev_dbg(&isys->adev->dev, "Device exists\n");
+ 		rval = 0;
++		goto skip_put_adapter;
+ 	} 
+-#if 0 
+ 	else if (sd_info->acpiname) {
+ 		dev_dbg(&isys->adev->dev, "ACPI name don't match: %s\n",
+ 			sd_info->acpiname);
+ 		rval = 0;
+ 		goto skip_put_adapter;
+ 	}
+-#endif
+ 	if (!client) {
+ 		dev_info(&isys->adev->dev,
+ 			 "i2c device not found in ACPI table\n");
+@@ -398,11 +396,6 @@ static int isys_register_ext_subdev(struct ici_isys *isys,
+ 	return rval;
+ }
+ 
+-// latest approach from ICG and ACRN intends to
+-// remove ACPI. re-implement this if need later.
+-// else remove.
+-
+-#if 0
+ static int isys_acpi_add_device(struct device *dev, void *priv,
+ 				struct ipu_isys_csi2_config *csi2,
+ 				bool reprobe)
+@@ -434,7 +427,6 @@ static int isys_acpi_add_device(struct device *dev, void *priv,
+ 
+ 	return isys_complete_ext_device_registration(isys, sd, csi2);
+ }
+-#endif
+ 
+ static void isys_register_ext_subdevs(struct ici_isys *isys)
+ {
+@@ -454,13 +446,10 @@ static void isys_register_ext_subdevs(struct ici_isys *isys)
+ 		dev_info(&isys->adev->dev, "no subdevice info provided\n");
+ 	}
+ 
+-// TODO need to implement ACPI?
+-#if 0
+ 	/* Handle real ACPI stuff */
+-	request_module("intel-ipu4-ici-acpi");
+-	intel_ipu4_ici_get_acpi_devices(isys, &isys->adev->dev,
++	request_module("ipu4-acpi");
++	ipu_get_acpi_devices(isys, &isys->adev->dev,
+ 				    isys_acpi_add_device);
+-#endif
+ }
+ 
+ static void isys_unregister_subdevices(struct ici_isys *isys)
+diff --git a/drivers/media/platform/intel/ipu4-acpi.c b/drivers/media/platform/intel/ipu4-acpi.c
+index 513f265..e8167d2 100644
+--- a/drivers/media/platform/intel/ipu4-acpi.c
++++ b/drivers/media/platform/intel/ipu4-acpi.c
+@@ -30,6 +30,7 @@
+ #include <linux/list.h>
+ 
+ #include <media/crlmodule.h>
++#include <media/crlmodule-lite.h>
+ #include <media/ipu4-acpi.h>
+ #include <media/as3638.h>
+ #include <media/lm3643.h>
+@@ -645,6 +646,60 @@ static int get_crlmodule_pdata(struct i2c_client *client,
+ 	return rval;
+ }
+ 
++static int get_crlmodule_lite_pdata(struct i2c_client *client,
++			       struct ipu4_camera_module_data *data,
++			       struct ipu4_i2c_helper *helper,
++			       void *priv, size_t size)
++{
++	struct sensor_bios_data sensor;
++	struct crlmodule_lite_platform_data *pdata;
++	struct ipu4_i2c_info i2c[2];
++	void *vcm_pdata;
++	char vcm[VCM_BUFFER_SIZE];
++	int num = get_i2c_info(&client->dev, i2c, ARRAY_SIZE(i2c));
++	int rval;
++
++	pdata = kzalloc(sizeof(*pdata), GFP_KERNEL);
++	if (!pdata)
++		return -ENOMEM;
++
++	sensor.dev = &client->dev;
++
++	rval = get_acpi_ssdb_sensor_data(&client->dev, &sensor);
++
++	ipu_acpi_get_sensor_data(&client->dev, data,
++					rval == 0 ? &sensor : NULL);
++
++	data->pdata = pdata;
++	/* sensor.dev may here point to sensor or dependent device */
++	pdata->xshutdown = get_sensor_gpio(sensor.dev, 0);
++	if (pdata->xshutdown < 0) {
++		rval = pdata->xshutdown;
++		goto err_free_pdata;
++	}
++
++	pdata->lanes = data->csi2.nlanes;
++	pdata->ext_clk = data->ext_clk;
++	client->dev.platform_data = pdata;
++
++	helper->fn(&client->dev, helper->driver_data, &data->csi2, true);
++
++	if ((num <= 1) || !priv)
++		return 0;
++
++	vcm_pdata = get_dsdt_vcm(&client->dev, vcm, priv);
++
++	dev_info(&client->dev, "Creating vcm instance: bus: %d addr 0x%x %s\n",
++		 i2c[1].bus, i2c[1].addr, vcm);
++
++	return add_new_i2c(i2c[1].addr, i2c[1].bus, 0, vcm, vcm_pdata);
++
++err_free_pdata:
++	kfree(pdata);
++	data->pdata = NULL;
++	return rval;
++}
++
+ static int get_smiapp_pdata(struct i2c_client *client,
+ 			    struct ipu4_camera_module_data *data,
+ 			    struct ipu4_i2c_helper *helper,
+@@ -808,6 +863,8 @@ static int get_as3638_pdata(struct i2c_client *client,
+ 	  sizeof(imx132_op_clocks) },
+ 	{ "TXNW3643", LM3643_NAME,    get_lm3643_pdata, NULL, 0 },
+ 	{ "AMS3638", AS3638_NAME,    get_as3638_pdata, NULL, 0 },
++	{ "ADV7481A", CRLMODULE_LITE_NAME, get_crlmodule_lite_pdata, NULL, 0 },
++	{ "ADV7481B", CRLMODULE_LITE_NAME, get_crlmodule_lite_pdata, NULL, 0 },
+ };
+ 
+ static int get_table_index(struct device *device, const __u8 *acpi_name)
+@@ -832,6 +889,8 @@ static int get_table_index(struct device *device, const __u8 *acpi_name)
+ 	{ "SONY214A", 0 },
+ 	{ "SONY132A", 0 },
+ 	{ "OV5670AA", 0 },
++	{ "ADV7481A", 0 },
++	{ "ADV7481B", 0 },
+ 	{},
+ };
+ 
+-- 
+1.9.1
+

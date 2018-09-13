@@ -1,7 +1,7 @@
-From fa37f54db9074f80c3b12054914dd442e20aac09 Mon Sep 17 00:00:00 2001
+From 83753a9d4721a0ab399581a2b178333eaf059bed Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Wed, 16 May 2018 14:46:40 -0700
-Subject: [PATCH 29/41] drm/i915: Enable NV12 on E0+ steppings
+Subject: [PATCH 29/44] drm/i915: Enable NV12 on E0+ steppings
 
 Broxton E0 SoC steppings (which contain a D0 GT/display stepping) have
 incorporated the NV12 display fix, so it should be safe to expose NV12
@@ -26,7 +26,7 @@ index dd31bad..94f3f11 100644
  #define IS_BXT_REVID(dev_priv, since, until) \
  	(IS_BROXTON(dev_priv) && IS_REVID(dev_priv, since, until))
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index fd081b7..b2ca9d2 100644
+index 8c27167..343990a 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -513,7 +513,7 @@ static void intel_update_czclk(struct drm_i915_private *dev_priv)
@@ -34,7 +34,7 @@ index fd081b7..b2ca9d2 100644
  skl_wa_528(struct drm_i915_private *dev_priv, int pipe, bool enable)
  {
 -	if (IS_SKYLAKE(dev_priv) || IS_BROXTON(dev_priv))
-+	if (IS_SKYLAKE(dev_priv) || IS_BXT_REVID(dev_priv, 0, BXT_REVID_D0))
++	if (IS_SKYLAKE(dev_priv) || IS_BXT_REVID(dev_priv, 0, BXT_REVID_C0))
  		return;
  
  	if (enable)
@@ -43,45 +43,45 @@ index fd081b7..b2ca9d2 100644
  skl_wa_clkgate(struct drm_i915_private *dev_priv, int pipe, bool enable)
  {
 -	if (IS_SKYLAKE(dev_priv) || IS_BROXTON(dev_priv))
-+	if (IS_SKYLAKE(dev_priv) || IS_BXT_REVID(dev_priv, 0, BXT_REVID_D0))
++	if (IS_SKYLAKE(dev_priv) || IS_BXT_REVID(dev_priv, 0, BXT_REVID_C0))
  		return;
  
  	if (enable)
-@@ -5282,7 +5282,7 @@ static bool needs_nv12_wa(struct drm_i915_private *dev_priv,
+@@ -5344,7 +5344,7 @@ static bool needs_nv12_wa(struct drm_i915_private *dev_priv,
  	if (!crtc_state->nv12_planes)
  		return false;
  
 -	if (IS_SKYLAKE(dev_priv) || IS_BROXTON(dev_priv))
-+	if (IS_SKYLAKE(dev_priv) || IS_BXT_REVID(dev_priv, 0, BXT_REVID_D0))
++	if (IS_SKYLAKE(dev_priv) || IS_BXT_REVID(dev_priv, 0, BXT_REVID_C0))
  		return false;
  
  	if ((INTEL_GEN(dev_priv) == 9 && !IS_GEMINILAKE(dev_priv)) ||
-@@ -13597,7 +13597,8 @@ bool skl_plane_has_planar(struct drm_i915_private *dev_priv,
+@@ -13659,7 +13659,8 @@ bool skl_plane_has_planar(struct drm_i915_private *dev_priv,
  			  enum pipe pipe, enum plane_id plane_id)
  {
  	if (plane_id == PLANE_PRIMARY) {
 -		if (IS_SKYLAKE(dev_priv) || IS_BROXTON(dev_priv))
 +		if (IS_SKYLAKE(dev_priv) ||
-+		    IS_BXT_REVID(dev_priv, 0, BXT_REVID_D0))
++		    IS_BXT_REVID(dev_priv, 0, BXT_REVID_C0))
  			return false;
  		else if ((INTEL_GEN(dev_priv) == 9 && pipe == PIPE_C) &&
  			 !IS_GEMINILAKE(dev_priv))
-@@ -13610,7 +13611,8 @@ bool skl_plane_has_planar(struct drm_i915_private *dev_priv,
+@@ -13672,7 +13673,8 @@ bool skl_plane_has_planar(struct drm_i915_private *dev_priv,
  				return false;
  		} else {
  			if (plane_id != PLANE_SPRITE0 || pipe == PIPE_C ||
 -			    IS_SKYLAKE(dev_priv) || IS_BROXTON(dev_priv))
 +			    IS_SKYLAKE(dev_priv) ||
-+			    IS_BXT_REVID(dev_priv, 0, BXT_REVID_D0))
++			    IS_BXT_REVID(dev_priv, 0, BXT_REVID_C0))
  				return false;
  		}
  	}
-@@ -14731,7 +14733,7 @@ static int intel_framebuffer_init(struct intel_framebuffer *intel_fb,
+@@ -14793,7 +14795,7 @@ static int intel_framebuffer_init(struct intel_framebuffer *intel_fb,
  			goto err;
  		}
  		if (INTEL_GEN(dev_priv) < 9 || IS_SKYLAKE(dev_priv) ||
 -		    IS_BROXTON(dev_priv)) {
-+		    IS_BXT_REVID(dev_priv, 0, BXT_REVID_D0)) {
++		    IS_BXT_REVID(dev_priv, 0, BXT_REVID_C0)) {
  			DRM_DEBUG_KMS("unsupported pixel format: %s\n",
  				      drm_get_format_name(mode_cmd->pixel_format,
  							  &format_name));

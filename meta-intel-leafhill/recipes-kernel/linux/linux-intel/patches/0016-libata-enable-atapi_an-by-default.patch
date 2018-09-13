@@ -1,0 +1,32 @@
+From 2a8dfb5285c3e7e75d24e59aaaf8fb4862fac83d Mon Sep 17 00:00:00 2001
+From: Vitaly Wool <vwool@dev.rtsoft.ru>
+Date: Thu, 30 Jun 2016 07:06:52 +0000
+Subject: [PATCH 16/42] libata: enable atapi_an by default
+
+Change the default value for atapi_an parameter within libata-core
+to enable asynchronous notifications (AN) by default for all
+ATAPI devices that support them.
+
+Signed-off-by: Vitaly Wool <vwool@dev.rtsoft.ru>
+Signed-off-by: Nikita Yushchenko <nyushchenko@dev.rtsoft.ru>
+Signed-off-by: Lim Key Seong <key.seong.lim@intel.com>
+---
+ drivers/ata/libata-core.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 6938bd8..0f70713 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -167,7 +167,7 @@ struct ata_force_ent {
+ module_param_named(allow_tpm, libata_allow_tpm, int, 0444);
+ MODULE_PARM_DESC(allow_tpm, "Permit the use of TPM commands (0=off [default], 1=on)");
+ 
+-static int atapi_an;
++static int atapi_an = 1;
+ module_param(atapi_an, int, 0444);
+ MODULE_PARM_DESC(atapi_an, "Enable ATAPI AN media presence notification (0=0ff [default], 1=on)");
+ 
+-- 
+1.9.1
+

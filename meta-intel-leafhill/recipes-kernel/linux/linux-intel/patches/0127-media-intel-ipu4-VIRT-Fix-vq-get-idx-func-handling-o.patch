@@ -1,0 +1,148 @@
+From 7525ef0aa14780f95aee937d47d1a815a758e0b7 Mon Sep 17 00:00:00 2001
+From: Ong Hock Yu <ong.hock.yu@intel.com>
+Date: Mon, 13 Aug 2018 12:33:13 +0800
+Subject: [PATCH 127/129] media: intel-ipu4: [VIRT] Fix vq get idx func
+ handling of multi VQ concurrent request.
+
+Under multiple VQ use case, it is possible to have concurrent requests.
+Added support to return multiple vq index from all vcpu.
+While waiting for acrn community to review and acceopt the patch.
+This patch duplicated the virtio_vq_index_get function locately.
+It can be remove at later stage.
+
+VBS callback function to handle kick signature has been changed.
+Instead of int unsigned long * is being used now.
+
+Change-Id: I628c4595e96d1211d64314d36ef9ed01311f2b87
+Signed-off-by: Ong Hock Yu <ong.hock.yu@intel.com>
+Signed-off-by: Bandi, Kushal <kushal.bandi@intel.com>
+---
+ .../media/pci/intel/virtio/intel-ipu4-virtio-be.c  | 62 +++++++++++++++++++---
+ .../media/pci/intel/virtio/intel-ipu4-virtio-be.h  |  6 ++-
+ 2 files changed, 59 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be.c b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be.c
+index 011cb33..ab1d03c 100644
+--- a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be.c
++++ b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be.c
+@@ -12,7 +12,6 @@
+ #include <linux/vmalloc.h>
+ 
+ #include <linux/vbs/vq.h>
+-#include <linux/vbs/vbs.h>
+ #include <linux/hashtable.h>
+ 
+ #include "intel-ipu4-virtio-common.h"
+@@ -60,7 +59,7 @@ struct vq_request_data {
+ static int ipu_vbk_connection_cnt;
+ 
+ /* function declarations */
+-static int handle_kick(int client_id, int req_cnt);
++static int handle_kick(int client_id, long unsigned int *req_cnt);
+ static void ipu_vbk_reset(struct ipu4_virtio_be_priv *rng);
+ static void ipu_vbk_stop(struct ipu4_virtio_be_priv *rng);
+ static void ipu_vbk_flush(struct ipu4_virtio_be_priv *rng);
+@@ -213,12 +212,12 @@ static void handle_vq_kick(struct ipu4_virtio_be_priv *priv, int vq_idx)
+ 		virtio_vq_endchains(vq, 1);
+ }
+ 
+-static int handle_kick(int client_id, int req_cnt)
++static int handle_kick(int client_id, long unsigned *ioreqs_map)
+ {
+-	int val = -1;
++	int val[IPU_VIRTIO_QUEUE_MAX], i, count;
+ 	struct ipu4_virtio_be_priv *priv;
+ 
+-	if (unlikely(req_cnt <= 0))
++	if (unlikely(bitmap_empty(ioreqs_map, VHM_REQUEST_MAX)))
+ 		return -EINVAL;
+ 
+ 	pr_debug("%s: IPU VBK handle kick!\n", __func__);
+@@ -230,10 +229,13 @@ static int handle_kick(int client_id, int req_cnt)
+ 		return -EINVAL;
+ 	}
+ 
+-	val = virtio_vq_index_get(&priv->dev, req_cnt);
++	count = ipu_virtio_vqs_index_get(&priv->dev, ioreqs_map, val, IPU_VIRTIO_QUEUE_MAX);
+ 
+-	if (val >= 0)
+-		handle_vq_kick(priv, val);
++	for (i = 0; i < count; i++) {
++		if (val[i] >= 0) {
++			handle_vq_kick(priv, val[i]);
++		}
++	}
+ 
+ 	return 0;
+ }
+@@ -393,6 +395,50 @@ int notify_fe(void)
+ 	return 0;
+ }
+ 
++int ipu_virtio_vqs_index_get(struct virtio_dev_info *dev, unsigned long *ioreqs_map,
++				int *vqs_index, int max_vqs_index)
++{
++	int idx = 0;
++	struct vhm_request *req;
++	int vcpu;
++
++	if (dev == NULL) {
++		pr_err("%s: dev is NULL!\n", __func__);
++		return -EINVAL;
++	}
++
++	while (idx < max_vqs_index) {
++		vcpu = find_first_bit(ioreqs_map, dev->_ctx.max_vcpu);
++		if (vcpu == dev->_ctx.max_vcpu)
++			break;
++		req = &dev->_ctx.req_buf[vcpu];
++		if (req->valid && req->processed == REQ_STATE_PROCESSING &&
++		    req->client == dev->_ctx.vhm_client_id) {
++			if (req->reqs.pio_request.direction == REQUEST_READ) {
++				/* currently we handle kick only,
++				 * so read will return 0
++				 */
++				pr_debug("%s: read request!\n", __func__);
++				if (dev->io_range_type == PIO_RANGE)
++					req->reqs.pio_request.value = 0;
++				else
++					req->reqs.mmio_request.value = 0;
++			} else {
++				pr_debug("%s: write request! type %d\n",
++						__func__, req->type);
++				if (dev->io_range_type == PIO_RANGE)
++					vqs_index[idx++] = req->reqs.pio_request.value;
++				else
++					vqs_index[idx++] = req->reqs.mmio_request.value;
++			}
++			req->processed = REQ_STATE_SUCCESS;
++			acrn_ioreq_complete_request(req->client, vcpu);
++		}
++	}
++
++	return idx;
++}
++
+ /* device specific function to cleanup itself */
+ static void ipu_vbk_reset(struct ipu4_virtio_be_priv *rng)
+ {
+diff --git a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be.h b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be.h
+index 3fb8710..999b543 100644
+--- a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be.h
++++ b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be.h
+@@ -6,6 +6,10 @@
+ #ifndef __IPU4_VIRTIO_BE__
+ #define __IPU4_VIRTIO_BE__
+ 
++#include <linux/vbs/vbs.h>
++
+ int notify_fe(void);
++int ipu_virtio_vqs_index_get(struct virtio_dev_info *dev, unsigned long *ioreqs_map,
++						int *vqs_index, int max_vqs_index);
+ 
+-#endif
+\ No newline at end of file
++#endif
+-- 
+1.9.1
+

@@ -1,7 +1,7 @@
-From 9e21fb0a6d386cccc43d7d00de5ba94bae3b63ef Mon Sep 17 00:00:00 2001
+From 6f2481c23d959e4b544efbf3736eb74652575b09 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Fri, 18 Aug 2017 09:33:42 +0100
-Subject: [PATCH 71/96] Revert "Revert "ASoC: Intel: Boards: add param to set
+Subject: [PATCH 071/102] Revert "Revert "ASoC: Intel: Boards: add param to set
  codecs to dummy""
 
 This reverts commit 9711c7315edb868ad3296a42fea70363acbc0f74.

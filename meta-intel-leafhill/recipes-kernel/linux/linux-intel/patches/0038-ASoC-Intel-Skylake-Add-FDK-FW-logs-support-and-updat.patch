@@ -1,0 +1,71 @@
+From 94d6f843dca2f5af6bfa4a9c5347c92c7b515f2a Mon Sep 17 00:00:00 2001
+From: Jakub Dorzak <jakubx.dorzak@intel.com>
+Date: Tue, 15 Nov 2016 14:00:40 +0000
+Subject: [PATCH 38/98] ASoC: Intel: Skylake: Add FDK FW logs support and
+ update naming for probing.
+
+FDK FW logging needs support in the machine driver. Added required entries in the FE DAI links. Minor change in probe naming, so the DAIs look like BMW ones.
+
+Signed-off-by: Jakub Dorzak <jakubx.dorzak@intel.com>
+
+Conflicts:
+	sound/soc/intel/boards/bxt_gpmrb.c
+---
+ sound/soc/intel/boards/bxt_gpmrb.c | 41 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
+
+diff --git a/sound/soc/intel/boards/bxt_gpmrb.c b/sound/soc/intel/boards/bxt_gpmrb.c
+index 2946b55..7c1b8d9 100644
+--- a/sound/soc/intel/boards/bxt_gpmrb.c
++++ b/sound/soc/intel/boards/bxt_gpmrb.c
+@@ -209,6 +209,47 @@
+ 		.nonatomic = 1,
+ 		.dynamic = 1,
+ 	},
++	/* Trace Buffer & Probing DAI links */
++	{
++		.name = "Bxt Trace Buffer0",
++		.stream_name = "Core 0 Trace Buffer",
++		.cpu_dai_name = "TraceBuffer0 Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = "0000:00:0e.0",
++		.capture_only = true,
++		.ignore_suspend = 1,
++	},
++	{
++		.name = "Bxt Trace Buffer1",
++		.stream_name = "Core 1 Trace Buffer",
++		.cpu_dai_name = "TraceBuffer1 Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = "0000:00:0e.0",
++		.capture_only = true,
++		.ignore_suspend = 1,
++	},
++	{
++		.name = "Bxt Compress Probe playback",
++		.stream_name = "Probe Playback",
++		.cpu_dai_name = "Compress Probe0 Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = "0000:00:0e.0",
++		.init = NULL,
++		.nonatomic = 1,
++	},
++	{
++		.name = "Bxt Compress Probe capture",
++		.stream_name = "Probe Capture",
++		.cpu_dai_name = "Compress Probe1 Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = "0000:00:0e.0",
++		.init = NULL,
++		.nonatomic = 1,
++	},
+ 	/* Back End DAI links */
+ 	{
+ 		/* SSP0 - BT */
+-- 
+1.9.1
+

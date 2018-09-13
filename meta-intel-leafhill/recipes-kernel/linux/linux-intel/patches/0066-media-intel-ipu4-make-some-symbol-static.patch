@@ -1,0 +1,298 @@
+From 244c6a25f46dccf769caa248feedd3d0003a4776 Mon Sep 17 00:00:00 2001
+From: Ding Yunliang <yunliang.ding@intel.com>
+Date: Mon, 28 May 2018 14:52:03 +0800
+Subject: [PATCH 066/129] media: intel-ipu4: make some symbol static
+
+Message for Open Source:
+sparse warning (like below) fix:
+warning symbol 'isys_mdev_ops' was not declared. Should it be static?
+
+Message for Internal:
+[Issue/Feature] Same as above.
+[Root Cause/Changes] Same as above.
+
+Change-Id: Ia3a48b439ddf5fcd0a96eeaee515390bb6765b12
+Tracked-On: #JICCCN-228
+Signed-off-by: Ding Yunliang <yunliang.ding@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu-bus.c               | 2 +-
+ drivers/media/pci/intel/ipu-buttress.c          | 2 +-
+ drivers/media/pci/intel/ipu-fw-com.c            | 5 +++--
+ drivers/media/pci/intel/ipu-fw-isys.c           | 2 +-
+ drivers/media/pci/intel/ipu-isys-csi2.c         | 6 +++---
+ drivers/media/pci/intel/ipu-isys-tpg.c          | 8 +++-----
+ drivers/media/pci/intel/ipu-isys-video.c        | 2 +-
+ drivers/media/pci/intel/ipu-isys.c              | 2 +-
+ drivers/media/pci/intel/ipu-mmu.c               | 2 +-
+ drivers/media/pci/intel/ipu-psys.c              | 2 +-
+ drivers/media/pci/intel/ipu-trace.c             | 4 ++--
+ drivers/media/pci/intel/ipu-wrapper.c           | 5 -----
+ drivers/media/pci/intel/ipu.c                   | 4 ++--
+ drivers/media/pci/intel/ipu4/ipu4-psys.c        | 4 ++--
+ drivers/media/platform/intel/ipu4-bxt-p-pdata.c | 6 +++---
+ 15 files changed, 25 insertions(+), 31 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu-bus.c b/drivers/media/pci/intel/ipu-bus.c
+index 53908e3..886f28c 100644
+--- a/drivers/media/pci/intel/ipu-bus.c
++++ b/drivers/media/pci/intel/ipu-bus.c
+@@ -155,7 +155,7 @@ static int bus_pm_runtime_resume(struct device *dev)
+ 	return -EBUSY;
+ }
+ 
+-const struct dev_pm_ops ipu_bus_pm_ops = {
++static const struct dev_pm_ops ipu_bus_pm_ops = {
+ 	.runtime_suspend = bus_pm_runtime_suspend,
+ 	.runtime_resume = bus_pm_runtime_resume,
+ };
+diff --git a/drivers/media/pci/intel/ipu-buttress.c b/drivers/media/pci/intel/ipu-buttress.c
+index 21f6462..ab40787 100644
+--- a/drivers/media/pci/intel/ipu-buttress.c
++++ b/drivers/media/pci/intel/ipu-buttress.c
+@@ -50,7 +50,7 @@
+ 
+ #define BUTTRESS_IPC_CMD_SEND_RETRY	1
+ 
+-const struct ipu_buttress_sensor_clk_freq sensor_clk_freqs[] = {
++static const struct ipu_buttress_sensor_clk_freq sensor_clk_freqs[] = {
+ 	{6750000, BUTTRESS_SENSOR_CLK_FREQ_6P75MHZ},
+ 	{8000000, BUTTRESS_SENSOR_CLK_FREQ_8MHZ},
+ 	{9600000, BUTTRESS_SENSOR_CLK_FREQ_9P6MHZ},
+diff --git a/drivers/media/pci/intel/ipu-fw-com.c b/drivers/media/pci/intel/ipu-fw-com.c
+index 8a50634..e497122 100644
+--- a/drivers/media/pci/intel/ipu-fw-com.c
++++ b/drivers/media/pci/intel/ipu-fw-com.c
+@@ -165,12 +165,13 @@ static unsigned int inc_index(void __iomem *q_dmem, struct sys_queue *q,
+ 	return index >= q->size ? 0 : index;
+ }
+ 
+-unsigned int ipu_sys_queue_buf_size(unsigned int size, unsigned int token_size)
++static unsigned int ipu_sys_queue_buf_size(unsigned int size,
++					   unsigned int token_size)
+ {
+ 	return (size + 1) * token_size;
+ }
+ 
+-void ipu_sys_queue_init(struct sys_queue *q, unsigned int size,
++static void ipu_sys_queue_init(struct sys_queue *q, unsigned int size,
+ 		    unsigned int token_size, struct sys_queue_res *res)
+ {
+ 	unsigned int buf_size;
+diff --git a/drivers/media/pci/intel/ipu-fw-isys.c b/drivers/media/pci/intel/ipu-fw-isys.c
+index 8ccc175..e109ca5 100644
+--- a/drivers/media/pci/intel/ipu-fw-isys.c
++++ b/drivers/media/pci/intel/ipu-fw-isys.c
+@@ -80,7 +80,7 @@
+ 	IPU_FW_UNSUPPORTED_DATA_TYPE	/* [0x3F] */
+ };
+ 
+-const char send_msg_types[N_IPU_FW_ISYS_SEND_TYPE][32] = {
++static const char send_msg_types[N_IPU_FW_ISYS_SEND_TYPE][32] = {
+ 	"STREAM_OPEN",
+ 	"STREAM_START",
+ 	"STREAM_START_AND_CAPTURE",
+diff --git a/drivers/media/pci/intel/ipu-isys-csi2.c b/drivers/media/pci/intel/ipu-isys-csi2.c
+index c5fc878..9da8a51 100644
+--- a/drivers/media/pci/intel/ipu-isys-csi2.c
++++ b/drivers/media/pci/intel/ipu-isys-csi2.c
+@@ -216,7 +216,7 @@ static int subscribe_event(struct v4l2_subdev *sd, struct v4l2_fh *fh,
+ };
+ 
+ #ifdef IPU_META_DATA_SUPPORT
+-struct ipu_isys_pixelformat csi2_meta_pfmts[] = {
++static struct ipu_isys_pixelformat csi2_meta_pfmts[] = {
+ 	{V4L2_FMT_IPU_ISYS_META, 8, 8, 0, MEDIA_BUS_FMT_FIXED, 0},
+ 	{},
+ };
+@@ -438,8 +438,8 @@ static int csi2_link_validate(struct media_link *link)
+ 	return 0;
+ }
+ 
+-bool csi2_has_route(struct media_entity *entity, unsigned int pad0,
+-		    unsigned int pad1, int *stream)
++static bool csi2_has_route(struct media_entity *entity, unsigned int pad0,
++			   unsigned int pad1, int *stream)
+ {
+ #ifdef IPU_META_DATA_SUPPORT
+ 	if (pad0 == CSI2_PAD_META || pad1 == CSI2_PAD_META)
+diff --git a/drivers/media/pci/intel/ipu-isys-tpg.c b/drivers/media/pci/intel/ipu-isys-tpg.c
+index c61849d..c960933 100644
+--- a/drivers/media/pci/intel/ipu-isys-tpg.c
++++ b/drivers/media/pci/intel/ipu-isys-tpg.c
+@@ -202,11 +202,9 @@ static int ipu_isys_tpg_set_ffmt(struct v4l2_subdev *sd,
+ 	return 0;
+ }
+ 
+-const struct ipu_isys_pixelformat *ipu_isys_tpg_try_fmt(struct ipu_isys_video
+-							*av,
+-							struct
+-							v4l2_pix_format_mplane
+-							*mpix)
++static const struct ipu_isys_pixelformat *ipu_isys_tpg_try_fmt(
++					struct ipu_isys_video *av,
++					struct v4l2_pix_format_mplane *mpix)
+ {
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 5, 0)
+ 	struct media_entity entity = av->vdev.entity;
+diff --git a/drivers/media/pci/intel/ipu-isys-video.c b/drivers/media/pci/intel/ipu-isys-video.c
+index 4c2870d..6d3edf0 100644
+--- a/drivers/media/pci/intel/ipu-isys-video.c
++++ b/drivers/media/pci/intel/ipu-isys-video.c
+@@ -905,7 +905,7 @@ static int short_packet_queue_setup(struct ipu_isys_pipeline *ip)
+ 	return 0;
+ }
+ 
+-void csi_short_packet_prepare_firmware_stream_cfg(
++static void csi_short_packet_prepare_firmware_stream_cfg(
+ 				struct ipu_isys_pipeline *ip,
+ 				struct ipu_fw_isys_stream_cfg_data_abi *cfg)
+ {
+diff --git a/drivers/media/pci/intel/ipu-isys.c b/drivers/media/pci/intel/ipu-isys.c
+index 0f82167..c757534 100644
+--- a/drivers/media/pci/intel/ipu-isys.c
++++ b/drivers/media/pci/intel/ipu-isys.c
+@@ -744,7 +744,7 @@ static int isys_register_subdevices(struct ipu_isys *isys)
+ 	return rval;
+ }
+ 
+-struct media_device_ops isys_mdev_ops = {
++static struct media_device_ops isys_mdev_ops = {
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 6, 0)
+ 	.link_notify = ipu_pipeline_link_notify,
+ #else
+diff --git a/drivers/media/pci/intel/ipu-mmu.c b/drivers/media/pci/intel/ipu-mmu.c
+index b3be7af..0e40f1f 100644
+--- a/drivers/media/pci/intel/ipu-mmu.c
++++ b/drivers/media/pci/intel/ipu-mmu.c
+@@ -834,7 +834,7 @@ static int ipu_mmu_suspend(struct device *dev)
+ 	return 0;
+ }
+ 
+-const struct dev_pm_ops ipu_mmu_pm_ops = {
++static const struct dev_pm_ops ipu_mmu_pm_ops = {
+ 	.resume = ipu_mmu_hw_init,
+ 	.suspend = ipu_mmu_suspend,
+ 	.runtime_resume = ipu_mmu_hw_init,
+diff --git a/drivers/media/pci/intel/ipu-psys.c b/drivers/media/pci/intel/ipu-psys.c
+index 1a9a0bf..822f256 100644
+--- a/drivers/media/pci/intel/ipu-psys.c
++++ b/drivers/media/pci/intel/ipu-psys.c
+@@ -379,7 +379,7 @@ static void ipu_dma_buf_release(struct dma_buf *buf)
+ 	kfree(kbuf);
+ }
+ 
+-int ipu_dma_buf_begin_cpu_access(struct dma_buf *dma_buf,
++static int ipu_dma_buf_begin_cpu_access(struct dma_buf *dma_buf,
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(4, 6, 0)
+ 				 size_t start, size_t len,
+ #endif
+diff --git a/drivers/media/pci/intel/ipu-trace.c b/drivers/media/pci/intel/ipu-trace.c
+index 0d8364b..bece0ab 100644
+--- a/drivers/media/pci/intel/ipu-trace.c
++++ b/drivers/media/pci/intel/ipu-trace.c
+@@ -157,7 +157,7 @@ int ipu_trace_get_timer(struct device *dev, u64 *timer)
+ }
+ EXPORT_SYMBOL_GPL(ipu_trace_get_timer);
+ 
+-void __ipu_trace_restore(struct device *dev)
++static void __ipu_trace_restore(struct device *dev)
+ {
+ 	struct ipu_bus_device *adev = to_ipu_bus_device(dev);
+ 	struct ipu_device *isp = adev->isp;
+@@ -262,7 +262,7 @@ void ipu_trace_restore(struct device *dev)
+ }
+ EXPORT_SYMBOL_GPL(ipu_trace_restore);
+ 
+-void __ipu_trace_stop(struct device *dev)
++static void __ipu_trace_stop(struct device *dev)
+ {
+ 	struct ipu_subsystem_trace_config *sys =
+ 	    to_ipu_bus_device(dev)->trace_cfg;
+diff --git a/drivers/media/pci/intel/ipu-wrapper.c b/drivers/media/pci/intel/ipu-wrapper.c
+index a10c410..6fff729 100644
+--- a/drivers/media/pci/intel/ipu-wrapper.c
++++ b/drivers/media/pci/intel/ipu-wrapper.c
+@@ -40,11 +40,6 @@ struct my_css_memory_buffer_item {
+ #endif
+ };
+ 
+-unsigned long long get_hrt_base_address(void)
+-{
+-	return 0;
+-}
+-
+ static struct wrapper_base *get_mem_sub_system(int mmid)
+ {
+ 	if (mmid == ISYS_MMID)
+diff --git a/drivers/media/pci/intel/ipu.c b/drivers/media/pci/intel/ipu.c
+index 9d716a3..f460231 100644
+--- a/drivers/media/pci/intel/ipu.c
++++ b/drivers/media/pci/intel/ipu.c
+@@ -275,7 +275,7 @@ static void ipu_remove_debugfs(struct ipu_device *isp)
+ 	debugfs_remove_recursive(isp->ipu_dir);
+ }
+ 
+-int ipu_pci_config_setup(struct pci_dev *dev)
++static int ipu_pci_config_setup(struct pci_dev *dev)
+ {
+ 	u16 pci_command;
+ 	int rval = pci_enable_msi(dev);
+@@ -293,7 +293,7 @@ int ipu_pci_config_setup(struct pci_dev *dev)
+ 	return 0;
+ }
+ 
+-void ipu_configure_vc_mechanism(struct ipu_device *isp)
++static void ipu_configure_vc_mechanism(struct ipu_device *isp)
+ {
+ 	u32 val = readl(isp->base + BUTTRESS_REG_BTRS_CTRL);
+ 
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-psys.c b/drivers/media/pci/intel/ipu4/ipu4-psys.c
+index a527561..35f86e0 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-psys.c
++++ b/drivers/media/pci/intel/ipu4/ipu4-psys.c
+@@ -215,8 +215,8 @@ void ipu_psys_kcmd_free(struct ipu_psys_kcmd *kcmd)
+ 	kfree(kcmd);
+ }
+ 
+-struct ipu_psys_kcmd *ipu_psys_copy_cmd(struct ipu_psys_command *cmd,
+-					struct ipu_psys_fh *fh)
++static struct ipu_psys_kcmd *ipu_psys_copy_cmd(struct ipu_psys_command *cmd,
++					       struct ipu_psys_fh *fh)
+ {
+ 	struct ipu_psys *psys = fh->psys;
+ 	struct ipu_psys_kcmd *kcmd;
+diff --git a/drivers/media/platform/intel/ipu4-bxt-p-pdata.c b/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
+index 4cc47d1..1638d9d 100755
+--- a/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
++++ b/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
+@@ -692,7 +692,7 @@
+ 	.port = 4,
+ };
+ 
+-struct ti964_subdev_info ti964_subdevs[] = {
++static struct ti964_subdev_info ti964_subdevs[] = {
+ #ifdef CONFIG_INTEL_IPU4_OV10635
+ 	{
+ 		.board_info = {
+@@ -791,7 +791,7 @@ struct ti964_subdev_info ti964_subdevs[] = {
+ #endif
+ };
+ 
+-struct ti964_subdev_info ti964_subdevs_2[] = {
++static struct ti964_subdev_info ti964_subdevs_2[] = {
+ #ifdef CONFIG_INTEL_IPU4_OV10635
+ 	{
+ 		.board_info = {
+@@ -919,7 +919,7 @@ struct ti964_subdev_info ti964_subdevs_2[] = {
+  * Map buttress output sensor clocks to sensors -
+  * this should be coming from ACPI
+  */
+-struct ipu_isys_clk_mapping clk_mapping[] = {
++static struct ipu_isys_clk_mapping clk_mapping[] = {
+ 	{ CLKDEV_INIT("2-0036", NULL, NULL), "OSC_CLK_OUT0" },
+ 	{ CLKDEV_INIT("2-001a", NULL, NULL), "OSC_CLK_OUT0" },
+ 	{ CLKDEV_INIT("4-001a", NULL, NULL), "OSC_CLK_OUT1" },
+-- 
+1.9.1
+

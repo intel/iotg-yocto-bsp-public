@@ -1,7 +1,7 @@
-From 2593247525e9902398199f70c23c237f6b688337 Mon Sep 17 00:00:00 2001
+From 8b5c9a8a0ad7581460b31cba748f4c5682a415ae Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 16:24:14 +0800
-Subject: [PATCH 10/43] igb: Initialize runtime PM and schedule first suspend
+Subject: [PATCH 10/41] igb: Initialize runtime PM and schedule first suspend
 
 Enabling autosuspend and configure default autosuspend delay in
 igb_probe() and schedule first suspend from __igb_open().

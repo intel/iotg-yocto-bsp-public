@@ -1,7 +1,7 @@
-From df131bbde949bca24dd6d875abf50c652f5ef5c4 Mon Sep 17 00:00:00 2001
+From 39af617abe56cc9e6f4d188d65965bbe07d840ed Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 17:24:10 +0800
-Subject: [PATCH 11/43] igb: Do not disconnect netdevice from system during
+Subject: [PATCH 11/41] igb: Do not disconnect netdevice from system during
  runtime suspend
 
 During runtime suspend in __igb_shutdown() function do not

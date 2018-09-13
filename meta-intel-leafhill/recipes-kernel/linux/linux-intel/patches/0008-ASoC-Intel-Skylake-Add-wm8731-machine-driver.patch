@@ -1,12 +1,9 @@
-From 5f1375ef34b1a4e4638fad2d3a990320478367d1 Mon Sep 17 00:00:00 2001
+From 5e6044eb3bd438c48b48e6134f403d7039a33e89 Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Mon, 4 Jul 2016 17:25:12 +0800
-Subject: [PATCH 08/96] ASoC: Intel: Skylake: Add wm8731 machine driver
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH 08/98] ASoC: Intel: Skylake: Add wm8731 machine driver
 
-This commit is to add new wm8731 codec machine drivers for
+This commit is to add new wm8731 codec machine drivers for
 Apollo Lake-I LeafHill CRB.
 
 LeafHill CRB Machine driver enable SSP2 as a dummy codec
@@ -18,9 +15,14 @@ and SSP4 port connect with wm8731 codec with settings:
 
 Signed-off-by: Tan, Seng Kai <seng.kai.tan@intel.com>
 Signed-off-by: Joshua Wong Weng Onn <joshua.weng.onn.wong@intel.com>
+Signed-off-by: Ho, Yu Xin <yu.xin.ho@intel.com>
 
 Conflicts:
 	sound/soc/intel/Kconfig
+
+Conflicts:
+	MAINTAINERS
+	sound/soc/intel/boards/Makefile
 ---
  MAINTAINERS                                |   5 +
  sound/soc/intel/boards/Kconfig             |  11 ++
@@ -30,12 +32,12 @@ Conflicts:
  create mode 100644 sound/soc/intel/boards/apli_lhcrb_wm8731.c
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 7652bab..5cff59f 100644
+index 098e44b..4377c54 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -12554,6 +12554,11 @@ M:	Seng Kai, Tan <seng.kai.tan@intel.com>
- S:	Supported
- F:	sound/soc/intel/boards/apli_lhcrb_dummy.c
+@@ -12549,6 +12549,11 @@ F:	Documentation/sound/alsa/soc/
+ F:	sound/soc/
+ F:	include/sound/soc*
  
 +APOLLO_LAKE_I WM8731 MACHINE DRIVER
 +M:	Tan, Seng Kai <seng.kai.tan@intel.com>
@@ -46,12 +48,12 @@ index 7652bab..5cff59f 100644
  M:	Olli Salonen <olli.salonen@iki.fi>
  L:	linux-media@vger.kernel.org
 diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
-index 6ce7705..313600b 100644
+index 1f53302..d3efcd4 100644
 --- a/sound/soc/intel/boards/Kconfig
 +++ b/sound/soc/intel/boards/Kconfig
-@@ -385,6 +385,17 @@ config SND_SOC_INTEL_APLI_LHCRB_DUMMY_MACH
- 	  Say Y if you have such a device
- 	  If unsure select "N".
+@@ -403,6 +403,17 @@ config SND_SOC_INTEL_CNL_RT274_MACH
+ 	   Say Y or m if you have such a device. This is a recommended option.
+ 	   If unsure select "N".
  
 +config SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH
 +        tristate "ASoC Audio driver for APLI LHCRB WM8731 Codec"
@@ -68,21 +70,21 @@ index 6ce7705..313600b 100644
  
  endif ## SND_SOC_INTEL_MACH
 diff --git a/sound/soc/intel/boards/Makefile b/sound/soc/intel/boards/Makefile
-index ec158f1..b243219 100644
+index 646b293b..d4b3817 100644
 --- a/sound/soc/intel/boards/Makefile
 +++ b/sound/soc/intel/boards/Makefile
-@@ -30,6 +30,7 @@ snd-soc-bxtp_ivi_hu_rt298-objs := bxtp_ivi_hu_rt298.o
+@@ -30,6 +30,7 @@ snd-soc-bxtp_ivi_rse_rt298-objs := bxtp_ivi_rse_rt298.o
+ snd-soc-bxtp_ivi_hu_rt298-objs := bxtp_ivi_hu_rt298.o
  snd-soc-bxtp_ivi_m3-objs := bxtp_ivi_m3.o
  snd-soc-bxtp_ivi_generic-objs := bxtp_ivi_generic.o
- snd-soc-apli_lhcrb_dummy-objs := apli_lhcrb_dummy.o
 +snd-soc-apli_lhcrb_wm8731-objs := apli_lhcrb_wm8731.o
  
  obj-$(CONFIG_SND_SOC_INTEL_HASWELL_MACH) += snd-soc-sst-haswell.o
  obj-$(CONFIG_SND_SOC_INTEL_BYT_RT5640_MACH) += snd-soc-sst-byt-rt5640-mach.o
-@@ -62,3 +63,4 @@ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_HU_MACH) += snd-soc-bxtp_ivi_hu_rt298.o
+@@ -62,3 +63,4 @@ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_RSE_MACH) += snd-soc-bxtp_ivi_rse_rt298.o
+ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_HU_MACH) += snd-soc-bxtp_ivi_hu_rt298.o
  obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_M3_MACH) += snd-soc-bxtp_ivi_m3.o
  obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH) += snd-soc-bxtp_ivi_generic.o
- obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_DUMMY_MACH) += snd-soc-apli_lhcrb_dummy.o
 +obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH) += snd-soc-apli_lhcrb_wm8731.o
 diff --git a/sound/soc/intel/boards/apli_lhcrb_wm8731.c b/sound/soc/intel/boards/apli_lhcrb_wm8731.c
 new file mode 100644

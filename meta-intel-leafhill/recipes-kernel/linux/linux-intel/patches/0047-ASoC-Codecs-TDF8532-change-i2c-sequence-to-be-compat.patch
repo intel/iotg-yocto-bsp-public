@@ -1,7 +1,7 @@
-From 0599d0eb99561cd749109f1fb86070d4921a2501 Mon Sep 17 00:00:00 2001
+From 266cc25bbcf8d254176cd30dc0dc37cccfe996a6 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Thu, 1 Sep 2016 15:10:05 +0100
-Subject: [PATCH 47/96] ASoC: Codecs: TDF8532 change i2c sequence to be
+Subject: [PATCH 047/102] ASoC: Codecs: TDF8532 change i2c sequence to be
  compatible with GP MRB fab D
 
 Updated i2c sequence and refactored common i2c code. Added delay before
@@ -9,11 +9,11 @@ shutdown to allow state transition to complete.
 
 Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
 ---
- sound/soc/codecs/tdf8532.c | 94 ++++++++++++++++++++++++++++++----------------
- 1 file changed, 61 insertions(+), 33 deletions(-)
+ sound/soc/codecs/tdf8532.c | 93 ++++++++++++++++++++++++++++++----------------
+ 1 file changed, 61 insertions(+), 32 deletions(-)
 
 diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
-index 18b9713..f94eb98 100644
+index 3c8b46b..f94eb98 100644
 --- a/sound/soc/codecs/tdf8532.c
 +++ b/sound/soc/codecs/tdf8532.c
 @@ -13,6 +13,7 @@
@@ -187,15 +187,7 @@ index 18b9713..f94eb98 100644
  			.channels_max = 4,
  			.rates = SNDRV_PCM_RATE_48000,
  			.formats = SNDRV_PCM_FMTBIT_S16_LE,
-@@ -143,7 +171,6 @@ static int tdf8532_set_fast_mute(struct tdf8532_priv *tdf8532)
- static int tdf8532_i2c_probe(struct i2c_client *i2c,
- 		const struct i2c_device_id *id)
- {
--
- 	int ret;
- 	struct tdf8532_priv *tdf8532;
- 
-@@ -168,7 +195,7 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
+@@ -167,7 +195,7 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
  	ret = snd_soc_register_codec(&i2c->dev, &soc_codec_tdf8532,
  			tdf8532_dai, ARRAY_SIZE(tdf8532_dai));
  	if (ret != 0)
@@ -204,7 +196,7 @@ index 18b9713..f94eb98 100644
  
  	return ret;
  
-@@ -177,6 +204,7 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
+@@ -176,6 +204,7 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
  static int tdf8532_i2c_remove(struct i2c_client *i2c)
  {
  	snd_soc_unregister_codec(&i2c->dev);

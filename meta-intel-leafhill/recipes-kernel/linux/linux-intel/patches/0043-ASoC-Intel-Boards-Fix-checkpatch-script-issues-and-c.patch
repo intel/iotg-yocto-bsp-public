@@ -1,7 +1,7 @@
-From 6badea30fd3fc8d9b4b7400c520c136b4a6987b7 Mon Sep 17 00:00:00 2001
+From a27ebc76534d72b88b784dbb1f6848162a18282d Mon Sep 17 00:00:00 2001
 From: Jakub Dorzak <jdorzakx@intel.com>
 Date: Mon, 18 Jul 2016 13:03:57 +0100
-Subject: [PATCH 43/96] ASoC: Intel: Boards: Fix checkpatch script issues and
+Subject: [PATCH 043/102] ASoC: Intel: Boards: Fix checkpatch script issues and
  compiler warnings
 
 Fixed formattings and replaced printk with dev_dbg in machine driver.

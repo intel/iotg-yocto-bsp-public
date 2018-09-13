@@ -1,7 +1,7 @@
-From 956989059cebbb70e5c992d22bce92645b4e5384 Mon Sep 17 00:00:00 2001
+From 378fa1ee0d59c16185ffc0e4c63d2afc12ad6241 Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Wed, 13 Jan 2016 14:11:35 +0100
-Subject: [PATCH 26/96] ASoC: Intel: DAI structure and DAPM updated
+Subject: [PATCH 026/102] ASoC: Intel: DAI structure and DAPM updated
 
 DAI structure of APL platform driver and GP MRB updated.
 DAPM widgets added to GP MRB machine driver.

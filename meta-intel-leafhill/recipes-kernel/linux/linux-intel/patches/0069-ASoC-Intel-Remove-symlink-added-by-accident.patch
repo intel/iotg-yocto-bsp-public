@@ -1,7 +1,7 @@
-From d2642fe2fd808fb102e77c7a5ce81f8acadf41c2 Mon Sep 17 00:00:00 2001
+From 0c12dfd96197e02cf159853f144e78f89d65f7c0 Mon Sep 17 00:00:00 2001
 From: Markus Schuetterle <markus.schuetterle@intel.com>
 Date: Thu, 28 Apr 2016 15:35:50 +0200
-Subject: [PATCH 69/96] ASoC: Intel: Remove symlink added by accident
+Subject: [PATCH 069/102] ASoC: Intel: Remove symlink added by accident
 
 Change-Id: Id14a44262d17356d2b81deed19fa95dbdabfc11b
 Signed-off-by: Markus Schuetterle <markus.schuetterle@intel.com>

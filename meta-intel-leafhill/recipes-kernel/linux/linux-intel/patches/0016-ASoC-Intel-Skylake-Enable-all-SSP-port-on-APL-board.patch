@@ -1,7 +1,8 @@
-From 6fa9cbc7b8e25212dc76051fc4174a14b39185cc Mon Sep 17 00:00:00 2001
+From 0b5da37ee278269fe74367e66f38f3a1c7d0f20e Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Thu, 20 Apr 2017 10:47:33 +0800
-Subject: [PATCH 16/96] ASoC: Intel: Skylake: Enable all SSP port on APL board.
+Subject: [PATCH 016/102] ASoC: Intel: Skylake: Enable all SSP port on APL
+ board.
 
 Enable all the SSP port with multi channel,samplig rate,protocol,
 bit depth for Apli(Apollo Lake).
@@ -48,10 +49,10 @@ index 5766273..38124a3 100644
  M:	Henrik Rydberg <rydberg@bitmath.org>
  L:	linux-input@vger.kernel.org
 diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
-index 986aeb3..78ad841 100644
+index 8f3fc48..73aa94c 100644
 --- a/sound/soc/intel/boards/Kconfig
 +++ b/sound/soc/intel/boards/Kconfig
-@@ -385,6 +385,17 @@ config SND_SOC_INTEL_APLI_LHCRB_DUMMY_MACH
+@@ -414,6 +414,17 @@ config SND_SOC_INTEL_APLI_LHCRB_DUMMY_MACH
  	  Say Y if you have such a device
  	  If unsure select "N".
  
@@ -70,10 +71,10 @@ index 986aeb3..78ad841 100644
          tristate "ASoC Audio driver for APLI LHCRB WM8731 Codec"
          depends on X86_INTEL_LPSS && I2C
 diff --git a/sound/soc/intel/boards/Makefile b/sound/soc/intel/boards/Makefile
-index 495aba5..09e9e3a 100644
+index 2c6a621..9adc437 100644
 --- a/sound/soc/intel/boards/Makefile
 +++ b/sound/soc/intel/boards/Makefile
-@@ -33,6 +33,7 @@ snd-soc-apli_lhcrb_dummy-objs := apli_lhcrb_dummy.o
+@@ -34,6 +34,7 @@ snd-soc-apli_lhcrb_dummy-objs := apli_lhcrb_dummy.o
  snd-soc-apli_lhcrb_wm8731-objs := apli_lhcrb_wm8731.o
  snd-soc-apli_lhcrb_aic3107M-objs := apli_lhcrb_aic3107M.o
  snd-soc-apli_lhcrb_aic3107S-objs := apli_lhcrb_aic3107S.o
@@ -81,7 +82,7 @@ index 495aba5..09e9e3a 100644
  
  obj-$(CONFIG_SND_SOC_INTEL_HASWELL_MACH) += snd-soc-sst-haswell.o
  obj-$(CONFIG_SND_SOC_INTEL_BYT_RT5640_MACH) += snd-soc-sst-byt-rt5640-mach.o
-@@ -68,3 +69,4 @@ obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_DUMMY_MACH) += snd-soc-apli_lhcrb_dummy.o
+@@ -70,3 +71,4 @@ obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_DUMMY_MACH) += snd-soc-apli_lhcrb_dummy.o
  obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH) += snd-soc-apli_lhcrb_wm8731.o
  obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH) += snd-soc-apli_lhcrb_aic3107M.o
  obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH) += snd-soc-apli_lhcrb_aic3107S.o

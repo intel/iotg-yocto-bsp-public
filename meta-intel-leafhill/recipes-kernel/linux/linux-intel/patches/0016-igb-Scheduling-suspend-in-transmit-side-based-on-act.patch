@@ -1,7 +1,7 @@
-From 8acab148ba3dd4e33086b1a4ba2332efda71921d Mon Sep 17 00:00:00 2001
+From 655a7a292dbdf57ff5605476ad75693c46e48096 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 16 Nov 2016 09:38:05 +0800
-Subject: [PATCH 16/43] igb: Scheduling suspend in transmit side based on
+Subject: [PATCH 16/41] igb: Scheduling suspend in transmit side based on
  activity monitoring
 
 Invoking resume if transmit handler is called in suspended

@@ -1,0 +1,63 @@
+From 2827c705afa567f7e0ccf777b6a7b74c9b81221d Mon Sep 17 00:00:00 2001
+From: liyong4x <yongx.a.li@intel.com>
+Date: Fri, 15 Jun 2018 04:48:14 -0400
+Subject: [PATCH 105/129] media: intel-ipu4: max9286: vc individual control
+
+Message for Open Source:
+To control the virtual channel separately.
+
+Message for Internal:
+To control the virtual channel separately.
+
+[Issue/Feature] Four channel sensors must be
+connected at the same time, even only want to
+launch one of them. Max9286 enables all four
+channels by default. If any one channel of them
+has no output data, it will be held off.
+
+[Root Cause/Changes] Enable max9286 links
+according to remote media entity active pads.
+
+Change-Id: Id40716f34825cedb7c88c1d99f2143211796e000
+Tracked-On: #JIIAP-475
+Signed-off-by: liyong4x <yongx.a.li@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/i2c/max9286.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/media/i2c/max9286.c b/drivers/media/i2c/max9286.c
+index 6a472f3..bf05072 100644
+--- a/drivers/media/i2c/max9286.c
++++ b/drivers/media/i2c/max9286.c
+@@ -162,7 +162,7 @@ static int max9286_set_stream(struct v4l2_subdev *subdev, int enable)
+ 	struct v4l2_subdev *sd;
+ 	int i, rval;
+ 	unsigned int val;
+-	u8 slval = 0;
++	u8 slval = 0xE0;
+ 
+ 	dev_dbg(max->v4l2_sd.dev, "MAX9286 set stream. enable = %d\n", enable);
+ 
+@@ -182,8 +182,8 @@ static int max9286_set_stream(struct v4l2_subdev *subdev, int enable)
+ 
+ 		if (!remote_pad)
+ 			continue;
+-
+-		slval = 0xEF;
++		/* Enable link */
++		slval |= (0x0F & (1 << i));
+ 		rval = regmap_write(max->regmap8, DS_LINK_ENABLE, slval);
+ 		if (rval) {
+ 			dev_err(max->v4l2_sd.dev,
+@@ -205,7 +205,6 @@ static int max9286_set_stream(struct v4l2_subdev *subdev, int enable)
+ 				sd->name, enable);
+ 			return rval;
+ 		}
+-		break;
+ 	}
+ 
+ 	/* Enable I2C ACK */
+-- 
+1.9.1
+

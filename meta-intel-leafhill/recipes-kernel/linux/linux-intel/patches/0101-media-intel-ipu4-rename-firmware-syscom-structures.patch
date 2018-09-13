@@ -1,0 +1,280 @@
+From 4d08e596db0a714b0836037ad6e36e1fe29aa9ee Mon Sep 17 00:00:00 2001
+From: Ding Yunliang <yunliang.ding@intel.com>
+Date: Thu, 14 Jun 2018 17:55:20 +0800
+Subject: [PATCH 101/129] media: intel-ipu4: rename firmware syscom structures
+
+Message for Open Source:
+The common practice to name firmware strucures is adding ipu_fw
+prefix. Fix some strucures naming here.
+
+Message for Internal:
+[Issue/Feature] Same as above.
+[Root Cause/Changes] Same as above.
+
+Change-Id: Ib93992a6f069b555fae508143fe5cedd03b3835f
+Tracked-On: #JICCCN-228
+Signed-off-by: Ding Yunliang <yunliang.ding@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu-fw-com.c  | 46 +++++++++++++++++------------------
+ drivers/media/pci/intel/ipu-fw-com.h  |  6 ++---
+ drivers/media/pci/intel/ipu-fw-isys.c |  4 +--
+ drivers/media/pci/intel/ipu-psys.c    | 20 ++++++++-------
+ 4 files changed, 39 insertions(+), 37 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu-fw-com.c b/drivers/media/pci/intel/ipu-fw-com.c
+index e497122..839fb92 100644
+--- a/drivers/media/pci/intel/ipu-fw-com.c
++++ b/drivers/media/pci/intel/ipu-fw-com.c
+@@ -28,7 +28,7 @@
+  */
+ 
+ /* Shared structure between driver and FW - do not modify */
+-struct sys_queue {
++struct ipu_fw_sys_queue {
+ 	u64 host_address;
+ 	u32 vied_address;
+ 	u32 size;
+@@ -38,7 +38,7 @@ struct sys_queue {
+ 	u32 _align;
+ };
+ 
+-struct sys_queue_res {
++struct ipu_fw_sys_queue_res {
+ 	u64 host_address;
+ 	u32 vied_address;
+ 	u32 reg;
+@@ -63,13 +63,13 @@ enum syscom_cmd {
+ /* firmware config: data that sent from the host to SP via DDR */
+ /* Cell copies data into a context */
+ 
+-struct ia_css_syscom_config_fw {
++struct ipu_fw_syscom_config {
+ 	u32 firmware_address;
+ 
+ 	u32 num_input_queues;
+ 	u32 num_output_queues;
+ 
+-	/* ISP pointers to an array of sys_queue structures */
++	/* ISP pointers to an array of ipu_fw_sys_queue structures */
+ 	u32 input_queue;
+ 	u32 output_queue;
+ 
+@@ -94,8 +94,8 @@ struct ipu_fw_com_context {
+ 	unsigned int num_input_queues;
+ 	unsigned int num_output_queues;
+ 
+-	struct sys_queue *input_queue;	/* array of host to SP queues */
+-	struct sys_queue *output_queue;	/* array of SP to host */
++	struct ipu_fw_sys_queue *input_queue;	/* array of host to SP queues */
++	struct ipu_fw_sys_queue *output_queue;	/* array of SP to host */
+ 
+ 	void *config_host_addr;
+ 	void *specific_host_addr;
+@@ -156,7 +156,7 @@ static unsigned int curr_index(void __iomem *q_dmem,
+ 			 (dir == DIR_RECV ? FW_COM_RD_REG : FW_COM_WR_REG));
+ }
+ 
+-static unsigned int inc_index(void __iomem *q_dmem, struct sys_queue *q,
++static unsigned int inc_index(void __iomem *q_dmem, struct ipu_fw_sys_queue *q,
+ 			      enum message_direction dir)
+ {
+ 	unsigned int index;
+@@ -171,8 +171,8 @@ static unsigned int ipu_sys_queue_buf_size(unsigned int size,
+ 	return (size + 1) * token_size;
+ }
+ 
+-static void ipu_sys_queue_init(struct sys_queue *q, unsigned int size,
+-		    unsigned int token_size, struct sys_queue_res *res)
++static void ipu_sys_queue_init(struct ipu_fw_sys_queue *q, unsigned int size,
++		    unsigned int token_size, struct ipu_fw_sys_queue_res *res)
+ {
+ 	unsigned int buf_size;
+ 
+@@ -197,12 +197,12 @@ void *ipu_fw_com_prepare(struct ipu_fw_com_cfg *cfg,
+ 			 struct ipu_bus_device *adev, void __iomem *base)
+ {
+ 	struct ipu_fw_com_context *ctx;
+-	struct ia_css_syscom_config_fw *fw_cfg;
++	struct ipu_fw_syscom_config *fw_cfg;
+ 	unsigned int i;
+ 	unsigned int sizeall, offset;
+ 	unsigned int sizeinput = 0, sizeoutput = 0;
+ 	unsigned long attrs = 0;
+-	struct sys_queue_res res;
++	struct ipu_fw_sys_queue_res res;
+ 
+ 	/* error handling */
+ 	if (!cfg || !cfg->cell_start || !cfg->cell_ready)
+@@ -224,10 +224,10 @@ void *ipu_fw_com_prepare(struct ipu_fw_com_cfg *cfg,
+ 	 */
+ 	sizeall =
+ 	    /* Base cfg for FW */
+-	    roundup(sizeof(struct ia_css_syscom_config_fw), 8) +
++	    roundup(sizeof(struct ipu_fw_syscom_config), 8) +
+ 	    /* Descriptions of the queues */
+-	    cfg->num_input_queues * sizeof(struct sys_queue) +
+-	    cfg->num_output_queues * sizeof(struct sys_queue) +
++	    cfg->num_input_queues * sizeof(struct ipu_fw_sys_queue) +
++	    cfg->num_output_queues * sizeof(struct ipu_fw_sys_queue) +
+ 	    /* FW specific information structure */
+ 	    roundup(cfg->specific_size, 8);
+ 
+@@ -259,16 +259,16 @@ void *ipu_fw_com_prepare(struct ipu_fw_com_cfg *cfg,
+ 	/* This is the address where FW starts to parse allocations */
+ 	ctx->config_host_addr = ctx->dma_buffer;
+ 	ctx->config_vied_addr = ctx->dma_addr;
+-	fw_cfg = (struct ia_css_syscom_config_fw *)ctx->config_host_addr;
+-	offset = roundup(sizeof(struct ia_css_syscom_config_fw), 8);
++	fw_cfg = (struct ipu_fw_syscom_config *)ctx->config_host_addr;
++	offset = roundup(sizeof(struct ipu_fw_syscom_config), 8);
+ 
+ 	ctx->input_queue = ctx->dma_buffer + offset;
+ 	ctx->input_queue_vied_addr = ctx->dma_addr + offset;
+-	offset += cfg->num_input_queues * sizeof(struct sys_queue);
++	offset += cfg->num_input_queues * sizeof(struct ipu_fw_sys_queue);
+ 
+ 	ctx->output_queue = ctx->dma_buffer + offset;
+ 	ctx->output_queue_vied_addr = ctx->dma_addr + offset;
+-	offset += cfg->num_output_queues * sizeof(struct sys_queue);
++	offset += cfg->num_output_queues * sizeof(struct ipu_fw_sys_queue);
+ 
+ 	ctx->specific_host_addr = ctx->dma_buffer + offset;
+ 	ctx->specific_vied_addr = ctx->dma_addr + offset;
+@@ -388,7 +388,7 @@ int ipu_fw_com_ready(struct ipu_fw_com_context *ctx)
+ }
+ EXPORT_SYMBOL_GPL(ipu_fw_com_ready);
+ 
+-static bool is_index_valid(struct sys_queue *q, unsigned int index)
++static bool is_index_valid(struct ipu_fw_sys_queue *q, unsigned int index)
+ {
+ 	if (index >= q->size)
+ 		return false;
+@@ -397,7 +397,7 @@ static bool is_index_valid(struct sys_queue *q, unsigned int index)
+ 
+ void *ipu_send_get_token(struct ipu_fw_com_context *ctx, int q_nbr)
+ {
+-	struct sys_queue *q = &ctx->input_queue[q_nbr];
++	struct ipu_fw_sys_queue *q = &ctx->input_queue[q_nbr];
+ 	void __iomem *q_dmem = ctx->dmem_addr + q->wr_reg * 4;
+ 	unsigned int wr, rd;
+ 	unsigned int packets;
+@@ -422,7 +422,7 @@ void *ipu_send_get_token(struct ipu_fw_com_context *ctx, int q_nbr)
+ 
+ void ipu_send_put_token(struct ipu_fw_com_context *ctx, int q_nbr)
+ {
+-	struct sys_queue *q = &ctx->input_queue[q_nbr];
++	struct ipu_fw_sys_queue *q = &ctx->input_queue[q_nbr];
+ 	void __iomem *q_dmem = ctx->dmem_addr + q->wr_reg * 4;
+ 	int index = curr_index(q_dmem, DIR_SEND);
+ 	void *addr = (void *)(unsigned long)q->host_address +
+@@ -439,7 +439,7 @@ void ipu_send_put_token(struct ipu_fw_com_context *ctx, int q_nbr)
+ 
+ void *ipu_recv_get_token(struct ipu_fw_com_context *ctx, int q_nbr)
+ {
+-	struct sys_queue *q = &ctx->output_queue[q_nbr];
++	struct ipu_fw_sys_queue *q = &ctx->output_queue[q_nbr];
+ 	void __iomem *q_dmem = ctx->dmem_addr + q->wr_reg * 4;
+ 	unsigned int wr, rd;
+ 	unsigned int packets;
+@@ -465,7 +465,7 @@ void *ipu_recv_get_token(struct ipu_fw_com_context *ctx, int q_nbr)
+ 
+ void ipu_recv_put_token(struct ipu_fw_com_context *ctx, int q_nbr)
+ {
+-	struct sys_queue *q = &ctx->output_queue[q_nbr];
++	struct ipu_fw_sys_queue *q = &ctx->output_queue[q_nbr];
+ 	void __iomem *q_dmem = ctx->dmem_addr + q->wr_reg * 4;
+ 	unsigned int rd = inc_index(q_dmem, q, DIR_RECV);
+ 
+diff --git a/drivers/media/pci/intel/ipu-fw-com.h b/drivers/media/pci/intel/ipu-fw-com.h
+index d0ec3cb..9a39ac5 100644
+--- a/drivers/media/pci/intel/ipu-fw-com.h
++++ b/drivers/media/pci/intel/ipu-fw-com.h
+@@ -7,7 +7,7 @@
+ struct ipu_fw_com_context;
+ struct ipu_bus_device;
+ 
+-struct ia_css_syscom_queue_config {
++struct ipu_fw_syscom_queue_config {
+ 	unsigned int queue_size;	/* tokens per queue */
+ 	unsigned int token_size;	/* bytes per token */
+ };
+@@ -15,8 +15,8 @@ struct ia_css_syscom_queue_config {
+ struct ipu_fw_com_cfg {
+ 	unsigned int num_input_queues;
+ 	unsigned int num_output_queues;
+-	struct ia_css_syscom_queue_config *input;
+-	struct ia_css_syscom_queue_config *output;
++	struct ipu_fw_syscom_queue_config *input;
++	struct ipu_fw_syscom_queue_config *output;
+ 
+ 	unsigned int dmem_addr;
+ 
+diff --git a/drivers/media/pci/intel/ipu-fw-isys.c b/drivers/media/pci/intel/ipu-fw-isys.c
+index e42e9db..6fc2917 100644
+--- a/drivers/media/pci/intel/ipu-fw-isys.c
++++ b/drivers/media/pci/intel/ipu-fw-isys.c
+@@ -288,9 +288,9 @@ int ipu_fw_isys_init(struct ipu_isys *isys, unsigned int num_streams)
+ 	int base_msg_send = IPU_BASE_MSG_SEND_QUEUES;
+ 	int base_msg_recv = IPU_BASE_MSG_RECV_QUEUES;
+ 
+-	struct ia_css_syscom_queue_config
++	struct ipu_fw_syscom_queue_config
+ 	    input_queue_cfg[IPU_N_MAX_SEND_QUEUES];
+-	struct ia_css_syscom_queue_config
++	struct ipu_fw_syscom_queue_config
+ 	    output_queue_cfg[IPU_N_MAX_RECV_QUEUES];
+ 
+ 	struct ipu_fw_com_cfg fwcom = {
+diff --git a/drivers/media/pci/intel/ipu-psys.c b/drivers/media/pci/intel/ipu-psys.c
+index c46669b..5c550cc 100644
+--- a/drivers/media/pci/intel/ipu-psys.c
++++ b/drivers/media/pci/intel/ipu-psys.c
+@@ -1326,11 +1326,13 @@ static int query_sp(struct ipu_bus_device *adev)
+ 
+ static int ipu_psys_fw_init(struct ipu_psys *psys)
+ {
+-	struct ia_css_syscom_queue_config
+-		ia_css_psys_cmd_queue_cfg[IPU_FW_PSYS_N_PSYS_CMD_QUEUE_ID];
+-	struct ia_css_syscom_queue_config ia_css_psys_event_queue_cfg[] = {
+-		{IPU_FW_PSYS_EVENT_QUEUE_SIZE,
+-		 sizeof(struct ipu_fw_psys_event)}
++	struct ipu_fw_syscom_queue_config
++		fw_psys_cmd_queue_cfg[IPU_FW_PSYS_N_PSYS_CMD_QUEUE_ID];
++	struct ipu_fw_syscom_queue_config fw_psys_event_queue_cfg[] = {
++		{
++			IPU_FW_PSYS_EVENT_QUEUE_SIZE,
++			sizeof(struct ipu_fw_psys_event)
++		}
+ 	};
+ 	struct ipu_fw_psys_srv_init server_init = {
+ 		.ddr_pkg_dir_address = 0,
+@@ -1342,7 +1344,7 @@ static int ipu_psys_fw_init(struct ipu_psys *psys)
+ 	struct ipu_fw_com_cfg fwcom = {
+ 		.num_input_queues = IPU_FW_PSYS_N_PSYS_CMD_QUEUE_ID,
+ 		.num_output_queues = IPU_FW_PSYS_N_PSYS_EVENT_QUEUE_ID,
+-		.output = ia_css_psys_event_queue_cfg,
++		.output = fw_psys_event_queue_cfg,
+ 		.specific_addr = &server_init,
+ 		.specific_size = sizeof(server_init),
+ 		.cell_start = start_sp,
+@@ -1351,13 +1353,13 @@ static int ipu_psys_fw_init(struct ipu_psys *psys)
+ 	int rval, i;
+ 
+ 	for (i = 0; i < IPU_FW_PSYS_N_PSYS_CMD_QUEUE_ID; i++) {
+-		ia_css_psys_cmd_queue_cfg[i].queue_size =
++		fw_psys_cmd_queue_cfg[i].queue_size =
+ 			IPU_FW_PSYS_CMD_QUEUE_SIZE;
+-		ia_css_psys_cmd_queue_cfg[i].token_size =
++		fw_psys_cmd_queue_cfg[i].token_size =
+ 			sizeof(struct ipu_fw_psys_cmd);
+ 	}
+ 
+-	fwcom.input = ia_css_psys_cmd_queue_cfg;
++	fwcom.input = fw_psys_cmd_queue_cfg;
+ 
+ 	fwcom.dmem_addr = psys->pdata->ipdata->hw_variant.dmem_offset;
+ 
+-- 
+1.9.1
+

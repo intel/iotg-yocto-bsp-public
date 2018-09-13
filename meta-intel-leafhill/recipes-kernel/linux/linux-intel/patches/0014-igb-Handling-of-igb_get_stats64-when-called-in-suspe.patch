@@ -1,7 +1,7 @@
-From 2cacf7b7885f3025ab2496f84ed45c7c68c82662 Mon Sep 17 00:00:00 2001
+From a5fb0d0b822d8175cae5d42a7ef384223320e61e Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Thu, 29 Dec 2016 11:40:59 +0800
-Subject: [PATCH 14/43] igb: Handling of igb_get_stats64 when called in
+Subject: [PATCH 14/41] igb: Handling of igb_get_stats64 when called in
  suspended state
 
 In igb_get_stats64() function, it invokes pm_runtime_get()

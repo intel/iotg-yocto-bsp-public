@@ -1,7 +1,7 @@
-From 3a5676fa5e93568d111383db07b6a631f92092c9 Mon Sep 17 00:00:00 2001
+From af7f7989eff56cae1c7440a9749a501af681ba8d Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Fri, 7 Apr 2017 08:30:38 +0100
-Subject: [PATCH 65/96] ASoC: Intel: Boards: remove ignore_suspend flag
+Subject: [PATCH 065/102] ASoC: Intel: Boards: remove ignore_suspend flag
 
 If the ignore_suspend flag is set then the dpib and lpib positions
 won't be saved and the DMA won't be resumed. Set the flags to 0 for

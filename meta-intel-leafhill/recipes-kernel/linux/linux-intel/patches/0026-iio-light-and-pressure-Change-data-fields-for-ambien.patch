@@ -1,7 +1,7 @@
-From 3e8d1afa6363b1a549ec0c099c6174157a64ad24 Mon Sep 17 00:00:00 2001
+From 9a0e0eddc4c3d9bd93809232d86455a6d7e7e7fd Mon Sep 17 00:00:00 2001
 From: "Ooi, Joyce" <joyce.ooi@intel.com>
 Date: Tue, 21 Jun 2016 11:42:11 +0800
-Subject: [PATCH 26/43] iio: light and pressure: Change data fields for ambient
+Subject: [PATCH 26/41] iio: light and pressure: Change data fields for ambient
  light and pressure sensor
 
 Sensitivity Percent Relative is added for ambient light sensor as it is

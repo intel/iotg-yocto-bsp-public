@@ -1,0 +1,76 @@
+From 161488314cb7a889fca56551fa8a36e9a6ab8a09 Mon Sep 17 00:00:00 2001
+From: Tianshu Qiu <tian.shu.qiu@intel.com>
+Date: Fri, 4 May 2018 15:18:30 +0800
+Subject: [PATCH 006/129] media: intel-ipu4: imx355: Rearrange test pattern
+ value order
+
+Message for Open Source:
+Rearrange test pattern order to make the value aligned with other
+sensor drivers.
+
+Message for Internal:
+[Issue/Feature] The test pattern value definition in Android
+camera HAL api does not match with the value definition in sensor.
+[Root Cause/Changes] Rearrange test pattern order to make the value
+consistent among sensor drivers and match with the definition in
+Android camera HAL.
+
+Change-Id: I33c98e5b5b3f761b1de1d98d0793f4301ccdfa39
+Tracked-On: #JICCCN-171
+Signed-off-by: Tianshu Qiu <tian.shu.qiu@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/i2c/imx355.c | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/i2c/imx355.c b/drivers/media/i2c/imx355.c
+index dbcd423..f3149aa 100644
+--- a/drivers/media/i2c/imx355.c
++++ b/drivers/media/i2c/imx355.c
+@@ -50,6 +50,11 @@
+ 
+ /* Test Pattern Control */
+ #define IMX355_REG_TEST_PATTERN		0x0600
++#define IMX355_TEST_PATTERN_DISABLED		0
++#define IMX355_TEST_PATTERN_SOLID_COLOR		1
++#define IMX355_TEST_PATTERN_COLOR_BARS		2
++#define IMX355_TEST_PATTERN_GRAY_COLOR_BARS	3
++#define IMX355_TEST_PATTERN_PN9			4
+ 
+ /* Flip Control */
+ #define IMX355_REG_ORIENTATION		0x0101
+@@ -819,12 +824,20 @@ struct imx355_reg_list imx355_global_setting = {
+ 
+ static const char * const imx355_test_pattern_menu[] = {
+ 	"Disabled",
+-	"Solid color",
+ 	"100% color bars",
++	"Solid color",
+ 	"Fade to gray color bars",
+ 	"PN9"
+ };
+ 
++static const int imx355_test_pattern_val[] = {
++	IMX355_TEST_PATTERN_DISABLED,
++	IMX355_TEST_PATTERN_COLOR_BARS,
++	IMX355_TEST_PATTERN_SOLID_COLOR,
++	IMX355_TEST_PATTERN_GRAY_COLOR_BARS,
++	IMX355_TEST_PATTERN_PN9,
++};
++
+ /* Configurations for supported link frequencies */
+ /* Menu items for LINK_FREQ V4L2 control */
+ static const s64 link_freq_menu_items[] = {
+@@ -1163,7 +1176,8 @@ static int imx355_update_digital_gain(struct imx355 *imx355, u32 d_gain)
+ static int imx355_enable_test_pattern(struct imx355 *imx355, u32 pattern)
+ {
+ 	return imx355_write_reg(imx355, IMX355_REG_TEST_PATTERN,
+-				 IMX355_REG_VALUE_16BIT, pattern);
++				IMX355_REG_VALUE_16BIT,
++				imx355_test_pattern_val[pattern]);
+ }
+ 
+ static int imx355_set_ctrl(struct v4l2_ctrl *ctrl)
+-- 
+1.9.1
+

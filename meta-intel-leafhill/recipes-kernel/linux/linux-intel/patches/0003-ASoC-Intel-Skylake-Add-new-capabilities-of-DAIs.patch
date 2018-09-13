@@ -1,7 +1,7 @@
-From f8e42c4904a44af1a5d929b067b032abf09fb719 Mon Sep 17 00:00:00 2001
+From 0bc909a88a0b2c89bdb69bebb755c562efaae0ce Mon Sep 17 00:00:00 2001
 From: Pardha Saradhi K <pardha.saradhi.kesapragada@intel.com>
 Date: Sat, 7 Nov 2015 12:11:29 +0530
-Subject: [PATCH 03/96] ASoC: Intel: Skylake: Add new capabilities of DAIs
+Subject: [PATCH 003/102] ASoC: Intel: Skylake: Add new capabilities of DAIs
 
 Enhance the capabilties of the FE and BE DAIs with respect
 to new features implemented for IVI. Number of FEs have
@@ -26,7 +26,7 @@ Conflicts:
  1 file changed, 14 insertions(+), 2 deletions(-)
 
 diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
-index f340992..611143a 100644
+index d5d8a00..a8d9ae0 100644
 --- a/sound/soc/intel/skylake/skl-pcm.c
 +++ b/sound/soc/intel/skylake/skl-pcm.c
 @@ -1285,6 +1285,18 @@ struct skl_dsp_notify_ops cb_ops = {

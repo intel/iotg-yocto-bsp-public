@@ -1,7 +1,7 @@
-From b72a0b3766d75a47319cfc507718950c8c3a971c Mon Sep 17 00:00:00 2001
+From d65d3ba6ecdc0135ca30573171fab44cf5c7904e Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 27 Sep 2017 14:01:17 +0800
-Subject: [PATCH 17/43] Schedule suspend after finish the processing of
+Subject: [PATCH 17/41] Schedule suspend after finish the processing of
  received packets.
 
 Signed-off-by: Jayasankar <jayasankarx.nara@intel.com>

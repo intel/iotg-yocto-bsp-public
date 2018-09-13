@@ -1,7 +1,7 @@
-From d35b1204af3ae642fd44417b76f6323e039d5190 Mon Sep 17 00:00:00 2001
+From 7082bf25ad3a8c9ee8331ac2661618e1ce2ccc17 Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Fri, 24 Mar 2017 09:37:08 +0800
-Subject: [PATCH 24/43] igb: Fix driver compilation errors when building
+Subject: [PATCH 24/41] igb: Fix driver compilation errors when building
  without CONFIG_PM
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

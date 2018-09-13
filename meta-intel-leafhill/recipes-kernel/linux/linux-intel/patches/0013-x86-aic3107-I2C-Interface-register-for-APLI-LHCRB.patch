@@ -1,7 +1,7 @@
-From 2beb62f7142d494c59593cdb63c3b91f0fab4ec6 Mon Sep 17 00:00:00 2001
+From 4dbb7b46893e84fc463e8a252a589c0f41b2424d Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Mon, 4 Jul 2016 18:23:39 +0800
-Subject: [PATCH 13/96] x86: aic3107 I2C Interface register for APLI LHCRB
+Subject: [PATCH 013/102] x86: aic3107 I2C Interface register for APLI LHCRB
 
 This commit register I2C bus 3 for aic3107 codec specific for
 Apollo Lake-I Leaf Hill CRB
@@ -15,10 +15,10 @@ Signed-off-by: Tan, Seng Kai <seng.kai.tan@intel.com>
  create mode 100644 arch/x86/platform/apli_lhcrb/apli_lhcrb_aic3107_i2c.c
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 7985fbb..90c8c82 100644
+index 40b8dfc..f72ffc9 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
-@@ -680,6 +680,14 @@ config X86_INTEL_APLI_LHCRB_WM8731
+@@ -681,6 +681,14 @@ config X86_INTEL_APLI_LHCRB_WM8731
  	  bus 3 access for wm8731 codec.
  	  If you do not have one of these chips, you should say N here.
  

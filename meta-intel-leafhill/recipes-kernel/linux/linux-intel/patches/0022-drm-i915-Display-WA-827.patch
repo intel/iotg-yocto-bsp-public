@@ -1,7 +1,7 @@
-From e51a85a638d4ad2da60fc39e1fbb5e2421b2499d Mon Sep 17 00:00:00 2001
+From 727ab3cae0e84bd50e1f0af3c019f2b267e88bad Mon Sep 17 00:00:00 2001
 From: Vidya Srinivas <vidya.srinivas@intel.com>
 Date: Mon, 9 Apr 2018 09:11:09 +0530
-Subject: [PATCH 22/41] drm/i915: Display WA 827
+Subject: [PATCH 22/44] drm/i915: Display WA 827
 
 Display WA 827 applies to GEN9 (excluede GLK) and CNL.
 Switching the plane format from NV12 to RGB and leaving system idle
@@ -30,10 +30,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  2 files changed, 37 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/i915_reg.h b/drivers/gpu/drm/i915/i915_reg.h
-index e3cee87..2c7f67d 100644
+index b037b3c..5bbcca8 100644
 --- a/drivers/gpu/drm/i915/i915_reg.h
 +++ b/drivers/gpu/drm/i915/i915_reg.h
-@@ -3812,6 +3812,9 @@ enum {
+@@ -3817,6 +3817,9 @@ enum {
  #define _CLKGATE_DIS_PSL_A		0x46520
  #define _CLKGATE_DIS_PSL_B		0x46524
  #define _CLKGATE_DIS_PSL_C		0x46528
@@ -44,7 +44,7 @@ index e3cee87..2c7f67d 100644
  #define   DPF_RAM_GATING_DIS		(1 << 9)
  #define   DPFR_GATING_DIS		(1 << 8)
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index f742d8d..b4bdb8b 100644
+index 10995f594..0564454 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -494,6 +494,21 @@ static void intel_update_czclk(struct drm_i915_private *dev_priv)
@@ -69,7 +69,7 @@ index f742d8d..b4bdb8b 100644
  static bool
  needs_modeset(struct drm_crtc_state *state)
  {
-@@ -5194,6 +5209,8 @@ static void intel_crtc_dpms_overlay_disable(struct intel_crtc *intel_crtc)
+@@ -5256,6 +5271,8 @@ static void intel_crtc_dpms_overlay_disable(struct intel_crtc *intel_crtc)
  static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
  {
  	struct intel_crtc *crtc = to_intel_crtc(old_crtc_state->base.crtc);
@@ -78,7 +78,7 @@ index f742d8d..b4bdb8b 100644
  	struct drm_atomic_state *old_state = old_crtc_state->base.state;
  	struct intel_crtc_state *pipe_config =
  		to_intel_crtc_state(crtc->base.state);
-@@ -5211,6 +5228,7 @@ static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
+@@ -5273,6 +5290,7 @@ static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
  			to_intel_plane_state(primary->state);
  		struct intel_plane_state *old_primary_state =
  			to_intel_plane_state(old_pri_state);
@@ -86,7 +86,7 @@ index f742d8d..b4bdb8b 100644
  
  		intel_fbc_post_update(crtc);
  
-@@ -5218,6 +5236,14 @@ static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
+@@ -5280,6 +5298,14 @@ static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
  		    (needs_modeset(&pipe_config->base) ||
  		     !old_primary_state->base.visible))
  			intel_post_enable_primary(&crtc->base);
@@ -101,7 +101,7 @@ index f742d8d..b4bdb8b 100644
  	}
  }
  
-@@ -5240,6 +5266,14 @@ static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
+@@ -5302,6 +5328,14 @@ static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
  			to_intel_plane_state(primary->state);
  		struct intel_plane_state *old_primary_state =
  			to_intel_plane_state(old_pri_state);

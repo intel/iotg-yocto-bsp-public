@@ -1,0 +1,39 @@
+From 489eca345ca9ec9ffe1f2fa9da6c0a4e1849c41a Mon Sep 17 00:00:00 2001
+From: yzha108 <yanli.l.zhang@intel.com>
+Date: Wed, 8 Aug 2018 18:50:34 +0800
+Subject: [PATCH 23/54] media: intel-ipu4: ar0231: set min t1 exposure time
+
+Message for Open Source:
+Set AR0231 min valid exposoure time to avoid messy image
+
+Message for Internal:
+[Issue/Feature]
+Set AR0231 min valid exposoure time to avoid messy image
+
+[Root Cause/Changes]
+Set AR0231 min valid exposoure time to avoid messy image
+
+Change-Id: I1663ce21762219df6dcd436505e131e5b942072d
+Tracked-On: #H1407529342
+Signed-off-by: yzha108 <yanli.l.zhang@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h b/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h
+index b351c09..d3107c6 100644
+--- a/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h
++++ b/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h
+@@ -1826,7 +1826,7 @@ struct crl_v4l2_ctrl ar0231at_v4l2_ctrls[] = {
+ 		.ctrl_id = V4L2_CID_EXPOSURE,
+ 		.name = "T1_COARSE_EXPOSURE_TIME",
+ 		.type = CRL_V4L2_CTRL_TYPE_INTEGER,
+-		.data.std_data.min = 0x0,
++		.data.std_data.min = 0x0010,
+ 		.data.std_data.max = 0x0500,
+ 		.data.std_data.step = 1,
+ 		.data.std_data.def = 0x0163,
+-- 
+1.9.1
+

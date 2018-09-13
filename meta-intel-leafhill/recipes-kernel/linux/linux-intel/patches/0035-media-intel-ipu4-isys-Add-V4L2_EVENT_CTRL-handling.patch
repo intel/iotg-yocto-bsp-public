@@ -1,0 +1,53 @@
+From da276a0c2c91d7f190f617acfd46fc145652c466 Mon Sep 17 00:00:00 2001
+From: Yong Zhi <yong.zhi@intel.com>
+Date: Mon, 9 Apr 2018 13:10:17 -0500
+Subject: [PATCH 035/129] media: intel-ipu4: isys: Add V4L2_EVENT_CTRL handling
+
+Message for Open Source:
+Fix v4l2-compliance fails on " Intel IPU4 CSI-2 0" subdev.
+
+Message for Internal:
+[Issue/Feature] v4l2-compliance -u /dev/v4l-subdev0
+
+"fail: v4l2-test-controls: subscribe event for control"
+"      'User Controls' failed"
+"test VIDIOC_(UN)SUBSCRIBE_EVENT/DQEVENT: FAIL"
+
+[Root Cause/Changes] Missing implementation.
+
+Change-Id: I9e6994c1bb0baeaf9ac28dec2b36b2b59158c252
+Tracked-On: #JICCCN-87
+Signed-off-by: Yong Zhi <yong.zhi@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu-isys-csi2.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu-isys-csi2.c b/drivers/media/pci/intel/ipu-isys-csi2.c
+index 93e27f0..e6d5707 100644
+--- a/drivers/media/pci/intel/ipu-isys-csi2.c
++++ b/drivers/media/pci/intel/ipu-isys-csi2.c
+@@ -197,12 +197,16 @@ static int subscribe_event(struct v4l2_subdev *sd, struct v4l2_fh *fh,
+ {
+ 	struct ipu_isys_csi2 *csi2 = to_ipu_isys_csi2(sd);
+ 
+-	if (sub->type != V4L2_EVENT_FRAME_SYNC)
+-		return -EINVAL;
+-
+ 	dev_dbg(&csi2->isys->adev->dev, "sub->id %u\n", sub->id);
+ 
+-	return v4l2_event_subscribe(fh, sub, 10, NULL);
++	switch (sub->type) {
++	case V4L2_EVENT_FRAME_SYNC:
++		return v4l2_event_subscribe(fh, sub, 10, NULL);
++	case V4L2_EVENT_CTRL:
++		return v4l2_ctrl_subscribe_event(fh, sub);
++	default:
++		return -EINVAL;
++	}
+ }
+ 
+ static const struct v4l2_subdev_core_ops csi2_sd_core_ops = {
+-- 
+1.9.1
+

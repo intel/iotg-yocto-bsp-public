@@ -1,0 +1,515 @@
+From 508af06b7f423b5838e224c73457a6fc0ae3f899 Mon Sep 17 00:00:00 2001
+From: Ding Yunliang <yunliang.ding@intel.com>
+Date: Wed, 18 Jul 2018 17:12:05 +0800
+Subject: [PATCH 27/54] media: intel-ipu4: Add suffix for sensor subdev name
+
+Message for Open Source:
+The previous sensor subdev name would have i2c bus and addr
+info while i2c bus would potenially change, so add the
+suffix char to identify different sensors.
+
+Message for Internal:
+[Issue/Feature] User space HAL should adapter this change.
+[Root Cause/Changes]
+
+Change-Id: I25a0673c8dc4fa88f8133b056388420688ce241e
+Depends-On: I91cabbeb7f23c5726e5b4fc8968fcaf289e70fa8
+Tracked-On: #JICSD9-74
+Signed-off-by: Ding Yunliang <yunliang.ding@intel.com>
+Reviewed-on: https://icggerrit.corp.intel.com/343167
+Reviewed-by: Coding Style
+Reviewed-by: Leo Zhao <leo.zhao@intel.com>
+Approver: Wei Meng <wei.meng@intel.com>
+Reviewed-by: Wei Meng <wei.meng@intel.com>
+Integrator: Wei Meng <wei.meng@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/i2c/crlmodule/crlmodule-core.c    | 17 ++++++---
+ drivers/media/i2c/max9286.c                     | 10 ++++--
+ drivers/media/i2c/ti964.c                       |  7 ++--
+ drivers/media/platform/intel/ipu4-bxt-p-pdata.c | 48 ++++++++++++++++++++++---
+ include/media/crlmodule.h                       |  1 +
+ include/media/max9286.h                         |  2 ++
+ include/media/ti964.h                           |  2 ++
+ 7 files changed, 75 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/media/i2c/crlmodule/crlmodule-core.c b/drivers/media/i2c/crlmodule/crlmodule-core.c
+index efea035..ac18120 100755
+--- a/drivers/media/i2c/crlmodule/crlmodule-core.c
++++ b/drivers/media/i2c/crlmodule/crlmodule-core.c
+@@ -2753,6 +2753,7 @@ static int crlmodule_set_power(struct v4l2_subdev *subdev, int on)
+ static int crlmodule_init_subdevs(struct v4l2_subdev *subdev)
+ {
+ 	struct crl_sensor *sensor = to_crlmodule_sensor(subdev);
++	struct crlmodule_platform_data *platform_data = sensor->platform_data;
+ 	struct i2c_client *client = v4l2_get_subdevdata(&sensor->src->sd);
+ 	struct crl_subdev *prev_sd = NULL;
+ 	int i = 0, j;
+@@ -2822,10 +2823,18 @@ static int crlmodule_init_subdevs(struct v4l2_subdev *subdev)
+ 			sd->source_pad = 1;
+ 		}
+ 
+-		snprintf(sd->sd.name,
+-			 sizeof(sd->sd.name), "%s %d-%4.4x",
+-			 sensor->sensor_ds->subdevs[i].name,
+-			 i2c_adapter_id(client->adapter), client->addr);
++		if (platform_data->suffix)
++			snprintf(sd->sd.name,
++				 sizeof(sd->sd.name), "%s %c",
++				 sensor->sensor_ds->subdevs[i].name,
++				 platform_data->suffix);
++		else
++			snprintf(sd->sd.name,
++				 sizeof(sd->sd.name), "%s %d-%4.4x",
++				 sensor->sensor_ds->subdevs[i].name,
++				 i2c_adapter_id(client->adapter),
++				 client->addr);
++
+ 
+ 		sd->sink_fmt.width =
+ 			sensor->sensor_ds->sensor_limits->x_addr_max;
+diff --git a/drivers/media/i2c/max9286.c b/drivers/media/i2c/max9286.c
+index 343616a..8fbedd8 100644
+--- a/drivers/media/i2c/max9286.c
++++ b/drivers/media/i2c/max9286.c
+@@ -11,6 +11,7 @@
+ #include <media/media-device.h>
+ #include <media/media-entity.h>
+ #include <media/max9286.h>
++#include <media/crlmodule.h>
+ #include <media/v4l2-device.h>
+ #include <media/videobuf2-core.h>
+ 
+@@ -570,6 +571,12 @@ static int max9286_registered(struct v4l2_subdev *subdev)
+ 	for (i = 0, k = 0; (i < num) && (k < nsinks); i++, k++) {
+ 		struct max9286_subdev_i2c_info *info =
+ 			&max->pdata->subdev_info[i];
++		struct crlmodule_platform_data *pdata =
++		    (struct crlmodule_platform_data *)
++		    info->board_info.platform_data;
++
++		/* Spin the sensor subdev name suffix */
++		pdata->suffix = info->suffix;
+ 
+ 		/* aggre and subdves share the same i2c bus */
+ 		max->sub_devs[k] = v4l2_i2c_new_subdev_board(
+@@ -712,8 +719,7 @@ static int max9286_register_subdev(struct max9286 *max)
+ 	/* subdevice driver initializes v4l2 subdev */
+ 	v4l2_subdev_init(&max->v4l2_sd, &max9286_sd_ops);
+ 	snprintf(max->v4l2_sd.name, sizeof(max->v4l2_sd.name),
+-		"MAX9286 %d-%4.4x", i2c_adapter_id(client->adapter),
+-		client->addr);
++		"MAX9286 %c", max->pdata->suffix);
+ 	max->v4l2_sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE |
+ 		V4L2_SUBDEV_FL_HAS_SUBSTREAMS;
+ 
+diff --git a/drivers/media/i2c/ti964.c b/drivers/media/i2c/ti964.c
+index 30e4424..215564f8 100644
+--- a/drivers/media/i2c/ti964.c
++++ b/drivers/media/i2c/ti964.c
+@@ -485,6 +485,9 @@ static int ti964_registered(struct v4l2_subdev *subdev)
+ 		/* If 0 is xshutdown, then 1 would be FSIN, vice versa. */
+ 		va->sub_devs[k].fsin_gpio = 1 - va->subdev_pdata[k].xshutdown;
+ 
++		/* Spin sensor subdev suffix name */
++		va->subdev_pdata[k].suffix = info->suffix;
++
+ 		/*
+ 		 * Change the gpio value to have xshutdown
+ 		 * and rx port included, so in gpio_set those
+@@ -1023,8 +1026,8 @@ static int ti964_register_subdev(struct ti964 *va)
+ 	struct i2c_client *client = v4l2_get_subdevdata(&va->sd);
+ 
+ 	v4l2_subdev_init(&va->sd, &ti964_sd_ops);
+-	snprintf(va->sd.name, sizeof(va->sd.name), "TI964 %d-%4.4x",
+-		i2c_adapter_id(client->adapter), client->addr);
++	snprintf(va->sd.name, sizeof(va->sd.name), "TI964 %c",
++		 va->pdata->suffix);
+ 
+ 	va->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE |
+ 			V4L2_SUBDEV_FL_HAS_SUBSTREAMS;
+diff --git a/drivers/media/platform/intel/ipu4-bxt-p-pdata.c b/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
+index 36f3358..f7b894e 100644
+--- a/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
++++ b/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
+@@ -115,6 +115,7 @@
+ 	.op_sys_clock = (uint64_t []){ 72000000 },
+ 	.module_name = "INT3474",
+ 	.id_string = "0x27 0x40",
++	.suffix = 'a',
+ };
+ 
+ static struct ipu_isys_csi2_config ov2740_csi2_cfg = {
+@@ -146,6 +147,7 @@
+ 					111375000, 222750000 },
+ 	.module_name = "IMX185",
+ 	.id_string = "0x1 0x85",
++	.suffix = 'a',
+ };
+ 
+ static struct ipu_isys_csi2_config imx185_csi2_cfg = {
+@@ -177,6 +179,7 @@
+ 					111375000, 222750000 },
+ 	.module_name = "IMX185",
+ 	.id_string = "0x1 0x85",
++	.suffix = 'b',
+ };
+ 
+ static struct ipu_isys_csi2_config imx185_li_csi2_cfg = {
+@@ -208,6 +211,7 @@
+ 	.op_sys_clock = (uint64_t []){317250000},
+ 	.module_name = "AR023Z",
+ 	.id_string = "0x4401 0x64",
++	.suffix = 'a',
+ };
+ 
+ static struct ipu_isys_csi2_config ar023z_csi2_cfg = {
+@@ -233,6 +237,7 @@
+ 	.op_sys_clock = (uint64_t []){317250000},
+ 	.module_name = "AR023Z",
+ 	.id_string = "0x4401 0x64",
++	.suffix = 'b',
+ };
+ 
+ static struct ipu_isys_csi2_config ar023z_b_csi2_cfg = {
+@@ -264,6 +269,7 @@
+ 	.op_sys_clock = (uint64_t []){600000000},
+ 	.module_name = "IMX477-MASTER",
+ 	.id_string = "0x4 0x77",
++	.suffix = 'a',
+ };
+ 
+ static struct ipu_isys_csi2_config imx477_csi2_cfg_master = {
+@@ -289,6 +295,7 @@
+ 	.op_sys_clock = (uint64_t []){600000000},
+ 	.module_name = "IMX477-SLAVE-1",
+ 	.id_string = "0x4 0x77",
++	.suffix = 'b',
+ };
+ 
+ static struct ipu_isys_csi2_config imx477_csi2_cfg_slave_1 = {
+@@ -320,6 +327,7 @@
+ 	.op_sys_clock = (uint64_t []){720000000},
+ 	.module_name = "IMX274",
+ 	.id_string = "0x6 0x9",
++	.suffix = 'a',
+ };
+ 
+ static struct ipu_isys_csi2_config imx274_csi2_cfg = {
+@@ -345,6 +353,7 @@
+ 	.op_sys_clock = (uint64_t []){720000000},
+ 	.module_name = "IMX274",
+ 	.id_string = "0x6 0x9",
++	.suffix = 'b',
+ };
+ 
+ static struct ipu_isys_csi2_config imx274_b_csi2_cfg = {
+@@ -376,6 +385,7 @@
+ 	.op_sys_clock = (uint64_t []){222750000, 445500000},
+ 	.module_name = "IMX290",
+ 	.id_string = "0x2 0x90",
++	.suffix = 'a',
+ };
+ 
+ static struct ipu_isys_csi2_config imx290_csi2_cfg = {
+@@ -405,7 +415,8 @@
+ 	.lanes = OV13860_LANES,
+ 	.ext_clk = 24000000,
+ 	.op_sys_clock = (uint64_t []){ 600000000, 300000000},
+-	.module_name = "OV13860"
++	.module_name = "OV13860",
++	.suffix = 'a',
+ };
+ 
+ static struct ipu_isys_csi2_config ov13860_csi2_cfg = {
+@@ -437,6 +448,7 @@
+ 	.op_sys_clock = (uint64_t []){400000000},
+ 	.module_name = "OV9281",
+ 	.id_string = "0x92 0x81",
++	.suffix = 'a',
+ };
+ 
+ static struct ipu_isys_csi2_config ov9281_csi2_cfg = {
+@@ -482,7 +494,8 @@
+ 	.lanes = ADV7481_LANES,
+ 	.ext_clk = 24000000,
+ 	.op_sys_clock = (uint64_t []){600000000},
+-	.module_name = "ADV7481"
++	.module_name = "ADV7481",
++	.suffix = 'a',
+ };
+ 
+ static struct ipu_isys_csi2_config adv7481_csi2_cfg = {
+@@ -515,7 +528,8 @@
+ 	.lanes = ADV7481_LANES,
+ 	.ext_clk = 24000000,
+ 	.op_sys_clock = (uint64_t []){600000000},
+-	.module_name = "ADV7481_EVAL"
++	.module_name = "ADV7481_EVAL",
++	.suffix = 'a',
+ };
+ 
+ static struct ipu_isys_csi2_config adv7481_eval_csi2_cfg = {
+@@ -541,7 +555,8 @@
+ 	.lanes = ADV7481_LANES,
+ 	.ext_clk = 24000000,
+ 	.op_sys_clock = (uint64_t []){600000000},
+-	.module_name = "ADV7481B_EVAL"
++	.module_name = "ADV7481B_EVAL",
++	.suffix = 'b',
+ };
+ 
+ static struct ipu_isys_csi2_config adv7481b_eval_csi2_cfg = {
+@@ -704,6 +719,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER,
+ 		.rx_port = 0,
+ 		.phy_i2c_addr = OV10635_I2C_PHY_ADDR,
++		.suffix = 'a',
+ 	},
+ 	{
+ 		.board_info = {
+@@ -714,6 +730,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER,
+ 		.rx_port = 1,
+ 		.phy_i2c_addr = OV10635_I2C_PHY_ADDR,
++		.suffix = 'b',
+ 	},
+ 	{
+ 		.board_info = {
+@@ -724,6 +741,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER,
+ 		.rx_port = 2,
+ 		.phy_i2c_addr = OV10635_I2C_PHY_ADDR,
++		.suffix = 'c',
+ 	},
+ 	{
+ 		.board_info = {
+@@ -734,6 +752,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER,
+ 		.rx_port = 3,
+ 		.phy_i2c_addr = OV10635_I2C_PHY_ADDR,
++		.suffix = 'd',
+ 	},
+ #endif
+ #ifdef CONFIG_INTEL_IPU4_OV10640
+@@ -746,6 +765,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER,
+ 		.rx_port = 0,
+ 		.phy_i2c_addr = OV10640_I2C_PHY_ADDR,
++		.suffix = 'a',
+ 	},
+ 	{
+ 		.board_info = {
+@@ -756,6 +776,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER,
+ 		.rx_port = 1,
+ 		.phy_i2c_addr = OV10640_I2C_PHY_ADDR,
++		.suffix = 'b',
+ 	},
+ 	{
+ 		.board_info = {
+@@ -766,6 +787,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER,
+ 		.rx_port = 2,
+ 		.phy_i2c_addr = OV10640_I2C_PHY_ADDR,
++		.suffix = 'c',
+ 	},
+ 	{
+ 		.board_info = {
+@@ -776,6 +798,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER,
+ 		.rx_port = 3,
+ 		.phy_i2c_addr = OV10640_I2C_PHY_ADDR,
++		.suffix = 'd',
+ 	},
+ #endif
+ #ifdef CONFIG_INTEL_IPU4_MAGNA
+@@ -788,6 +811,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER,
+ 		.rx_port = 0,
+ 		.phy_i2c_addr = MAGNA_PHY_ADDR,
++		.suffix = 'a',
+ 	},
+ #endif
+ };
+@@ -803,6 +827,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER_2,
+ 		.rx_port = 0,
+ 		.phy_i2c_addr = OV10635_I2C_PHY_ADDR,
++		.suffix = 'e',
+ 	},
+ 	{
+ 		.board_info = {
+@@ -813,6 +838,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER_2,
+ 		.rx_port = 1,
+ 		.phy_i2c_addr = OV10635_I2C_PHY_ADDR,
++		.suffix = 'f',
+ 	},
+ 	{
+ 		.board_info = {
+@@ -823,6 +849,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER_2,
+ 		.rx_port = 2,
+ 		.phy_i2c_addr = OV10635_I2C_PHY_ADDR,
++		.suffix = 'g',
+ 	},
+ 	{
+ 		.board_info = {
+@@ -833,6 +860,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER_2,
+ 		.rx_port = 3,
+ 		.phy_i2c_addr = OV10635_I2C_PHY_ADDR,
++		.suffix = 'h',
+ 	},
+ #endif
+ #ifdef CONFIG_INTEL_IPU4_OV10640
+@@ -845,6 +873,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER_2,
+ 		.rx_port = 0,
+ 		.phy_i2c_addr = OV10640_I2C_PHY_ADDR,
++		.suffix = 'e',
+ 	},
+ 	{
+ 		.board_info = {
+@@ -855,6 +884,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER_2,
+ 		.rx_port = 1,
+ 		.phy_i2c_addr = OV10640_I2C_PHY_ADDR,
++		.suffix = 'f',
+ 	},
+ 	{
+ 		.board_info = {
+@@ -865,6 +895,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER_2,
+ 		.rx_port = 2,
+ 		.phy_i2c_addr = OV10640_I2C_PHY_ADDR,
++		.suffix = 'g',
+ 	},
+ 	{
+ 		.board_info = {
+@@ -875,6 +906,7 @@
+ 		.i2c_adapter_id = TI964_I2C_ADAPTER_2,
+ 		.rx_port = 3,
+ 		.phy_i2c_addr = OV10640_I2C_PHY_ADDR,
++		.suffix = 'h',
+ 	},
+ #endif
+ };
+@@ -883,6 +915,7 @@
+ 	.subdev_info = ti964_subdevs,
+ 	.subdev_num = ARRAY_SIZE(ti964_subdevs),
+ 	.reset_gpio = GPIO_BASE + 63,
++	.suffix = 'a',
+ };
+ 
+ static struct ipu_isys_subdev_info ti964_sd = {
+@@ -901,6 +934,7 @@
+ 	.subdev_info = ti964_subdevs_2,
+ 	.subdev_num = ARRAY_SIZE(ti964_subdevs_2),
+ 	.reset_gpio = GPIO_BASE + 66,
++	.suffix = 'b',
+ };
+ 
+ static struct ipu_isys_subdev_info ti964_sd_2 = {
+@@ -927,6 +961,7 @@
+ 	.op_sys_clock = (uint64_t []){ 480000000 },
+ 	.module_name = "OV2775",
+ 	.id_string = "0x27 0x70",
++	.suffix = 'a',
+ 	/*
+ 	 * The pin number of xshutdown will be determined
+ 	 * and replaced inside TI960 driver.
+@@ -987,6 +1022,7 @@
+ 				.platform_data = &ar0231at_pdata,
+ 			},
+ 			.i2c_adapter_id = DS_MAX9286_I2C_ADAPTER,
++			.suffix = 'a',
+ 		},
+ 		{
+ 			.board_info = {
+@@ -995,6 +1031,7 @@
+ 				.platform_data = &ar0231at_pdata,
+ 			},
+ 			.i2c_adapter_id = DS_MAX9286_I2C_ADAPTER,
++			.suffix = 'b',
+ 		},
+ 		{
+ 			.board_info = {
+@@ -1003,6 +1040,7 @@
+ 				.platform_data = &ar0231at_pdata,
+ 			},
+ 			.i2c_adapter_id = DS_MAX9286_I2C_ADAPTER,
++			.suffix = 'c',
+ 		},
+ 		{
+ 			.board_info = {
+@@ -1011,6 +1049,7 @@
+ 				.platform_data = &ar0231at_pdata,
+ 			},
+ 			.i2c_adapter_id = DS_MAX9286_I2C_ADAPTER,
++			.suffix = 'd',
+ 		},
+ #endif
+ };
+@@ -1019,6 +1058,7 @@
+ 	.subdev_info = max9286_subdevs,
+ 	.subdev_num = ARRAY_SIZE(max9286_subdevs),
+ 	.reset_gpio = GPIO_BASE + 63,
++	.suffix = 'a',
+ };
+ 
+ static struct ipu_isys_subdev_info max9286_sd = {
+diff --git a/include/media/crlmodule.h b/include/media/crlmodule.h
+index 4517430..ead1beb 100644
+--- a/include/media/crlmodule.h
++++ b/include/media/crlmodule.h
+@@ -36,6 +36,7 @@ struct crlmodule_platform_data {
+ 	unsigned int irq_pin_flags;
+ 	char irq_pin_name[16];
+ 	const char *id_string;
++	char suffix; /* suffix to identify multi sensors, abcd.. */
+ 	unsigned int high_framevalid_flags; /* high framevaild flags*/
+ };
+ 
+diff --git a/include/media/max9286.h b/include/media/max9286.h
+index a0d935d..68d3856 100644
+--- a/include/media/max9286.h
++++ b/include/media/max9286.h
+@@ -40,12 +40,14 @@ struct max9286_csi_data_format {
+ struct max9286_subdev_i2c_info {
+ 	struct i2c_board_info board_info;
+ 	int i2c_adapter_id;
++	const char suffix; /* suffix for subdevs */
+ };
+ 
+ struct max9286_pdata {
+ 	unsigned int subdev_num;
+ 	struct max9286_subdev_i2c_info *subdev_info;
+ 	unsigned int reset_gpio;
++	const char suffix; /* suffix for multi aggregators, abcd... */
+ };
+ 
+ #endif
+diff --git a/include/media/ti964.h b/include/media/ti964.h
+index 28ffaac..ab5ee21 100644
+--- a/include/media/ti964.h
++++ b/include/media/ti964.h
+@@ -46,12 +46,14 @@ struct ti964_subdev_info {
+ 	int i2c_adapter_id;
+ 	unsigned short rx_port;
+ 	unsigned short phy_i2c_addr;
++	const char suffix; /* suffix for subdevs */
+ };
+ 
+ struct ti964_pdata {
+ 	unsigned int subdev_num;
+ 	struct ti964_subdev_info *subdev_info;
+ 	unsigned int reset_gpio;
++	const char suffix; /* suffix for multi aggregators, abcd... */
+ };
+ 
+ #endif
+-- 
+1.9.1
+

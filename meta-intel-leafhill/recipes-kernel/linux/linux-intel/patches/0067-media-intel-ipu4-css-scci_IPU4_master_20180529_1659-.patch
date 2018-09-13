@@ -1,0 +1,52 @@
+From 38b46dd6a66653b56eda2c68f12a5d5a975161b7 Mon Sep 17 00:00:00 2001
+From: icg_intg <icg_intg@intel.com>
+Date: Thu, 31 May 2018 10:26:39 +0800
+Subject: [PATCH 067/129] media: intel-ipu4: css:
+ scci_IPU4_master_20180529_1659 fw release
+
+Message for Open Source:
+New firmware css release.
+
+Message for Internal:
+[Feature]New firmware css release.
+[Root Cause/Changes]
+FW_Manifest_ID: 3a3b2f9b1f734cbb9b8e059672aa1e82dabac0de
+FW_Build_Branch: IPU4_master
+FW_Build_Topic: auto_merge_queue
+library version: commit-id 0ede218
+FW Bundle patch number of this release :  332149
+FW tag : scci_IPU4_master_20180529_1659
+
+Change-Id: I4b3693abea0e70fbdfc7e35241cbafb81589e942
+Depends-on: Iff37ca10e339332b812544279a2cd79531a96c48
+Depends-on: I3453c64fe22a60cfd8dd700d62a1269bd1a08c3a
+Signed-off-by: icg_intg <icg_intg@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h           | 2 +-
+ .../lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h        | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+index 60a0f99..eea56e7 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180526
++#define IA_CSS_FW_PKG_RELEASE  0x20180529
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+index 60a0f99..eea56e7 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180526
++#define IA_CSS_FW_PKG_RELEASE  0x20180529
+-- 
+1.9.1
+

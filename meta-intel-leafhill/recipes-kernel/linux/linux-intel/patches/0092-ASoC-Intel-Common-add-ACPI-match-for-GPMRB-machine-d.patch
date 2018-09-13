@@ -1,0 +1,37 @@
+From 910853bc3e8352ed047ecf62e271f72c4608402e Mon Sep 17 00:00:00 2001
+From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
+Date: Tue, 18 Sep 2018 18:05:28 +0800
+Subject: [PATCH 92/98] ASoC: Intel: Common: add ACPI match for GPMRB machine
+ driver
+
+Load GPMRB machine driver and ADSPFW.bin when ACPI ID INT34C3
+is matched.
+
+Signed-off-by: Ho, Yu Xin <yu.xin.ho@intel.com>
+---
+ sound/soc/intel/common/soc-acpi-intel-bxt-match.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/sound/soc/intel/common/soc-acpi-intel-bxt-match.c b/sound/soc/intel/common/soc-acpi-intel-bxt-match.c
+index 421fd39..61488f8 100644
+--- a/sound/soc/intel/common/soc-acpi-intel-bxt-match.c
++++ b/sound/soc/intel/common/soc-acpi-intel-bxt-match.c
+@@ -51,10 +51,15 @@ struct snd_soc_acpi_mach snd_soc_acpi_intel_bxt_machines[] = {
+ 	},
+ 	{
+ 		.id = "INT34C3",
++#if IS_ENABLED(CONFIG_SND_SOC_INTEL_BXT_GPMRB_MACH)
++		.drv_name = "gpmrb_machine",
++		.fw_filename = "ADSPFW.bin",
++#else
+ 		.drv_name = "bxt_tdf8532",
+ 		.sof_fw_filename = "intel/sof-apl.ri",
+ 		.sof_tplg_filename = "intel/sof-apl-tdf8532.tplg",
+ 		.asoc_plat_name = "0000:00:0e.0",
++#endif
+ 	},
+ 	{
+ 		.id = "INT344A",
+-- 
+1.9.1
+

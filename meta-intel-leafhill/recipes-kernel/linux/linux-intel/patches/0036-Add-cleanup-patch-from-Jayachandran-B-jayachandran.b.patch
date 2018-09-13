@@ -1,7 +1,7 @@
-From 8f8b9c3aee873cc4134c23f18d1ab5680ab9bd35 Mon Sep 17 00:00:00 2001
+From 40c1821f1c9a76e9f55f1ff30c3532551442850b Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Thu, 23 Jun 2016 10:20:21 +0100
-Subject: [PATCH 36/96] Add cleanup patch from Jayachandran B
+Subject: [PATCH 036/102] Add cleanup patch from Jayachandran B
  <jayachandran.b@intel.com>
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 36/96] Add cleanup patch from Jayachandran B
  1 file changed, 55 insertions(+), 55 deletions(-)
 
 diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
-index 2a5848a..5cf2d4a 100644
+index 003a02f..6f7ccb6 100644
 --- a/sound/soc/codecs/tdf8532.c
 +++ b/sound/soc/codecs/tdf8532.c
 @@ -10,9 +10,6 @@
@@ -139,9 +139,9 @@ index 2a5848a..5cf2d4a 100644
  };
  
  
-@@ -108,18 +101,25 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
+@@ -107,18 +100,25 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
+ 		const struct i2c_device_id *id)
  {
- 
  	int ret;
 -	tdf8532.tdf8532_i2c_client = i2c;
 +	struct tdf8532_priv *tdf8532;
@@ -173,7 +173,7 @@ index 2a5848a..5cf2d4a 100644
  
  }
  
-@@ -130,20 +130,20 @@ static int tdf8532_i2c_remove(struct i2c_client *i2c)
+@@ -129,20 +129,20 @@ static int tdf8532_i2c_remove(struct i2c_client *i2c)
  }
  
  static const struct i2c_device_id tdf8532_i2c_id[] = {

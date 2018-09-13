@@ -1,0 +1,101 @@
+From 8efb9992ac04db879c7ecc2d06b3b09c22692a77 Mon Sep 17 00:00:00 2001
+From: "Ng, Khai Wen" <khai.wen.ng@intel.com>
+Date: Fri, 3 Aug 2018 11:48:47 +0800
+Subject: [PATCH 113/129] media: intel-ipu4: crlmodule: Modify ACPI ext clk
+
+ACPI ext clk does not match with crlmodule pll input clock.
+
+Signed-off-by: Ng, Khai Wen <khai.wen.ng@intel.com>
+
+Change-Id: Iafac88cc7de6eeeed0cc57868d9b12bb2c9ed53b
+Signed-off-by: Ng, Khai Wen <khai.wen.ng@intel.com>
+---
+ .../i2c/crlmodule-lite/crl_adv7481_cvbs_configuration.h     | 11 +++++++++++
+ .../media/i2c/crlmodule/crl_adv7481_hdmi_configuration.h    |  2 +-
+ drivers/media/platform/intel/ipu4-acpi.c                    | 13 ++++++-------
+ 3 files changed, 18 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/media/i2c/crlmodule-lite/crl_adv7481_cvbs_configuration.h b/drivers/media/i2c/crlmodule-lite/crl_adv7481_cvbs_configuration.h
+index 841bba3..7e00727 100644
+--- a/drivers/media/i2c/crlmodule-lite/crl_adv7481_cvbs_configuration.h
++++ b/drivers/media/i2c/crlmodule-lite/crl_adv7481_cvbs_configuration.h
+@@ -61,6 +61,17 @@
+ 
+ static struct crl_pll_configuration adv7481_cvbs_pll_configurations[] = {
+ 	{
++		.input_clk = 286363636,
++		.op_sys_clk = 216000000,
++		.bitsperpixel = 16,
++		.pixel_rate_csi = 130000000,
++		.pixel_rate_pa = 130000000,
++		.comp_items = 0,
++		.ctrl_data = 0,
++		.pll_regs_items = 0,
++		.pll_regs = NULL,
++	},
++	{
+ 		.input_clk = 24000000,
+ 		.op_sys_clk = 130000000,
+ 		.bitsperpixel = 16,
+diff --git a/drivers/media/i2c/crlmodule/crl_adv7481_hdmi_configuration.h b/drivers/media/i2c/crlmodule/crl_adv7481_hdmi_configuration.h
+index 9a7eca4..aa13b0e 100644
+--- a/drivers/media/i2c/crlmodule/crl_adv7481_hdmi_configuration.h
++++ b/drivers/media/i2c/crlmodule/crl_adv7481_hdmi_configuration.h
+@@ -940,7 +940,7 @@ struct crl_ctrl_data_pair hdmi_ctrl_data_lanes[] = {
+ 	.csi_fmts_items = ARRAY_SIZE(adv7481_hdmi_crl_csi_data_fmt),
+ 	.csi_fmts = adv7481_hdmi_crl_csi_data_fmt,
+ 
+-	.irq_in_use = true,
++	.irq_in_use = false,
+ 	.crl_irq_fn = NULL,
+ 	.crl_threaded_irq_fn = crl_adv7481_threaded_irq_fn,
+ 
+diff --git a/drivers/media/platform/intel/ipu4-acpi.c b/drivers/media/platform/intel/ipu4-acpi.c
+index 8c880d3..ec027b0 100644
+--- a/drivers/media/platform/intel/ipu4-acpi.c
++++ b/drivers/media/platform/intel/ipu4-acpi.c
+@@ -531,7 +531,7 @@ static int ipu_acpi_get_sensor_data(struct device *dev,
+ 			return rval;
+ 		}
+ 		/* we have 24 MHz clock for sensors now */
+-		data->ext_clk = 24000000;
++		data->ext_clk = 286363636;
+ 	}
+ 
+ 	/* dsdt data currently contains wrong numbers for combo ports */
+@@ -646,6 +646,7 @@ static int get_crlmodule_pdata(struct i2c_client *client,
+ 	return rval;
+ }
+ 
++#if defined (CONFIG_VIDEO_INTEL_ICI)
+ static int get_crlmodule_lite_pdata(struct i2c_client *client,
+ 			       struct ipu4_camera_module_data *data,
+ 			       struct ipu4_i2c_helper *helper,
+@@ -676,7 +677,9 @@ static int get_crlmodule_lite_pdata(struct i2c_client *client,
+ 	pdata->xshutdown = get_sensor_gpio(sensor.dev, 0);
+ 	if (pdata->xshutdown < 0) {
+ 		rval = pdata->xshutdown;
+-		goto err_free_pdata;
++		kfree(pdata);
++		data->pdata = NULL;
++		return rval;
+ 	}
+ #endif
+ 	pdata->lanes = data->csi2.nlanes;
+@@ -694,12 +697,8 @@ static int get_crlmodule_lite_pdata(struct i2c_client *client,
+ 		 i2c[1].bus, i2c[1].addr, vcm);
+ 
+ 	return add_new_i2c(i2c[1].addr, i2c[1].bus, 0, vcm, vcm_pdata);
+-
+-err_free_pdata:
+-	kfree(pdata);
+-	data->pdata = NULL;
+-	return rval;
+ }
++#endif
+ 
+ static int get_smiapp_pdata(struct i2c_client *client,
+ 			    struct ipu4_camera_module_data *data,
+-- 
+1.9.1
+

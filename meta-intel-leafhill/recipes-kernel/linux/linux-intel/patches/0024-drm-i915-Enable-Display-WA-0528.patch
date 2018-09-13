@@ -1,7 +1,7 @@
-From 9473b1c675f48af7bde00b8edf76cc20c98af88b Mon Sep 17 00:00:00 2001
+From 98c57e4405a6ec85e327bd839cd13466a7ee3001 Mon Sep 17 00:00:00 2001
 From: Vidya Srinivas <vidya.srinivas@intel.com>
 Date: Sat, 12 May 2018 03:03:13 +0530
-Subject: [PATCH 24/41] drm/i915: Enable Display WA 0528
+Subject: [PATCH 24/44] drm/i915: Enable Display WA 0528
 
 Possible hang with NV12 plane surface formats.
 WA: When the plane source pixel format is NV12,
@@ -27,7 +27,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 19 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 3a67a59..3025485 100644
+index d14a8a4..5f43361 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -495,9 +495,21 @@ static void intel_update_czclk(struct drm_i915_private *dev_priv)
@@ -53,7 +53,7 @@ index 3a67a59..3025485 100644
  		return;
  
  	if (enable)
-@@ -5255,8 +5267,10 @@ static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
+@@ -5317,8 +5329,10 @@ static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
  
  	/* Display WA 827 */
  	if (needs_nv12_wa(dev_priv, old_crtc_state) &&
@@ -65,7 +65,7 @@ index 3a67a59..3025485 100644
  }
  
  static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
-@@ -5288,8 +5302,10 @@ static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
+@@ -5350,8 +5364,10 @@ static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
  
  	/* Display WA 827 */
  	if (!needs_nv12_wa(dev_priv, old_crtc_state) &&

@@ -1,0 +1,89 @@
+From 6ae4b4f863ff16564612d0bdeb6769cec16fc8a4 Mon Sep 17 00:00:00 2001
+From: Chen Meng J <meng.j.chen@intel.com>
+Date: Tue, 19 Jun 2018 17:10:14 +0800
+Subject: [PATCH 103/129] media: intel-ipu4: moving max streams macro
+
+Message for Open Source:
+Moving MAX_STREAM macro to platform header.
+This is done to make to it agnostic.
+
+Change-Id: I29f05c596e1dbc72e17991e889401f7e9e990593
+Tracked-On: #H1504723286
+Signed-off-by: Chen Meng J <meng.j.chen@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ici/libintel-ipu4_ici.c         | 2 ++
+ drivers/media/pci/intel/ipu.h                           | 2 --
+ drivers/media/pci/intel/ipu4/ipu-platform.h             | 2 ++
+ drivers/media/pci/intel/ipu4/ipu4-css/libintel-ipu4.c   | 2 ++
+ drivers/media/pci/intel/ipu4/ipu4p-css/libintel-ipu4p.c | 2 ++
+ 5 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ici/libintel-ipu4_ici.c b/drivers/media/pci/intel/ici/libintel-ipu4_ici.c
+index 087e657..b4fc334 100644
+--- a/drivers/media/pci/intel/ici/libintel-ipu4_ici.c
++++ b/drivers/media/pci/intel/ici/libintel-ipu4_ici.c
+@@ -8,6 +8,8 @@
+ #include "ipu-wrapper.h"
+ #include <ia_css_isysapi.h>
+ 
++#include "ipu-platform.h"
++
+ #define ipu_lib_call_notrace_unlocked(func, isys, ...)		\
+ 	({								\
+ 		int rval;						\
+diff --git a/drivers/media/pci/intel/ipu.h b/drivers/media/pci/intel/ipu.h
+index 7f15a19..3c1241e 100644
+--- a/drivers/media/pci/intel/ipu.h
++++ b/drivers/media/pci/intel/ipu.h
+@@ -26,8 +26,6 @@
+ #define IS_FREQ_SOURCE			1600000000
+ #define IS_FREQ_CTL_DIVISOR		0x4
+ 
+-#define IPU_ISYS_NUM_STREAMS		8	/* Max 8 */
+-
+ /*
+  * ISYS DMA can overshoot. For higher resolutions over allocation is one line
+  * but it must be at minimum 1024 bytes. Value could be different in
+diff --git a/drivers/media/pci/intel/ipu4/ipu-platform.h b/drivers/media/pci/intel/ipu4/ipu-platform.h
+index e6f2dae..d8af4ba 100644
+--- a/drivers/media/pci/intel/ipu4/ipu-platform.h
++++ b/drivers/media/pci/intel/ipu4/ipu-platform.h
+@@ -29,6 +29,8 @@
+ #define IPU_HW_BXT_P_D0_REV	0xb
+ #define IPU_HW_BXT_P_E0_REV	0xc
+ 
++#define IPU_ISYS_NUM_STREAMS            8       /* Max 8 */
++
+ /* BXTP E0 has icache bug fixed */
+ #define is_ipu_hw_bxtp_e0(isp)			\
+ 	({ typeof(isp) __isp = (isp); \
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/libintel-ipu4.c b/drivers/media/pci/intel/ipu4/ipu4-css/libintel-ipu4.c
+index 98ad22a..89234c0 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/libintel-ipu4.c
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/libintel-ipu4.c
+@@ -8,6 +8,8 @@
+ #include "ipu-wrapper.h"
+ #include <ia_css_isysapi.h>
+ 
++#include "ipu-platform.h"
++
+ #define ipu_lib_call_notrace_unlocked(func, isys, ...)		\
+ 	({								\
+ 		int rval;						\
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/libintel-ipu4p.c b/drivers/media/pci/intel/ipu4/ipu4p-css/libintel-ipu4p.c
+index 37f84d6..b6c5f1c 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/libintel-ipu4p.c
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/libintel-ipu4p.c
+@@ -8,6 +8,8 @@
+ #include "ipu-wrapper.h"
+ #include <ia_css_isysapi.h>
+ 
++#include "ipu-platform.h"
++
+ #define ipu_lib_call_notrace_unlocked(func, isys, ...)		\
+ 	({								\
+ 		int rval;						\
+-- 
+1.9.1
+

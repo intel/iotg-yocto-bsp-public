@@ -1,0 +1,62 @@
+From 104a81fd5a4d2d1b7680cf6398ca965e98902614 Mon Sep 17 00:00:00 2001
+From: Tianshu Qiu <tian.shu.qiu@intel.com>
+Date: Fri, 4 May 2018 15:07:24 +0800
+Subject: [PATCH 004/129] media: intel-ipu4: imx355: Be compatible for kernel
+ 4.4 and 4.14
+
+Message for Open Source:
+Wrap code with kernel version checking to make driver be compatible
+with both kernel 4.4 and 4.14.
+
+Message for Internal:
+[Issue/Feature] imx355 driver needs kernel version adapation as it is
+used for both KBL(kernel 4.4) and CNL/ICL(kernel 4.14)
+[Root Cause/Changes] Wrap code to make driver compatible for both
+kernel 4.4 and 4.14. v4l2_async_register_subdev_sensor_common()
+is a special case. It has been upstreamed but does not exist in
+kernel 4.4 and 4.14. Google kernel has back ported this patch
+so it has this function. As this driver is only used in
+google kernel, no macro wraping is applied for this function.
+
+Change-Id: Idcd130f668b339f4238c9994e9bc282bfe83feac
+Tracked-On: #JICCCN-171
+Signed-off-by: Tianshu Qiu <tian.shu.qiu@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/i2c/imx355.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/imx355.c b/drivers/media/i2c/imx355.c
+index 3681df6..dbcd423 100644
+--- a/drivers/media/i2c/imx355.c
++++ b/drivers/media/i2c/imx355.c
+@@ -1710,17 +1710,25 @@ static int imx355_probe(struct i2c_client *client,
+ 	imx355->sd.internal_ops = &imx355_internal_ops;
+ 	imx355->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE;
+ 	imx355->sd.entity.ops = &imx355_subdev_entity_ops;
++#if LINUX_VERSION_CODE > KERNEL_VERSION(4, 4, 0)
+ 	imx355->sd.entity.function = MEDIA_ENT_F_CAM_SENSOR;
++#else
++	imx355->sd.entity.type = MEDIA_ENT_T_V4L2_SUBDEV_SENSOR;
++#endif
+ 
+ 	/* Initialize source pad */
+ 	imx355->pad.flags = MEDIA_PAD_FL_SOURCE;
++#if LINUX_VERSION_CODE > KERNEL_VERSION(4, 4, 0)
+ 	ret = media_entity_pads_init(&imx355->sd.entity, 1, &imx355->pad);
++#else
++	ret = media_entity_init(&imx355->sd.entity, 1, &imx355->pad, 0);
++#endif
+ 	if (ret) {
+ 		dev_err(&client->dev, "%s failed:%d\n", __func__, ret);
+ 		goto error_handler_free;
+ 	}
+ 
+-	ret = v4l2_async_register_subdev(&imx355->sd);
++	ret = v4l2_async_register_subdev_sensor_common(&imx355->sd);
+ 	if (ret < 0)
+ 		goto error_media_entity;
+ 
+-- 
+1.9.1
+

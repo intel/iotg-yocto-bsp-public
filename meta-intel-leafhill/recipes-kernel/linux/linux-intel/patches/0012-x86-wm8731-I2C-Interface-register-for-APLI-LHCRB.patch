@@ -1,7 +1,7 @@
-From 6979b8b3f5d616a2ab77f1b6c3cdb973a8e11161 Mon Sep 17 00:00:00 2001
+From 8c6b0437aa7f0eb88b155ffc4853f33db63e1472 Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Mon, 4 Jul 2016 17:44:07 +0800
-Subject: [PATCH 12/96] x86: wm8731 I2C Interface register for APLI LHCRB
+Subject: [PATCH 012/102] x86: wm8731 I2C Interface register for APLI LHCRB
 
 This commit register I2C bus 3 for wm8731 codec specific for
 Apollo Lake-I Leaf Hill CRB
@@ -17,10 +17,10 @@ Signed-off-by: Tan, Seng Kai <seng.kai.tan@intel.com>
  create mode 100644 arch/x86/platform/apli_lhcrb/apli_lhcrb_wm8731_i2c.c
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index b4d015e..7985fbb 100644
+index ffd5802..40b8dfc 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
-@@ -672,6 +672,14 @@ config X86_32_NON_STANDARD
+@@ -673,6 +673,14 @@ config X86_32_NON_STANDARD
  	  kernel. If you select them all, kernel will probe it one by
  	  one and will fallback to default.
  

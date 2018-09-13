@@ -1,0 +1,38 @@
+From aed8155943c50fa37c670ebb300d5017a5510f19 Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Thu, 23 Aug 2018 17:12:14 -0700
+Subject: [PATCH 42/44] drm/i915: Add a little bit more debug output to
+ MIPI-DSI readout
+
+We'd like a little bit more information about how the BIOS setup our
+MIPI panels before the driver started, especially when dual-link panels
+are in use.
+
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_dsi.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_dsi.c b/drivers/gpu/drm/i915/intel_dsi.c
+index 81290d1..32c1ef3 100644
+--- a/drivers/gpu/drm/i915/intel_dsi.c
++++ b/drivers/gpu/drm/i915/intel_dsi.c
+@@ -1133,8 +1133,14 @@ static void bxt_dsi_get_pipe_config(struct intel_encoder *encoder,
+ 	 * encoder->get_hw_state() returns true.
+ 	 */
+ 	for_each_dsi_port(port, intel_dsi->ports) {
+-		if (I915_READ(BXT_MIPI_PORT_CTRL(port)) & DPI_ENABLE)
++		u32 val = I915_READ(BXT_MIPI_PORT_CTRL(port));
++		if (val & DPI_ENABLE) {
++			DRM_DEBUG_KMS("DSI-%d: dual_link = %d, dl mode = %d\n",
++				      port,
++				      val & LANE_CONFIGURATION_DUAL_LINK_A,
++				      val & DUAL_LINK_MODE_MASK);
+ 			break;
++		}
+ 	}
+ 
+ 	fmt = I915_READ(MIPI_DSI_FUNC_PRG(port)) & VID_MODE_FORMAT_MASK;
+-- 
+1.9.1
+

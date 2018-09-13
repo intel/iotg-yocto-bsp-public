@@ -1,7 +1,7 @@
-From d841e5e3d9182132ef98e80e170cea431b909efe Mon Sep 17 00:00:00 2001
+From 6dc6735f1b4d454f963764da33150ca52576a242 Mon Sep 17 00:00:00 2001
 From: Joshua Wong Weng Onn <joshua.weng.onn.wong@intel.com>
 Date: Tue, 3 Jul 2018 09:07:21 +0800
-Subject: [PATCH 23/96] ASoC: Intel: Revert "ASoC: Intel: Skylake: Remove
+Subject: [PATCH 023/102] ASoC: Intel: Revert "ASoC: Intel: Skylake: Remove
  unused soc component and topology param definition that causes kernel crash"
 
 This reverts commit a4dbe6c82fe6654930489d978994112399e4e1f9
@@ -16,10 +16,10 @@ Signed-off-by: Joshua Wong Weng Onn <joshua.weng.onn.wong@intel.com>
  2 files changed, 7 insertions(+), 7 deletions(-)
 
 diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
-index bcb3aed..cf4469f 100755
+index 1fc8309..89c847b 100755
 --- a/sound/soc/intel/skylake/skl-pcm.c
 +++ b/sound/soc/intel/skylake/skl-pcm.c
-@@ -2391,8 +2391,8 @@ static int skl_platform_soc_probe(struct snd_soc_platform *platform)
+@@ -2390,8 +2390,8 @@ static int skl_platform_soc_probe(struct snd_soc_platform *platform)
  
  static const struct snd_soc_component_driver skl_component = {
  	.name           = "pcm",

@@ -1,7 +1,7 @@
-From 14403cfb5d89419142839611d260c9723b88d973 Mon Sep 17 00:00:00 2001
+From 90ca9b85baaa06d90507af05e71e22cd7d62c28f Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:03:24 +0100
-Subject: [PATCH 05/43] intel_pstate: Add pstate notifier callback
+Subject: [PATCH 05/42] intel_pstate: Add pstate notifier callback
 
 Whenever the CPU frequency is changed, notify any other kernel processes
 that have registered to receive this information.
@@ -13,7 +13,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 32 insertions(+)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index c1b459d..06e5364 100644
+index 72fe151..2db8a14 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -30,6 +30,7 @@
@@ -33,7 +33,7 @@ index c1b459d..06e5364 100644
  static inline int32_t mul_fp(int32_t x, int32_t y)
  {
  	return ((int64_t)x * (int64_t)y) >> FRAC_BITS;
-@@ -1374,6 +1377,33 @@ static int intel_pstate_get_base_pstate(struct cpudata *cpu)
+@@ -1375,6 +1378,33 @@ static int intel_pstate_get_base_pstate(struct cpudata *cpu)
  			cpu->pstate.max_pstate : cpu->pstate.turbo_pstate;
  }
  
@@ -67,7 +67,7 @@ index c1b459d..06e5364 100644
  static void intel_pstate_set_pstate(struct cpudata *cpu, int pstate)
  {
  	trace_cpu_frequency(pstate * cpu->pstate.scaling, cpu->cpu);
-@@ -1385,6 +1415,8 @@ static void intel_pstate_set_pstate(struct cpudata *cpu, int pstate)
+@@ -1386,6 +1416,8 @@ static void intel_pstate_set_pstate(struct cpudata *cpu, int pstate)
  	 */
  	wrmsrl_on_cpu(cpu->cpu, MSR_IA32_PERF_CTL,
  		      pstate_funcs.get_val(cpu, pstate));

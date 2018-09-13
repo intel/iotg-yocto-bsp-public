@@ -1,7 +1,7 @@
-From 42ae933ca6b3e482606690b1bb1cdbdf38b8f6b0 Mon Sep 17 00:00:00 2001
+From 0b48d6d409bdf9422283764da2cc1bd2f93b7dea Mon Sep 17 00:00:00 2001
 From: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
 Date: Sat, 12 May 2018 03:03:14 +0530
-Subject: [PATCH 26/41] drm/i915: Add skl_check_nv12_surface for NV12
+Subject: [PATCH 26/44] drm/i915: Add skl_check_nv12_surface for NV12
 
 We skip src trunction/adjustments for
 NV12 case and handle the sizes directly.
@@ -32,7 +32,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  2 files changed, 28 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index adff6a9..69df919 100644
+index ad01921..1c290de 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -3071,6 +3071,28 @@ static int skl_check_main_surface(struct intel_plane_state *plane_state)
@@ -74,7 +74,7 @@ index adff6a9..69df919 100644
  		ret = skl_check_nv12_aux_surface(plane_state);
  		if (ret)
  			return ret;
-@@ -4896,8 +4921,7 @@ static void cpt_verify_modeset(struct drm_device *dev, int pipe)
+@@ -4958,8 +4983,7 @@ static void cpt_verify_modeset(struct drm_device *dev, int pipe)
  	}
  
  	if (plane_scaler_check && pixel_format == DRM_FORMAT_NV12 &&
@@ -85,10 +85,10 @@ index adff6a9..69df919 100644
  		return -EINVAL;
  	}
 diff --git a/drivers/gpu/drm/i915/intel_sprite.c b/drivers/gpu/drm/i915/intel_sprite.c
-index 2399119..730ce15 100644
+index d353ef2..cc6482c 100644
 --- a/drivers/gpu/drm/i915/intel_sprite.c
 +++ b/drivers/gpu/drm/i915/intel_sprite.c
-@@ -1071,7 +1071,8 @@ static u32 g4x_sprite_ctl(const struct intel_crtc_state *crtc_state,
+@@ -1140,7 +1140,8 @@ static u32 g4x_sprite_ctl(const struct intel_crtc_state *crtc_state,
  		src_y = src->y1 >> 16;
  		src_h = drm_rect_height(src) >> 16;
  

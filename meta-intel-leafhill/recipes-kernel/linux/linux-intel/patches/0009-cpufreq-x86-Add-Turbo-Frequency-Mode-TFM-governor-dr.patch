@@ -1,7 +1,7 @@
-From dd1b54a3f429eb8f50f52faeee4cc8272a55506a Mon Sep 17 00:00:00 2001
+From b547d86e84204373757146a0656093e0ef4cfb23 Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Mon, 17 Apr 2017 13:24:50 +0800
-Subject: [PATCH 09/43] cpufreq/x86: Add Turbo Frequency Mode (TFM) governor
+Subject: [PATCH 09/42] cpufreq/x86: Add Turbo Frequency Mode (TFM) governor
  driver for Apollo Lake
 
 The TFM Governor module manages the turbo frequency mode usage and budget

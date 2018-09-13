@@ -1,7 +1,7 @@
-From 3e858469d3a663460be245756589198aa880be6d Mon Sep 17 00:00:00 2001
+From 974dcc12ecdf0db76aa6aaeaa6f2e0a90324e3df Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 6 Dec 2016 11:18:21 +0800
-Subject: [PATCH 21/43] igb: Make igb_runtime_idle to autosuspend irregardless
+Subject: [PATCH 21/41] igb: Make igb_runtime_idle to autosuspend irregardless
  of link status for RTD3
 
 igb_runtime_idle change is meant for RTD3, that is why we are

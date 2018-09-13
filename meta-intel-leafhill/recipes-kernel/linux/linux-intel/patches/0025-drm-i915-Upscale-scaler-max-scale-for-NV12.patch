@@ -1,7 +1,7 @@
-From 69e90c4db338df21a378ed4642d5b05c011166d3 Mon Sep 17 00:00:00 2001
+From ed7f7a274d48979cc087cf530622f56bf91b5dd0 Mon Sep 17 00:00:00 2001
 From: Chandra Konduru <chandra.konduru@intel.com>
 Date: Mon, 9 Apr 2018 09:11:13 +0530
-Subject: [PATCH 25/41] drm/i915: Upscale scaler max scale for NV12
+Subject: [PATCH 25/44] drm/i915: Upscale scaler max scale for NV12
 
 This patch updates scaler max limit support for NV12
 
@@ -84,7 +84,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  3 files changed, 46 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 3025485..adff6a9 100644
+index 5f43361..ad01921 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -3505,6 +3505,8 @@ static u32 skl_plane_ctl_format(uint32_t pixel_format, enum i915_alpha alpha)
@@ -96,7 +96,7 @@ index 3025485..adff6a9 100644
  	default:
  		MISSING_CASE(pixel_format);
  	}
-@@ -4830,7 +4832,9 @@ static void cpt_verify_modeset(struct drm_device *dev, int pipe)
+@@ -4892,7 +4894,9 @@ static void cpt_verify_modeset(struct drm_device *dev, int pipe)
  static int
  skl_update_scaler(struct intel_crtc_state *crtc_state, bool force_detach,
  		  unsigned int scaler_user, int *scaler_id,
@@ -107,7 +107,7 @@ index 3025485..adff6a9 100644
  {
  	struct intel_crtc_scaler_state *scaler_state =
  		&crtc_state->scaler_state;
-@@ -4848,6 +4852,10 @@ static void cpt_verify_modeset(struct drm_device *dev, int pipe)
+@@ -4910,6 +4914,10 @@ static void cpt_verify_modeset(struct drm_device *dev, int pipe)
  	 */
  	need_scaling = src_w != dst_w || src_h != dst_h;
  
@@ -118,7 +118,7 @@ index 3025485..adff6a9 100644
  	if (crtc_state->ycbcr420 && scaler_user == SKL_CRTC_INDEX)
  		need_scaling = true;
  
-@@ -4887,6 +4895,13 @@ static void cpt_verify_modeset(struct drm_device *dev, int pipe)
+@@ -4949,6 +4957,13 @@ static void cpt_verify_modeset(struct drm_device *dev, int pipe)
  		return 0;
  	}
  
@@ -132,7 +132,7 @@ index 3025485..adff6a9 100644
  	/* range checks */
  	if (src_w < SKL_MIN_SRC_W || src_h < SKL_MIN_SRC_H ||
  		dst_w < SKL_MIN_DST_W || dst_h < SKL_MIN_DST_H ||
-@@ -4923,9 +4938,10 @@ int skl_update_scaler_crtc(struct intel_crtc_state *state)
+@@ -4985,9 +5000,10 @@ int skl_update_scaler_crtc(struct intel_crtc_state *state)
  	const struct drm_display_mode *adjusted_mode = &state->base.adjusted_mode;
  
  	return skl_update_scaler(state, !state->base.active, SKL_CRTC_INDEX,
@@ -146,7 +146,7 @@ index 3025485..adff6a9 100644
  }
  
  /**
-@@ -4955,7 +4971,8 @@ static int skl_update_scaler_plane(struct intel_crtc_state *crtc_state,
+@@ -5017,7 +5033,8 @@ static int skl_update_scaler_plane(struct intel_crtc_state *crtc_state,
  				drm_rect_width(&plane_state->base.src) >> 16,
  				drm_rect_height(&plane_state->base.src) >> 16,
  				drm_rect_width(&plane_state->base.dst),
@@ -156,7 +156,7 @@ index 3025485..adff6a9 100644
  
  	if (ret || plane_state->scaler_id < 0)
  		return ret;
-@@ -4981,6 +4998,7 @@ static int skl_update_scaler_plane(struct intel_crtc_state *crtc_state,
+@@ -5043,6 +5060,7 @@ static int skl_update_scaler_plane(struct intel_crtc_state *crtc_state,
  	case DRM_FORMAT_YVYU:
  	case DRM_FORMAT_UYVY:
  	case DRM_FORMAT_VYUY:
@@ -164,7 +164,7 @@ index 3025485..adff6a9 100644
  		break;
  	default:
  		DRM_DEBUG_KMS("[PLANE:%d:%s] FB:%d unsupported scaling format 0x%x\n",
-@@ -13144,11 +13162,13 @@ static int intel_atomic_commit(struct drm_device *dev,
+@@ -13206,11 +13224,13 @@ static int intel_atomic_commit(struct drm_device *dev,
  }
  
  int
@@ -181,7 +181,7 @@ index 3025485..adff6a9 100644
  
  	if (!intel_crtc || !crtc_state->base.enable)
  		return DRM_PLANE_HELPER_NO_SCALING;
-@@ -13170,8 +13190,10 @@ static int intel_atomic_commit(struct drm_device *dev,
+@@ -13232,8 +13252,10 @@ static int intel_atomic_commit(struct drm_device *dev,
  	 *            or
  	 *    cdclk/crtc_clock
  	 */
@@ -194,7 +194,7 @@ index 3025485..adff6a9 100644
  
  	return max_scale;
  }
-@@ -13187,12 +13209,16 @@ static int intel_atomic_commit(struct drm_device *dev,
+@@ -13249,12 +13271,16 @@ static int intel_atomic_commit(struct drm_device *dev,
  	int max_scale = DRM_PLANE_HELPER_NO_SCALING;
  	bool can_position = false;
  	int ret;
@@ -236,10 +236,10 @@ index 55ac6d7..c009937 100644
  static inline u32 intel_plane_ggtt_offset(const struct intel_plane_state *state)
  {
 diff --git a/drivers/gpu/drm/i915/intel_sprite.c b/drivers/gpu/drm/i915/intel_sprite.c
-index 740efac..2399119 100644
+index 7a4426b..d353ef2 100644
 --- a/drivers/gpu/drm/i915/intel_sprite.c
 +++ b/drivers/gpu/drm/i915/intel_sprite.c
-@@ -962,6 +962,7 @@ static u32 g4x_sprite_ctl(const struct intel_crtc_state *crtc_state,
+@@ -1031,6 +1031,7 @@ static u32 g4x_sprite_ctl(const struct intel_crtc_state *crtc_state,
  	int max_scale, min_scale;
  	bool can_scale;
  	int ret;
@@ -247,7 +247,7 @@ index 740efac..2399119 100644
  
  	*src = drm_plane_state_src(&state->base);
  	*dst = drm_plane_state_dest(&state->base);
-@@ -985,11 +986,14 @@ static u32 g4x_sprite_ctl(const struct intel_crtc_state *crtc_state,
+@@ -1054,11 +1055,14 @@ static u32 g4x_sprite_ctl(const struct intel_crtc_state *crtc_state,
  
  	/* setup can_scale, min_scale, max_scale */
  	if (INTEL_GEN(dev_priv) >= 9) {

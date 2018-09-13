@@ -1,7 +1,7 @@
-From 03261cb6f4b570427ee1d884eb23cc71a3a9475b Mon Sep 17 00:00:00 2001
+From e86cf2e9137560c23d20c02936373180b9f5a1c6 Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Tue, 10 Oct 2017 16:02:02 +0800
-Subject: [PATCH 19/96] ASoC: Intel: Skylake: Removed the S24_3LE format
+Subject: [PATCH 019/102] ASoC: Intel: Skylake: Removed the S24_3LE format
  support from generic driver
 
 Leaf Hill Hardware support the S16_LE, S24_LE and S32_LE format.

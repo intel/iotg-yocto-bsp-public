@@ -1,7 +1,7 @@
-From 60c625845fbc30f19ecbbe269eb345050ad54cd6 Mon Sep 17 00:00:00 2001
+From 0179877587ad311569639d4dee1c046913a1db3f Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:07 +0530
-Subject: [PATCH 19/41] drm/i915/skl+: nv12 workaround disable WM level 1-7
+Subject: [PATCH 19/44] drm/i915/skl+: nv12 workaround disable WM level 1-7
 
 Display Workaround #0826 (SKL:ALL BXT:ALL) & #1059(CNL:A)
 Hardware sometimes fails to wake memory from pkg C states fetching the
@@ -32,10 +32,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 11 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 2b5c809..f4d84d9 100644
+index 7edab4d..f9b7b67 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
-@@ -4610,6 +4610,17 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4611,6 +4611,17 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  		}
  	}
  

@@ -1,8 +1,8 @@
-From 08651af8ad381d68035d8865573aca620ed63e47 Mon Sep 17 00:00:00 2001
+From c97d7c5a8994c3ab85e1c7d60b04fd09662d10f7 Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Thu, 23 Jun 2016 08:53:43 +0800
-Subject: [PATCH 02/96] =?UTF-8?q?ASoC:=C2=A0Intel:=C2=A0Skylake:=C2=A0Add?=
- =?UTF-8?q?=20dummy=20machine=C2=A0drivers?=
+Subject: [PATCH 002/102] =?UTF-8?q?ASoC:=C2=A0Intel:=C2=A0Skylake:=C2=A0Ad?=
+ =?UTF-8?q?d=20dummy=20machine=C2=A0drivers?=
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -60,10 +60,10 @@ index 098e44b..7652bab 100644
  M:	Olli Salonen <olli.salonen@iki.fi>
  L:	linux-media@vger.kernel.org
 diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
-index 86584c3..6ce7705 100644
+index 1f53302..f7bbf74 100644
 --- a/sound/soc/intel/boards/Kconfig
 +++ b/sound/soc/intel/boards/Kconfig
-@@ -374,6 +374,17 @@ config SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH
+@@ -403,6 +403,17 @@ config SND_SOC_INTEL_CNL_RT274_MACH
  	   Say Y or m if you have such a device. This is a recommended option.
  	   If unsure select "N".
  
@@ -82,10 +82,10 @@ index 86584c3..6ce7705 100644
  
  endif ## SND_SOC_INTEL_MACH
 diff --git a/sound/soc/intel/boards/Makefile b/sound/soc/intel/boards/Makefile
-index 139e383..ec158f1 100644
+index 646b293b..a837e17 100644
 --- a/sound/soc/intel/boards/Makefile
 +++ b/sound/soc/intel/boards/Makefile
-@@ -29,6 +29,7 @@ snd-soc-bxtp_ivi_rse_rt298-objs := bxtp_ivi_rse_rt298.o
+@@ -30,6 +30,7 @@ snd-soc-bxtp_ivi_rse_rt298-objs := bxtp_ivi_rse_rt298.o
  snd-soc-bxtp_ivi_hu_rt298-objs := bxtp_ivi_hu_rt298.o
  snd-soc-bxtp_ivi_m3-objs := bxtp_ivi_m3.o
  snd-soc-bxtp_ivi_generic-objs := bxtp_ivi_generic.o
@@ -93,7 +93,7 @@ index 139e383..ec158f1 100644
  
  obj-$(CONFIG_SND_SOC_INTEL_HASWELL_MACH) += snd-soc-sst-haswell.o
  obj-$(CONFIG_SND_SOC_INTEL_BYT_RT5640_MACH) += snd-soc-sst-byt-rt5640-mach.o
-@@ -60,3 +61,4 @@ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_RSE_MACH) += snd-soc-bxtp_ivi_rse_rt298.o
+@@ -62,3 +63,4 @@ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_RSE_MACH) += snd-soc-bxtp_ivi_rse_rt298.o
  obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_HU_MACH) += snd-soc-bxtp_ivi_hu_rt298.o
  obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_M3_MACH) += snd-soc-bxtp_ivi_m3.o
  obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH) += snd-soc-bxtp_ivi_generic.o

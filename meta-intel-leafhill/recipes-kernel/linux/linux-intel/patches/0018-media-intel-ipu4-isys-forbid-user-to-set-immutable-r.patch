@@ -1,0 +1,38 @@
+From c7eb024a58835493a85e153a3bcdbd9e0bff5f07 Mon Sep 17 00:00:00 2001
+From: Wang Zaikuo <zaikuo.wang@intel.com>
+Date: Wed, 1 Aug 2018 14:42:01 +0800
+Subject: [PATCH 18/54] media: intel-ipu4: isys: forbid user to set immutable
+ route
+
+Message for Open Source:
+It's not allowed to set immutable route
+
+Message for Internal:
+[Issue/Feature] Same as above
+[Root Cause/Changes] Same as above
+
+Change-Id: I52e2f95504e23b27fda1a6a8480adbfb1dfe7436
+Tracked-On: #H1506250490
+Signed-off-by: Wang Zaikuo <zaikuo.wang@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu-isys-subdev.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu-isys-subdev.c b/drivers/media/pci/intel/ipu-isys-subdev.c
+index 7a72df4..745c109 100644
+--- a/drivers/media/pci/intel/ipu-isys-subdev.c
++++ b/drivers/media/pci/intel/ipu-isys-subdev.c
+@@ -554,8 +554,7 @@ int ipu_isys_subdev_set_routing(struct v4l2_subdev *sd,
+ 		if (j == asd->nstreams)
+ 			continue;
+ 
+-		if (t->flags & V4L2_SUBDEV_ROUTE_FL_IMMUTABLE &&
+-		    t->flags != asd->route[j].flags)
++		if (asd->route[j].flags & V4L2_SUBDEV_ROUTE_FL_IMMUTABLE)
+ 			continue;
+ 
+ 		if ((t->flags & V4L2_SUBDEV_ROUTE_FL_SOURCE) && asd->nsinks)
+-- 
+1.9.1
+

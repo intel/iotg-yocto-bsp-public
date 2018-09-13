@@ -1,7 +1,7 @@
-From 0b855541f402e3b8a017f8ee368536aec6d819d2 Mon Sep 17 00:00:00 2001
+From 93fe32dd4a640d883ba72b7cd9a742e502685337 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Thu, 5 Apr 2018 12:12:57 +0100
-Subject: [PATCH 89/96] ASoC: Intel: Skylake: Add extra SSP2-x pins
+Subject: [PATCH 089/102] ASoC: Intel: Skylake: Add extra SSP2-x pins
 
 This commit extends "ASoC: Intel: Skylake: Add secondary backend dais"
 
@@ -14,7 +14,7 @@ Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
  1 file changed, 40 insertions(+)
 
 diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
-index 56ba761..0228784 100755
+index e8bf10f..875b040 100755
 --- a/sound/soc/intel/skylake/skl-pcm.c
 +++ b/sound/soc/intel/skylake/skl-pcm.c
 @@ -1621,6 +1621,46 @@ struct skl_dsp_notify_ops cb_ops = {

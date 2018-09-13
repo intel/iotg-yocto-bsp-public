@@ -1,4 +1,4 @@
-From 0324d6bc7a74a433d7aed6a224094d0a55ae3c74 Mon Sep 17 00:00:00 2001
+From 4605484f551a4c573b449852d2c49e467b926b65 Mon Sep 17 00:00:00 2001
 From: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
 Date: Wed, 11 Oct 2017 09:35:01 -0700
 Subject: [PATCH 30/43] iio: hid-sensor-trigger: Don't touch sensors unless

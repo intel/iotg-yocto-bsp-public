@@ -1,7 +1,7 @@
-From 107ccf44ec284cfb0477079da0cd9917a73d5546 Mon Sep 17 00:00:00 2001
+From 12482424bef58ac70a4115f4755998c914538e4b Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Wed, 22 Feb 2017 11:54:15 +0000
-Subject: [PATCH 54/96] ASoC: Intel: Boards: Update machine driver DAI links
+Subject: [PATCH 054/102] ASoC: Intel: Boards: Update machine driver DAI links
 
 GPMRB specific DAI links removed from platform driver, rename
 the specific cp_dai_names with generic names to fit.

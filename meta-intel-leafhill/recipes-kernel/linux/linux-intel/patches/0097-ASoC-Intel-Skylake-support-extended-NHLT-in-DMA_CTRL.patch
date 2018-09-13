@@ -1,0 +1,98 @@
+From cfedcfd2ec3cb50e5ceaa9f74b73a879c5f6537d Mon Sep 17 00:00:00 2001
+From: Dominik Bozek <dominikx.bozek@intel.com>
+Date: Tue, 17 Jul 2018 11:20:43 +0200
+Subject: [PATCH 97/98] ASoC: Intel: Skylake: support extended NHLT in
+ DMA_CTRL_ID message
+
+The NHLT blob may have different size depend on blob version.
+This patch allow to transfer blobs of different size from NHLT
+to firmware.
+
+Change-Id: Iac73a04f29dda422539b4be7d9f2c81e40b69a00
+Signed-off-by: Dominik Bozek <dominikx.bozek@intel.com>
+Reviewed-on: https://git-gar-1.devtools.intel.com/gerrit/27730
+Reviewed-by: Wasko, Michal <michal.wasko@intel.com>
+Tested-by: Wasko, Michal <michal.wasko@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl-messages.c
+
+Signed-off-by: Ho, Yu Xin <yu.xin.ho@intel.com>
+---
+ sound/soc/intel/skylake/skl-messages.c | 23 +++++++----------------
+ sound/soc/intel/skylake/skl-topology.h |  2 +-
+ 2 files changed, 8 insertions(+), 17 deletions(-)
+ mode change 100644 => 100755 sound/soc/intel/skylake/skl-topology.h
+
+diff --git a/sound/soc/intel/skylake/skl-messages.c b/sound/soc/intel/skylake/skl-messages.c
+index 03e64a8..78ec162 100644
+--- a/sound/soc/intel/skylake/skl-messages.c
++++ b/sound/soc/intel/skylake/skl-messages.c
+@@ -1614,19 +1614,16 @@ static void skl_setup_cpr_gateway_cfg(struct skl_sst *ctx,
+ #define DMA_I2S_BLOB_SIZE 21
+ 
+ int skl_dsp_set_dma_control(struct skl_sst *ctx, u32 *caps,
+-				u32 caps_size, u32 node_id)
++				u32 caps_size, u32 node_id, u32 blob_size)
+ {
+ 	struct skl_dma_control *dma_ctrl;
+ 	struct skl_ipc_large_config_msg msg = {0};
+ 	int err = 0;
+ 
+-
+-	/*
+-	 * if blob size zero, then return
+-	 */
+-	if (caps_size == 0)
++	if (caps_size == blob_size) {
++		dev_dbg(ctx->dev, "No dma control included\n");
+ 		return 0;
+-
++	}
+ 	msg.large_param_id = DMA_CONTROL_ID;
+ 	msg.param_data_size = sizeof(struct skl_dma_control) + caps_size;
+ 
+@@ -1636,14 +1633,8 @@ int skl_dsp_set_dma_control(struct skl_sst *ctx, u32 *caps,
+ 
+ 	dma_ctrl->node_id = node_id;
+ 
+-	/*
+-	 * NHLT blob may contain additional configs along with i2s blob.
+-	 * firmware expects only the I2S blob size as the config_length. So fix to i2s
+-	 * blob size.
+-	 *
+-	 * size in dwords.
+-	 */
+-	dma_ctrl->config_length = DMA_I2S_BLOB_SIZE;
++	/* size in dwords */
++	dma_ctrl->config_length = blob_size / 4;
+ 
+ 	memcpy(dma_ctrl->config_data, caps, caps_size);
+ 
+@@ -1721,7 +1712,7 @@ int skl_dsp_set_dma_clk_controls(struct skl_sst *ctx)
+ 							hdr->tdm_slot);
+ 
+ 			ret = skl_dsp_set_dma_control(ctx, (u32 *)i2s_config,
+-							i2s_config_size, node_id);
++							i2s_config_size, node_id, cfg->size);
+ 
+ 			kfree(i2s_config);
+ 
+diff --git a/sound/soc/intel/skylake/skl-topology.h b/sound/soc/intel/skylake/skl-topology.h
+old mode 100644
+new mode 100755
+index 1f20358..ce4da55
+--- a/sound/soc/intel/skylake/skl-topology.h
++++ b/sound/soc/intel/skylake/skl-topology.h
+@@ -555,7 +555,7 @@ int skl_tplg_be_update_params(struct snd_soc_dai *dai,
+ 	struct skl_pipe_params *params);
+ int skl_dsp_set_dma_clk_controls(struct skl_sst *ctx);
+ int skl_dsp_set_dma_control(struct skl_sst *ctx, u32 *caps,
+-			u32 caps_size, u32 node_id);
++			u32 caps_size, u32 node_id, u32 blob_size);
+ void skl_tplg_set_be_dmic_config(struct snd_soc_dai *dai,
+ 	struct skl_pipe_params *params, int stream);
+ int skl_tplg_init(struct snd_soc_platform *platform,
+-- 
+1.9.1
+

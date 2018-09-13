@@ -1,0 +1,40 @@
+From 8623a39e388509464dc141125860bb733ba4a3f8 Mon Sep 17 00:00:00 2001
+From: Chen Meng J <meng.j.chen@intel.com>
+Date: Tue, 11 Sep 2018 14:15:56 +0800
+Subject: [PATCH 46/54] media: intel-ipu4: max9286: fix build warning
+
+Message for Open Source:
+fix build warning.
+
+Message for Internal:
+add const qualifier to fix build warning.
+
+Change-Id: Ibac0e19e0a54b3b45991d57ff452ec1ebbd2247e
+Tracked-On: #H1606672432
+Signed-off-by: Chen Meng J <meng.j.chen@intel.com>
+Reviewed-on: https://icggerrit.corp.intel.com/354618
+Reviewed-by: Coding Style
+Reviewed-by: Yanli L Zhang <yanli.l.zhang@intel.com>
+Approver: Wei Meng <wei.meng@intel.com>
+Integrator: Wei Meng <wei.meng@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/i2c/max9286.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/max9286.c b/drivers/media/i2c/max9286.c
+index b02271e..b54bcf4 100644
+--- a/drivers/media/i2c/max9286.c
++++ b/drivers/media/i2c/max9286.c
+@@ -179,7 +179,7 @@ static int max9286_set_stream(struct v4l2_subdev *subdev, int enable)
+ 	unsigned int val;
+ 	u8 slval = 0xE0;
+ 	u8 dtval = 0xF7;
+-	struct max9286_register_write *max9286_byte_order_settings;
++	const struct max9286_register_write *max9286_byte_order_settings;
+ 
+ 	dev_dbg(max->v4l2_sd.dev, "MAX9286 set stream. enable = %d\n", enable);
+ 
+-- 
+1.9.1
+

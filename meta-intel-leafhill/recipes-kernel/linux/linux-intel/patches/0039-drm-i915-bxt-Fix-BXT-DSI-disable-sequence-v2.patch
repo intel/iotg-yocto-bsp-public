@@ -1,7 +1,7 @@
-From 059064312f9ec09563f96ce8115f177b191f2794 Mon Sep 17 00:00:00 2001
+From 7e5e6ec88d1bea18fb998d53bff7c53deb384b8a Mon Sep 17 00:00:00 2001
 From: Uma Shankar <uma.shankar@intel.com>
 Date: Tue, 20 Dec 2016 10:24:28 -0800
-Subject: [PATCH 39/41] drm/i915/bxt: Fix BXT DSI disable sequence (v2)
+Subject: [PATCH 39/44] drm/i915/bxt: Fix BXT DSI disable sequence (v2)
 
 Fix BXT DSI disable sequence as per latest updates in bspec.
 

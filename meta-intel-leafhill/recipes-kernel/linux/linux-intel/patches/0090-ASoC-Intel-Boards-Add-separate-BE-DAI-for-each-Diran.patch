@@ -1,7 +1,7 @@
-From 7bcca27e909f009a3e36aa7724bb820504c0f9a3 Mon Sep 17 00:00:00 2001
+From 2717a24cdd4cc81026181116d490f979a778fa51 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Fri, 6 Apr 2018 11:19:48 +0100
-Subject: [PATCH 90/96] ASoC: Intel: Boards: Add separate BE DAI for each
+Subject: [PATCH 090/102] ASoC: Intel: Boards: Add separate BE DAI for each
  Dirana pipe
 
 This resolves an issue were the wrong HW params would be used. More details

@@ -1,0 +1,58 @@
+From cf08377d6e49260145364aa7936587e8cb50707e Mon Sep 17 00:00:00 2001
+From: kgopala2 <karthik.l.gopalakrishnan@intel.com>
+Date: Thu, 9 Aug 2018 07:22:17 +0800
+Subject: [PATCH 01/16] media: intel-ipu4: strip node names off i2c details
+
+This change adds place-holder for 'suffix' which will be used to
+differentiate between nodes of multiple instances of same type of
+sensors/bridges. Earlier used I2c bus/adapter ID will be stripped off
+from node-name. 'suffix' is set in PDATA. For bridge and sensor like
+mondello, suffix can NULL since there will always be only one
+instance of mondello on a platform.
+
+Signed-off-by: kgopala2 <karthik.l.gopalakrishnan@intel.com>
+---
+ drivers/media/i2c/crlmodule-lite/crlmodule-core.c | 14 ++++++++++----
+ include/media/crlmodule-lite.h                    |  1 +
+ 2 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/media/i2c/crlmodule-lite/crlmodule-core.c b/drivers/media/i2c/crlmodule-lite/crlmodule-core.c
+index eb8c55f..59896f4 100644
+--- a/drivers/media/i2c/crlmodule-lite/crlmodule-core.c
++++ b/drivers/media/i2c/crlmodule-lite/crlmodule-core.c
+@@ -2485,10 +2485,16 @@ static int init_ext_sd(struct i2c_client *client,
+ 	struct ici_ext_subdev* sd = &ssd->sd;
+ 	struct crl_sensor *sensor = ssd->sensor;
+ 	char name[ICI_MAX_NODE_NAME];
+-	snprintf(name,
+-		sizeof(name), "%s %d-%4.4x",
+-		sensor->sensor_ds->subdevs[idx].name,
+-		i2c_adapter_id(client->adapter), client->addr);
++	if (sensor->platform_data->suffix)
++		snprintf(name,
++			sizeof(name), "%s %c",
++			sensor->sensor_ds->subdevs[idx].name,
++			sensor->platform_data->suffix);
++	else
++		snprintf(name,
++			sizeof(name), "%s",
++			sensor->sensor_ds->subdevs[idx].name);
++
+ 	sd->client = client;
+ 	sd->num_pads = ssd->npads;
+ 	sd->src_pad = ssd->source_pad;
+diff --git a/include/media/crlmodule-lite.h b/include/media/crlmodule-lite.h
+index eaa14e4..ce812e8 100644
+--- a/include/media/crlmodule-lite.h
++++ b/include/media/crlmodule-lite.h
+@@ -19,6 +19,7 @@ struct crlmodule_lite_platform_data {
+ 
+ 	int xshutdown;			/* gpio */
+ 	char module_name[16]; /* module name from ACPI */
++	char suffix; /* suffix to identify multi sensors, abcd.. */
+ };
+ 
+ #endif /* __CRLMODULE_LITE_H  */
+-- 
+1.9.1
+

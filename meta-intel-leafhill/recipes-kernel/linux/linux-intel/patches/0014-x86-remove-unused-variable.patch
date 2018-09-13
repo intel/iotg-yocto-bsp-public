@@ -1,7 +1,7 @@
-From 1e8a84e5453e9703ad578aba892095257e8384e4 Mon Sep 17 00:00:00 2001
+From 3c083d49c7e9455daaba1ac916d7bd99c37583b3 Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Tue, 5 Jul 2016 09:18:04 +0800
-Subject: [PATCH 14/96] x86: remove unused variable
+Subject: [PATCH 014/102] x86: remove unused variable
 
 Remove unused variable to fix klocwork issue
 

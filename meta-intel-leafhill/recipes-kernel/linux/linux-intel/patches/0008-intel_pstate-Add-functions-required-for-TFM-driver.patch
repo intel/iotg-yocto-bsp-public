@@ -1,7 +1,7 @@
-From 92ee7314f5f6e7f38d450db6887e6357578ec88d Mon Sep 17 00:00:00 2001
+From 2fb8da083c60556e760bcca56ae9a8e6075f8d4d Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:16:12 +0100
-Subject: [PATCH 08/43] intel_pstate: Add functions required for TFM driver
+Subject: [PATCH 08/42] intel_pstate: Add functions required for TFM driver
 
 The following entry points are added:
  - pstate_cpu_pstate2freq(); Returns frequency in kHz, corresponding to
@@ -19,10 +19,10 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 49 insertions(+)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 5da8ed7..2c55df6 100644
+index e460af2..f888a8e 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
-@@ -855,6 +855,55 @@ int pstate_cpu_disable_turbo_usage(void)
+@@ -856,6 +856,55 @@ int pstate_cpu_disable_turbo_usage(void)
  }
  EXPORT_SYMBOL_GPL(pstate_cpu_disable_turbo_usage);
  

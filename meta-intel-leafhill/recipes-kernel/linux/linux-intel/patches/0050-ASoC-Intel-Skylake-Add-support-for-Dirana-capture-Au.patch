@@ -1,7 +1,7 @@
-From b57db32242f7d3f44f094443da7514ba3753aadb Mon Sep 17 00:00:00 2001
+From f5d4d3bb1a6d72dd7ed1c0ee943bf0afd7839bfa Mon Sep 17 00:00:00 2001
 From: Jakub Dorzak <jakubx.dorzak@intel.com>
 Date: Tue, 6 Dec 2016 12:56:52 +0000
-Subject: [PATCH 50/96] ASoC: Intel: Skylake: Add support for Dirana capture
+Subject: [PATCH 050/102] ASoC: Intel: Skylake: Add support for Dirana capture
  Aux, Mic and Tuner
 
 Signed-off-by: Jakub Dorzak <jakubx.dorzak@intel.com>

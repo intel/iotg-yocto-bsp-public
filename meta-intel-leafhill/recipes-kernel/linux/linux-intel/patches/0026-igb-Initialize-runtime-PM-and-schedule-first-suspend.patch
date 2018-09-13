@@ -1,0 +1,63 @@
+From 4db2d1b0f208b057d10f531ce6b3dfdd365826ac Mon Sep 17 00:00:00 2001
+From: Jayasankar <jayasankarx.nara@intel.com>
+Date: Tue, 15 Nov 2016 16:24:14 +0800
+Subject: [PATCH 26/42] igb: Initialize runtime PM and schedule first suspend
+
+Enabling autosuspend and configure default autosuspend delay in
+igb_probe() and schedule first suspend from __igb_open().
+
+Signed-off-by: Jayasankar <jayasankarx.nara@intel.com>
+Signed-off-by: Lai, Poey Seng <poey.seng.lai@intel.com>
+Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
+---
+ drivers/net/ethernet/intel/igb/igb.h      |  3 +++
+ drivers/net/ethernet/intel/igb/igb_main.c | 12 ++++++++++--
+ 2 files changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/igb/igb.h b/drivers/net/ethernet/intel/igb/igb.h
+index 6b23a57..4ad6ac1 100644
+--- a/drivers/net/ethernet/intel/igb/igb.h
++++ b/drivers/net/ethernet/intel/igb/igb.h
+@@ -43,6 +43,9 @@
+ 
+ #define E1000_PCS_CFG_IGN_SD	1
+ 
++/* Runtime PM defines */
++#define IGB_AUTOSUSPEND_DELAY_MS	1500
++
+ /* Interrupt defines */
+ #define IGB_START_ITR		648 /* ~6000 ints/sec */
+ #define IGB_4K_ITR		980
+diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
+index 2641620..7dd6105 100644
+--- a/drivers/net/ethernet/intel/igb/igb_main.c
++++ b/drivers/net/ethernet/intel/igb/igb_main.c
+@@ -3248,6 +3248,11 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 		}
+ 	}
+ 	pm_runtime_put_noidle(&pdev->dev);
++
++	/* Initialize run time pm parameters */
++	pm_suspend_ignore_children(&pdev->dev, 1);
++	pm_runtime_set_autosuspend_delay(&pdev->dev, IGB_AUTOSUSPEND_DELAY_MS);
++	pm_runtime_use_autosuspend(&pdev->dev);
+ 	return 0;
+ 
+ err_register:
+@@ -3754,8 +3759,11 @@ static int __igb_open(struct net_device *netdev, bool resuming)
+ 
+ 	netif_tx_start_all_queues(netdev);
+ 
+-	if (!resuming)
+-		pm_runtime_put(&pdev->dev);
++	/* schedule runtime suspend from open */
++	if (!resuming) {
++		pm_runtime_mark_last_busy(&pdev->dev);
++		pm_runtime_put_autosuspend(&pdev->dev);
++	}
+ 
+ 	/* start the watchdog. */
+ 	hw->mac.get_link_status = 1;
+-- 
+1.9.1
+

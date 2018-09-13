@@ -1,7 +1,7 @@
-From cda9dd3685d6a473b60debec8765c10ea8001cc1 Mon Sep 17 00:00:00 2001
+From b4c988773827f974c7ce88672bcea242d2f93e59 Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Wed, 20 Jul 2016 16:28:19 +0800
-Subject: [PATCH 11/96] ASoC: Intel: Skylake: Adding back dummy codec dapm
+Subject: [PATCH 011/102] ASoC: Intel: Skylake: Adding back dummy codec dapm
  widget for all machine drivers
 
 This commit attempts to add back DAPM widgets for all machine

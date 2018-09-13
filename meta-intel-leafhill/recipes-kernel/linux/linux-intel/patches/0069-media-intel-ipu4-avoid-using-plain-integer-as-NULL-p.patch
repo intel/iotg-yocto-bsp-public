@@ -1,0 +1,60 @@
+From a4ee19207bc033ec11bba218f4b97a7b90716b03 Mon Sep 17 00:00:00 2001
+From: Ding Yunliang <yunliang.ding@intel.com>
+Date: Wed, 30 May 2018 16:05:13 +0800
+Subject: [PATCH 069/129] media: intel-ipu4: avoid using plain integer as NULL
+ pointer
+
+Message for Open Source:
+sparse warning(like below) fix:
+ipu-isys-tpg.c:150:26: warning: Using plain integer as NULL pointer
+
+Message for Internal:
+[Issue/Feature] Same as above.
+[Root Cause/Changes] Same as above.
+
+Change-Id: I4bccbbedacdeef263ed55308f4ab4cbb81ab764e
+Tracked-On: #JICCCN-228
+Signed-off-by: Ding Yunliang <yunliang.ding@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu-isys-tpg.c | 2 +-
+ drivers/media/pci/intel/ipu-psys.c     | 4 +---
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu-isys-tpg.c b/drivers/media/pci/intel/ipu-isys-tpg.c
+index c960933..f15e1b4 100644
+--- a/drivers/media/pci/intel/ipu-isys-tpg.c
++++ b/drivers/media/pci/intel/ipu-isys-tpg.c
+@@ -124,7 +124,7 @@ static void ipu_isys_tpg_init_controls(struct v4l2_subdev *sd)
+ 		.max = 65535,
+ 		.min = 8,
+ 		.step = 1,
+-		.qmenu = 0,
++		.qmenu = NULL,
+ 		.elem_size = 0,
+ 	};
+ 
+diff --git a/drivers/media/pci/intel/ipu-psys.c b/drivers/media/pci/intel/ipu-psys.c
+index 822f256..c46669b 100644
+--- a/drivers/media/pci/intel/ipu-psys.c
++++ b/drivers/media/pci/intel/ipu-psys.c
+@@ -1328,15 +1328,13 @@ static int ipu_psys_fw_init(struct ipu_psys *psys)
+ {
+ 	struct ia_css_syscom_queue_config
+ 		ia_css_psys_cmd_queue_cfg[IPU_FW_PSYS_N_PSYS_CMD_QUEUE_ID];
+-
+ 	struct ia_css_syscom_queue_config ia_css_psys_event_queue_cfg[] = {
+ 		{IPU_FW_PSYS_EVENT_QUEUE_SIZE,
+ 		 sizeof(struct ipu_fw_psys_event)}
+ 	};
+-
+ 	struct ipu_fw_psys_srv_init server_init = {
+ 		.ddr_pkg_dir_address = 0,
+-		.host_ddr_pkg_dir = 0,
++		.host_ddr_pkg_dir = NULL,
+ 		.pkg_dir_size = 0,
+ 		.icache_prefetch_sp = psys->icache_prefetch_sp,
+ 		.icache_prefetch_isp = psys->icache_prefetch_isp,
+-- 
+1.9.1
+

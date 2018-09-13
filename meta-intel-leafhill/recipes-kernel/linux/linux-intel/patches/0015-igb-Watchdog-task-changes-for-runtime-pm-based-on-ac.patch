@@ -1,7 +1,7 @@
-From b9106d4385a5ad6e55ff3b0096c258911a8a7599 Mon Sep 17 00:00:00 2001
+From 025251a8e7dc4f7a0f26bab18bddba0655db4d36 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 18:23:30 +0800
-Subject: [PATCH 15/43] igb: Watchdog task changes for runtime pm based on
+Subject: [PATCH 15/41] igb: Watchdog task changes for runtime pm based on
  activity monitoring
 
 If watchdog task is invoked while runtime suspend is in

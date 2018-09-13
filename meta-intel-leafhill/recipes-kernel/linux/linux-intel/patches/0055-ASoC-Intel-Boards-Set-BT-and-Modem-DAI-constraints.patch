@@ -1,7 +1,7 @@
-From bb790c095dd1c9477481c09e3ca44c0dec44f2bc Mon Sep 17 00:00:00 2001
+From c2001fe91fe3c7ae9b52664c5fd96bc2a3a801d0 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Thu, 23 Feb 2017 11:36:39 +0000
-Subject: [PATCH 55/96] ASoC: Intel: Boards: Set BT and Modem DAI constraints
+Subject: [PATCH 055/102] ASoC: Intel: Boards: Set BT and Modem DAI constraints
 
 BT/Modem chip is not controlled by an ASoC Codec driver so dummy codec is
 used. Set explicit constraints for the BT/Modem chip in the DAI startup

@@ -1,0 +1,32 @@
+From 2c31c24d9bca0890a9d1fb88bfa8e398c4b06f88 Mon Sep 17 00:00:00 2001
+From: CraigX Kewley <craigx.kewley@intel.com>
+Date: Wed, 1 Jun 2016 14:39:46 +0100
+Subject: [PATCH 25/98] ASoC: Intel: Skylake: Print SSP configuration
+
+Print SSP configuration (debug level) when a pipeline is opened.
+
+Signed-off-by: CraigX Kewley <craigx.kewley@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl-topology.c
+---
+ sound/soc/intel/skylake/skl-topology.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/sound/soc/intel/skylake/skl-topology.c b/sound/soc/intel/skylake/skl-topology.c
+index fe677b7..0b27155 100644
+--- a/sound/soc/intel/skylake/skl-topology.c
++++ b/sound/soc/intel/skylake/skl-topology.c
+@@ -2997,6 +2997,9 @@ static int skl_tplg_be_fill_pipe_params(struct snd_soc_dai *dai,
+ 		mconfig->formats_config[SKL_PARAM_INIT].caps_size = cfg->size;
+ 		mconfig->formats_config[SKL_PARAM_INIT].caps =
+ 							(u32 *) &cfg->caps;
++
++		print_hex_dump_debug("SSP Config:", DUMP_PREFIX_OFFSET, 8, 4,
++				cfg->caps, cfg->size, false);
+ 	} else {
+ 		dev_err(dai->dev, "Blob NULL for id %x type %d dirn %d\n",
+ 					mconfig->vbus_id, link_type,
+-- 
+1.9.1
+

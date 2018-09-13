@@ -1,0 +1,55 @@
+From 353d6e04ee54bf2fc0a7ec7727aa317a4563c476 Mon Sep 17 00:00:00 2001
+From: Ding Yunliang <yunliang.ding@intel.com>
+Date: Thu, 14 Jun 2018 17:43:19 +0800
+Subject: [PATCH 097/129] media: intel-ipu4: remove some include files
+
+Message for Open Source:
+The header file itself was just a collection of structure
+definitions, clean up its headers to less dependency.
+
+Message for Internal:
+[Issue/Feature]
+There is user space program which includes this file and it will
+complain no header file found. If no harm to the kernel space, remove
+the header include.
+[Root Cause/Changes]
+
+Change-Id: Ief6847e40a30a976bda3d522265fa45977ebd9f3
+Tracked-On: #JICCCN-228
+Signed-off-by: Ding Yunliang <yunliang.ding@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu-fw-psys.h            | 3 ---
+ drivers/media/pci/intel/ipu4/ipu4-fw-resources.c | 2 ++
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu-fw-psys.h b/drivers/media/pci/intel/ipu-fw-psys.h
+index 6256eff..58c2bce 100644
+--- a/drivers/media/pci/intel/ipu-fw-psys.h
++++ b/drivers/media/pci/intel/ipu-fw-psys.h
+@@ -4,9 +4,6 @@
+ #ifndef IPU_FW_PSYS_H
+ #define IPU_FW_PSYS_H
+ 
+-#include <linux/errno.h>
+-#include <linux/device.h>
+-
+ #include "ipu-platform-resources.h"
+ 
+ /* ia_css_psys_device.c */
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-fw-resources.c b/drivers/media/pci/intel/ipu4/ipu4-fw-resources.c
+index 3fea36f..7d50bce 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-fw-resources.c
++++ b/drivers/media/pci/intel/ipu4/ipu4-fw-resources.c
+@@ -3,6 +3,8 @@
+ 
+ #include "ipu-fw-psys.h"
+ 
++#include <uapi/asm-generic/errno-base.h>
++
+ /* resources table */
+ /*
+  * Cell types by cell IDs
+-- 
+1.9.1
+

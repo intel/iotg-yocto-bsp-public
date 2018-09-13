@@ -1,7 +1,7 @@
-From b087e651d9d587ce01a257a9cce38b89efa6f7f7 Mon Sep 17 00:00:00 2001
+From 8af1d9ca8281e5a653e0b02c697ea2938552a0fc Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 16 Nov 2016 12:54:20 +0800
-Subject: [PATCH 19/43] igb: Adding runtime PM support to various netdev ops
+Subject: [PATCH 19/41] igb: Adding runtime PM support to various netdev ops
 
 invoking resume and schedule suspend from following netdev ops
 	igb_set_rx_mode

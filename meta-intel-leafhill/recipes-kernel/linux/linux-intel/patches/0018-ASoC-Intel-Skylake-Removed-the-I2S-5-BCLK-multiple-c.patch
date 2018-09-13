@@ -1,7 +1,7 @@
-From 220daa2e2d186de9898ab4b760eb60412938aacb Mon Sep 17 00:00:00 2001
+From bd7acf53a3fe749dd4ffd6fee7c3d1b6e7b24631 Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Wed, 20 Sep 2017 12:40:23 +0800
-Subject: [PATCH 18/96] ASoC: Intel: Skylake: Removed the I2S 5 BCLK multiple
+Subject: [PATCH 018/102] ASoC: Intel: Skylake: Removed the I2S 5 BCLK multiple
  configuration
 
 I2S5 BCLK Pin was configuring during the enablment of I2S 6 and I2S 5.

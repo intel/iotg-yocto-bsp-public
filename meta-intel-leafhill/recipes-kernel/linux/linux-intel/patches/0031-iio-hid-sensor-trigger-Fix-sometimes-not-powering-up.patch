@@ -1,4 +1,4 @@
-From 4bfe2e4a7afb6542404abcd9678c2668c30fe16f Mon Sep 17 00:00:00 2001
+From a9e86a716f2e7873abf2a2f9130807a1e78a7ebd Mon Sep 17 00:00:00 2001
 From: Hans de Goede <hdegoede@redhat.com>
 Date: Sat, 14 Apr 2018 17:09:09 +0200
 Subject: [PATCH 31/43] iio: hid-sensor-trigger: Fix sometimes not powering up

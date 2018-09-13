@@ -1,7 +1,7 @@
-From 3b9de4b944a5f75def28084fcaa5f401507d4d23 Mon Sep 17 00:00:00 2001
+From 0ea261919abdafb33906e580b25d9cf8d35bc532 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 17:39:41 +0800
-Subject: [PATCH 12/43] igb: During runtime resume do not reinitialize the net
+Subject: [PATCH 12/41] igb: During runtime resume do not reinitialize the net
  device tx queues
 
 Updating power.last_busy field of device at the end of

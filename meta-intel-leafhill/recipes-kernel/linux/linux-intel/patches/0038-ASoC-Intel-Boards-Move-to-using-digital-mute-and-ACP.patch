@@ -1,7 +1,7 @@
-From 5bf83b8bcc782f6fee52b046df46f94af7cebc48 Mon Sep 17 00:00:00 2001
+From d6e959ac13d01e76fca092e140f45eb4686101b7 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Thu, 23 Jun 2016 12:47:51 +0100
-Subject: [PATCH 38/96] ASoC: Intel: Boards: Move to using digital mute and
+Subject: [PATCH 038/102] ASoC: Intel: Boards: Move to using digital mute and
  ACPI.
 
 Removed dependency on board driver as codec now enumerated via ACPI.
@@ -18,10 +18,10 @@ Conflicts:
  2 files changed, 2 insertions(+), 15 deletions(-)
 
 diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
-index b1c32f8..53a07f4 100644
+index 69241dc..9e66a38 100644
 --- a/sound/soc/intel/boards/Kconfig
 +++ b/sound/soc/intel/boards/Kconfig
-@@ -378,7 +378,6 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
+@@ -407,7 +407,6 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
  	tristate "ASoC Audio driver for BXT IVI GP MRB"
  	select SND_SOC_INTEL_SST
  	select SND_SOC_TDF8532

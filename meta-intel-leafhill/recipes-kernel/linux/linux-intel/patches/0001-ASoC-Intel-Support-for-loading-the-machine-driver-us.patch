@@ -1,7 +1,7 @@
-From e7486007ee0dad130b3c31803d4e0d069f61a470 Mon Sep 17 00:00:00 2001
+From 6dbc0923f4f2365b3cdbc7f1061ae8adc6a65e03 Mon Sep 17 00:00:00 2001
 From: Mousumi Jana <mousumix.jana@intel.com>
 Date: Fri, 11 Dec 2015 00:01:50 +0530
-Subject: [PATCH 01/96] ASoC: Intel: Support for loading the machine driver
+Subject: [PATCH 001/102] ASoC: Intel: Support for loading the machine driver
  using module parameter
 
 Added support for loading the machine driver for RSE and HU using
@@ -18,17 +18,19 @@ Tested-by: Babu, Ramesh <ramesh.babu@intel.com>
 Conflicts:
 	sound/soc/intel/skylake/skl.c
 ---
- sound/soc/intel/skylake/skl.c | 34 ++++++++++++++++++++++++++++------
- 1 file changed, 28 insertions(+), 6 deletions(-)
+ sound/soc/intel/skylake/skl.c | 36 ++++++++++++++++++++++++++++++------
+ 1 file changed, 30 insertions(+), 6 deletions(-)
 
 diff --git a/sound/soc/intel/skylake/skl.c b/sound/soc/intel/skylake/skl.c
-index e2a13d4..b1dcc6d 100644
+index 674dd5c..d8f92f6 100644
 --- a/sound/soc/intel/skylake/skl.c
 +++ b/sound/soc/intel/skylake/skl.c
-@@ -40,7 +40,17 @@
+@@ -39,7 +39,19 @@
+ #include "skl-sst-ipc.h"
+ #include "skl-topology.h"
  
- static struct skl_machine_pdata skl_dmic_data;
- 
++static struct skl_machine_pdata skl_dmic_data;
++
 +static char *machine = NULL;
 +static char *fw_filename = NULL;
 +
@@ -43,7 +45,7 @@ index e2a13d4..b1dcc6d 100644
   * initialize the PCI registers
   */
  static void skl_update_pci_byte(struct pci_dev *pci, unsigned int reg,
-@@ -516,14 +526,24 @@ static int skl_find_machine(struct skl *skl, void *driver_data)
+@@ -515,14 +527,24 @@ static int skl_find_machine(struct skl *skl, void *driver_data)
  	    IS_ENABLED(CONFIG_SND_SOC_INTEL_CNL_FPGA))
  		goto out;
  
@@ -73,7 +75,7 @@ index e2a13d4..b1dcc6d 100644
  	skl->fw_name = mach->fw_filename;
  	skl->mach = mach;
  	if (mach->pdata) {
-@@ -540,7 +560,6 @@ static int skl_machine_device_register(struct skl *skl)
+@@ -539,7 +561,6 @@ static int skl_machine_device_register(struct skl *skl)
  	struct snd_soc_acpi_mach *mach = skl->mach;
  	struct platform_device *pdev;
  	int ret;
@@ -81,7 +83,7 @@ index e2a13d4..b1dcc6d 100644
  	pdev = platform_device_alloc(mach->drv_name, -1);
  	if (pdev == NULL) {
  		dev_err(bus->dev, "platform device alloc failed\n");
-@@ -559,6 +578,9 @@ static int skl_machine_device_register(struct skl *skl)
+@@ -558,6 +579,9 @@ static int skl_machine_device_register(struct skl *skl)
  
  	skl->i2s_dev = pdev;
  

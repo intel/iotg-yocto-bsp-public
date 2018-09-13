@@ -1,0 +1,57 @@
+From fdc4f94b12377f8400febc3bc5c4ef4f4d64220a Mon Sep 17 00:00:00 2001
+From: Jakub Dorzak <jdorzakx@intel.com>
+Date: Tue, 26 Jul 2016 14:59:58 +0100
+Subject: [PATCH 36/98] ASoC: Intel: Boards: Added option to enable TDF8532 DAI
+ link
+
+Added Kconfig option that allows user to switch between TDF8532
+and snd-soc-dummy in DAI link struct for GPMRB machine driver.
+
+Signed-off-by: Jakub Dorzak <jdorzakx@intel.com>
+
+Conflicts:
+	sound/soc/intel/Kconfig
+
+Conflicts:
+	sound/soc/intel/Kconfig
+
+Conflicts:
+	sound/soc/intel/boards/Kconfig
+---
+ sound/soc/intel/boards/Kconfig     | 1 +
+ sound/soc/intel/boards/bxt_gpmrb.c | 5 +++++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
+index a0322a2..b9fc4b9 100644
+--- a/sound/soc/intel/boards/Kconfig
++++ b/sound/soc/intel/boards/Kconfig
+@@ -392,6 +392,7 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
+ 	select SND_SOC_INTEL_SST
+ 	select SND_SOC_TDF8532
+ 	select SND_SOC_COMPRESS
++	select DW_DMAC
+ 	default n
+ 	help
+ 	   This adds support for ASoC machine driver for Broxton IVI GP MRB platform
+diff --git a/sound/soc/intel/boards/bxt_gpmrb.c b/sound/soc/intel/boards/bxt_gpmrb.c
+index 3948257..2946b55 100644
+--- a/sound/soc/intel/boards/bxt_gpmrb.c
++++ b/sound/soc/intel/boards/bxt_gpmrb.c
+@@ -266,8 +266,13 @@
+ 		.name = "SSP4-Codec",
+ 		.be_id = 0,
+ 		.cpu_dai_name = "SSP4 Pin",
++#ifdef CONFIG_SND_SOC_INTEL_BXT_GPMRB_MACH_TDF8532_CODEC
+ 		.codec_name = "i2c-INT34C3:00",
+ 		.codec_dai_name = "tdf8532-hifi",
++#else
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++#endif
+ 		.platform_name = "0000:00:0e.0",
+ 		.ignore_suspend = 1,
+ 		.dpcm_playback = 1,
+-- 
+1.9.1
+

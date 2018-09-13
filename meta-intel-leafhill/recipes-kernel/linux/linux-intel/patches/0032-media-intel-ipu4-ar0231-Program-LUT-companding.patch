@@ -1,0 +1,94 @@
+From 7b416d5b9c04c5117770f5e8ad31c08f415bb04e Mon Sep 17 00:00:00 2001
+From: yzha108 <yanli.l.zhang@intel.com>
+Date: Fri, 17 Aug 2018 01:11:12 +0800
+Subject: [PATCH 32/54] media: intel-ipu4: ar0231: Program LUT companding
+
+Message for Open Source:
+Program AR0231 20bit->12bit LUT companding reg
+
+Message for Internal:
+[Issue/Feature]
+Program AR0231 20bit->12bit LUT companding reg
+
+[Root Cause/Changes]
+Program AR0231 20bit->12bit LUT companding reg
+If not, it will use default LUT companding method
+
+Change-Id: I0d13accff1c15496d2242154adef7f2c0b6ba371
+Tracked-On: #H1407529342
+Signed-off-by: yzha108 <yanli.l.zhang@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ .../i2c/crlmodule/crl_ar0231at_configuration.h     | 42 ++++++++++++++++++++--
+ 1 file changed, 39 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h b/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h
+index 9995f19..9ddec78 100644
+--- a/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h
++++ b/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h
+@@ -694,7 +694,19 @@ struct crl_ctrl_data_pair ar0231at_ctrl_data_modes[] = {
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+-	{ 0x33DA, CRL_REG_LEN_16BIT, 0x0002, 0x10 },
++	{ 0x33C0, CRL_REG_LEN_16BIT, 0x2000, 0x10 },
++	{ 0x33C2, CRL_REG_LEN_16BIT, 0x3440, 0x10 },
++	{ 0x33C4, CRL_REG_LEN_16BIT, 0x4890, 0x10 },
++	{ 0x33C6, CRL_REG_LEN_16BIT, 0x5CE0, 0x10 },
++	{ 0x33C8, CRL_REG_LEN_16BIT, 0x7140, 0x10 },
++	{ 0x33CA, CRL_REG_LEN_16BIT, 0x8590, 0x10 },
++	{ 0x33CC, CRL_REG_LEN_16BIT, 0x99E0, 0x10 },
++	{ 0x33CE, CRL_REG_LEN_16BIT, 0xAE40, 0x10 },
++	{ 0x33D0, CRL_REG_LEN_16BIT, 0xC290, 0x10 },
++	{ 0x33D2, CRL_REG_LEN_16BIT, 0xD6F0, 0x10 },
++	{ 0x33D4, CRL_REG_LEN_16BIT, 0xEB40, 0x10 },
++	{ 0x33D6, CRL_REG_LEN_16BIT, 0x0000, 0x10 },
++	{ 0x33DA, CRL_REG_LEN_16BIT, 0x0000, 0x10 },
+ 	{ 0x33E0, CRL_REG_LEN_16BIT, 0x0C80, 0x10 },
+ 	{ 0x33E0, CRL_REG_LEN_16BIT, 0x0C80, 0x10 },
+ 	{ 0x3180, CRL_REG_LEN_16BIT, 0x0080, 0x10 },
+@@ -1034,7 +1046,19 @@ struct crl_ctrl_data_pair ar0231at_ctrl_data_modes[] = {
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+-	{ 0x33DA, CRL_REG_LEN_16BIT, 0x0002, 0x10 },
++	{ 0x33C0, CRL_REG_LEN_16BIT, 0x2000, 0x10 },
++	{ 0x33C2, CRL_REG_LEN_16BIT, 0x3440, 0x10 },
++	{ 0x33C4, CRL_REG_LEN_16BIT, 0x4890, 0x10 },
++	{ 0x33C6, CRL_REG_LEN_16BIT, 0x5CE0, 0x10 },
++	{ 0x33C8, CRL_REG_LEN_16BIT, 0x7140, 0x10 },
++	{ 0x33CA, CRL_REG_LEN_16BIT, 0x8590, 0x10 },
++	{ 0x33CC, CRL_REG_LEN_16BIT, 0x99E0, 0x10 },
++	{ 0x33CE, CRL_REG_LEN_16BIT, 0xAE40, 0x10 },
++	{ 0x33D0, CRL_REG_LEN_16BIT, 0xC290, 0x10 },
++	{ 0x33D2, CRL_REG_LEN_16BIT, 0xD6F0, 0x10 },
++	{ 0x33D4, CRL_REG_LEN_16BIT, 0xEB40, 0x10 },
++	{ 0x33D6, CRL_REG_LEN_16BIT, 0x0000, 0x10 },
++	{ 0x33DA, CRL_REG_LEN_16BIT, 0x0000, 0x10 },
+ 	{ 0x33E0, CRL_REG_LEN_16BIT, 0x0C80, 0x10 },
+ 	{ 0x33E0, CRL_REG_LEN_16BIT, 0x0C80, 0x10 },
+ 	{ 0x3180, CRL_REG_LEN_16BIT, 0x0080, 0x10 },
+@@ -1374,7 +1398,19 @@ struct crl_ctrl_data_pair ar0231at_ctrl_data_modes[] = {
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+-	{ 0x33DA, CRL_REG_LEN_16BIT, 0x0002, 0x10 },
++	{ 0x33C0, CRL_REG_LEN_16BIT, 0x2000, 0x10 },
++	{ 0x33C2, CRL_REG_LEN_16BIT, 0x3440, 0x10 },
++	{ 0x33C4, CRL_REG_LEN_16BIT, 0x4890, 0x10 },
++	{ 0x33C6, CRL_REG_LEN_16BIT, 0x5CE0, 0x10 },
++	{ 0x33C8, CRL_REG_LEN_16BIT, 0x7140, 0x10 },
++	{ 0x33CA, CRL_REG_LEN_16BIT, 0x8590, 0x10 },
++	{ 0x33CC, CRL_REG_LEN_16BIT, 0x99E0, 0x10 },
++	{ 0x33CE, CRL_REG_LEN_16BIT, 0xAE40, 0x10 },
++	{ 0x33D0, CRL_REG_LEN_16BIT, 0xC290, 0x10 },
++	{ 0x33D2, CRL_REG_LEN_16BIT, 0xD6F0, 0x10 },
++	{ 0x33D4, CRL_REG_LEN_16BIT, 0xEB40, 0x10 },
++	{ 0x33D6, CRL_REG_LEN_16BIT, 0x0000, 0x10 },
++	{ 0x33DA, CRL_REG_LEN_16BIT, 0x0000, 0x10 },
+ 	{ 0x33E0, CRL_REG_LEN_16BIT, 0x0C80, 0x10 },
+ 	{ 0x33E0, CRL_REG_LEN_16BIT, 0x0C80, 0x10 },
+ 	{ 0x3180, CRL_REG_LEN_16BIT, 0x0080, 0x10 },
+-- 
+1.9.1
+

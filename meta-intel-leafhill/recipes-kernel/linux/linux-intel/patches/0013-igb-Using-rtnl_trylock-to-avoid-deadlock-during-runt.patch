@@ -1,7 +1,7 @@
-From 8d312321414397626ffadd7020b9e0f57b1101f1 Mon Sep 17 00:00:00 2001
+From a9bfd2916816aaf54cc598b0dfd29945acf80d45 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Thu, 29 Dec 2016 11:37:47 +0800
-Subject: [PATCH 13/43] igb: Using rtnl_trylock to avoid deadlock during
+Subject: [PATCH 13/41] igb: Using rtnl_trylock to avoid deadlock during
  runtime resume
 
 Network device ioctl function in net/core/dev_ioctl.c is acquiring

@@ -1,7 +1,7 @@
-From e934c4d33d5e80d81641ce471d3bcb73bb25c129 Mon Sep 17 00:00:00 2001
+From e1f0241adc2d53e5144125d060e24fc7772f82d3 Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:11:48 +0100
-Subject: [PATCH 07/43] intel_pstate: Add forced CPU pstate change notification
+Subject: [PATCH 07/42] intel_pstate: Add forced CPU pstate change notification
 
 In case of no CPU frequency changes during 10 periods of a timer,
 send a force notification with a current value of CPU frequency.
@@ -13,7 +13,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 0c0b030..5da8ed7 100644
+index 3e81156..e460af2 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -57,6 +57,9 @@
@@ -34,7 +34,7 @@ index 0c0b030..5da8ed7 100644
  
  	unsigned int policy;
  	struct update_util_data update_util;
-@@ -1406,6 +1410,7 @@ int pstate_unregister_freq_notify(struct notifier_block *nb)
+@@ -1407,6 +1411,7 @@ int pstate_unregister_freq_notify(struct notifier_block *nb)
  
  static int pstate_notifier_call_chain(struct cpudata *cpu)
  {
@@ -42,7 +42,7 @@ index 0c0b030..5da8ed7 100644
  	return atomic_notifier_call_chain(&pstate_freq_notifier_list,
  		(unsigned long) cpu->pstate.current_pstate,
  		(void *) (long) (cpu->cpu));
-@@ -1413,6 +1418,12 @@ static int pstate_notifier_call_chain(struct cpudata *cpu)
+@@ -1414,6 +1419,12 @@ static int pstate_notifier_call_chain(struct cpudata *cpu)
  
  static void intel_pstate_set_pstate(struct cpudata *cpu, int pstate)
  {
@@ -55,7 +55,7 @@ index 0c0b030..5da8ed7 100644
  	trace_cpu_frequency(pstate * cpu->pstate.scaling, cpu->cpu);
  	cpu->pstate.current_pstate = pstate;
  	/*
-@@ -1570,11 +1581,16 @@ static int intel_pstate_prepare_request(struct cpudata *cpu, int pstate)
+@@ -1579,11 +1590,16 @@ static int intel_pstate_prepare_request(struct cpudata *cpu, int pstate)
  
  static void intel_pstate_update_pstate(struct cpudata *cpu, int pstate)
  {

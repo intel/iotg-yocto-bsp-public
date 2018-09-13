@@ -1,7 +1,7 @@
-From 8c0a39f2c062b0ffdfb92123f0a17cbd2377ff16 Mon Sep 17 00:00:00 2001
+From 11f2be0d9c0163737e325584f5927d6500036fc4 Mon Sep 17 00:00:00 2001
 From: Chandra Konduru <chandra.konduru@intel.com>
 Date: Sat, 12 May 2018 03:03:16 +0530
-Subject: [PATCH 28/41] drm/i915: Add NV12 as supported format for primary
+Subject: [PATCH 28/44] drm/i915: Add NV12 as supported format for primary
  plane
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -83,7 +83,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  2 files changed, 51 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 323d018..fd081b7 100644
+index c6361cf..8c27167 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -92,6 +92,22 @@
@@ -109,7 +109,7 @@ index 323d018..fd081b7 100644
  static const uint64_t skl_format_modifiers_noccs[] = {
  	I915_FORMAT_MOD_Yf_TILED,
  	I915_FORMAT_MOD_Y_TILED,
-@@ -13384,6 +13400,7 @@ static bool skl_mod_supported(uint32_t format, uint64_t modifier)
+@@ -13446,6 +13462,7 @@ static bool skl_mod_supported(uint32_t format, uint64_t modifier)
  	case DRM_FORMAT_YVYU:
  	case DRM_FORMAT_UYVY:
  	case DRM_FORMAT_VYUY:
@@ -117,7 +117,7 @@ index 323d018..fd081b7 100644
  		if (modifier == I915_FORMAT_MOD_Yf_TILED)
  			return true;
  		/* fall through */
-@@ -13576,6 +13593,30 @@ static bool intel_cursor_plane_format_mod_supported(struct drm_plane *plane,
+@@ -13638,6 +13655,30 @@ static bool intel_cursor_plane_format_mod_supported(struct drm_plane *plane,
  	.format_mod_supported = intel_cursor_plane_format_mod_supported,
  };
  
@@ -148,7 +148,7 @@ index 323d018..fd081b7 100644
  static struct intel_plane *
  intel_primary_plane_create(struct drm_i915_private *dev_priv, enum pipe pipe)
  {
-@@ -13620,17 +13661,14 @@ static bool intel_cursor_plane_format_mod_supported(struct drm_plane *plane,
+@@ -13682,17 +13723,14 @@ static bool intel_cursor_plane_format_mod_supported(struct drm_plane *plane,
  	primary->frontbuffer_bit = INTEL_FRONTBUFFER_PRIMARY(pipe);
  	primary->check_plane = intel_check_primary_plane;
  

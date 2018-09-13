@@ -1,8 +1,8 @@
-From 2ee7c7cc321dde90354162d08ecb56d2fd1107b1 Mon Sep 17 00:00:00 2001
+From c16b8d94e8fe21d2e0f417e928bc9d6e97b0dcb1 Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Thu, 14 Jul 2016 11:06:18 +0800
-Subject: [PATCH 10/96] ASoC: Intel: Skylake: Remove dummy codec SSP ports mute
- unmute switch
+Subject: [PATCH 010/102] ASoC: Intel: Skylake: Remove dummy codec SSP ports
+ mute unmute switch
 
 This commit attempts to remove mute unmute control for SSP ports
 with dummy codec. This is due to the fact that mute and unmute command

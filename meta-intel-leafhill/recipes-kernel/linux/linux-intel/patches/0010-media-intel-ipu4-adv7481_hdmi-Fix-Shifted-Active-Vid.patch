@@ -1,0 +1,61 @@
+From 19957033cd86295179c50adf62f7e5a8304016e3 Mon Sep 17 00:00:00 2001
+From: yangz1x <zhonghuax.yang@intel.com>
+Date: Mon, 13 Aug 2018 18:23:29 +0000
+Subject: [PATCH 10/54] media: intel-ipu4: adv7481_hdmi: Fix Shifted Active
+ Video
+
+Message for Open Source:
+Active video for 1080p, 1080i and 720p will be shifted to the left.
+Leaving black bar on the right hand side.
+
+Message for Internal:
+[Issue/Feature] Same as above
+[Root cause/Changes] Shift video of 1080p, 1080i and 720p to the right
+
+Change-Id: Id1f03138cfdadc182f83335dee0237b89a650734
+Tracked-On: #H1506461184
+Signed-off-by: Khai Wen Ng <khai.wen.ng@intel.com>
+---
+ drivers/media/i2c/crlmodule/crl_adv7481_hdmi_configuration.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/media/i2c/crlmodule/crl_adv7481_hdmi_configuration.h b/drivers/media/i2c/crlmodule/crl_adv7481_hdmi_configuration.h
+index 438feb0..0a33945 100644
+--- a/drivers/media/i2c/crlmodule/crl_adv7481_hdmi_configuration.h
++++ b/drivers/media/i2c/crlmodule/crl_adv7481_hdmi_configuration.h
+@@ -242,6 +242,10 @@ struct crl_ctrl_data_pair hdmi_ctrl_data_lanes[] = {
+ 	{0x31, CRL_REG_LEN_08BIT, 0x80, 0x94},
+ 	{0xC9, CRL_REG_LEN_08BIT, 0x2D, 0x44},
+ 	{0x05, CRL_REG_LEN_08BIT, 0x5E, 0xE0},
++	{0x8B, CRL_REG_LEN_08BIT, 0x43, 0x44}, /* shift 44 pixel to right */
++	{0x8C, CRL_REG_LEN_08BIT, 0xD4, 0x44},
++	{0x8B, CRL_REG_LEN_08BIT, 0x4F, 0x44},
++	{0x8D, CRL_REG_LEN_08BIT, 0xD4, 0x44},
+ };
+ 
+ static struct crl_register_write_rep adv7481_hdmi_mode_1080i[] = {
+@@ -261,6 +265,10 @@ struct crl_ctrl_data_pair hdmi_ctrl_data_lanes[] = {
+ 	{0x31, CRL_REG_LEN_08BIT, 0x80, 0x94},
+ 	{0xC9, CRL_REG_LEN_08BIT, 0x2D, 0x44},
+ 	{0x05, CRL_REG_LEN_08BIT, 0x54, 0xE0},
++	{0x8B, CRL_REG_LEN_08BIT, 0x43, 0x44}, /* shift 44 pixel to right */
++	{0x8C, CRL_REG_LEN_08BIT, 0xD4, 0x44},
++	{0x8B, CRL_REG_LEN_08BIT, 0x4F, 0x44},
++	{0x8D, CRL_REG_LEN_08BIT, 0xD4, 0x44},
+ };
+ 
+ static struct crl_register_write_rep adv7481_hdmi_mode_480p[] = {
+@@ -299,6 +307,10 @@ struct crl_ctrl_data_pair hdmi_ctrl_data_lanes[] = {
+ 	{0x31, CRL_REG_LEN_08BIT, 0x80, 0x94},
+ 	{0xC9, CRL_REG_LEN_08BIT, 0x2D, 0x44},
+ 	{0x05, CRL_REG_LEN_08BIT, 0x53, 0xE0},
++	{0x8B, CRL_REG_LEN_08BIT, 0x43, 0x44}, /* shift 40 pixel to right */
++	{0x8C, CRL_REG_LEN_08BIT, 0xD8, 0x44},
++	{0x8B, CRL_REG_LEN_08BIT, 0x4F, 0x44},
++	{0x8D, CRL_REG_LEN_08BIT, 0xD8, 0x44},
+ };
+ 
+ static struct crl_register_write_rep adv7481_hdmi_mode_576p[] = {
+-- 
+1.9.1
+

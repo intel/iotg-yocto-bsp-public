@@ -1,7 +1,7 @@
-From 3c84233c28c8baf90fbccfadff87551e9c4b6e3c Mon Sep 17 00:00:00 2001
+From 7fb954ab30ef61104051d1ab0ad82b9250f6196f Mon Sep 17 00:00:00 2001
 From: Arun Siluvery <arun.siluvery@linux.intel.com>
 Date: Fri, 21 Apr 2017 09:37:28 -0700
-Subject: [PATCH 31/41] drm/i915/guc: Provide register list to be
+Subject: [PATCH 31/44] drm/i915/guc: Provide register list to be
  saved/restored during engine reset
 
 GuC expects a list of registers from the driver which are saved/restored

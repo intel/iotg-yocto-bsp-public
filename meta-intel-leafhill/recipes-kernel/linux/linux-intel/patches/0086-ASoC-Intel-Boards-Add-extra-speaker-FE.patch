@@ -1,7 +1,7 @@
-From fab2725142b90aec286b621b284dc79b5d5564e3 Mon Sep 17 00:00:00 2001
+From 1a58df8d7d0d803b2a8bb9a3f8c552d4db0185e0 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Mon, 21 Aug 2017 15:21:50 +0100
-Subject: [PATCH 86/96] ASoC: Intel: Boards: Add extra speaker FE
+Subject: [PATCH 086/102] ASoC: Intel: Boards: Add extra speaker FE
 
 On the GPMRB the early audio application holds the speaker audio device
 open so that it can quickly playback important audio, such as parking

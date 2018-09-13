@@ -1,0 +1,87 @@
+From 084cb5d100f45d55d69e627af4c6dec0a8ccaabe Mon Sep 17 00:00:00 2001
+From: Yong Zhi <yong.zhi@intel.com>
+Date: Tue, 10 Apr 2018 10:58:37 -0500
+Subject: [PATCH 061/129] media: intel-ipu4: isys: Add (un)subscribe_event
+ tpg_sd_core_ops
+
+Message for Open Source:
+Fix v4l2-compliance test fail on "Intel IPU4 TPG 1" subdev
+for subscribe event for control 'Image Source Controls'.
+
+Message for Internal:
+[Issue/Feature] Run "v4l2-compliance -u /dev/v4l-subdev6"
+
+"fail: v4l2-test-controls: subscribe event for control
+       'Image Source Controls' failed ret is 25 Inappropriate
+       ioctl for device"
+"test VIDIOC_(UN)SUBSCRIBE_EVENT/DQEVENT: FAIL"
+
+[Root Cause/Changes] Missing implementation.
+
+Change-Id: I6016e75abcd4d9c773bd5e31dae5dbf256adbbd1
+Tracked-On: #JICCCN-87
+Signed-off-by: Yong Zhi <yong.zhi@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu-isys-tpg.c | 29 +++++++++++++++++++++++------
+ 1 file changed, 23 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu-isys-tpg.c b/drivers/media/pci/intel/ipu-isys-tpg.c
+index de619cb..c61849d 100644
+--- a/drivers/media/pci/intel/ipu-isys-tpg.c
++++ b/drivers/media/pci/intel/ipu-isys-tpg.c
+@@ -235,10 +235,29 @@ const struct ipu_isys_pixelformat *ipu_isys_tpg_try_fmt(struct ipu_isys_video
+ 	.enum_mbus_code = ipu_isys_subdev_enum_mbus_code,
+ };
+ 
+-static struct v4l2_subdev_ops tpg_sd_ops = {
++static int subscribe_event(struct v4l2_subdev *sd, struct v4l2_fh *fh,
++			   struct v4l2_event_subscription *sub)
++{
++	switch (sub->type) {
+ #ifdef IPU_TPG_SOF
+-	.core = &tpg_sd_core_ops,
++	case V4L2_EVENT_FRAME_SYNC:
++		return v4l2_event_subscribe(fh, sub, 10, NULL);
+ #endif
++	case V4L2_EVENT_CTRL:
++		return v4l2_ctrl_subscribe_event(fh, sub);
++	default:
++		return -EINVAL;
++	}
++};
++
++/* V4L2 subdev core operations */
++static const struct v4l2_subdev_core_ops tpg_sd_core_ops = {
++	.subscribe_event = subscribe_event,
++	.unsubscribe_event = v4l2_event_subdev_unsubscribe,
++};
++
++static struct v4l2_subdev_ops tpg_sd_ops = {
++	.core = &tpg_sd_core_ops,
+ 	.video = &tpg_sd_video_ops,
+ 	.pad = &tpg_sd_pad_ops,
+ };
+@@ -282,7 +301,8 @@ int ipu_isys_tpg_init(struct ipu_isys_tpg *tpg,
+ 				    NR_OF_TPG_PADS,
+ 				    NR_OF_TPG_STREAMS,
+ 				    NR_OF_TPG_SOURCE_PADS,
+-				    NR_OF_TPG_SINK_PADS, 0);
++				    NR_OF_TPG_SINK_PADS,
++				    V4L2_SUBDEV_FL_HAS_EVENTS);
+ 	if (rval)
+ 		return rval;
+ 
+@@ -291,9 +311,6 @@ int ipu_isys_tpg_init(struct ipu_isys_tpg *tpg,
+ #else
+ 	tpg->asd.sd.entity.function = MEDIA_ENT_F_CAM_SENSOR;
+ #endif
+-#ifdef IPU_TPG_SOF
+-	tpg->asd.sd.flags |= V4L2_SUBDEV_FL_HAS_EVENTS;
+-#endif
+ 	tpg->asd.pad[TPG_PAD_SOURCE].flags = MEDIA_PAD_FL_SOURCE;
+ 
+ 	tpg->asd.source = IPU_FW_ISYS_STREAM_SRC_MIPIGEN_PORT0 + index;
+-- 
+1.9.1
+

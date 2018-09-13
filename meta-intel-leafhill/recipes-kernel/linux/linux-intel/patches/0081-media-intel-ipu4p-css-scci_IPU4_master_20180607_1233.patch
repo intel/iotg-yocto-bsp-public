@@ -1,0 +1,74 @@
+From bfec19dfc5c2c0b45c62fa9c2311402d8654f936 Mon Sep 17 00:00:00 2001
+From: icg_intg <icg_intg@intel.com>
+Date: Fri, 8 Jun 2018 10:28:04 +0800
+Subject: [PATCH 081/129] media: intel-ipu4p: css:
+ scci_IPU4_master_20180607_1233 FwRelease
+
+Message for Open Source:
+New firmware css release.
+
+Message for Internal:
+[Feature]New firmware css release.
+[Root Cause/Changes]
+FW_Manifest_ID: 611c5ae6e191480482a9d121208a7f0ddabac0de
+FW_Build_Branch: IPU4_master
+FW_Build_Topic: auto_merge_queue
+library version: commit-id b745f8e
+FW Bundle patch number of this release :  334403
+FW tag : scci_IPU4_master_20180607_1233
+
+Change-Id: Ie1be3083da60a1040f0f5471cb45825a84634030
+Depends-on: Ib45167e36252fac84522f736affc5c8b784181eb
+Depends-on: Ibc81607dbe37195f8b901728ce71c413dcf669cc
+Signed-off-by: icg_intg <icg_intg@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h          | 2 +-
+ .../pci/intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h | 2 +-
+ .../ipu4p-css/lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h | 2 +-
+ .../ipu4p-css/lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h
+index 081886c..67f92cf 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180605
++#define IA_CSS_FW_PKG_RELEASE  0x20180607
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h
+index 081886c..67f92cf 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180605
++#define IA_CSS_FW_PKG_RELEASE  0x20180607
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h
+index 081886c..67f92cf 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180605
++#define IA_CSS_FW_PKG_RELEASE  0x20180607
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h
+index 081886c..67f92cf 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180605
++#define IA_CSS_FW_PKG_RELEASE  0x20180607
+-- 
+1.9.1
+

@@ -1,0 +1,73 @@
+From f099b4d43f8f41abe69d6567bd51d13c4d0dc3e6 Mon Sep 17 00:00:00 2001
+From: CraigX Kewley <craigx.kewley@intel.com>
+Date: Thu, 23 Jun 2016 12:47:51 +0100
+Subject: [PATCH 28/98] ASoC: Intel: Boards: Move to using digital mute and
+ ACPI.
+
+Removed dependency on board driver as codec now enumerated via ACPI.
+Changed DAI codec name to reflect ACPI change.
+Removed Amp event as digital mute now handled by codec.
+
+Signed-off-by: CraigX Kewley <craigx.kewley@intel.com>
+
+Conflicts:
+	sound/soc/intel/Kconfig
+---
+ sound/soc/intel/boards/Kconfig     |  1 -
+ sound/soc/intel/boards/bxt_gpmrb.c | 16 ++--------------
+ 2 files changed, 2 insertions(+), 15 deletions(-)
+
+diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
+index 1aa13b7..20337a6 100644
+--- a/sound/soc/intel/boards/Kconfig
++++ b/sound/soc/intel/boards/Kconfig
+@@ -391,7 +391,6 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
+ 	tristate "ASoC Audio driver for BXT IVI GP MRB"
+ 	select SND_SOC_INTEL_SST
+ 	select SND_SOC_TDF8532
+-	select GPMRB_BRD
+ 	default n
+ 	help
+ 	   This adds support for ASoC machine driver for Broxton IVI GP MRB platform
+diff --git a/sound/soc/intel/boards/bxt_gpmrb.c b/sound/soc/intel/boards/bxt_gpmrb.c
+index bef0185..85044a5 100644
+--- a/sound/soc/intel/boards/bxt_gpmrb.c
++++ b/sound/soc/intel/boards/bxt_gpmrb.c
+@@ -25,24 +25,12 @@
+ #include <linux/i2c.h>
+ #include <sound/pcm_params.h>
+ 
+-/* NXP TDF8532 Amplifier Mute Pin */
+-#define GPIO_AMP_MUTE 322
+-
+-
+-
+ static const struct snd_kcontrol_new broxton_controls[] = {
+ 		SOC_DAPM_PIN_SWITCH("Speaker"),
+ };
+ 
+-/* mute speaker amplifier on/off depending on use */
+-static int amp_event(struct snd_soc_dapm_widget *w, struct snd_kcontrol *k, int event)
+-{
+-	gpio_set_value(GPIO_AMP_MUTE, SND_SOC_DAPM_EVENT_ON(event));
+-	return 0;
+-}
+-
+ static const struct snd_soc_dapm_widget broxton_widgets[] = {
+-		SND_SOC_DAPM_SPK("Speaker", amp_event),
++		SND_SOC_DAPM_SPK("Speaker", NULL),
+ 		SND_SOC_DAPM_MIC("DiranaCp", NULL),
+ 		SND_SOC_DAPM_HP("DiranaPb", NULL),
+ 		SND_SOC_DAPM_MIC("HdmiIn", NULL),
+@@ -287,7 +275,7 @@ static int broxton_gpmrb_hw_params(struct snd_pcm_substream *substream,
+ 				.name = "SSP4-Codec",
+ 				.be_id = 0,
+ 				.cpu_dai_name = "SSP4 Pin",
+-				.codec_name = "tdf8532-codec.4-006c",
++				.codec_name = "i2c-INT34C3:00",
+ 				.codec_dai_name = "tdf8532-hifi",
+ 				.platform_name = "0000:00:0e.0",
+ 				.ignore_suspend = 1,
+-- 
+1.9.1
+

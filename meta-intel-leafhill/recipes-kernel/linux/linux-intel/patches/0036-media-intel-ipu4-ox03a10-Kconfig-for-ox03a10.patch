@@ -1,0 +1,38 @@
+From b8b5546e86a495fd2641fae25faa2eb842afc839 Mon Sep 17 00:00:00 2001
+From: Chen Meng J <meng.j.chen@intel.com>
+Date: Wed, 15 Aug 2018 11:08:31 +0800
+Subject: [PATCH 36/54] media: intel-ipu4: ox03a10: Kconfig for ox03a10
+
+Message for Open Source:
+Kconfig for ox03a10
+
+Message for Internal:
+[Feature] sensor ox03a10 driver enabling
+Kconfig for ox03a10
+
+Change-Id: If04f77fee75462e7702ca2e6a829da93922097e4
+Tracked-On: #JIIAP-573
+Signed-off-by: Chang Ying <ying.chang@intel.com>
+Signed-off-by: Chen Meng J <meng.j.chen@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/platform/intel/Kconfig | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/media/platform/intel/Kconfig b/drivers/media/platform/intel/Kconfig
+index be7621c..0d99e86 100755
+--- a/drivers/media/platform/intel/Kconfig
++++ b/drivers/media/platform/intel/Kconfig
+@@ -122,3 +122,9 @@ config INTEL_IPU4_OV2775
+ 	depends on INTEL_IPU4_BXT_P_PDATA
+ 	---help---
+ 	"Omnivision OV2775 camera sensor"
++
++config INTEL_IPU4_OX03A10
++	bool "Compile platorm data for OX03A10"
++	depends on INTEL_IPU4_BXT_P_PDATA
++	---help---
++	"ox03a10 camera sensor"
+-- 
+1.9.1
+

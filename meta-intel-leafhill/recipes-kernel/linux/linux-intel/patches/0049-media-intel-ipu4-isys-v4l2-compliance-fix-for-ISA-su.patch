@@ -1,0 +1,46 @@
+From 17cb40a5b692f7f91d48ea137e93f3822968465d Mon Sep 17 00:00:00 2001
+From: Yong Zhi <yong.zhi@intel.com>
+Date: Fri, 6 Apr 2018 12:06:07 -0500
+Subject: [PATCH 049/129] media: intel-ipu4: isys: v4l2-compliance fix for ISA
+ subdev
+
+Message for Open Source:
+Fix v4l2-compliance fails on "Intel IPU4 ISA" subdev for
+VIDIOC_SUBDEV_G/S_FMT test.
+
+Message for Internal:
+[Issue/Feature] v4l2-compliance -u /dev/v4l-subdev9
+
+"fail: v4l2-test-subdevs fmt.width == 0 || fmt.width == ~0U"
+"fail: v4l2-test-subdevs checkMBusFrameFmt(node, fmt.format)"
+"test Try VIDIOC_SUBDEV_G/S_FMT: FAIL"
+
+[Root Cause/Changes]
+0 is invalid value for w and h.
+
+Change-Id: I2f1f64aaaf40d1ded56a3c5ead02e052ff968dae
+Tracked-On: #JICCCN-87
+Signed-off-by: Yong Zhi <yong.zhi@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu4/ipu4-isys-isa.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-isys-isa.c b/drivers/media/pci/intel/ipu4/ipu4-isys-isa.c
+index 3bc6510..11ed206 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-isys-isa.c
++++ b/drivers/media/pci/intel/ipu4/ipu4-isys-isa.c
+@@ -349,8 +349,8 @@ static void isa_set_ffmt(struct v4l2_subdev *sd,
+ 	case ISA_PAD_CONFIG:
+ 	case ISA_PAD_3A:
+ 		ffmt->code = MEDIA_BUS_FMT_FIXED;
+-		ffmt->width = 0;
+-		ffmt->height = 0;
++		ffmt->width = IPU_ISYS_MIN_WIDTH;
++		ffmt->height = IPU_ISYS_MIN_HEIGHT;
+ 		fmt->format = *ffmt;
+ 		return;
+ 	case ISA_PAD_SOURCE_SCALED: {
+-- 
+1.9.1
+

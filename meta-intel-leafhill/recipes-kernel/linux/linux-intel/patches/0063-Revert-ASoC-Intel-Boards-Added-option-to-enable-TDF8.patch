@@ -1,7 +1,7 @@
-From 669fb4ddc52306716a12785e61dcc64504645826 Mon Sep 17 00:00:00 2001
+From 123c0e91a7c6a7ef9604034728a295321a340e72 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Wed, 7 Jun 2017 10:03:02 +0100
-Subject: [PATCH 63/96] Revert "ASoC: Intel: Boards: Added option to enable
+Subject: [PATCH 063/102] Revert "ASoC: Intel: Boards: Added option to enable
  TDF8532 DAI link"
 
 This reverts commit cab970a7cb8be9c8289a751910c35cb8063f9b2d.
@@ -14,10 +14,10 @@ Conflicts:
  2 files changed, 15 deletions(-)
 
 diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
-index ef8c02f..ca1f1f0 100644
+index 8428d6e..987c808 100644
 --- a/sound/soc/intel/boards/Kconfig
 +++ b/sound/soc/intel/boards/Kconfig
-@@ -388,16 +388,6 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
+@@ -417,16 +417,6 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
  	   Say Y if you have such a device
  	   If unsure select "N".
  

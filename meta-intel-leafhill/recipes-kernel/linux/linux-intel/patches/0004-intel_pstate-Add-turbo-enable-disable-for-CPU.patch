@@ -1,7 +1,7 @@
-From c77e4a3ff16e0e4b74f489b018000686bb62bd95 Mon Sep 17 00:00:00 2001
+From f46cdbdd626eff8d8cd6f5a2b3631f63e2134dc8 Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:01:42 +0100
-Subject: [PATCH 04/43] intel_pstate: Add turbo enable/disable for CPU
+Subject: [PATCH 04/42] intel_pstate: Add turbo enable/disable for CPU
 
 Add functions for enabling/disabling CPU turbo mode
 by changing no_turbo variable.
@@ -13,10 +13,10 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 39 insertions(+)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 20226d4..c1b459d 100644
+index 114dfe6..72fe151 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
-@@ -698,6 +698,7 @@ static void intel_pstate_get_hwp_max(unsigned int cpu, int *phy_max,
+@@ -699,6 +699,7 @@ static void intel_pstate_get_hwp_max(unsigned int cpu, int *phy_max,
  	*phy_max = HWP_HIGHEST_PERF(cap);
  }
  
@@ -24,7 +24,7 @@ index 20226d4..c1b459d 100644
  static void intel_pstate_hwp_set(unsigned int cpu)
  {
  	struct cpudata *cpu_data = all_cpu_data[cpu];
-@@ -807,6 +808,44 @@ static void intel_pstate_update_policies(void)
+@@ -808,6 +809,44 @@ static void intel_pstate_update_policies(void)
  		cpufreq_update_policy(cpu);
  }
  

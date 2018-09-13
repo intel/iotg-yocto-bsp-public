@@ -1,7 +1,7 @@
-From 00f7372e1ec378f4b35494306b46e19c5cf8f6d7 Mon Sep 17 00:00:00 2001
+From 92b31860f6d65bdfc0a064298a97bb719dbbde81 Mon Sep 17 00:00:00 2001
 From: Yetunde Adebisi <yetundex.adebisi@intel.com>
 Date: Tue, 5 Apr 2016 13:56:01 +0100
-Subject: [PATCH 05/41] drm/i915: Add backlight Control using DPCD registers
+Subject: [PATCH 05/44] drm/i915: Add backlight Control using DPCD registers
  for DP connectors
 
 This patch enables support for DPCD backlight control for DP connectors.

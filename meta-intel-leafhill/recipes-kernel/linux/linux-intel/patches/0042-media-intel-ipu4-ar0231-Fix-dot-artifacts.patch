@@ -1,0 +1,70 @@
+From a2c693f4472ae7f2362766e04930c7d23c46586d Mon Sep 17 00:00:00 2001
+From: Yongsheng Chen <yongsheng.chen@intel.com>
+Date: Tue, 28 Aug 2018 17:52:43 -0700
+Subject: [PATCH 42/54] media: intel-ipu4: ar0231: Fix dot artifacts.
+
+Message for Open Source:
+Enable BLC.
+
+Message for Internal:
+[Issue/Feature]
+Enable BLC.
+
+[Root Cause/Changes]
+Enable BLC to resolve the dot artifacts issue.
+
+Change-Id: I42912620e7f785ae2c8794b4195ca68b83d7038a
+Tracked-On:#H1407792856
+Signed-off-by: Chen, Yongsheng <yongsheng.chen@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h b/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h
+index 0daeb2f..3b1fdf6 100644
+--- a/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h
++++ b/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h
+@@ -423,6 +423,7 @@ struct crl_ctrl_data_pair ar0231at_ctrl_data_modes[] = {
+ 	{ 0x340C, CRL_REG_LEN_16BIT, 0x0080, 0x10 },
+ 	{ 0x30CE, CRL_REG_LEN_16BIT, 0x0120, 0x10 },
+ 	{ 0x301A, CRL_REG_LEN_16BIT, 0x19DC, 0x10 },
++	{ 0x3370, CRL_REG_LEN_16BIT, 0x0231, 0x10 },
+ };
+ 
+ static struct crl_register_write_rep ar0231at_1920_1088_linear_mode[] = {
+@@ -738,6 +739,7 @@ struct crl_ctrl_data_pair ar0231at_ctrl_data_modes[] = {
+ 	{ 0x340C, CRL_REG_LEN_16BIT, 0x0080, 0x10 },
+ 	{ 0x30CE, CRL_REG_LEN_16BIT, 0x0120, 0x10 },
+ 	{ 0x301A, CRL_REG_LEN_16BIT, 0x19DC, 0x10 },
++	{ 0x3370, CRL_REG_LEN_16BIT, 0x0231, 0x10 },
+ };
+ 
+ static struct crl_register_write_rep ar0231at_1920_1088_2hdr_mode[] = {
+@@ -1085,6 +1087,7 @@ struct crl_ctrl_data_pair ar0231at_ctrl_data_modes[] = {
+ 	{ 0x340C, CRL_REG_LEN_16BIT, 0x0080, 0x10 },
+ 	{ 0x30CE, CRL_REG_LEN_16BIT, 0x0120, 0x10 },
+ 	{ 0x301A, CRL_REG_LEN_16BIT, 0x19DC, 0x10 },
++	{ 0x3370, CRL_REG_LEN_16BIT, 0x0231, 0x10 },
+ };
+ 
+ static struct crl_register_write_rep ar0231at_1920_1088_3hdr_mode[] = {
+@@ -1437,6 +1440,7 @@ struct crl_ctrl_data_pair ar0231at_ctrl_data_modes[] = {
+ 	{ 0x340C, CRL_REG_LEN_16BIT, 0x0080, 0x10 },
+ 	{ 0x30CE, CRL_REG_LEN_16BIT, 0x0120, 0x10 },
+ 	{ 0x301A, CRL_REG_LEN_16BIT, 0x19DC, 0x10 },
++	{ 0x3370, CRL_REG_LEN_16BIT, 0x0231, 0x10 },
+ };
+ 
+ static struct crl_register_write_rep ar0231at_1920_1088_4hdr_mode[] = {
+@@ -1790,6 +1794,7 @@ struct crl_ctrl_data_pair ar0231at_ctrl_data_modes[] = {
+ 	{ 0x340C, CRL_REG_LEN_16BIT, 0x0080, 0x10 },
+ 	{ 0x30CE, CRL_REG_LEN_16BIT, 0x0120, 0x10 },
+ 	{ 0x301A, CRL_REG_LEN_16BIT, 0x19DC, 0x10 },
++	{ 0x3370, CRL_REG_LEN_16BIT, 0x0231, 0x10 },
+ };
+ 
+ struct crl_mode_rep ar0231at_modes[] = {
+-- 
+1.9.1
+

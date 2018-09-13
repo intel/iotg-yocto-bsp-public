@@ -1,0 +1,38 @@
+From 6ecb3784ee464bacec91ef2275b8223e0d3d7a64 Mon Sep 17 00:00:00 2001
+From: Craig Kewley <craigx.kewley@intel.com>
+Date: Thu, 4 Aug 2016 16:54:01 +0100
+Subject: [PATCH 35/98] ASoC: Intel: Skylake: enable i915 code.
+
+Enabl i915_init code by removing '#if 0' as it is used on the GP MRB board.
+
+Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl.c
+---
+ sound/soc/intel/skylake/skl.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/sound/soc/intel/skylake/skl.c b/sound/soc/intel/skylake/skl.c
+index 674dd5c..09f2398 100644
+--- a/sound/soc/intel/skylake/skl.c
++++ b/sound/soc/intel/skylake/skl.c
+@@ -657,6 +657,7 @@ static void __maybe_unused skl_codec_create(struct hdac_ext_bus *ebus)
+ 	.get_response = snd_hdac_bus_get_response,
+ };
+ 
++#if 1
+ static int skl_i915_init(struct hdac_bus *bus)
+ {
+ 	int err;
+@@ -675,6 +676,7 @@ static int skl_i915_init(struct hdac_bus *bus)
+ 
+ 	return err;
+ }
++#endif
+ 
+ static void skl_probe_work(struct work_struct *work)
+ {
+-- 
+1.9.1
+

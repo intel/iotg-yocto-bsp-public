@@ -1,0 +1,51 @@
+From 945c5fb262a094c04537c15b8dc34fef6704b561 Mon Sep 17 00:00:00 2001
+From: Yong Zhi <yong.zhi@intel.com>
+Date: Fri, 6 Apr 2018 12:26:03 -0500
+Subject: [PATCH 033/129] media: intel-ipu4: isys: Fix VIDIOC_S_CTRL panic on
+ TPG
+
+Message for Open Source:
+The v4l2-compliance VIDIOC_S_CTRL test on "Intel IPU4 TPG 1"
+subdev causes kernel panic, fix it with valid max index.
+
+Message for Internal:
+[Issue/Feature]
+"v4l2-compliance -u /dev/v4l-subdev6" caused kernel panic:
+
+[   83.968335]  validate_new+0x35/0x44
+[   83.972238]  set_ctrl+0x4f/0xb6
+[   83.975744]  v4l2_s_ctrl+0x97/0xe0
+[   83.979544]  subdev_do_ioctl+0x283/0xad8
+[   83.983933]  ? tty_insert_flip_string_fixed_flag+0x49/0xb4
+[   83.990073]  ? __might_fault+0x35/0x37
+[   83.994268]  video_usercopy+0x301/0x565
+[   83.998559]  ? subdev_close+0x99/0x99
+[   84.002648]  ? ldsem_up_read+0x19/0x2f
+[   84.006833]  ? tty_write+0x259/0x26b
+[   84.010830]  v4l2_ioctl+0x79/0xaf
+
+[Root Cause/Changes] max index of tpg_mode_items should be valid.
+
+Change-Id: Ibe7b8611a60ab4d6da3ca12a7c56b9e0b840370a
+Tracked-On: #JICCCN-87
+Signed-off-by: Yong Zhi <yong.zhi@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu-isys-tpg.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/media/pci/intel/ipu-isys-tpg.c b/drivers/media/pci/intel/ipu-isys-tpg.c
+index 53ab79e..de619cb 100644
+--- a/drivers/media/pci/intel/ipu-isys-tpg.c
++++ b/drivers/media/pci/intel/ipu-isys-tpg.c
+@@ -90,7 +90,6 @@ static s64 ipu_isys_tpg_rate(struct ipu_isys_tpg *tpg, unsigned int bpp)
+ 	"Ramp",
+ 	"Checkerboard",	/* Does not work, disabled. */
+ 	"Frame Based Colour",
+-	NULL,
+ };
+ 
+ static struct v4l2_ctrl_config tpg_mode = {
+-- 
+1.9.1
+

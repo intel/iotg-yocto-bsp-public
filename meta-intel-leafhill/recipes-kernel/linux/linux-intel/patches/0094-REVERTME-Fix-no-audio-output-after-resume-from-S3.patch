@@ -1,0 +1,33 @@
+From e92cddfd75fe546aa634041e6bd191481e23cb10 Mon Sep 17 00:00:00 2001
+From: Gustaw Lewandowski <gustaw.lewandowski@intel.com>
+Date: Fri, 21 Sep 2018 16:09:53 +0200
+Subject: [PATCH 94/98] REVERTME: Fix no audio output after resume from S3
+
+Ignoring returned code from tdf8532_stop_play allows continue
+playback after S3.
+
+Tracked-On: https://jira01.devtools.intel.com/browse/OAM-67068
+Change-Id: Ied077210ce6508a79b12eedc0ac22ea86d5b643a
+Signed-off-by: Gustaw Lewandowski <gustaw.lewandowski@intel.com>
+---
+ sound/soc/codecs/tdf8532.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
+index 689f675..65d9b1c 100644
+--- a/sound/soc/codecs/tdf8532.c
++++ b/sound/soc/codecs/tdf8532.c
+@@ -323,7 +323,9 @@ static int tdf8532_dai_trigger(struct snd_pcm_substream *substream, int cmd,
+ 	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
+ 	case SNDRV_PCM_TRIGGER_SUSPEND:
+ 	case SNDRV_PCM_TRIGGER_STOP:
+-		ret = tdf8532_stop_play(tdf8532);
++		/* WA on unexpected codec down during S3
++		 SNDRV_PCM_TRIGGER_STOP fails so skip set ret */
++		tdf8532_stop_play(tdf8532);
+ 		break;
+ 	}
+ 
+-- 
+1.9.1
+

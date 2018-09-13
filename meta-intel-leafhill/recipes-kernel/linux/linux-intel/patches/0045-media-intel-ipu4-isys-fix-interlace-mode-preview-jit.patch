@@ -1,0 +1,138 @@
+From 61ae3b35aaaff9e552cc23d19a9624c39055f97f Mon Sep 17 00:00:00 2001
+From: qianmenx <qianx.meng@intel.com>
+Date: Thu, 6 Sep 2018 10:06:10 +0800
+Subject: [PATCH 45/54] media: intel-ipu4: isys: fix interlace mode preview
+ jitter issue
+
+Message for Open Source:
+fix the issue of enable ddr ssc will cause interlace mode preview
+jitter with two channels
+
+Message for Internal:
+[Issue/Feature]
+enable ddr ssc will cause interlace mode preview jitter still
+exist with two channels
+
+[Root Cause/Changes]
+multi channels will cause negative value during compare the tsc
+and tunit time, then get mismatch result.
+add negative value process in function in tsc_time_to_tunit_time,
+ipu4p do the same process
+
+Change-Id: I0adeafd6980d8e73aa93749fd9e80a31ab9b6d28
+Tracked-On: #H1605358636
+Signed-off-by: qianmenx <qianx.meng@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu4/ipu4-isys-csi2.c  | 13 +++++---
+ drivers/media/pci/intel/ipu4/ipu4p-isys-csi2.c | 45 +++++++++++++++++++++++---
+ 2 files changed, 49 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-isys-csi2.c b/drivers/media/pci/intel/ipu4/ipu4-isys-csi2.c
+index a35a530..1484a197 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-isys-csi2.c
++++ b/drivers/media/pci/intel/ipu4/ipu4-isys-csi2.c
+@@ -560,12 +560,13 @@ static u64 tsc_time_to_tunit_time(struct ipu_isys *isys,
+ 	struct ipu_bus_device *adev = to_ipu_bus_device(isys->adev->iommu);
+ 	u64 isys_clk = IS_FREQ_SOURCE / adev->ctrl->divisor / 100000;
+ 	u64 tsc_clk = IPU_BUTTRESS_TSC_CLK / 100000;
+-	u64 tunit_time;
+ 
+-	tunit_time = (tsc_time - tsc_base) * isys_clk;
+-	do_div(tunit_time, tsc_clk);
++	tsc_time *= isys_clk;
++	tsc_base *= isys_clk;
++	do_div(tsc_time, tsc_clk);
++	do_div(tsc_base, tsc_clk);
+ 
+-	return tunit_time + tunit_base;
++	return tunit_base + tsc_time - tsc_base;
+ }
+ 
+ /* Extract the timestamp from trace message.
+@@ -609,6 +610,8 @@ static u64 tsc_time_to_tunit_time(struct ipu_isys *isys,
+ 	bool msg_matched = false;
+ 	unsigned int monitor_id;
+ 
++	update_timer_base(isys);
++
+ 	if (ip->csi2->index >= IPU_ISYS_MAX_CSI2_LEGACY_PORTS)
+ 		monitor_id = TRACE_REG_CSI2_3PH_TM_MONITOR_ID;
+ 	else
+@@ -653,7 +656,7 @@ static u64 tsc_time_to_tunit_time(struct ipu_isys *isys,
+ 	if (!msg_matched)
+ 		/* We have walked through the whole buffer. */
+ 		dev_dbg(&isys->adev->dev, "No matched trace message found.\n");
+-	update_timer_base(isys);
++
+ 	return field;
+ }
+ 
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-isys-csi2.c b/drivers/media/pci/intel/ipu4/ipu4p-isys-csi2.c
+index 0ced354..5a58bcd 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-isys-csi2.c
++++ b/drivers/media/pci/intel/ipu4/ipu4p-isys-csi2.c
+@@ -234,12 +234,47 @@ static u64 tsc_time_to_tunit_time(struct ipu_isys *isys,
+ 	struct ipu_bus_device *adev = to_ipu_bus_device(isys->adev->iommu);
+ 	u64 isys_clk = IS_FREQ_SOURCE / adev->ctrl->divisor / 100000;
+ 	u64 tsc_clk = IPU_BUTTRESS_TSC_CLK / 100000;
+-	u64 tunit_time;
+ 
+-	tunit_time = (tsc_time - tsc_base) * isys_clk;
+-	do_div(tunit_time, tsc_clk);
++	tsc_time *= isys_clk;
++	tsc_base *= isys_clk;
++	do_div(tsc_time, tsc_clk);
++	do_div(tsc_base, tsc_clk);
+ 
+-	return tunit_time + tunit_base;
++	return tunit_base + tsc_time - tsc_base;
++}
++
++static int update_timer_base(struct ipu_isys *isys)
++{
++	int rval, i;
++	u64 time;
++
++	for (i = 0; i < CSI2_UPDATE_TIME_TRY_NUM; i++) {
++		rval = ipu_trace_get_timer(&isys->adev->dev, &time);
++		if (rval) {
++			dev_err(&isys->adev->dev,
++				"Failed to read Tunit timer.\n");
++			return rval;
++		}
++		rval = ipu_buttress_tsc_read(isys->adev->isp,
++					     &isys->tsc_timer_base);
++		if (rval) {
++			dev_err(&isys->adev->dev,
++				"Failed to read TSC timer.\n");
++			return rval;
++		}
++		rval = ipu_trace_get_timer(&isys->adev->dev,
++					   &isys->tunit_timer_base);
++		if (rval) {
++			dev_err(&isys->adev->dev,
++				"Failed to read Tunit timer.\n");
++			return rval;
++		}
++		if (tunit_time_to_us(isys, isys->tunit_timer_base - time) <
++		    CSI2_UPDATE_TIME_MAX_DIFF)
++			return 0;
++	}
++	dev_dbg(&isys->adev->dev, "Timer base values may not be accurate.\n");
++	return 0;
+ }
+ 
+ /* Extract the timestamp from trace message.
+@@ -283,6 +318,8 @@ unsigned int ipu_isys_csi2_get_current_field(struct ipu_isys_pipeline *ip,
+ 	bool msg_matched = false;
+ 	unsigned int monitor_id;
+ 
++	update_timer_base(isys);
++
+ 	if (ip->csi2->index >= IPU_ISYS_MAX_CSI2_LEGACY_PORTS)
+ 		monitor_id = TRACE_REG_CSI2_3PH_TM_MONITOR_ID;
+ 	else
+-- 
+1.9.1
+

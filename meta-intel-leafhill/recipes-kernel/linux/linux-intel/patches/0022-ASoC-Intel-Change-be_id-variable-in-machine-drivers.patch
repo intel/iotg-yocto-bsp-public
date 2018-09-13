@@ -1,7 +1,7 @@
-From dda9fc740cf38c69766d700b8700462f0c989d81 Mon Sep 17 00:00:00 2001
+From 0652c9b56e478b837f283205c2f167b5f5ae2a81 Mon Sep 17 00:00:00 2001
 From: Joshua Wong Weng Onn <joshua.weng.onn.wong@intel.com>
 Date: Mon, 4 Jun 2018 13:27:14 +0800
-Subject: [PATCH 22/96] ASoC: Intel: Change be_id variable in machine drivers
+Subject: [PATCH 022/102] ASoC: Intel: Change be_id variable in machine drivers
 
 The be_id variable has been replaced with id. Hence, change be_id to id
 for the following machine drivers.

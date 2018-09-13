@@ -1,0 +1,40 @@
+From 34071fd582185622c24dbe77a0f52a0e9fe4e4f4 Mon Sep 17 00:00:00 2001
+From: Ding Yunliang <yunliang.ding@intel.com>
+Date: Mon, 13 Aug 2018 15:13:09 +0800
+Subject: [PATCH 28/54] media: intel-ipu4: enable csi2_port_optimized by
+ default
+
+Message for Open Source:
+More ports appeared on the pipeline but only few of them
+are used, enable the optimzed configuration by default to
+let only used ports appear in the pipeline.
+
+Message for Internal:
+[Issue/Feature] Same as above.
+[Root Cause/Changes]
+Actually all the platform could do this optimzation.
+
+Change-Id: Iaafeafea8de7ca0d1c6124517df505b2a4bca9cc
+Tracked-On: #JICSD9-75
+Signed-off-by: Ding Yunliang <yunliang.ding@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu-isys.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/pci/intel/ipu-isys.c b/drivers/media/pci/intel/ipu-isys.c
+index 081d503..b2fad70 100644
+--- a/drivers/media/pci/intel/ipu-isys.c
++++ b/drivers/media/pci/intel/ipu-isys.c
+@@ -40,7 +40,7 @@
+  * The param was passed from module to indicate if port
+  * could be optimized.
+  */
+-static bool csi2_port_optimized;
++static bool csi2_port_optimized = true;
+ module_param(csi2_port_optimized, bool, 0660);
+ MODULE_PARM_DESC(csi2_port_optimized, "IPU CSI2 port optimization");
+ 
+-- 
+1.9.1
+

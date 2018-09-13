@@ -1,0 +1,75 @@
+From 86d2f2585e8c5db225e4a7472c12acf617f143fb Mon Sep 17 00:00:00 2001
+From: icg_intg <icg_intg@intel.com>
+Date: Mon, 13 Aug 2018 10:19:51 +0800
+Subject: [PATCH 25/54] media: intel-ipu4: css: scci_IPU4_master_20180809_0305
+ fw release
+
+Message for Open Source:
+New firmware css release.
+
+Message for Internal:
+[Feature]New firmware css release.
+[Root Cause/Changes]
+FW_Manifest_ID: 32b12b4b2553432e9b8a59396503121fdabac0de
+FW_Build_Branch: IPU4_master
+FW_Build_Topic: auto_merge_queue
+library version: commit-id 115518d
+FW Bundle patch number of this release :  347449
+FW tag : scci_IPU4_master_20180809_0305
+
+Change-Id: I803c5c97f0ad66076390aec318b941de2cb2e466
+Depends-on: Iad20e5f94c125982ab18153c96514c5529e3fa0e
+Depends-on: I87089e0a6345054c3433a54afe08ca3bc6aadedf
+Signed-off-by: icg_intg <icg_intg@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h         | 2 +-
+ .../pci/intel/ipu4/ipu4-css/lib2600/isysapi/src/ia_css_isys_public.c  | 4 ++--
+ .../lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h      | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+index aea2a25..ff6c501 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180802
++#define IA_CSS_FW_PKG_RELEASE  0x20180809
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600/isysapi/src/ia_css_isys_public.c b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600/isysapi/src/ia_css_isys_public.c
+index f7b1325..960f646 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600/isysapi/src/ia_css_isys_public.c
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600/isysapi/src/ia_css_isys_public.c
+@@ -296,7 +296,7 @@ int ia_css_isys_context_create(
+ 
+ /* push context information to DMEM for FW to access */
+ int ia_css_isys_context_store_dmem(
+-	const HANDLE *context,
++	const HANDLE * context,
+ 	const struct ia_css_isys_device_cfg_data *config)
+ {
+ 	struct ia_css_isys_context *ctx = (struct ia_css_isys_context *) *context;
+@@ -305,7 +305,7 @@ int ia_css_isys_context_store_dmem(
+ }
+ 
+ bool ia_css_isys_ab_spc_ready(
+-	HANDLE *context)
++	HANDLE * context)
+ {
+ 	struct ia_css_isys_context *ctx = (struct ia_css_isys_context *) *context;
+ 
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+index aea2a25..ff6c501 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180802
++#define IA_CSS_FW_PKG_RELEASE  0x20180809
+-- 
+1.9.1
+

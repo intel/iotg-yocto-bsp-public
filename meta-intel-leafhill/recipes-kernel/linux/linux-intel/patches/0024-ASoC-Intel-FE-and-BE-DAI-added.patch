@@ -1,7 +1,7 @@
-From d52fae0ceb58fcff7231b9830e3ad6a5265d4e69 Mon Sep 17 00:00:00 2001
+From 8e648ca89b51fbbfcee152cfb08b3dfeae3ca8b5 Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Thu, 19 Nov 2015 06:51:46 +0100
-Subject: [PATCH 24/96] ASoC: Intel: FE and BE DAI added.
+Subject: [PATCH 024/102] ASoC: Intel: FE and BE DAI added.
 
  FE DAI Dirana Cp and Pb added.
  BE Cp and Pb DAI for SSP2 added.

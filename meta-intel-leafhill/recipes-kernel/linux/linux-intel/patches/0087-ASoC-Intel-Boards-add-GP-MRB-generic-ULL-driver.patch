@@ -1,7 +1,7 @@
-From be537ecc980cb8bf2964c96d866d6bd6a10ff600 Mon Sep 17 00:00:00 2001
+From b4d8e7c92f98603ded57f4ad95faddac8305b6e2 Mon Sep 17 00:00:00 2001
 From: Jakub Dorzak <jakubx.dorzak@intel.com>
 Date: Tue, 20 Feb 2018 10:59:30 +0100
-Subject: [PATCH 87/96] ASoC: Intel: Boards: add GP MRB generic ULL driver
+Subject: [PATCH 087/102] ASoC: Intel: Boards: add GP MRB generic ULL driver
 
 This is a generic ULL (Ultra Low Latency) machine
 driver with a DSP loop, capture and playback pipes.
@@ -20,10 +20,10 @@ Conflicts:
  create mode 100644 sound/soc/intel/boards/bxt_ull.c
 
 diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
-index ca1f1f0..52ee3d4 100644
+index 987c808..35fd19b 100644
 --- a/sound/soc/intel/boards/Kconfig
 +++ b/sound/soc/intel/boards/Kconfig
-@@ -388,6 +388,19 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
+@@ -417,6 +417,19 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
  	   Say Y if you have such a device
  	   If unsure select "N".
  
@@ -44,10 +44,10 @@ index ca1f1f0..52ee3d4 100644
  	tristate "ASoC Audio driver for APLI LHCRB Dummy Codec"
  	depends on X86_INTEL_LPSS && I2C
 diff --git a/sound/soc/intel/boards/Makefile b/sound/soc/intel/boards/Makefile
-index 03d83fb..87c7144 100644
+index 693ee9d..a891651 100644
 --- a/sound/soc/intel/boards/Makefile
 +++ b/sound/soc/intel/boards/Makefile
-@@ -38,6 +38,7 @@ snd-soc-apli_lhcrb_aic3107M-objs := apli_lhcrb_aic3107M.o
+@@ -39,6 +39,7 @@ snd-soc-apli_lhcrb_aic3107M-objs := apli_lhcrb_aic3107M.o
  snd-soc-apli_lhcrb_aic3107S-objs := apli_lhcrb_aic3107S.o
  snd-soc-apli_lhcrb_generic-objs := apli_lhcrb_generic.o
  snd-soc-bxt_gpmrb-objs := bxt_gpmrb.o
@@ -55,7 +55,7 @@ index 03d83fb..87c7144 100644
  
  obj-$(CONFIG_SND_SOC_INTEL_HASWELL_MACH) += snd-soc-sst-haswell.o
  obj-$(CONFIG_SND_SOC_INTEL_BYT_RT5640_MACH) += snd-soc-sst-byt-rt5640-mach.o
-@@ -76,3 +77,4 @@ obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH) += snd-soc-apli_lhcrb_aic310
+@@ -78,3 +79,4 @@ obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH) += snd-soc-apli_lhcrb_aic310
  obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH) += snd-soc-apli_lhcrb_aic3107S.o
  obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_GENERIC_MACH) += snd-soc-apli_lhcrb_generic.o
  obj-$(CONFIG_SND_SOC_INTEL_BXT_GPMRB_MACH) += snd-soc-bxt_gpmrb.o

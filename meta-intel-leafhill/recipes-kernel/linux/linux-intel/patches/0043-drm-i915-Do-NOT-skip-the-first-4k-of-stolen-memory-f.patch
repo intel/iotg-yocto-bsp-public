@@ -1,0 +1,145 @@
+From 66893319eb5dbc5744c593777598b4d4542719f9 Mon Sep 17 00:00:00 2001
+From: Hans de Goede <j.w.r.degoede@gmail.com>
+Date: Fri, 20 Apr 2018 11:59:33 +0200
+Subject: [PATCH 43/44] drm/i915: Do NOT skip the first 4k of stolen memory for
+ pre-allocated buffers v2
+
+Before this commit the WaSkipStolenMemoryFirstPage workaround code was
+skipping the first 4k by passing 4096 as start of the address range passed
+to drm_mm_init(). This means that calling drm_mm_reserve_node() to try and
+reserve the firmware framebuffer so that we can inherit it would always
+fail, as the firmware framebuffer starts at address 0.
+
+Commit d43537610470 ("drm/i915: skip the first 4k of stolen memory on
+everything >= gen8") says in its commit message: "This is confirmed to fix
+Skylake screen flickering issues (probably caused by the fact that we
+initialized a ring in the first page of stolen, but I didn't 100% confirm
+this theory)."
+
+Which suggests that it is safe to use the first page for a linear
+framebuffer as the firmware is doing (see note below).
+
+This commit always passes 0 as start to drm_mm_init() and works around
+WaSkipStolenMemoryFirstPage in i915_gem_stolen_insert_node_in_range()
+by insuring the start address passed by to drm_mm_insert_node_in_range()
+is always 4k or more. All entry points to i915_gem_stolen.c go through
+i915_gem_stolen_insert_node_in_range(), so that any newly allocated
+objects such as ring-buffers will not be allocated in the first 4k.
+
+The one exception is i915_gem_object_create_stolen_for_preallocated()
+which directly calls drm_mm_reserve_node() which now will be able to
+use the first 4k.
+
+This fixes the i915 driver no longer being able to inherit the firmware
+framebuffer on gen8+, which fixes the video output changing from the
+vendor logo to a black screen as soon as the i915 driver is loaded
+(on systems without fbcon).
+
+Some notes about the mapping of the BIOS framebuffer:
+
+v1 led to some discussion if the assumption of the intel_display.c code
+that the firmware framebuffer is a linear mapping of the stolen memory
+starting at offset 0 is still correct, because that would mean that the
+GOP does not implement the WaSkipStolenMemoryFirstPage workaround.
+
+To verify this the following code was added at the end of
+i915_gem_object_create_stolen_for_preallocated() :
+
+pr_err("first ggtt entry before bind: 0x%016llx\n",
+       readq(dev_priv->ggtt.gsm));
+ret = i915_vma_bind(vma,
+            HAS_LLC(dev_priv) ? I915_CACHE_LLC : I915_CACHE_NONE,
+            PIN_UPDATE);
+pr_err("i915_vma_bind ret %d\n", ret);
+pr_err("first ggtt entry after bind: 0x%016llx\n",
+       readq(dev_priv->ggtt.gsm));
+
+Which prints the mapping of the first page, then does a vma_bind() to
+force update the mapping with our linear view of the framebuffer and
+then prints the mapping of the first page again.
+
+On an Asrock B150M Pro4S/D3 mainboard with i5-6500 CPU this prints:
+
+[    1.651141] first ggtt entry before bind: 0x0000000078c00001
+[    1.651151] i915_vma_bind ret 0
+[    1.651152] first ggtt entry after bind: 0x0000000078c00083
+
+And "sudo cat /proc/iomem | grep Stolen" gives:
+  78c00000-88bfffff : Graphics Stolen Memory
+
+There are no visual changes with this patch (BIOS vendor logo still
+stays in place when we inherit the BIOS framebuffer), so the vma_bind()
+does not impact which memory is being scanned out.
+
+The address of the first ggtt entry matches with the start of stolen
+and the i915_vma_bind call only changes the first gtt entry's flags,
+or-ing in _PAGE_RW (BIT(1)) and PPAT_CACHED (BIT(7)), which perfectly
+matches what we would expect based on gen8_pte_encode()'s behavior.
+
+So it seems that the GOP indeed does NOT implement the wa and the i915's
+code assuming a linear mapping at the start of stolen for the BIOS fb
+still holds true for gen8+.
+
+I've also tested this on a Cherry Trail based device (a GPD Win)
+with identical results (the flags are 0x1b after the vma_bind
+on CHT, which matches with I915_CACHE_NONE).
+
+Changed in v2: No code changes, extended the commit message with the
+verification that the intel_display.c BIOS framebuffer mapping is still
+correct.
+
+Reviewed-by: Daniel Vetter <daniel.vetter@ffwll.ch>
+Signed-off-by: Hans de Goede <hdegoede@redhat.com>
+Link: https://patchwork.freedesktop.org/patch/msgid/20180420095933.16442-1-hdegoede@redhat.com
+(cherry picked from commit 011f22eb545a35f972036bb6a245c95c2e7e15a0)
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/i915_gem_stolen.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_gem_stolen.c b/drivers/gpu/drm/i915/i915_gem_stolen.c
+index 507c9f0..1854eb2 100644
+--- a/drivers/gpu/drm/i915/i915_gem_stolen.c
++++ b/drivers/gpu/drm/i915/i915_gem_stolen.c
+@@ -54,6 +54,10 @@ int i915_gem_stolen_insert_node_in_range(struct drm_i915_private *dev_priv,
+ 	if (!drm_mm_initialized(&dev_priv->mm.stolen))
+ 		return -ENODEV;
+ 
++	/* WaSkipStolenMemoryFirstPage:bdw+ */
++	if (INTEL_GEN(dev_priv) >= 8 && start < 4096)
++		start = 4096;
++
+ 	mutex_lock(&dev_priv->mm.stolen_lock);
+ 	ret = drm_mm_insert_node_in_range(&dev_priv->mm.stolen, node,
+ 					  size, alignment, 0,
+@@ -406,7 +410,6 @@ int i915_gem_init_stolen(struct drm_i915_private *dev_priv)
+ 	struct i915_ggtt *ggtt = &dev_priv->ggtt;
+ 	dma_addr_t reserved_base, stolen_top;
+ 	u32 reserved_total, reserved_size;
+-	u32 stolen_usable_start;
+ 
+ 	mutex_init(&dev_priv->mm.stolen_lock);
+ 
+@@ -490,17 +493,11 @@ int i915_gem_init_stolen(struct drm_i915_private *dev_priv)
+ 		      ggtt->stolen_size >> 10,
+ 		      (ggtt->stolen_size - reserved_total) >> 10);
+ 
+-	stolen_usable_start = 0;
+-	/* WaSkipStolenMemoryFirstPage:bdw+ */
+-	if (INTEL_GEN(dev_priv) >= 8)
+-		stolen_usable_start = 4096;
+-
+ 	ggtt->stolen_usable_size =
+-		ggtt->stolen_size - reserved_total - stolen_usable_start;
++		ggtt->stolen_size - reserved_total;
+ 
+ 	/* Basic memrange allocator for stolen space. */
+-	drm_mm_init(&dev_priv->mm.stolen, stolen_usable_start,
+-		    ggtt->stolen_usable_size);
++	drm_mm_init(&dev_priv->mm.stolen, 0, ggtt->stolen_usable_size);
+ 
+ 	return 0;
+ }
+-- 
+1.9.1
+

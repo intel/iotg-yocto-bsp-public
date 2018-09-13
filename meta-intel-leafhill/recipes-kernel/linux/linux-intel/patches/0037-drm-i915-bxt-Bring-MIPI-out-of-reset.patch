@@ -1,7 +1,7 @@
-From c5f35d699fb80418f4bed1a0420681309acfc372 Mon Sep 17 00:00:00 2001
+From f3079a47931668a358ed1f7b374e8f6f4bbd1992 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Tue, 20 Dec 2016 10:24:21 -0800
-Subject: [PATCH 37/41] drm/i915/bxt: Bring MIPI out of reset
+Subject: [PATCH 37/44] drm/i915/bxt: Bring MIPI out of reset
 
 and power up the DSI regulator when initializing a MIPI display.
 
@@ -14,7 +14,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  2 files changed, 17 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/i915_reg.h b/drivers/gpu/drm/i915/i915_reg.h
-index 1732e24..c1159b7c 100644
+index 2fd4e0c..025d242 100644
 --- a/drivers/gpu/drm/i915/i915_reg.h
 +++ b/drivers/gpu/drm/i915/i915_reg.h
 @@ -1753,6 +1753,13 @@ enum i915_power_well_id {

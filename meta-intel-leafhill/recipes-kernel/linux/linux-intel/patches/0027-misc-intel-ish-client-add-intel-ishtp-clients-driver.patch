@@ -1,7 +1,7 @@
-From b8307747e0ec6c5daf5ebb0a9346dc22d1dcfabe Mon Sep 17 00:00:00 2001
+From db7d7a418941cc9a810bd122b6026cb671f17eb0 Mon Sep 17 00:00:00 2001
 From: "Ooi, Joyce" <joyce.ooi@intel.com>
 Date: Wed, 21 Dec 2016 00:37:07 +0800
-Subject: [PATCH 27/43] misc: intel-ish-client: add intel ishtp clients driver
+Subject: [PATCH 27/41] misc: intel-ish-client: add intel ishtp clients driver
 
 Intel ISHFW supports many different clients, in
 hid/intel-ish-hid/ishtp bus driver, it creates following client devices:

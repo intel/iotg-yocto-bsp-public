@@ -1,0 +1,36 @@
+From ad1e7b4f2d2699a183f7b8f53b79f290e695c84b Mon Sep 17 00:00:00 2001
+From: Markus Schweikhardt <markus.schweikhardt@intel.com>
+Date: Thu, 28 Jan 2016 09:06:14 +0100
+Subject: [PATCH 19/98] ASoC: Intel: Boards: DAPM routes changed of GP MRB
+ machine driver
+
+DAPM for GP MRB Modem path changed.
+
+Signed-off-by: Markus Schweikhardt <markus.schweikhardt@intel.com>
+---
+ sound/soc/intel/boards/bxt_gpmrb.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/sound/soc/intel/boards/bxt_gpmrb.c b/sound/soc/intel/boards/bxt_gpmrb.c
+index 04b6d3b..de1baae 100644
+--- a/sound/soc/intel/boards/bxt_gpmrb.c
++++ b/sound/soc/intel/boards/bxt_gpmrb.c
+@@ -79,11 +79,11 @@ static int amp_event(struct snd_soc_dapm_widget *w, struct snd_kcontrol *k, int
+ 	{ "BtHfpUl", NULL, "ssp0 Tx"},
+ 	{ "ssp0 Tx", NULL, "BtHfp_ssp0_out"},
+ 
+-	{ "Modem_ssp3_in", NULL, "ssp0 Rx"},
+-	{ "ssp0 Rx", NULL, "ModemDl"},
++	{ "Modem_ssp3_in", NULL, "ssp3 Rx"},
++	{ "ssp3 Rx", NULL, "ModemDl"},
+ 
+-	{ "ModemUl", NULL, "ssp0 Tx"},
+-	{ "ssp0 Tx", NULL, "Modem_ssp3_out"},
++	{ "ModemUl", NULL, "ssp3 Tx"},
++	{ "ssp3 Tx", NULL, "Modem_ssp3_out"},
+ };
+ 
+ 
+-- 
+1.9.1
+

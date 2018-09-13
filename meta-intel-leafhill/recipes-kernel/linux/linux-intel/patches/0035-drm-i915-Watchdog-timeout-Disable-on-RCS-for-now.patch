@@ -1,7 +1,7 @@
-From ec417b1ee84a4a05231a3cf25e1ff7349585cfb6 Mon Sep 17 00:00:00 2001
+From 0635fd0c579cf15d7ab175028c164d06dc1a8dd8 Mon Sep 17 00:00:00 2001
 From: Jeff McGee <jeff.mcgee@intel.com>
 Date: Wed, 26 Apr 2017 12:49:32 -0700
-Subject: [PATCH 35/41] drm/i915: Watchdog timeout: Disable on RCS for now
+Subject: [PATCH 35/44] drm/i915: Watchdog timeout: Disable on RCS for now
 
 We suspect that RCS reset by GuC following watchdog timeout is missing
 some important state restore. There is no known user at the moment who

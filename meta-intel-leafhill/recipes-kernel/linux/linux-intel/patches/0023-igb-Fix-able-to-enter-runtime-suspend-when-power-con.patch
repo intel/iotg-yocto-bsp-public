@@ -1,7 +1,7 @@
-From 6448593cfb976751968340beffe1edea34f2398e Mon Sep 17 00:00:00 2001
+From 8dc2ab000f2e60cb4b16f6ef95e6be40edc0b118 Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Wed, 22 Feb 2017 14:07:15 +0800
-Subject: [PATCH 23/43] igb: Fix able to enter runtime suspend when
+Subject: [PATCH 23/41] igb: Fix able to enter runtime suspend when
  power/control is on
 
 The following kernel log messages was observed:

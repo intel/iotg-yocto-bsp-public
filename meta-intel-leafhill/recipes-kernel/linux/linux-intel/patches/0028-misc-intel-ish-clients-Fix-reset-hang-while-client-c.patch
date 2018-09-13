@@ -1,7 +1,7 @@
-From c5d9c13107efeecebb13fc8c1cd305f4ba683199 Mon Sep 17 00:00:00 2001
+From 8428905ed248c2fdc2d850c4e910d04654bc0494 Mon Sep 17 00:00:00 2001
 From: Even Xu <even.xu@intel.com>
 Date: Mon, 26 Dec 2016 15:06:52 +0800
-Subject: [PATCH 28/43] misc: intel-ish-clients: Fix reset hang while client
+Subject: [PATCH 28/41] misc: intel-ish-clients: Fix reset hang while client
  connecting
 
 Add ishtp_cl_unlink() in reset handler callback before re-allocated

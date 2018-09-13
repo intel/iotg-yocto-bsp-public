@@ -1,0 +1,56 @@
+From 1b49a77059d7e228a8d651bdf41dbb808a63e16a Mon Sep 17 00:00:00 2001
+From: Yongsheng Chen <yongsheng.chen@intel.com>
+Date: Tue, 7 Aug 2018 15:15:22 -0700
+Subject: [PATCH 30/54] media: intel-ipu4: ar0231: Fixed AR0231 overexposed
+ issue.
+
+Message for Open Source:
+Fixed AR0231 overexposed issue.
+
+Message for Internal:
+[Issue/Feature]
+Fixed AR0231 overexposed issue in HDR mode.
+
+[Root Cause/Changes]
+The source of this overexposed issue is due to
+that LUT companding is disabled in HDR mode.
+
+Change-Id: I836796b2f72b7e7c56823094cd84aeaea97a15a8
+Tracked-On:#H1407529342
+Signed-off-by: Chen, Yongsheng <yongsheng.chen@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h b/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h
+index d3107c6..9995f19 100644
+--- a/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h
++++ b/drivers/media/i2c/crlmodule/crl_ar0231at_configuration.h
+@@ -694,6 +694,7 @@ struct crl_ctrl_data_pair ar0231at_ctrl_data_modes[] = {
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
++	{ 0x33DA, CRL_REG_LEN_16BIT, 0x0002, 0x10 },
+ 	{ 0x33E0, CRL_REG_LEN_16BIT, 0x0C80, 0x10 },
+ 	{ 0x33E0, CRL_REG_LEN_16BIT, 0x0C80, 0x10 },
+ 	{ 0x3180, CRL_REG_LEN_16BIT, 0x0080, 0x10 },
+@@ -1033,6 +1034,7 @@ struct crl_ctrl_data_pair ar0231at_ctrl_data_modes[] = {
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
++	{ 0x33DA, CRL_REG_LEN_16BIT, 0x0002, 0x10 },
+ 	{ 0x33E0, CRL_REG_LEN_16BIT, 0x0C80, 0x10 },
+ 	{ 0x33E0, CRL_REG_LEN_16BIT, 0x0C80, 0x10 },
+ 	{ 0x3180, CRL_REG_LEN_16BIT, 0x0080, 0x10 },
+@@ -1372,6 +1374,7 @@ struct crl_ctrl_data_pair ar0231at_ctrl_data_modes[] = {
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
+ 	{ 0x3064, CRL_REG_LEN_16BIT, 0x1802, 0x10 },
++	{ 0x33DA, CRL_REG_LEN_16BIT, 0x0002, 0x10 },
+ 	{ 0x33E0, CRL_REG_LEN_16BIT, 0x0C80, 0x10 },
+ 	{ 0x33E0, CRL_REG_LEN_16BIT, 0x0C80, 0x10 },
+ 	{ 0x3180, CRL_REG_LEN_16BIT, 0x0080, 0x10 },
+-- 
+1.9.1
+

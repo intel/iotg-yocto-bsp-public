@@ -1,0 +1,69 @@
+From 7dac8ff86ea4ff68550b0940abea6af67d2e79aa Mon Sep 17 00:00:00 2001
+From: Craig Kewley <craigx.kewley@intel.com>
+Date: Thu, 5 Apr 2018 12:12:57 +0100
+Subject: [PATCH 78/98] ASoC: Intel: Skylake: Add extra SSP2-x pins
+
+This commit extends "ASoC: Intel: Skylake: Add secondary backend dais"
+
+The GPMRB topology has four pipelines connected to SSP2, lets add two
+extra SSP2 DAIs to match.
+
+Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
+---
+ sound/soc/intel/skylake/skl-pcm.c | 40 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index e8bf10f..875b040 100644
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -1621,6 +1621,46 @@ struct skl_dsp_notify_ops cb_ops = {
+ 	},
+ },
+ {
++	.name = "SSP2-C Pin",
++	.ops = &skl_be_ssp_dai_ops,
++	.playback = {
++		.stream_name = "ssp2-c Tx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++	.capture = {
++		.stream_name = "ssp2-c Rx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++},
++{
++	.name = "SSP2-D Pin",
++	.ops = &skl_be_ssp_dai_ops,
++	.playback = {
++		.stream_name = "ssp2-d Tx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++	.capture = {
++		.stream_name = "ssp2-d Rx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++},
++{
+ 	.name = "SSP3 Pin",
+ 	.ops = &skl_be_ssp_dai_ops,
+ 	.playback = {
+-- 
+1.9.1
+

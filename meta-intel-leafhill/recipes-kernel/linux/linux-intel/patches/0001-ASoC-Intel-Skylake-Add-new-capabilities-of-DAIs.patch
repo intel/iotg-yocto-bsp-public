@@ -1,0 +1,71 @@
+From 82ff95f041abf9f682edbb141e20b46db146c585 Mon Sep 17 00:00:00 2001
+From: Pardha Saradhi K <pardha.saradhi.kesapragada@intel.com>
+Date: Sat, 7 Nov 2015 12:11:29 +0530
+Subject: [PATCH 01/98] ASoC: Intel: Skylake: Add new capabilities of DAIs
+
+Enhance the capabilties of the FE and BE DAIs with respect
+to new features implemented for IVI. Number of FEs have
+been increased to support a total of 4 System Playback Pins
+and 1 Multi Channel HDMI Pin that carries I2S data from SSP.
+On the other side, the BE capabilities have been enhanced
+to support more SSPs as per new platforms
+
+Change-Id: I7c7efa52d9b36fbc06b77c56f0c59f73e7a0030c
+Signed-off-by: Pardha Saradhi K <pardha.saradhi.kesapragada@intel.com>
+Reviewed-on: https://git-gar-1.devtools.intel.com/gerrit/7580
+Reviewed-by: Babu, Ramesh <ramesh.babu@intel.com>
+Tested-by: Babu, Ramesh <ramesh.babu@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl-pcm.c
+
+Conflicts:
+	sound/soc/intel/skylake/skl-pcm.c
+---
+ sound/soc/intel/skylake/skl-pcm.c | 16 ++++++++++++++--
+ 1 file changed, 14 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index d5d8a00..a8d9ae0 100644
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -1285,6 +1285,18 @@ struct skl_dsp_notify_ops cb_ops = {
+ 	},
+ },
+ {
++	.name = "System Pin 2",
++	.ops = &skl_pcm_dai_ops,
++	.playback = {
++		.stream_name = "System Playback 2",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_STEREO,
++		.rates = SNDRV_PCM_RATE_48000 | SNDRV_PCM_RATE_16000 |
++			SNDRV_PCM_RATE_8000,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE,
++	},
++},
++{
+ 	.name = "System Pin 3",
+ 	.ops = &skl_pcm_dai_ops,
+ 	.capture = {
+@@ -1426,7 +1438,7 @@ struct skl_dsp_notify_ops cb_ops = {
+ 	.playback = {
+ 		.stream_name = "ssp1 Tx",
+ 		.channels_min = HDA_MONO,
+-		.channels_max = HDA_8_CH,
++		.channels_max = HDA_QUAD,
+ 		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+ 		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE |
+ 			SNDRV_PCM_FMTBIT_S32_LE,
+@@ -1434,7 +1446,7 @@ struct skl_dsp_notify_ops cb_ops = {
+ 	.capture = {
+ 		.stream_name = "ssp1 Rx",
+ 		.channels_min = HDA_MONO,
+-		.channels_max = HDA_8_CH,
++		.channels_max = HDA_QUAD,
+ 		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+ 		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE |
+ 			SNDRV_PCM_FMTBIT_S32_LE,
+-- 
+1.9.1
+

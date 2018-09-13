@@ -1,7 +1,7 @@
-From 9452608a7daf75c40440872e5f7f3d37905303d0 Mon Sep 17 00:00:00 2001
+From c316bfc4046d78dde92eaa194c7c3208b28d03d1 Mon Sep 17 00:00:00 2001
 From: Jakub Dorzak <jdorzakx@intel.com>
 Date: Mon, 25 Jul 2016 09:57:22 +0100
-Subject: [PATCH 44/96] ASoC: Intel: Boards: Removed BIOS option from Kconfig
+Subject: [PATCH 044/102] ASoC: Intel: Boards: Removed BIOS option from Kconfig
 
 Removed BIOS related functions from the machine driver and menuconfig respectively.
 
@@ -15,10 +15,10 @@ Conflicts:
  2 files changed, 171 deletions(-)
 
 diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
-index 6a6995e..564067a 100644
+index 039602b..df68be6 100644
 --- a/sound/soc/intel/boards/Kconfig
 +++ b/sound/soc/intel/boards/Kconfig
-@@ -385,13 +385,6 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
+@@ -414,13 +414,6 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
  	   Say Y if you have such a device
  	   If unsure select "N".
  

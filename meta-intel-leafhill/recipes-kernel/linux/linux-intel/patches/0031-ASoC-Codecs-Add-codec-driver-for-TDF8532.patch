@@ -1,7 +1,7 @@
-From 5953560b03fe9c4ce7dd81337fc120fc70f484fb Mon Sep 17 00:00:00 2001
+From 4408e5faf83768406b133a6f68390ad0f4e8738d Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Tue, 16 Feb 2016 10:26:40 +0100
-Subject: [PATCH 31/96] ASoC: Codecs: Add codec driver for TDF8532
+Subject: [PATCH 031/102] ASoC: Codecs: Add codec driver for TDF8532
 
  I2C based codec driver for TDF8532 added. Driver
  sends enable/disbale command via I2C in dai_trigger callback.
@@ -21,15 +21,15 @@ Conflicts:
  arch/x86/platform/bxt/gpmrb-board.c |  23 ++
  sound/soc/codecs/Kconfig            |   2 +-
  sound/soc/codecs/Makefile           |   2 +
- sound/soc/codecs/tdf8532.c          | 424 +++++-----------------------
+ sound/soc/codecs/tdf8532.c          | 379 +++++--------------------
  sound/soc/intel/boards/Kconfig      |   2 +
  sound/soc/intel/boards/bxt_gpmrb.c  | 544 ++++++++++++++++++------------------
- 8 files changed, 379 insertions(+), 622 deletions(-)
+ 8 files changed, 379 insertions(+), 577 deletions(-)
  create mode 100644 arch/x86/platform/bxt/Makefile
  create mode 100644 arch/x86/platform/bxt/gpmrb-board.c
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 90c8c82..75f445e 100644
+index f72ffc9..f04c139 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -1,4 +1,7 @@
@@ -110,10 +110,10 @@ index 8a6ee2c..fedef12 100644
  obj-$(CONFIG_SND_SOC_ES8328_I2C)+= snd-soc-es8328-i2c.o
  obj-$(CONFIG_SND_SOC_ES8328_SPI)+= snd-soc-es8328-spi.o
 diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
-index ccad958..2a5848a 100644
+index c7bdb39..003a02f 100644
 --- a/sound/soc/codecs/tdf8532.c
 +++ b/sound/soc/codecs/tdf8532.c
-@@ -1,429 +1,153 @@
+@@ -1,383 +1,152 @@
  /*
 - * Codec driver for NXP Semiconductors - TDF8532
 - * Copyright (c) 2017, Intel Corporation.
@@ -173,16 +173,16 @@ index ccad958..2a5848a 100644
 -
 -		param = va_arg(valist, int);
 -	}
--
--	payload[HEADER_LEN] = len;
 +struct tdf8532_priv{
 +	struct i2c_client* tdf8532_i2c_client;
 +};
  
--	return len + cmd_offset;
--}
+-	payload[HEADER_LEN] = len;
 +struct tdf8532_priv tdf8532;
  
+-	return len + cmd_offset;
+-}
+-
 -static int __tdf8532_single_write(struct tdf8532_priv *dev_data,
 -						int dummy, ...)
 +static int tdf8532_dai_startup(struct snd_pcm_substream *substream,
@@ -326,7 +326,7 @@ index ccad958..2a5848a 100644
 -
 -	ret = -ETIME;
 -
--	dev_err(dev, "tdf8532-codec: state: %u, req_state: %u, ret: %d\n",
+-	dev_warn(dev, "tdf8532-codec: state: %u, req_state: %u, ret: %d\n",
 -			status_repl->state, req_state, ret);
 -
 -out:
@@ -366,8 +366,13 @@ index ccad958..2a5848a 100644
 -
 -	ret = tdf8532_wait_state(tdf8532, STATE_STBY, ACK_TIMEOUT);
 -
--	if (ret < 0)
--		goto out;
+-	 /* Refer to TDF8532 manual:
+-	  * If the wait_state result is ok, we should send CLK_DISCONNECT
+-	  * command to force codec from STANDBY(2) to IDLE(1).
+-	  * If the wait_state result is timeout, the codec state should be
+-	  * at Clockfail(7), we still should send CLK_DISCONNECT command
+-	  * force the codec from Clockfail(7) to Idle(1).
+-	  */
 -
 -	ret = tdf8532_amp_write(tdf8532, SET_CLK_STATE, CLK_DISCONNECT);
 -	if (ret < 0)
@@ -376,13 +381,6 @@ index ccad958..2a5848a 100644
 -	ret = tdf8532_wait_state(tdf8532, STATE_IDLE, ACK_TIMEOUT);
 -
 -out:
--#if IS_ENABLED(CONFIG_SND_SOC_SOF_INTEL)
--	/*
--	 * FIXME: this is only work around to fix the stop failed issue on SOF,
--	 * return success always to make the next start successfully.
--	 */
--	ret = 0;
--#endif
 -	return ret;
 +	printk(KERN_DEBUG "%s\n",__func__);
 +	return 0;
@@ -486,11 +484,9 @@ index ccad958..2a5848a 100644
  static int tdf8532_i2c_probe(struct i2c_client *i2c,
  		const struct i2c_device_id *id)
  {
--	int ret;
+ 	int ret;
 -	struct tdf8532_priv *dev_data;
 -	struct device *dev = &(i2c->dev);
--	u8 payload[16];
--	int ret1;
 -
 -	dev_dbg(&i2c->dev, "%s\n", __func__);
 -
@@ -504,9 +500,8 @@ index ccad958..2a5848a 100644
 -	dev_data->i2c = i2c;
 -	dev_data->pkt_id = 0;
 -	dev_data->channels = 4;
- 
+-
 -	i2c_set_clientdata(i2c, dev_data);
-+	int ret;
 +	tdf8532.tdf8532_i2c_client = i2c;
  
 +	printk(KERN_DEBUG "%s\n",__func__);
@@ -521,51 +516,10 @@ index ccad958..2a5848a 100644
 +		return ret;
  	}
  
--#if IS_ENABLED(CONFIG_SND_SOC_SOF_INTEL)
--	/* We support 2 channels, 16bit 48KHz for SOF only at the moment */
--	dev_data->channels = 2;
--	/* set format */
--	payload[0] = 0x02;
--	payload[1] = 0x00;
--	payload[2] = 0x08;
--	payload[3] = 0x80;/* ModuleId */
--	payload[4] = 0x1c;/* CmdId, SetAudioConfig_cmd */
--	payload[5] = 0;/* rfa */
--	payload[6] = 0x01;/* SamplingFrequency, 48KHz */
--	payload[7] = 0x00;/* FrameSize, 2 slots per I2S frame */
--	payload[8] = 0x00;/* SlotSize, 16bit */
--	/* TDMFrameSync, TDM frame starts at rising edge frame sync */
--	payload[9] = 0x1;
--	payload[10] = 0x1;/* BitClockDelay, no delay */
--	ret1 = i2c_master_send(dev_data->i2c, payload, 11);
--
--	/* set routing */
--	payload[0] = 0x02;
--	payload[1] = 0x00;
--	payload[2] = 0x06;
--	payload[3] = 0x80;/* ModuleId */
--	payload[4] = 0x28;/* CmdId, SetAudioRoutingConfig_cmd */
--	/* channel 0 */
--	payload[5] = 0;/* AudioSource, SDI1 */
--	payload[6] = 0x00;/* SlotNr, Slot 0 */
--	/* channel 1 */
--	payload[7] = 0;/* AudioSource, SDI1 */
--	payload[8] = 0x01;/* SlotNr, Slot 1 */
--	ret1 = i2c_master_send(dev_data->i2c, payload, 9);
--
--	/* initial to disable all channels */
--	ret = tdf8532_amp_write(dev_data, SET_CHNL_DISABLE,
--			CHNL_MASK(8));
--
--#endif
--
--	if (ret < 0)
--		dev_err(&i2c->dev,
--			"i2c send set format packet returned:%d\n", ret);
-+	return 0;
- 
 -out:
 -	return ret;
++	return 0;
++
  }
  
  static int tdf8532_i2c_remove(struct i2c_client *i2c)
@@ -618,10 +572,10 @@ index ccad958..2a5848a 100644
 -MODULE_LICENSE("GPL v2");
 +MODULE_LICENSE("GPL");
 diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
-index 9e7743c..be7d533 100644
+index 4c5559f..183e769 100644
 --- a/sound/soc/intel/boards/Kconfig
 +++ b/sound/soc/intel/boards/Kconfig
-@@ -377,6 +377,8 @@ config SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH
+@@ -406,6 +406,8 @@ config SND_SOC_INTEL_CNL_RT274_MACH
  config SND_SOC_INTEL_BXT_GPMRB_MACH
  	tristate "ASoC Audio driver for BXT IVI GP MRB"
  	select SND_SOC_INTEL_SST

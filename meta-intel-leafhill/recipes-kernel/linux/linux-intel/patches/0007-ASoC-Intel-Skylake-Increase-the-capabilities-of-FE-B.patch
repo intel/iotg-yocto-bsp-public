@@ -1,7 +1,7 @@
-From 881243802f017ec1b1806089e2f0d19289339090 Mon Sep 17 00:00:00 2001
+From c54c5c884410a04c4928ce87fee7679b7045f7d3 Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Thu, 20 Apr 2017 11:07:53 +0800
-Subject: [PATCH 07/96] ASoC: Intel: Skylake: Increase the capabilities of
+Subject: [PATCH 007/102] ASoC: Intel: Skylake: Increase the capabilities of
  FE/BE streams
 
 Add more capabilities to the existing streams so as to support
@@ -24,7 +24,7 @@ Conflicts:
  1 file changed, 45 insertions(+), 29 deletions(-)
 
 diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
-index eadcbf6..98d70fc 100644
+index c410e9d..b97d03e 100644
 --- a/sound/soc/intel/skylake/skl-pcm.c
 +++ b/sound/soc/intel/skylake/skl-pcm.c
 @@ -1300,7 +1300,8 @@ struct skl_dsp_notify_ops cb_ops = {

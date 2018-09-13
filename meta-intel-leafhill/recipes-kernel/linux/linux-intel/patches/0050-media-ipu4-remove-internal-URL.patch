@@ -1,0 +1,184 @@
+From e4d7bf911669f4f5abff3b145c1080ad087b6441 Mon Sep 17 00:00:00 2001
+From: Hui Xia <hui.xia@intel.com>
+Date: Tue, 7 Aug 2018 03:13:26 -0400
+Subject: [PATCH 50/54] media: ipu4: remove internal URL
+
+Signed-off-by: Hui Xia <hui.xia@intel.com>
+---
+ .../intel/ipu4/ipu4-css/lib2600/support/assert_support.h  | 10 ----------
+ .../ipu4-css/lib2600psys/lib/support/assert_support.h     | 10 ----------
+ .../ipu4/ipu4p-css/lib2600/config/isys/subsystem_cnlB0.mk |  3 ---
+ .../lib2600/fw_abi_common_types/ia_css_terminal_defs.h    |  4 ----
+ .../intel/ipu4/ipu4p-css/lib2600/support/assert_support.h | 13 -------------
+ .../lib2600psys/lib/config/psys/subsystem_cnlB0.mk        | 15 +++------------
+ .../lib/fw_abi_common_types/ia_css_terminal_defs.h        |  4 ----
+ .../ipu4p-css/lib2600psys/lib/support/assert_support.h    | 13 -------------
+ 8 files changed, 3 insertions(+), 69 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600/support/assert_support.h b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600/support/assert_support.h
+index f904a49..dac974b 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600/support/assert_support.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600/support/assert_support.h
+@@ -33,16 +33,6 @@
+ 
+ #define IA_CSS_ASSERT(expr) assert(expr)
+ 
+-#ifdef __KLOCWORK__
+-/* Klocwork does not see that assert will lead to abortion
+- * as there is no good way to tell this to KW and the code
+- * should not depend on assert to function (actually the assert
+- * could be disabled in a release build) it was decided to
+- * disable the assert for KW scans (by defining NDEBUG)
+- */
+-#define NDEBUG
+-#endif /* __KLOCWORK__ */
+-
+ /**
+  * The following macro can help to test the size of a struct at compile
+  * time rather than at run-time. It does not work for all compilers; see
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/support/assert_support.h b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/support/assert_support.h
+index f904a49..dac974b 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/support/assert_support.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/support/assert_support.h
+@@ -33,16 +33,6 @@
+ 
+ #define IA_CSS_ASSERT(expr) assert(expr)
+ 
+-#ifdef __KLOCWORK__
+-/* Klocwork does not see that assert will lead to abortion
+- * as there is no good way to tell this to KW and the code
+- * should not depend on assert to function (actually the assert
+- * could be disabled in a release build) it was decided to
+- * disable the assert for KW scans (by defining NDEBUG)
+- */
+-#define NDEBUG
+-#endif /* __KLOCWORK__ */
+-
+ /**
+  * The following macro can help to test the size of a struct at compile
+  * time rather than at run-time. It does not work for all compilers; see
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/config/isys/subsystem_cnlB0.mk b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/config/isys/subsystem_cnlB0.mk
+index d02690b..4a7ef4f 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/config/isys/subsystem_cnlB0.mk
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/config/isys/subsystem_cnlB0.mk
+@@ -46,9 +46,6 @@ FW_LOAD_NO_OF_REQUEST_SIZE_BYTES	= 4
+ WA_HSD1304553438                 = 1
+ 
+ # FW workaround for HSD 1404347241. Disable clock gating for CSI2 DPHY Receiver ports
+-# This is also specified in the CNLB0 clock gating document:
+-#     https://sharepoint.ger.ith.intel.com/sites/ICG_Arch/Shared%20Documents/
+-#           IPU%20Specs/IPU4-P/HAS/CNL%20B0%20clock%20gating%20registers.xlsx
+ DISABLE_CSI2_RX_DPHY_CLK_GATE    = 1
+ 
+ # Larger than specified frames that complete mid-line
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/fw_abi_common_types/ia_css_terminal_defs.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/fw_abi_common_types/ia_css_terminal_defs.h
+index 3a7b333..dbf1cf9 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/fw_abi_common_types/ia_css_terminal_defs.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/fw_abi_common_types/ia_css_terminal_defs.h
+@@ -71,10 +71,6 @@
+  * Dimensions of the data objects. Note that a C-style
+  * data order is assumed. Data stored by row.
+  */
+-/* A strange problem with hivecc compiler which is described
+- * here https://icggerrit.ir.intel.com/#/c/51630/1 forces this
+- * enum to be explicitly initialized for the moment
+- */
+ typedef enum ia_css_dimension {
+ 	/**< The number of columns, i.e. the size of the row */
+ 	IA_CSS_COL_DIMENSION = 0,
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/support/assert_support.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/support/assert_support.h
+index 28aed19..dac974b 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/support/assert_support.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/support/assert_support.h
+@@ -33,19 +33,6 @@
+ 
+ #define IA_CSS_ASSERT(expr) assert(expr)
+ 
+-#ifdef __KLOCWORK__
+-/* Klocwork does not see that assert will lead to abortion
+- * as there is no good way to tell this to KW and the code
+- * should not depend on assert to function (actually the assert
+- * could be disabled in a release build) it was decided to
+- * disable the assert for KW scans (by defining NDEBUG)
+- * see also:
+- * http://www.klocwork.com/products/documentation/current/
+- * Tuning_C/C%2B%2B_analysis#Assertions
+- */
+-#define NDEBUG
+-#endif /* __KLOCWORK__ */
+-
+ /**
+  * The following macro can help to test the size of a struct at compile
+  * time rather than at run-time. It does not work for all compilers; see
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/config/psys/subsystem_cnlB0.mk b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/config/psys/subsystem_cnlB0.mk
+index 521613a..42bc023 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/config/psys/subsystem_cnlB0.mk
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/config/psys/subsystem_cnlB0.mk
+@@ -37,22 +37,13 @@ PSYS_SERVER_ENABLE_TERMINAL_LOAD_DMA = 1
+ # Assume OFS will be running concurrently with IPF, and prioritize according to rates of services on devproxy
+ CONCURRENT_OFS_IPF_PRIORITY_OPTIMIZATION_ENABLED	= 1
+ 
+-# Enable clock gating of input feeder ibufctrl as specified in:
+-#     https://sharepoint.ger.ith.intel.com/sites/ICG_Arch/Shared%20Documents/
+-#           IPU%20Specs/IPU4-P/HAS/CNL%20B0%20clock%20gating%20registers.xlsx
+-# (see register: processing_system_psa_psa_logic_ipfd_ibufctrl_2600_inst_enable_clk_gate)
++# Enable clock gating of input feeder ibufctrl
+ ENABLE_IPFD_IBUFCTRL_CLK_GATE    = 1
+ 
+-# Enable clock gating of input slice light ibufctrl as specified in:
+-#     https://sharepoint.ger.ith.intel.com/sites/ICG_Arch/Shared%20Documents/
+-#           IPU%20Specs/IPU4-P/HAS/CNL%20B0%20clock%20gating%20registers.xlsx
+-# (see register: processing_system_input_slice_light_logic_ibuf_ctrl_enable_clk_gate)
++# Enable clock gating of input slice light ibufctrl
+ ENABLE_ISL_IBUFCTRL_CLK_GATE     = 1
+ 
+-# Enable clock gating of GDC0 as specified in:
+-#     https://sharepoint.ger.ith.intel.com/sites/ICG_Arch/Shared%20Documents/
+-#           IPU%20Specs/IPU4-P/HAS/CNL%20B0%20clock%20gating%20registers.xlsx
+-# (see register: processing_system_gdc_logic_gdc0_nr_of_lut_parts)
++# Enable clock gating of GDC0
+ ENABLE_GDC0_CLK_GATE     = 1
+ 
+ 
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/fw_abi_common_types/ia_css_terminal_defs.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/fw_abi_common_types/ia_css_terminal_defs.h
+index 3a7b333..dbf1cf9 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/fw_abi_common_types/ia_css_terminal_defs.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/fw_abi_common_types/ia_css_terminal_defs.h
+@@ -71,10 +71,6 @@
+  * Dimensions of the data objects. Note that a C-style
+  * data order is assumed. Data stored by row.
+  */
+-/* A strange problem with hivecc compiler which is described
+- * here https://icggerrit.ir.intel.com/#/c/51630/1 forces this
+- * enum to be explicitly initialized for the moment
+- */
+ typedef enum ia_css_dimension {
+ 	/**< The number of columns, i.e. the size of the row */
+ 	IA_CSS_COL_DIMENSION = 0,
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/support/assert_support.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/support/assert_support.h
+index 28aed19..dac974b 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/support/assert_support.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/support/assert_support.h
+@@ -33,19 +33,6 @@
+ 
+ #define IA_CSS_ASSERT(expr) assert(expr)
+ 
+-#ifdef __KLOCWORK__
+-/* Klocwork does not see that assert will lead to abortion
+- * as there is no good way to tell this to KW and the code
+- * should not depend on assert to function (actually the assert
+- * could be disabled in a release build) it was decided to
+- * disable the assert for KW scans (by defining NDEBUG)
+- * see also:
+- * http://www.klocwork.com/products/documentation/current/
+- * Tuning_C/C%2B%2B_analysis#Assertions
+- */
+-#define NDEBUG
+-#endif /* __KLOCWORK__ */
+-
+ /**
+  * The following macro can help to test the size of a struct at compile
+  * time rather than at run-time. It does not work for all compilers; see
+-- 
+1.9.1
+

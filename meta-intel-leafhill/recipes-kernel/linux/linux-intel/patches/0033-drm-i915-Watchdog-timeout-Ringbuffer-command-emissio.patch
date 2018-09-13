@@ -1,7 +1,7 @@
-From f3647b686edfb32872693a1bfac0038642794d5c Mon Sep 17 00:00:00 2001
+From 4c0a767d4991c9527129d219ffeba571340f551c Mon Sep 17 00:00:00 2001
 From: Michel Thierry <michel.thierry@intel.com>
 Date: Fri, 21 Apr 2017 09:37:30 -0700
-Subject: [PATCH 33/41] drm/i915: Watchdog timeout: Ringbuffer command emission
+Subject: [PATCH 33/44] drm/i915: Watchdog timeout: Ringbuffer command emission
  for gen8+
 
 Emit the required commands into the ring buffer for starting and
@@ -50,7 +50,7 @@ index 44688e2..c384644 100644
  	} engine[I915_NUM_ENGINES];
  
 diff --git a/drivers/gpu/drm/i915/i915_reg.h b/drivers/gpu/drm/i915/i915_reg.h
-index 2c7f67d..1732e24 100644
+index 5bbcca8..2fd4e0c 100644
 --- a/drivers/gpu/drm/i915/i915_reg.h
 +++ b/drivers/gpu/drm/i915/i915_reg.h
 @@ -2285,6 +2285,10 @@ enum i915_power_well_id {
@@ -64,7 +64,7 @@ index 2c7f67d..1732e24 100644
  #define RING_SYNC_0(base)	_MMIO((base)+0x40)
  #define RING_SYNC_1(base)	_MMIO((base)+0x44)
  #define RING_SYNC_2(base)	_MMIO((base)+0x48)
-@@ -2769,6 +2773,7 @@ enum i915_power_well_id {
+@@ -2774,6 +2778,7 @@ enum i915_power_well_id {
  #define GT_BSD_USER_INTERRUPT			(1 << 12)
  #define GT_RENDER_L3_PARITY_ERROR_INTERRUPT_S1	(1 << 11) /* hsw+; rsvd on snb, ivb, vlv */
  #define GT_CONTEXT_SWITCH_INTERRUPT		(1 <<  8)
@@ -73,10 +73,10 @@ index 2c7f67d..1732e24 100644
  #define GT_RENDER_PIPECTL_NOTIFY_INTERRUPT	(1 <<  4)
  #define GT_RENDER_CS_MASTER_ERROR_INTERRUPT	(1 <<  3)
 diff --git a/drivers/gpu/drm/i915/intel_lrc.c b/drivers/gpu/drm/i915/intel_lrc.c
-index 1104988..293464b 100644
+index f97fe79..f832fc3 100644
 --- a/drivers/gpu/drm/i915/intel_lrc.c
 +++ b/drivers/gpu/drm/i915/intel_lrc.c
-@@ -1782,6 +1782,8 @@ static int gen8_emit_bb_start(struct drm_i915_gem_request *req,
+@@ -1792,6 +1792,8 @@ static int gen8_emit_bb_start(struct drm_i915_gem_request *req,
  			      const unsigned int flags)
  {
  	u32 *cs;
@@ -85,7 +85,7 @@ index 1104988..293464b 100644
  	int ret;
  
  	/* Don't rely in hw updating PDPs, specially in lite-restore.
-@@ -1801,21 +1803,45 @@ static int gen8_emit_bb_start(struct drm_i915_gem_request *req,
+@@ -1811,21 +1813,45 @@ static int gen8_emit_bb_start(struct drm_i915_gem_request *req,
  		req->ctx->ppgtt->pd_dirty_rings &= ~intel_engine_flag(req->engine);
  	}
  
@@ -133,7 +133,7 @@ index 1104988..293464b 100644
  	return 0;
  }
  
-@@ -1935,6 +1961,51 @@ static int gen8_emit_flush_render(struct drm_i915_gem_request *request,
+@@ -1945,6 +1971,51 @@ static int gen8_emit_flush_render(struct drm_i915_gem_request *request,
  	return 0;
  }
  
@@ -185,7 +185,7 @@ index 1104988..293464b 100644
  /*
   * Reserve space for 2 NOOPs at the end of each request to be
   * used as a workaround for not being allowed to do lite
-@@ -2084,6 +2155,18 @@ static void execlists_set_default_submission(struct intel_engine_cs *engine)
+@@ -2094,6 +2165,18 @@ static void execlists_set_default_submission(struct intel_engine_cs *engine)
  	unsigned shift = engine->irq_shift;
  	engine->irq_enable_mask = GT_RENDER_USER_INTERRUPT << shift;
  	engine->irq_keep_mask = GT_CONTEXT_SWITCH_INTERRUPT << shift;
@@ -204,7 +204,7 @@ index 1104988..293464b 100644
  }
  
  static void i915_error_reset(struct work_struct *work) {
-@@ -2163,6 +2246,10 @@ int logical_render_ring_init(struct intel_engine_cs *engine)
+@@ -2173,6 +2256,10 @@ int logical_render_ring_init(struct intel_engine_cs *engine)
  	engine->emit_flush = gen8_emit_flush_render;
  	engine->emit_breadcrumb = gen8_emit_breadcrumb_render;
  	engine->emit_breadcrumb_sz = gen8_emit_breadcrumb_render_sz;
@@ -215,7 +215,7 @@ index 1104988..293464b 100644
  
  	ret = intel_engine_create_scratch(engine, PAGE_SIZE);
  	if (ret)
-@@ -2184,8 +2271,16 @@ int logical_render_ring_init(struct intel_engine_cs *engine)
+@@ -2194,8 +2281,16 @@ int logical_render_ring_init(struct intel_engine_cs *engine)
  
  int logical_xcs_ring_init(struct intel_engine_cs *engine)
  {

@@ -1,0 +1,61 @@
+From 3d8dd63fe0e8fe6277244cbcacfb9e2d4034c7e3 Mon Sep 17 00:00:00 2001
+From: yangz1x <zhonghuax.yang@intel.com>
+Date: Thu, 9 Aug 2018 10:23:51 +0800
+Subject: [PATCH 08/54] media: intel-ipu4: OV10635: Enable RDACM23 camera
+ module
+
+Message for Open Source:
+Enable RDACM23 camera module
+
+Message for Internal:
+Enable RDACM23 camera module
+
+[Issue/Feature]
+RDACM23 cannot be power on.
+
+[Root Cause/Changes]
+1. setting the correct value for power item and undo value
+2. set xshutdown to 0
+
+Change-Id: Ic22f265edccabb2203c70fcaf268f9f9bea03dda
+Tracked-On: #H1506637333
+Signed-off-by: jinchung <jin.chung.teng@intel.com>
+---
+ drivers/media/i2c/crlmodule/crl_ov10635_configuration.h | 4 ++--
+ drivers/media/platform/intel/ipu4-bxt-p-pdata.c         | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+ mode change 100755 => 100644 drivers/media/platform/intel/ipu4-bxt-p-pdata.c
+
+diff --git a/drivers/media/i2c/crlmodule/crl_ov10635_configuration.h b/drivers/media/i2c/crlmodule/crl_ov10635_configuration.h
+index d771953..0f81f7d 100644
+--- a/drivers/media/i2c/crlmodule/crl_ov10635_configuration.h
++++ b/drivers/media/i2c/crlmodule/crl_ov10635_configuration.h
+@@ -6117,8 +6117,8 @@
+ static struct crl_power_seq_entity ov10635_power_items[] = {
+ 	{
+ 		.type = CRL_POWER_ETY_GPIO_FROM_PDATA,
+-		.val = 0,
+-		.undo_val = 1,
++		.val = 1,
++		.undo_val = 0,
+ 	},
+ };
+ 
+diff --git a/drivers/media/platform/intel/ipu4-bxt-p-pdata.c b/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
+old mode 100755
+new mode 100644
+index 53c0037..36f3358
+--- a/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
++++ b/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
+@@ -649,7 +649,7 @@
+ 	 * The number here stands for which GPIO to connect with.
+ 	 * 1 means to connect sensor xshutdown to GPIO1
+ 	 */
+-	.xshutdown = 1,
++	.xshutdown = 0,
+ };
+ #endif
+ 
+-- 
+1.9.1
+

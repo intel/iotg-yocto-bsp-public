@@ -1,7 +1,7 @@
-From 62d93d3f9a8d72ee3ded8d7fb4eb7045b727e752 Mon Sep 17 00:00:00 2001
+From 9251e20654a171078da7f1f337703bdcd69fe3e9 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Mon, 25 Jul 2016 14:15:24 +0100
-Subject: [PATCH 41/96] ASoC: Intel: Boards: Add SND_SOC_COMPRESS dependency
+Subject: [PATCH 041/102] ASoC: Intel: Boards: Add SND_SOC_COMPRESS dependency
 
 SND_SOC_COMPRESS was moved out to an optional config
 option, enable it when the GP MRB machine driver is
@@ -16,10 +16,10 @@ Conflicts:
  1 file changed, 1 insertion(+)
 
 diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
-index 53a07f4..6a6995e 100644
+index 9e66a38..039602b 100644
 --- a/sound/soc/intel/boards/Kconfig
 +++ b/sound/soc/intel/boards/Kconfig
-@@ -378,6 +378,7 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
+@@ -407,6 +407,7 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
  	tristate "ASoC Audio driver for BXT IVI GP MRB"
  	select SND_SOC_INTEL_SST
  	select SND_SOC_TDF8532

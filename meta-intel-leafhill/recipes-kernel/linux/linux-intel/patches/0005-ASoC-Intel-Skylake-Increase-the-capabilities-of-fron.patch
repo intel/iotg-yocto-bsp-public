@@ -1,7 +1,7 @@
-From ebe237d439d2d0dd5e058dd4098d25de65c3d990 Mon Sep 17 00:00:00 2001
+From 92dce83215566009b601d694c07304a96ae01838 Mon Sep 17 00:00:00 2001
 From: Mousumi Jana <mousumix.jana@intel.com>
 Date: Tue, 26 Jul 2016 23:50:50 +0530
-Subject: [PATCH 05/96] ASoC: Intel: Skylake: Increase the capabilities of
+Subject: [PATCH 005/102] ASoC: Intel: Skylake: Increase the capabilities of
  front end streams
 
 Add more capabilities to the existing streams so as to support
@@ -27,7 +27,7 @@ Conflicts:
  1 file changed, 8 insertions(+)
 
 diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
-index 90389ef..6c7babe 100644
+index 71099b5..1c345ace 100644
 --- a/sound/soc/intel/skylake/skl-pcm.c
 +++ b/sound/soc/intel/skylake/skl-pcm.c
 @@ -1294,6 +1294,14 @@ struct skl_dsp_notify_ops cb_ops = {

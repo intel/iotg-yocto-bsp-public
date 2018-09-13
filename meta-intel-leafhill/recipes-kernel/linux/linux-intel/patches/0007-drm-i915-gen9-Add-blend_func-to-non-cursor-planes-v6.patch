@@ -1,7 +1,7 @@
-From 4b40eee4f54e05054c4bf7b77fc04f6a4e4aef1a Mon Sep 17 00:00:00 2001
+From 87cbcbaa19a50cca0888e1b6b333c32039fea2f2 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Mon, 7 May 2018 13:32:08 -0700
-Subject: [PATCH 07/41] drm/i915/gen9: Add blend_func to non-cursor planes (v6)
+Subject: [PATCH 07/44] drm/i915/gen9: Add blend_func to non-cursor planes (v6)
 
 This patch adds the blend functions, and as per the
 blend function, updates the plane control register values
@@ -85,7 +85,7 @@ index ee76fab..838f01c 100644
  }
  
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index b14afaf..716363b 100644
+index 01b4324..fbe1dd4 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -3423,17 +3423,30 @@ u32 skl_plane_stride(const struct drm_framebuffer *fb, int plane,
@@ -150,7 +150,7 @@ index b14afaf..716363b 100644
  	plane_ctl |= skl_plane_ctl_tiling(fb->modifier);
  	plane_ctl |= skl_plane_ctl_rotation(rotation);
  
-@@ -10462,6 +10481,81 @@ static bool needs_scaling(struct intel_plane_state *state)
+@@ -10524,6 +10543,81 @@ static bool needs_scaling(struct intel_plane_state *state)
  	return (src_w != dst_w || src_h != dst_h);
  }
  
@@ -232,7 +232,7 @@ index b14afaf..716363b 100644
  int intel_plane_atomic_calc_changes(struct drm_crtc_state *crtc_state,
  				    struct drm_plane_state *plane_state)
  {
-@@ -10564,6 +10658,12 @@ int intel_plane_atomic_calc_changes(struct drm_crtc_state *crtc_state,
+@@ -10626,6 +10720,12 @@ int intel_plane_atomic_calc_changes(struct drm_crtc_state *crtc_state,
  	    !needs_scaling(old_plane_state))
  		pipe_config->disable_lp_wm = true;
  
@@ -245,7 +245,7 @@ index b14afaf..716363b 100644
  	return 0;
  }
  
-@@ -13431,6 +13531,9 @@ static bool intel_cursor_plane_format_mod_supported(struct drm_plane *plane,
+@@ -13493,6 +13593,9 @@ static bool intel_cursor_plane_format_mod_supported(struct drm_plane *plane,
  						   DRM_MODE_ROTATE_0,
  						   supported_rotations);
  
@@ -255,7 +255,7 @@ index b14afaf..716363b 100644
  	drm_plane_helper_add(&primary->base, &intel_plane_helper_funcs);
  
  	return primary;
-@@ -13545,6 +13648,20 @@ static bool intel_cursor_plane_format_mod_supported(struct drm_plane *plane,
+@@ -13607,6 +13710,20 @@ static bool intel_cursor_plane_format_mod_supported(struct drm_plane *plane,
  	return ERR_PTR(ret);
  }
  
@@ -314,10 +314,10 @@ index ed088f3..3015572 100644
  				    enum pipe pipe);
  
 diff --git a/drivers/gpu/drm/i915/intel_sprite.c b/drivers/gpu/drm/i915/intel_sprite.c
-index 47be1b2..e82cb07 100644
+index 64dcd1d..3abb528 100644
 --- a/drivers/gpu/drm/i915/intel_sprite.c
 +++ b/drivers/gpu/drm/i915/intel_sprite.c
-@@ -1498,6 +1498,7 @@ struct intel_plane *
+@@ -1567,6 +1567,7 @@ struct intel_plane *
  	drm_plane_create_rotation_property(&intel_plane->base,
  					   DRM_MODE_ROTATE_0,
  					   supported_rotations);

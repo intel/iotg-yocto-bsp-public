@@ -1,7 +1,7 @@
-From e11b2a3161cc9a5b0ad99d22a5b451667047e777 Mon Sep 17 00:00:00 2001
+From 9b1d577ed0cc3042c01410de782546fd4a62919b Mon Sep 17 00:00:00 2001
 From: lmcneilx <lornax.mcneil@intel.com>
 Date: Mon, 26 Mar 2018 15:09:22 +0100
-Subject: [PATCH 91/96] ASoC: TDF8532: use reverse xmas tree declarations
+Subject: [PATCH 091/102] ASoC: TDF8532: use reverse xmas tree declarations
 
 Order local variables from longest to shortest to improve readability
 of code.

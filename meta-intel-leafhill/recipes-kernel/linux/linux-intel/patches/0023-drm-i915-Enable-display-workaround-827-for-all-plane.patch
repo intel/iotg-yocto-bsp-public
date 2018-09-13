@@ -1,7 +1,7 @@
-From 8eb532d52aed4c239a847f2b690fc8541e7b52bb Mon Sep 17 00:00:00 2001
+From 5907d5350d349f78acc27028fdce9420214854ad Mon Sep 17 00:00:00 2001
 From: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
 Date: Sat, 12 May 2018 03:03:12 +0530
-Subject: [PATCH 23/41] drm/i915: Enable display workaround 827 for all planes,
+Subject: [PATCH 23/44] drm/i915: Enable display workaround 827 for all planes,
  v2.
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -56,10 +56,10 @@ index 1a1ec0f..c5d8c7b 100644
  }
  
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index b4bdb8b..3a67a59 100644
+index 0564454..d14a8a4 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
-@@ -5206,6 +5206,22 @@ static void intel_crtc_dpms_overlay_disable(struct intel_crtc *intel_crtc)
+@@ -5268,6 +5268,22 @@ static void intel_crtc_dpms_overlay_disable(struct intel_crtc *intel_crtc)
  		intel_wait_for_vblank(dev_priv, pipe);
  }
  
@@ -82,7 +82,7 @@ index b4bdb8b..3a67a59 100644
  static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
  {
  	struct intel_crtc *crtc = to_intel_crtc(old_crtc_state->base.crtc);
-@@ -5228,7 +5244,6 @@ static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
+@@ -5290,7 +5306,6 @@ static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
  			to_intel_plane_state(primary->state);
  		struct intel_plane_state *old_primary_state =
  			to_intel_plane_state(old_pri_state);
@@ -90,7 +90,7 @@ index b4bdb8b..3a67a59 100644
  
  		intel_fbc_post_update(crtc);
  
-@@ -5236,15 +5251,12 @@ static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
+@@ -5298,15 +5313,12 @@ static void intel_post_plane_update(struct intel_crtc_state *old_crtc_state)
  		    (needs_modeset(&pipe_config->base) ||
  		     !old_primary_state->base.visible))
  			intel_post_enable_primary(&crtc->base);
@@ -111,7 +111,7 @@ index b4bdb8b..3a67a59 100644
  }
  
  static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
-@@ -5266,14 +5278,6 @@ static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
+@@ -5328,14 +5340,6 @@ static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
  			to_intel_plane_state(primary->state);
  		struct intel_plane_state *old_primary_state =
  			to_intel_plane_state(old_pri_state);
@@ -126,7 +126,7 @@ index b4bdb8b..3a67a59 100644
  
  		intel_fbc_pre_update(crtc, pipe_config, primary_state);
  
-@@ -5282,6 +5286,11 @@ static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
+@@ -5344,6 +5348,11 @@ static void intel_pre_plane_update(struct intel_crtc_state *old_crtc_state,
  			intel_pre_disable_primary(&crtc->base);
  	}
  

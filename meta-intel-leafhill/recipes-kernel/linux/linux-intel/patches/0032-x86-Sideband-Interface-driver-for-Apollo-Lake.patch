@@ -1,4 +1,4 @@
-From 989d42126c2c87a55393c1d69fd7d84000fee932 Mon Sep 17 00:00:00 2001
+From 60473086ea02e01b6b06cd35c8d6b5e7a53992fb Mon Sep 17 00:00:00 2001
 From: "Yong, Jonathan" <jonathan.yong@intel.com>
 Date: Tue, 28 Jun 2016 01:28:20 +0000
 Subject: [PATCH 32/43] x86: Sideband Interface driver for Apollo Lake

@@ -1,0 +1,46 @@
+From de46f8456485aa8c72dbbe2f8f3df7936501ba0a Mon Sep 17 00:00:00 2001
+From: qianmenx <qianx.meng@intel.com>
+Date: Fri, 24 Aug 2018 17:33:10 +0800
+Subject: [PATCH 40/54] media: intel-ipu4: isys: fix interlace mode preview
+ jitter issue
+
+Message for Open Source:
+fix the issue of ddr ssc enable will cause interlace mode preview
+jitter
+
+Message for Internal:
+[Issue/Feature]
+ddr ssc enable will cause interlace mode preview jitter
+
+[Root Cause/Changes]
+once enable ddr ssc feature, the tunit clock was not full match
+between the hardware and the code, it will cause get frame's field
+failed, then cause preview jitter with interlace mode.
+
+do tsc and tunit time sync opt when get per frame (at the
+end of function ipu_isys_csi2_get_current_field call
+update_timer_base to sync the time)
+
+Change-Id: I1cf40c26451b3b3b5ce46fc9624ce648391ddca8
+Tracked-On: #H1605358636
+Signed-off-by: qianmenx <qianx.meng@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu4/ipu4-isys-csi2.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-isys-csi2.c b/drivers/media/pci/intel/ipu4/ipu4-isys-csi2.c
+index 11e4091..a35a530 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-isys-csi2.c
++++ b/drivers/media/pci/intel/ipu4/ipu4-isys-csi2.c
+@@ -653,6 +653,7 @@ static u64 tsc_time_to_tunit_time(struct ipu_isys *isys,
+ 	if (!msg_matched)
+ 		/* We have walked through the whole buffer. */
+ 		dev_dbg(&isys->adev->dev, "No matched trace message found.\n");
++	update_timer_base(isys);
+ 	return field;
+ }
+ 
+-- 
+1.9.1
+

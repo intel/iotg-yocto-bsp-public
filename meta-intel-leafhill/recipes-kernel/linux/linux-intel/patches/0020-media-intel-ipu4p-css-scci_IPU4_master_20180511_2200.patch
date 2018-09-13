@@ -1,0 +1,145 @@
+From 27da6db9bcd07d322aaf29f2d515f2438c278e51 Mon Sep 17 00:00:00 2001
+From: icg_intg <icg_intg@intel.com>
+Date: Mon, 14 May 2018 10:11:41 +0800
+Subject: [PATCH 020/129] media: intel-ipu4p: css:
+ scci_IPU4_master_20180511_2200 fw release
+
+Message for Open Source:
+New firmware css release.
+
+Message for Internal:
+[Feature]New firmware css release.
+[Root Cause/Changes]
+isys & psys ipu4p package lib2600b0 for commit-id 9dd8b9e
+FW_Manifest_ID: 6f1fb92662064046bb3c65e78ac570bfdabac0de
+FW_Build_Branch: IPU4_master
+FW_Build_Topic: auto_merge_queue
+library version for ipu4p: commit-id 9dd8b9e
+FW Bundle patch number of this release :  328262
+FW tag : scci_IPU4_master_20180511_2200
+
+Change-Id: I4c80d76f55737ef11bd0157a73d96d2559bab027
+Depends-on: I86e31110cb5aae0b5bedda651fb82fc9f72396e3
+Depends-on: Ib5100dbbcbee2ed8908c1849159ff268baedea26
+Depends-on: I3d7e2314f569f687c672bf74deaebbb5fd880a14
+Signed-off-by: icg_intg <icg_intg@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h      | 2 +-
+ .../intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h | 2 +-
+ .../lib2600/isysapi/interface/ia_css_isys_fw_bridged_types.h        | 2 ++
+ .../ipu4/ipu4p-css/lib2600/isysapi/interface/ia_css_isysapi_types.h | 2 ++
+ .../intel/ipu4/ipu4p-css/lib2600/isysapi/src/ia_css_isys_private.c  | 4 ++++
+ .../lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h       | 2 +-
+ .../lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h       | 2 +-
+ .../psysapi/dynamic/interface/ia_css_psys_process_group_cmd_impl.h  | 6 ++++--
+ 8 files changed, 16 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h
+index c6f47ef..9ec820e 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180506
++#define IA_CSS_FW_PKG_RELEASE  0x20180511
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h
+index c6f47ef..9ec820e 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180506
++#define IA_CSS_FW_PKG_RELEASE  0x20180511
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/isysapi/interface/ia_css_isys_fw_bridged_types.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/isysapi/interface/ia_css_isys_fw_bridged_types.h
+index da62337..5e47fe7 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/isysapi/interface/ia_css_isys_fw_bridged_types.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/isysapi/interface/ia_css_isys_fw_bridged_types.h
+@@ -273,6 +273,8 @@ struct ia_css_isys_frame_buff_set_comm {
+ 	aligned_struct(struct ia_css_isys_param_pin_comm, process_group_light);
+ 	aligned_uint8(unsigned int, send_irq_sof);
+ 	aligned_uint8(unsigned int, send_irq_eof);
++	aligned_uint8(unsigned int, send_irq_capture_ack);
++	aligned_uint8(unsigned int, send_irq_capture_done);
+ 	aligned_uint8(unsigned int, send_resp_sof);
+ 	aligned_uint8(unsigned int, send_resp_eof);
+ 	aligned_uint8(unsigned int, frame_counter);
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/isysapi/interface/ia_css_isysapi_types.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/isysapi/interface/ia_css_isysapi_types.h
+index 4a3903f..481a7dc 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/isysapi/interface/ia_css_isysapi_types.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/isysapi/interface/ia_css_isysapi_types.h
+@@ -273,6 +273,8 @@ struct ia_css_isys_frame_buff_set {
+ 	struct ia_css_isys_param_pin process_group_light;
+ 	unsigned int send_irq_sof;
+ 	unsigned int send_irq_eof;
++	unsigned int send_irq_capture_ack;
++	unsigned int send_irq_capture_done;
+ 	unsigned int send_resp_sof;
+ 	unsigned int send_resp_eof;
+ 	uint8_t      frame_counter;
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/isysapi/src/ia_css_isys_private.c b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/isysapi/src/ia_css_isys_private.c
+index f44a24e..ec92f14 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/isysapi/src/ia_css_isys_private.c
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/isysapi/src/ia_css_isys_private.c
+@@ -601,6 +601,10 @@ STORAGE_CLASS_INLINE void frame_buff_set_host_to_css(
+ 			frame_buff_set_host->send_irq_sof ? 1 : 0;
+ 	frame_buff_set_css->send_irq_eof =
+ 			frame_buff_set_host->send_irq_eof ? 1 : 0;
++	frame_buff_set_css->send_irq_capture_done =
++			(uint8_t)frame_buff_set_host->send_irq_capture_done;
++	frame_buff_set_css->send_irq_capture_ack =
++			frame_buff_set_host->send_irq_capture_ack ? 1 : 0;
+ 	frame_buff_set_css->send_resp_sof =
+ 			frame_buff_set_host->send_irq_sof ?
+ 				1 : frame_buff_set_host->send_resp_sof;
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h
+index c6f47ef..9ec820e 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180506
++#define IA_CSS_FW_PKG_RELEASE  0x20180511
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h
+index c6f47ef..9ec820e 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180506
++#define IA_CSS_FW_PKG_RELEASE  0x20180511
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/psysapi/dynamic/interface/ia_css_psys_process_group_cmd_impl.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/psysapi/dynamic/interface/ia_css_psys_process_group_cmd_impl.h
+index f4b191e..530f93e 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/psysapi/dynamic/interface/ia_css_psys_process_group_cmd_impl.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/psysapi/dynamic/interface/ia_css_psys_process_group_cmd_impl.h
+@@ -22,8 +22,8 @@
+ #define N_UINT64_IN_PROCESS_GROUP_STRUCT	2
+ #define N_UINT32_IN_PROCESS_GROUP_STRUCT	5
+ #define N_UINT16_IN_PROCESS_GROUP_STRUCT	5
+-#define N_UINT8_IN_PROCESS_GROUP_STRUCT		6
+-#define N_PADDING_UINT8_IN_PROCESS_GROUP_STRUCT	4
++#define N_UINT8_IN_PROCESS_GROUP_STRUCT		7
++#define N_PADDING_UINT8_IN_PROCESS_GROUP_STRUCT	3
+ 
+ #define SIZE_OF_PROCESS_GROUP_STRUCT_BITS \
+ 	(IA_CSS_RBM_BITS \
+@@ -88,6 +88,8 @@ struct ia_css_process_group_s {
+ 	uint8_t base_queue_id;
+ 	/**< Number of dedicated queues used */
+ 	uint8_t num_queues;
++	/**< Mask the send_pg_done IRQ */
++	uint8_t mask_irq;
+ 	/**< Padding for 64bit alignment */
+ 	uint8_t padding[N_PADDING_UINT8_IN_PROCESS_GROUP_STRUCT];
+ };
+-- 
+1.9.1
+

@@ -1,0 +1,171 @@
+From 174862b0fc78fd5c48f76113bd4949058f66d27a Mon Sep 17 00:00:00 2001
+From: Ding Yunliang <yunliang.ding@intel.com>
+Date: Wed, 27 Jun 2018 16:41:48 +0800
+Subject: [PATCH 16/54] media: intel-ipu4: introduce ipu version support
+
+Message for Open Source:
+Adding version support to our IPU driver to reflect each major or
+minor driver change. Users may use IPU_GET_DRIVER_VERSION for the
+version information.
+
+Message for Internal:
+[Issue/Feature]
+Hal should query this version before running its logic to
+make sure driver has required support.
+[Root Cause/Changes]
+
+Change-Id: I7c723e52381a32f7b774261f1466b1070a1c732f
+Tracked-On: #JICSD9-69
+Signed-off-by: Ding Yunliang <yunliang.ding@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+
+Conflicts:
+	drivers/media/pci/intel/ipu-isys-video.c
+	include/uapi/linux/ipu-isys.h
+---
+ drivers/media/pci/intel/ipu-isys-video.c | 55 ++++++++++++++++++++++++++++++++
+ drivers/media/pci/intel/ipu.c            |  3 ++
+ drivers/media/pci/intel/ipu.h            |  8 +++++
+ include/uapi/linux/ipu-isys.h            | 15 +++++++++
+ 4 files changed, 81 insertions(+)
+
+diff --git a/drivers/media/pci/intel/ipu-isys-video.c b/drivers/media/pci/intel/ipu-isys-video.c
+index 0c6e59b..27b8b8f 100644
+--- a/drivers/media/pci/intel/ipu-isys-video.c
++++ b/drivers/media/pci/intel/ipu-isys-video.c
+@@ -614,6 +614,59 @@ static int vidioc_try_fmt_vid_cap(struct file *file, void *fh,
+ 	return 0;
+ }
+ 
++static long ipu_isys_vidioc_private(struct file *file, void *fh,
++				    bool valid_prio, unsigned int cmd,
++				    void *arg)
++{
++	struct ipu_isys_video *av = video_drvdata(file);
++	int ret = 0;
++
++	switch (cmd) {
++#ifdef IPU_OTF_SUPPORT
++	case VIDIOC_IPU_SET_LINK_ID: {
++		struct ipu_isys_pipeline *ip = &av->ip;
++		u8 link_id = *(u8 *) arg;
++
++		if (ip->streaming) {
++			dev_err(&av->isys->adev->dev,
++				"Could not set link id while streaming\n");
++			return -EBUSY;
++		}
++
++		dev_dbg(&av->isys->adev->dev, "set link id %d\n", link_id);
++		if (link_id != 0 || link_id >= N_IPU_FW_ISYS_LINK_ID)
++			return -EINVAL;
++
++		av->link_id = link_id;
++		break;
++	}
++
++	case VIDIOC_IPU_SET_FRAME_COUNTER: {
++		struct ipu_frame_counter *fc = (struct ipu_frame_counter *)arg;
++
++		if (!av->link_id)
++			return 0;
++
++		dev_dbg(&av->isys->adev->dev, "set frame counter %d\n",
++			fc->frame_counter);
++		ret = ipu_isys_queue_prepare_frame_counter(av,
++							   fc->frame_counter,
++							   fc->index);
++		break;
++	}
++#endif
++	case VIDIOC_IPU_GET_DRIVER_VERSION:
++		*(u32 *)arg = IPU_DRIVER_VERSION;
++		break;
++
++	default:
++		dev_dbg(&av->isys->adev->dev, "unsupported private ioctl %x\n",
++			cmd);
++	}
++
++	return ret;
++}
++
+ static int vidioc_enum_input(struct file *file, void *fh,
+ 			     struct v4l2_input *input)
+ {
+@@ -1681,6 +1734,7 @@ static long ipu_isys_compat_ioctl(struct file *file, unsigned int cmd,
+ 	.vidioc_streamon = vb2_ioctl_streamon,
+ 	.vidioc_streamoff = vb2_ioctl_streamoff,
+ 	.vidioc_expbuf = vb2_ioctl_expbuf,
++	.vidioc_default = ipu_isys_vidioc_private,
+ 	.vidioc_enum_input = vidioc_enum_input,
+ 	.vidioc_g_input = vidioc_g_input,
+ 	.vidioc_s_input = vidioc_s_input,
+@@ -1701,6 +1755,7 @@ static long ipu_isys_compat_ioctl(struct file *file, unsigned int cmd,
+ 	.vidioc_streamon = vb2_ioctl_streamon,
+ 	.vidioc_streamoff = vb2_ioctl_streamoff,
+ 	.vidioc_expbuf = vb2_ioctl_expbuf,
++	.vidioc_default = ipu_isys_vidioc_private,
+ 	.vidioc_enum_input = vidioc_enum_input,
+ 	.vidioc_g_input = vidioc_g_input,
+ 	.vidioc_s_input = vidioc_s_input,
+diff --git a/drivers/media/pci/intel/ipu.c b/drivers/media/pci/intel/ipu.c
+index cccd6d2..e59a281 100644
+--- a/drivers/media/pci/intel/ipu.c
++++ b/drivers/media/pci/intel/ipu.c
+@@ -502,6 +502,9 @@ static int ipu_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	pm_runtime_put_noidle(&pdev->dev);
+ 	pm_runtime_allow(&pdev->dev);
+ 
++	dev_info(&pdev->dev, "IPU driver verion %d.%d\n", IPU_MAJOR_VERSION,
++		 IPU_MINOR_VERSION);
++
+ 	trace_printk("E|TMWK\n");
+ 	return 0;
+ 
+diff --git a/drivers/media/pci/intel/ipu.h b/drivers/media/pci/intel/ipu.h
+index 1916018..173517c 100644
+--- a/drivers/media/pci/intel/ipu.h
++++ b/drivers/media/pci/intel/ipu.h
+@@ -19,6 +19,14 @@
+ #define IPU_PCI_ID	0x5a19
+ #endif
+ 
++/*
++ * IPU version definitions to reflect the IPU driver changes.
++ * Both ISYS and PSYS share the same version.
++ */
++#define IPU_MAJOR_VERSION 1
++#define IPU_MINOR_VERSION 0
++#define IPU_DRIVER_VERSION (IPU_MAJOR_VERSION << 16 | IPU_MINOR_VERSION)
++
+ /* processing system frequency: 25Mhz x ratio, Legal values [8,32] */
+ #define PS_FREQ_CTL_DEFAULT_RATIO	0x12
+ 
+diff --git a/include/uapi/linux/ipu-isys.h b/include/uapi/linux/ipu-isys.h
+index 850767b6..f98bfab 100644
+--- a/include/uapi/linux/ipu-isys.h
++++ b/include/uapi/linux/ipu-isys.h
+@@ -21,4 +21,19 @@
+ #define V4L2_FMT_IPU_ISA_CFG	v4l2_fourcc('i', 'p', '4', 'c')
+ #define V4L2_FMT_IPU_ISYS_META	v4l2_fourcc('i', 'p', '4', 'm')
+ 
++#ifdef IPU_OTF_SUPPORT
++struct ipu_frame_counter {
++	uint32_t frame_counter;
++	uint32_t index;
++} __attribute__ ((packed));
++
++#define VIDIOC_IPU_SET_LINK_ID _IOWR('v', BASE_VIDIOC_PRIVATE + 1, uint8_t)
++#define VIDIOC_IPU_SET_FRAME_COUNTER\
++	_IOWR('v', BASE_VIDIOC_PRIVATE + 2, struct ipu_frame_counter)
++
++#endif /* IPU_OTF_SUPPORT */
++
++#define VIDIOC_IPU_GET_DRIVER_VERSION \
++	_IOWR('v', BASE_VIDIOC_PRIVATE + 3, uint32_t)
++
+ #endif /* UAPI_LINUX_IPU_ISYS_H */
+-- 
+1.9.1
+

@@ -1,4 +1,4 @@
-From 35a788e2b97b11d40fe6e5151d2a4983bca70a4f Mon Sep 17 00:00:00 2001
+From 83dcd664d0dacf3e774e4dbb269981d12c16f505 Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Wed, 11 Jan 2017 14:15:31 +0800
 Subject: [PATCH 43/43] usb: dwc3: call _DSM for core soft reset

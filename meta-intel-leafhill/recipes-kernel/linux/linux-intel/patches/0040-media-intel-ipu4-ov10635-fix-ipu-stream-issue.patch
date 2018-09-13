@@ -1,0 +1,88 @@
+From 00c3321ff12a7dc2228dd85a719702b9ba793734 Mon Sep 17 00:00:00 2001
+From: xinyudox <xinyux.dong@intel.com>
+Date: Thu, 26 Apr 2018 15:10:18 +0800
+Subject: [PATCH 040/129] media: intel-ipu4: ov10635: fix ipu stream issue
+
+Message for Open Source:
+OV10635 has special timing when configure its internal registers, with
+this configuration change, the following issues got fixed:
+1 FIFO Overflow
+2 Stream stop timeout
+
+Message for Internal:
+[Issue/Feature] There are FIFO overflow and stream stop time out message
+in kernel log when using 1x4 ov10635.
+[Root Cause/Changes] OV10635 has special timing when configure its
+internal registers, delays are added to meet the timing requirement.
+
+Change-Id: I3917a9ba52508e188106d692ca56ce4b27519085
+Tracked-On: #JIIAP-443
+Signed-off-by: xinyudox <xinyux.dong@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ .../media/i2c/crlmodule/crl_ov10635_configuration.h   | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/drivers/media/i2c/crlmodule/crl_ov10635_configuration.h b/drivers/media/i2c/crlmodule/crl_ov10635_configuration.h
+index 7fd960c..c056e4b 100644
+--- a/drivers/media/i2c/crlmodule/crl_ov10635_configuration.h
++++ b/drivers/media/i2c/crlmodule/crl_ov10635_configuration.h
+@@ -1906,10 +1906,15 @@
+ 	{0xceb3, CRL_REG_LEN_08BIT, 0x00},
+ 	{0xceb4, CRL_REG_LEN_08BIT, 0x00},
+ 	{0xceb5, CRL_REG_LEN_08BIT, 0x00},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xceb6, CRL_REG_LEN_08BIT, 0x00},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xceb7, CRL_REG_LEN_08BIT, 0x00},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xc4bc, CRL_REG_LEN_08BIT, 0x01},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xc4bd, CRL_REG_LEN_08BIT, 0x60},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ };
+ 
+ static struct crl_register_write_rep ov10635_1280_720_YUV_HDR_BT656[] = {
+@@ -3947,14 +3952,23 @@
+ 	{0xceb3, CRL_REG_LEN_08BIT, 0x00},
+ 	{0xceb4, CRL_REG_LEN_08BIT, 0x00},
+ 	{0xceb5, CRL_REG_LEN_08BIT, 0x00},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xceb6, CRL_REG_LEN_08BIT, 0x00},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xceb7, CRL_REG_LEN_08BIT, 0x00},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xc4bc, CRL_REG_LEN_08BIT, 0x01},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xc4bd, CRL_REG_LEN_08BIT, 0x60},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xc4a0, CRL_REG_LEN_08BIT, 0x03},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xc4a2, CRL_REG_LEN_08BIT, 0x04},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0x3011, CRL_REG_LEN_08BIT, 0x42},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0x5608, CRL_REG_LEN_08BIT, 0x0d},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ };
+ 
+ static struct crl_register_write_rep ov10635_640_480_YUV_HDR[] = {
+@@ -5912,10 +5926,15 @@
+ 	{0xceb3, CRL_REG_LEN_08BIT, 0x00},
+ 	{0xceb4, CRL_REG_LEN_08BIT, 0x00},
+ 	{0xceb5, CRL_REG_LEN_08BIT, 0x00},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xceb6, CRL_REG_LEN_08BIT, 0x00},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xceb7, CRL_REG_LEN_08BIT, 0x00},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xc4bc, CRL_REG_LEN_08BIT, 0x01},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ 	{0xc4bd, CRL_REG_LEN_08BIT, 0x60},
++	{0x0000, CRL_REG_LEN_DELAY, 0x0c},
+ };
+ 
+ static struct crl_dynamic_register_access ov10635_h_flip_regs[] = {
+-- 
+1.9.1
+

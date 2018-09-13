@@ -1,0 +1,85 @@
+From 78575c217f47f377b81250556210136770f97727 Mon Sep 17 00:00:00 2001
+From: "Vohra, GauravX" <gauravx.vohra@intel.com>
+Date: Tue, 28 Aug 2018 17:04:21 +0800
+Subject: [PATCH 86/98] ASoC: TDF8532: Fix for aplay suspend and resume
+
+Signed-off-by: Vohra, GauravX <gauravx.vohra@intel.com>
+---
+ sound/soc/codecs/tdf8532.c | 24 +++++++++++++++++++-----
+ sound/soc/codecs/tdf8532.h |  1 +
+ 2 files changed, 20 insertions(+), 5 deletions(-)
+
+diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
+index b7b4151..689f675 100644
+--- a/sound/soc/codecs/tdf8532.c
++++ b/sound/soc/codecs/tdf8532.c
+@@ -226,10 +226,14 @@ static int __tdf8532_wait_state(struct tdf8532_priv *dev_data, u8 req_state,
+ 	u8 state;
+ 	int ret;
+ 
++	dev_data->state_flag = false;
++
+ 	do {
+ 		ret = tdf8532_get_state(dev_data, &state);
+-		if (ret < 0)
++		if (ret < 0) {
++			dev_data->state_flag = true;
+ 			goto out;
++		}
+ 
+ 	} while (time_before(jiffies, timeout) && state != req_state);
+ 
+@@ -242,11 +246,13 @@ static int __tdf8532_wait_state(struct tdf8532_priv *dev_data, u8 req_state,
+ 	}
+ 
+ out:
++	dev_data->state_flag = true;
+ 	return ret;
+ out_timeout:
+ 	ret = -ETIME;
+ 	dev_err(dev, "State: %u, req_state: %u, ret: %d\n", state,
+ 			req_state, ret);
++	dev_data->state_flag = true;
+ 	return ret;
+ }
+ 
+@@ -331,12 +337,20 @@ static int tdf8532_mute(struct snd_soc_dai *dai, int mute)
+ 
+ 	dev_dbg(codec->dev, "%s\n", __func__);
+ 
+-	if (mute)
+-		return tdf8532_amp_write(tdf8532, SET_CHNL_MUTE,
++	if (mute) {
++		if(tdf8532->state_flag == false) {
++			dev_dbg(codec->dev, "dirty codec state %s\n", __func__);
++			mdelay(180);
++			return tdf8532_amp_write(tdf8532, SET_CHNL_MUTE,
+ 						CHNL_MASK(CHNL_MAX));
+-	else
+-		return tdf8532_amp_write(tdf8532, SET_CHNL_UNMUTE,
++		} else {
++			return tdf8532_amp_write(tdf8532, SET_CHNL_MUTE,
++                                                CHNL_MASK(CHNL_MAX));
++		}
++	} else {
++	  	return tdf8532_amp_write(tdf8532, SET_CHNL_UNMUTE,
+ 						CHNL_MASK(CHNL_MAX));
++	}
+ }
+ 
+ static const struct snd_soc_dai_ops tdf8532_dai_ops = {
+diff --git a/sound/soc/codecs/tdf8532.h b/sound/soc/codecs/tdf8532.h
+index ba988fb..895efb6 100644
+--- a/sound/soc/codecs/tdf8532.h
++++ b/sound/soc/codecs/tdf8532.h
+@@ -103,6 +103,7 @@ struct tdf8532_priv {
+ 	u8 channels;
+ 	u8 pkt_id;
+ 	u8 sw_major;
++	_Bool state_flag;
+ };
+ 
+ #endif
+-- 
+1.9.1
+

@@ -1,0 +1,61 @@
+From bfd719e32fce602c0f07f50105570832fa1ba116 Mon Sep 17 00:00:00 2001
+From: "Gopal, Puunithaaraj" <puunithaaraj.gopal@intel.com>
+Date: Thu, 6 Sep 2018 07:35:36 +0700
+Subject: [PATCH 11/54] media: ici: Remove set_pipeline_format when setting
+ stream format
+
+set_pipeline_format sets format for all the nodes in the pipeline
+when set stream format is executed. This is not desired when some
+nodes might have selection set to it and set_pipeline_format will
+overwrite existing setting of the node.
+
+Change-Id: I8d813157d5e37db5220de5222d14764b172a971d
+Signed-off-by: Gopal, Puunithaaraj <puunithaaraj.gopal@intel.com>
+---
+ drivers/media/pci/intel/ici/ici-isys-stream.c | 23 -----------------------
+ 1 file changed, 23 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ici/ici-isys-stream.c b/drivers/media/pci/intel/ici/ici-isys-stream.c
+index 1d45a76..a124d73 100644
+--- a/drivers/media/pci/intel/ici/ici-isys-stream.c
++++ b/drivers/media/pci/intel/ici/ici-isys-stream.c
+@@ -131,23 +131,6 @@ static int set_pipeline_node_format(void* cb_data,
+ 	return 0;
+ }
+ 
+-static int set_pipeline_format(struct ici_isys_stream *as,
+-	struct ici_framefmt* ff)
+-{
+-	struct pipeline_format_data fmt_data = {
+-		.as = as,
+-		.pff.pad.pad_idx = 0,
+-		.pff.ffmt = *ff
+-	};
+-
+-	return ici_isys_pipeline_for_each_node(
+-		set_pipeline_node_format,
+-		&fmt_data,
+-		&as->node,
+-		&as->ip,
+-		true);
+-}
+-
+ struct pipeline_power_data {
+ 	struct ici_isys_stream *as;
+ 	int power;
+@@ -1311,12 +1294,6 @@ static int ici_isys_set_format(struct file *file, void *fh,
+ 		return rval;
+ 	}
+ 
+-	rval = set_pipeline_format(as, &sf->ffmt);
+-	if (rval) {
+-		dev_err(&isys->adev->dev,
+-			"failed to set format on pipeline %d\n", rval);
+-		return rval;
+-	}
+ 	return 0;
+ }
+ 
+-- 
+1.9.1
+

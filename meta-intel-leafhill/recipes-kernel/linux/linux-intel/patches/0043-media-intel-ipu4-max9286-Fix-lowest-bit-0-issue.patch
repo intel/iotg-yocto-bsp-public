@@ -1,0 +1,108 @@
+From bf41a4cf512c58c85cadac06fbd5eb39d625ec3f Mon Sep 17 00:00:00 2001
+From: yzha108 <yanli.l.zhang@intel.com>
+Date: Wed, 22 Aug 2018 00:28:19 +0800
+Subject: [PATCH 43/54] media: intel-ipu4: max9286: Fix lowest bit 0 issue
+
+Message for Open Source:
+The lowest bit is always 0 in 12bit mode
+
+Message for Internal:
+[Issue/Feature]
+The lowest bit is always 0 in 12bit mode
+
+[Root Cause/Changes]
+Set max9286/96705 control mode
+Adjust reg settings' sequence
+
+Change-Id: I85e60dc27fd25a05b9e14ab387e80a46d01b927c
+Tracked-On: #H1506707135
+Signed-off-by: yzha108 <yanli.l.zhang@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/i2c/max9286-reg-settings.h |  3 +++
+ drivers/media/i2c/max9286.c              | 24 +++++++++++++++---------
+ 2 files changed, 18 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/media/i2c/max9286-reg-settings.h b/drivers/media/i2c/max9286-reg-settings.h
+index b8b6c38..f03e6fc 100644
+--- a/drivers/media/i2c/max9286-reg-settings.h
++++ b/drivers/media/i2c/max9286-reg-settings.h
+@@ -20,9 +20,11 @@
+ #define DS_FSYNC_PERIOD_HIGH      0x08
+ #define DS_FWDCCEN_REVCCEN        0x0A
+ #define DS_LINK_OUTORD            0x0B
++#define DS_HS_VS                  0x0C
+ #define DS_CSI_DBL_DT             0x12
+ #define DS_CSI_VC_CTL             0x15
+ #define DS_ENEQ                   0x1B
++#define DS_HIGHIMM                0x1C
+ #define DS_MAX9286_DEVID          0x1E
+ #define DS_FSYNC_LOCKED           0x31
+ #define DS_I2CLOCACK              0x34
+@@ -50,6 +52,7 @@
+ #define S_VS_H_2                  0x47
+ #define S_VS_H_1                  0x48
+ #define S_VS_H_0                  0x49
++#define S_DBL_ALIGN_TO            0x67
+ #define S_RSVD_97                 0x97
+ 
+ struct max9286_register_write {
+diff --git a/drivers/media/i2c/max9286.c b/drivers/media/i2c/max9286.c
+index ad64c7b..b02271e 100644
+--- a/drivers/media/i2c/max9286.c
++++ b/drivers/media/i2c/max9286.c
+@@ -320,6 +320,10 @@ static int max9286_set_stream(struct v4l2_subdev *subdev, int enable)
+ 		S_ADDR_MAX96705, S_VS_H_0, 0x00);
+ 	usleep_range(5000, 6000);
+ 
++	max96705_write_register(max, S_ADDR_MAX96705_BROADCAST -
++		S_ADDR_MAX96705, S_DBL_ALIGN_TO, 0xC4);
++	usleep_range(5000, 6000);
++
+ 	/* Enable link equalizers */
+ 	rval = regmap_write(max->regmap8, DS_ENEQ, 0x0F);
+ 	if (rval) {
+@@ -328,7 +332,7 @@ static int max9286_set_stream(struct v4l2_subdev *subdev, int enable)
+ 		return rval;
+ 	}
+ 	usleep_range(5000, 6000);
+-	rval = regmap_write(max->regmap8, 0x0C, 0x91);
++	rval = regmap_write(max->regmap8, DS_HS_VS, 0x91);
+ 
+ 	/* Enable serial links and desable configuration */
+ 	max96705_write_register(max, S_ADDR_MAX96705_BROADCAST -
+@@ -963,6 +967,16 @@ static int max9286_init(struct max9286 *max, struct i2c_client *client)
+ 	rval = regmap_write(max->regmap8, DS_FSYNC_PERIOD_MIDDLE, 0xc2);
+ 	rval = regmap_write(max->regmap8, DS_FSYNC_PERIOD_HIGH, 0x2C);
+ 
++	rval = regmap_write(max->regmap8, DS_HIGHIMM, 0x06);
++
++	/*
++	 * Enable DBL
++	 * Edge select: Rising Edge
++	 * Enable HS/VS encoding
++	 */
++	max96705_write_register(max, 0, S_CONFIG, 0xD4);
++	usleep_range(2000, 3000);
++
+ 	for (i = 0; i < ARRAY_SIZE(max9286_byte_order_settings_12bit); i++) {
+ 		rval = max96705_write_register(max, 0,
+ 				max9286_byte_order_settings_12bit[i].reg,
+@@ -1020,14 +1034,6 @@ static int max9286_init(struct max9286 *max, struct i2c_client *client)
+ 
+ 	slval = 0xE0 | max->sensor_present;
+ 
+-	/*
+-	 * Enable DBL
+-	 * Edge select: Rising Edge
+-	 * Enable HS/VS encoding
+-	 */
+-	max96705_write_register(max, 0, S_CONFIG, 0x94);
+-	usleep_range(2000, 3000);
+-
+ 	mval = 0;
+ 	tmval = 0;
+ 	/*
+-- 
+1.9.1
+

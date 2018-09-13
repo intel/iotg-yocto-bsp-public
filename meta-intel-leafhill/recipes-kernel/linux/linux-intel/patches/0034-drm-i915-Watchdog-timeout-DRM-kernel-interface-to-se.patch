@@ -1,7 +1,7 @@
-From 3727277dd3c034fbff4ee624dfb6cf0c3487041c Mon Sep 17 00:00:00 2001
+From 2eab39fd60a900e28e378cff9d1f8563a9c288aa Mon Sep 17 00:00:00 2001
 From: Michel Thierry <michel.thierry@intel.com>
 Date: Fri, 21 Apr 2017 09:37:31 -0700
-Subject: [PATCH 34/41] drm/i915: Watchdog timeout: DRM kernel interface to set
+Subject: [PATCH 34/44] drm/i915: Watchdog timeout: DRM kernel interface to set
  the timeout
 
 Final enablement patch for GPU hang detection using watchdog timeout.

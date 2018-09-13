@@ -1,7 +1,7 @@
-From 2f9fff7b8556f9d165ddfd1fcc7fef90718f9619 Mon Sep 17 00:00:00 2001
+From 265f611da758bad9e4283dadd6cce1a5e55f45fc Mon Sep 17 00:00:00 2001
 From: Sagar Arun Kamble <sagar.a.kamble@intel.com>
 Date: Thu, 23 Mar 2017 13:50:56 -0700
-Subject: [PATCH 04/41] drm/i915/guc: Disable critical logging in GuC by
+Subject: [PATCH 04/44] drm/i915/guc: Disable critical logging in GuC by
  default from GuC v9
 
 From GuC v9 firmware (for KBL v9.39+), separate control is added to enable
@@ -28,17 +28,17 @@ Signed-off-by: Jeff McGee <jeff.mcgee@intel.com>
 Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
 ---
  drivers/gpu/drm/i915/i915_params.c      |  3 +++
- drivers/gpu/drm/i915/i915_params.h      |  3 ++-
+ drivers/gpu/drm/i915/i915_params.h      |  1 +
  drivers/gpu/drm/i915/intel_guc_fwif.h   | 14 +++++++++++++-
  drivers/gpu/drm/i915/intel_guc_loader.c | 21 ++++++++++++++++++++-
  drivers/gpu/drm/i915/intel_guc_log.c    |  9 ++++++++-
- 5 files changed, 46 insertions(+), 4 deletions(-)
+ 5 files changed, 45 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_params.c b/drivers/gpu/drm/i915/i915_params.c
-index 040e32ae..fa578d9 100644
+index 81c2918..e88a2f5 100644
 --- a/drivers/gpu/drm/i915/i915_params.c
 +++ b/drivers/gpu/drm/i915/i915_params.c
-@@ -84,6 +84,7 @@ struct i915_params i915_modparams __read_mostly = {
+@@ -87,6 +87,7 @@ struct i915_params i915_modparams __read_mostly = {
  	.bg_color = 0x00000000,
  	.gvt_emulate_hdmi = true,
  	.domain_scaler_owner = 0x21100,
@@ -46,7 +46,7 @@ index 040e32ae..fa578d9 100644
  };
  
  i915_param_named(modeset, int, 0400,
-@@ -226,6 +227,8 @@ struct i915_params i915_modparams __read_mostly = {
+@@ -229,6 +230,8 @@ struct i915_params i915_modparams __read_mostly = {
  
  i915_param_named_unsafe(guc_firmware_path, charp, 0400,
  	"GuC firmware path to use instead of the default one");
@@ -56,19 +56,17 @@ index 040e32ae..fa578d9 100644
  i915_param_named_unsafe(huc_firmware_path, charp, 0400,
  	"HuC firmware path to use instead of the default one");
 diff --git a/drivers/gpu/drm/i915/i915_params.h b/drivers/gpu/drm/i915/i915_params.h
-index 6d60869..5b865fb 100644
+index 6d60869..a14fc60 100644
 --- a/drivers/gpu/drm/i915/i915_params.h
 +++ b/drivers/gpu/drm/i915/i915_params.h
-@@ -81,7 +81,8 @@
+@@ -81,6 +81,7 @@
  	func(int, gvt_workload_priority); \
  	func(bool, enable_initial_modeset); \
  	func(bool, gvt_emulate_hdmi); \
--	func(int, domain_scaler_owner);
-+	func(int, domain_scaler_owner); \
-+	func(bool, enable_guc_critical_logging);
++	func(bool, enable_guc_critical_logging); \
+ 	func(int, domain_scaler_owner);
  
  #define MEMBER(T, member) T member
- struct i915_params {
 diff --git a/drivers/gpu/drm/i915/intel_guc_fwif.h b/drivers/gpu/drm/i915/intel_guc_fwif.h
 index 83bd401..b119e9f 100644
 --- a/drivers/gpu/drm/i915/intel_guc_fwif.h

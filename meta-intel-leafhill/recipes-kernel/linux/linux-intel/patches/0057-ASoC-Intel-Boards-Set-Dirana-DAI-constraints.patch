@@ -1,7 +1,7 @@
-From de9f2af69c233bfdc676cd7f0cd95dbb2a4ada75 Mon Sep 17 00:00:00 2001
+From 7c8e8279633027d71f3acba0efe45cda5e2441f1 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Wed, 1 Mar 2017 15:04:58 +0000
-Subject: [PATCH 57/96] ASoC: Intel: Boards: Set Dirana DAI constraints
+Subject: [PATCH 057/102] ASoC: Intel: Boards: Set Dirana DAI constraints
 
 Dirana chip is not controlled by an ASoC Codec driver so dummy codec is
 used. Set explicit constraints for the Dirana chip in the DAI startup

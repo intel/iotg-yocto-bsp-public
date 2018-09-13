@@ -1,8 +1,8 @@
-From 1c33e83d89e9a417bf532e2abb9767a1508d867c Mon Sep 17 00:00:00 2001
+From fb01cea2e2d79fa722b1260d06a3acb83bb4be80 Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Tue, 16 Feb 2016 16:05:47 +0100
-Subject: [PATCH 32/96] ASoC: Intel: Boards: Config define added to enable pin
- ownership with BIOS
+Subject: [PATCH 032/102] ASoC: Intel: Boards: Config define added to enable
+ pin ownership with BIOS
 
  * CONFIG_SND_SOC_BXT_GPMRB_MACH_BIOS added to enable Pin ownership
    workaround for BIOS version BXTI_IFWI_X64_R_2015_10_13_1544 or
@@ -18,10 +18,10 @@ Conflicts:
  2 files changed, 15 insertions(+), 1 deletion(-)
 
 diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
-index be7d533..b1c32f8 100644
+index 183e769..69241dc 100644
 --- a/sound/soc/intel/boards/Kconfig
 +++ b/sound/soc/intel/boards/Kconfig
-@@ -385,6 +385,13 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
+@@ -414,6 +414,13 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
  	   Say Y if you have such a device
  	   If unsure select "N".
  

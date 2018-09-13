@@ -1,0 +1,62 @@
+From e00dffe29330c6a0a115723373f34ec0a384c515 Mon Sep 17 00:00:00 2001
+From: Chen Meng J <meng.j.chen@intel.com>
+Date: Fri, 31 Aug 2018 14:38:09 +0800
+Subject: [PATCH 48/54] media: intel-ipu4: ox03a10: add V4L2_CID_EXPOSURE
+
+Message for Open Source:
+add V4L2_CID_EXPOSURE.
+
+Message for Internal:
+[Feature] sensor ox03a10 driver enabling.
+add V4L2_CID_EXPOSURE, set DCG exposure value in 12 bit case.
+
+Change-Id: Ic345c757a344bfb794d0a7dd1f3577888e7add58
+Tracked-On: #JIIAP-573
+Signed-off-by: Chang Ying <ying.chang@intel.com>
+Signed-off-by: Chen Meng J <meng.j.chen@intel.com>
+(cherry picked from commit 38f16aa569ecbe914c59ac2c3ecf3b09a8b73635)
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ .../media/i2c/crlmodule/crl_ox03a10_configuration.h   | 19 ++++++++++++++++++-
+ 1 file changed, 18 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/crlmodule/crl_ox03a10_configuration.h b/drivers/media/i2c/crlmodule/crl_ox03a10_configuration.h
+index ffd2c6f..47bc9c6 100644
+--- a/drivers/media/i2c/crlmodule/crl_ox03a10_configuration.h
++++ b/drivers/media/i2c/crlmodule/crl_ox03a10_configuration.h
+@@ -1285,7 +1285,7 @@ struct crl_v4l2_ctrl ox03a10_v4l2_ctrls[] = {
+ 		.sd_type = CRL_SUBDEV_TYPE_PIXEL_ARRAY,
+ 		.op_type = CRL_V4L2_CTRL_SET_OP,
+ 		.context = SENSOR_POWERED_ON,
+-		.name = "DCG exposure",
++		.name = "DCG exposure in multi exposure",
+ 		.ctrl_id =  CRL_CID_EXPOSURE_SHS1,
+ 		.type = CRL_V4L2_CTRL_TYPE_CUSTOM,
+ 		.data.std_data.min = 1,
+@@ -1302,6 +1302,23 @@ struct crl_v4l2_ctrl ox03a10_v4l2_ctrls[] = {
+ 		.sd_type = CRL_SUBDEV_TYPE_PIXEL_ARRAY,
+ 		.op_type = CRL_V4L2_CTRL_SET_OP,
+ 		.context = SENSOR_POWERED_ON,
++		.name = "DCG exposure",
++		.ctrl_id =  V4L2_CID_EXPOSURE,
++		.type = CRL_V4L2_CTRL_TYPE_CUSTOM,
++		.data.std_data.min = 1,
++		.data.std_data.max = 1280,
++		.data.std_data.step = 1,
++		.data.std_data.def = 0x40,
++		.flags = V4L2_CTRL_FLAG_UPDATE,
++		.impact = CRL_IMPACTS_NO_IMPACT,
++		.regs_items = ARRAY_SIZE(ox03a10_dcg_exposure_coarse),
++		.regs = ox03a10_dcg_exposure_coarse,
++		.v4l2_type = V4L2_CTRL_TYPE_INTEGER,
++	},
++	{
++		.sd_type = CRL_SUBDEV_TYPE_PIXEL_ARRAY,
++		.op_type = CRL_V4L2_CTRL_SET_OP,
++		.context = SENSOR_POWERED_ON,
+ 		.name = "LCG ANALOG GAIN",
+ 		.ctrl_id = CRL_CID_ANALOG_GAIN_S,
+ 		.type = CRL_V4L2_CTRL_TYPE_CUSTOM,
+-- 
+1.9.1
+

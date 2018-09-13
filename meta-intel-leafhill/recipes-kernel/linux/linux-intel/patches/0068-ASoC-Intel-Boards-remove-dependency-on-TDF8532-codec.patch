@@ -1,7 +1,8 @@
-From 39ce8a9663aa4e17a49b860ffec62880605bf268 Mon Sep 17 00:00:00 2001
+From 9121605db192b27f23192771fbbd0ce1f869bbce Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Fri, 30 Jun 2017 15:00:23 +0100
-Subject: [PATCH 68/96] ASoC: Intel: Boards: remove dependency on TDF8532 codec
+Subject: [PATCH 068/102] ASoC: Intel: Boards: remove dependency on TDF8532
+ codec
 
 The TDF8532 codec driver has been removed. Remove the dependency in the
 machine driver DAI link and machine driver kernel config.
@@ -16,10 +17,10 @@ Conflicts:
  2 files changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
-index ca1f1f0..eb62359 100644
+index 987c808..19a3803 100644
 --- a/sound/soc/intel/boards/Kconfig
 +++ b/sound/soc/intel/boards/Kconfig
-@@ -377,7 +377,7 @@ config SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH
+@@ -406,7 +406,7 @@ config SND_SOC_INTEL_CNL_RT274_MACH
  	   If unsure select "N".
  
  config SND_SOC_INTEL_BXT_GPMRB_MACH

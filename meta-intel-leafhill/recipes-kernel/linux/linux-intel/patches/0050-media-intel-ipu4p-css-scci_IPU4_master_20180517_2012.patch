@@ -1,0 +1,98 @@
+From 06efde4c2813391dc345c6d0914f881e307778c1 Mon Sep 17 00:00:00 2001
+From: icg_intg <icg_intg@intel.com>
+Date: Wed, 23 May 2018 10:44:09 +0800
+Subject: [PATCH 050/129] media: intel-ipu4p: css:
+ scci_IPU4_master_20180517_2012 FwRelease
+
+Message for Open Source:
+New firmware css release.
+
+Message for Internal:
+[Feature]New firmware css release.
+[Root Cause/Changes]
+FW_Manifest_ID: 681a5db016ff4f538492e0856a91933fdabac0de
+FW_Build_Branch: IPU4_master
+FW_Build_Topic: auto_merge_queue
+library version: commit-id 7de6eb4
+FW Bundle patch number of this release :  329697
+FW tag : scci_IPU4_master_20180517_2012
+
+Change-Id: I40836461691e37c4b1fb182c2033103ca0475277
+Depends-on: Iaa52815ebe5b5b01ef18ef306c2ddc633f0a68ef
+Depends-on: Ia65bac3e14fa665d24da4079fdcc85cf931b7262
+Depends-on: I5fd4bbfa8db224395c3db72973e8d2684be0a6e7
+Signed-off-by: icg_intg <icg_intg@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h        | 2 +-
+ .../intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h   | 2 +-
+ .../lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h         | 2 +-
+ .../lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h         | 2 +-
+ .../lib2600psys/lib/psysapi/static/src/ia_css_psys_program_manifest.c | 4 ++--
+ 5 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h
+index 04e50b5..fc9e9f8 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180516
++#define IA_CSS_FW_PKG_RELEASE  0x20180517
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h
+index 04e50b5..fc9e9f8 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600/cpd_binary/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180516
++#define IA_CSS_FW_PKG_RELEASE  0x20180517
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h
+index 04e50b5..fc9e9f8 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/CNL_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180516
++#define IA_CSS_FW_PKG_RELEASE  0x20180517
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h
+index 04e50b5..fc9e9f8 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/ICL_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20180516
++#define IA_CSS_FW_PKG_RELEASE  0x20180517
+diff --git a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/psysapi/static/src/ia_css_psys_program_manifest.c b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/psysapi/static/src/ia_css_psys_program_manifest.c
+index 3fb92a0..be1ef96 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/psysapi/static/src/ia_css_psys_program_manifest.c
++++ b/drivers/media/pci/intel/ipu4/ipu4p-css/lib2600psys/lib/psysapi/static/src/ia_css_psys_program_manifest.c
+@@ -1064,7 +1064,7 @@ void ia_css_program_manifest_init(
+ /* WA for a visual studio compiler bug, refer to
+  developercommunity.visualstudio.com/content/problem/209359/ice-with-fpfast-in-156-and-msvc-daily-1413263051-p.html
+ */
+-#pragma optimize( "", off )
++#pragma optimize("", off)
+ #endif
+ 
+ int ia_css_program_manifest_print(
+@@ -1234,7 +1234,7 @@ int ia_css_program_manifest_print(
+ 
+ #if defined(_MSC_VER)
+ /* WA for a visual studio compiler bug */
+-#pragma optimize( "", off )
++#pragma optimize("", off)
+ #endif
+ 
+ #endif
+-- 
+1.9.1
+

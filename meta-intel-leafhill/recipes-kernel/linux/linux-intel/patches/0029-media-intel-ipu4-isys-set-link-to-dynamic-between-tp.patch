@@ -1,0 +1,56 @@
+From f1ea377e941fb71ab93c8e3e49ee47f7f7f80cc2 Mon Sep 17 00:00:00 2001
+From: Wang Zaikuo <zaikuo.wang@intel.com>
+Date: Wed, 8 Aug 2018 18:03:42 +0800
+Subject: [PATCH 29/54] media: intel-ipu4: isys: set link to dynamic between
+ tpg & be_soc
+
+Message for Open Source:
+The link flag: MEDIA_LNK_FL_DYNAMIC should be applied between TPG
+and BE_SOC, otherwise the link between other TPG and BE_SOC could not
+setup when there's already one TPG linking to BE_SOC
+
+Message for Internal:
+[Issue/Feature]
+On ipu6 fpga, it used 3 or 4 TPG to test multiple camera case, but
+the 2nd and 3rd TPG could not link to BE_SOC;
+[Root Cause/Changes]
+Same as above
+
+Change-Id: I1178837c90b3f49b85a78257afd9421c25d04133
+Tracked-On: #JKRLCSN-301
+Signed-off-by: Wang Zaikuo <zaikuo.wang@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu-isys.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu-isys.c b/drivers/media/pci/intel/ipu-isys.c
+index b2fad70..3bc6060 100644
+--- a/drivers/media/pci/intel/ipu-isys.c
++++ b/drivers/media/pci/intel/ipu-isys.c
+@@ -702,10 +702,9 @@ static int isys_register_subdevices(struct ipu_isys *isys)
+ 			     k < NR_OF_CSI2_BE_SOC_SINK_PADS; k++) {
+ 				rval =
+ 				    media_create_pad_link(&isys->csi2[i].asd.sd.
+-							  entity, j,
++							  entity, CSI2_PAD_SOURCE,
+ 							  &isys->csi2_be_soc.
+-							  asd.sd.entity, k,
+-							  MEDIA_LNK_FL_DYNAMIC);
++							  asd.sd.entity, CSI2_BE_SOC_PAD_SINK, 0);
+ 				if (rval) {
+ 					dev_info(&isys->adev->dev,
+ 						 "can't create link csi2->be_soc\n");
+@@ -732,7 +731,8 @@ static int isys_register_subdevices(struct ipu_isys *isys)
+ 			    media_create_pad_link(&isys->tpg[i].asd.sd.entity,
+ 						  TPG_PAD_SOURCE,
+ 						  &isys->csi2_be_soc.asd.sd.
+-						  entity, k, 0);
++						  entity, k,
++						  MEDIA_LNK_FL_DYNAMIC);
+ 			if (rval) {
+ 				dev_info(&isys->adev->dev,
+ 					 "can't create link tpg->be_soc\n");
+-- 
+1.9.1
+

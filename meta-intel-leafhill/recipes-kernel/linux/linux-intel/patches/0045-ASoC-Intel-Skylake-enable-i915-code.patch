@@ -1,7 +1,7 @@
-From 5e77c2bfb7dc2327d6b0d353e70e0c3d32250f5f Mon Sep 17 00:00:00 2001
+From e762fa94f4473974e7e8acabb778d4a75b4e10d2 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Thu, 4 Aug 2016 16:54:01 +0100
-Subject: [PATCH 45/96] ASoC: Intel: Skylake: enable i915 code.
+Subject: [PATCH 045/102] ASoC: Intel: Skylake: enable i915 code.
 
 Enabl i915_init code by removing '#if 0' as it is used on the GP MRB board.
 
@@ -14,10 +14,10 @@ Conflicts:
  1 file changed, 2 insertions(+)
 
 diff --git a/sound/soc/intel/skylake/skl.c b/sound/soc/intel/skylake/skl.c
-index b1dcc6d..2063cd6 100644
+index d8f92f6..a5c833e 100644
 --- a/sound/soc/intel/skylake/skl.c
 +++ b/sound/soc/intel/skylake/skl.c
-@@ -680,6 +680,7 @@ static void __maybe_unused skl_codec_create(struct hdac_ext_bus *ebus)
+@@ -681,6 +681,7 @@ static void __maybe_unused skl_codec_create(struct hdac_ext_bus *ebus)
  	.get_response = snd_hdac_bus_get_response,
  };
  
@@ -25,7 +25,7 @@ index b1dcc6d..2063cd6 100644
  static int skl_i915_init(struct hdac_bus *bus)
  {
  	int err;
-@@ -698,6 +699,7 @@ static int skl_i915_init(struct hdac_bus *bus)
+@@ -699,6 +700,7 @@ static int skl_i915_init(struct hdac_bus *bus)
  
  	return err;
  }

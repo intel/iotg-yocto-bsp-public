@@ -1,0 +1,36 @@
+From 945c50417ff99ca548d4496b32f9328eb1113156 Mon Sep 17 00:00:00 2001
+From: CraigX Kewley <craigx.kewley@intel.com>
+Date: Wed, 1 Jun 2016 11:38:13 +0100
+Subject: [PATCH 24/98] Revert "ASoC: Intel: Skylake: [WORKAROUND] Disable the
+ ACPI dependencies"
+
+This reverts commit fed7185dcf0babb26cf3eca1771e5263efb05f60.
+---
+ sound/soc/intel/skylake/skl-nhlt.c | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-nhlt.c b/sound/soc/intel/skylake/skl-nhlt.c
+index b33b27d..99a8bc0 100644
+--- a/sound/soc/intel/skylake/skl-nhlt.c
++++ b/sound/soc/intel/skylake/skl-nhlt.c
+@@ -45,9 +45,6 @@ int skl_get_nhlt_version(struct device *dev)
+ 
+ struct nhlt_acpi_table *skl_nhlt_init(struct device *dev)
+ {
+-/* Workaround: Disable ACPI dependencies */
+-#if 0
+-
+ 	acpi_handle handle;
+ 	union acpi_object *obj;
+ 	struct nhlt_resource_desc  *nhlt_ptr = NULL;
+@@ -78,7 +75,6 @@ struct nhlt_acpi_table *skl_nhlt_init(struct device *dev)
+ 	}
+ 
+ 	dev_err(dev, "device specific method to extract NHLT blob failed\n");
+-#endif
+ 	return NULL;
+ }
+ 
+-- 
+1.9.1
+

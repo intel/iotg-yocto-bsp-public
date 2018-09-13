@@ -1,7 +1,7 @@
-From 388ccec975aacc5d1a4fdc467c70560a1370fa6f Mon Sep 17 00:00:00 2001
+From 227cf91e48c4831fd148640e9eb3a4f125444c16 Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Mon, 4 Jul 2016 17:34:05 +0800
-Subject: [PATCH 09/96] ASoC: Intel: Skylake: Add machine drivers for
+Subject: [PATCH 009/102] ASoC: Intel: Skylake: Add machine drivers for
  TLV320AIC3107
 
 This commit is to add new machine drivers for TI codec,
@@ -44,10 +44,10 @@ index 5cff59f..5766273 100644
  M:	Olli Salonen <olli.salonen@iki.fi>
  L:	linux-media@vger.kernel.org
 diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
-index 313600b..986aeb3 100644
+index 12bb69a..8f3fc48 100644
 --- a/sound/soc/intel/boards/Kconfig
 +++ b/sound/soc/intel/boards/Kconfig
-@@ -396,6 +396,17 @@ config SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH
+@@ -425,6 +425,17 @@ config SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH
            Say Y if you have such a device
            If unsure select "N".
  
@@ -66,10 +66,10 @@ index 313600b..986aeb3 100644
  
  endif ## SND_SOC_INTEL_MACH
 diff --git a/sound/soc/intel/boards/Makefile b/sound/soc/intel/boards/Makefile
-index b243219..495aba5 100644
+index 3c4dca6..2c6a621 100644
 --- a/sound/soc/intel/boards/Makefile
 +++ b/sound/soc/intel/boards/Makefile
-@@ -31,6 +31,8 @@ snd-soc-bxtp_ivi_m3-objs := bxtp_ivi_m3.o
+@@ -32,6 +32,8 @@ snd-soc-bxtp_ivi_m3-objs := bxtp_ivi_m3.o
  snd-soc-bxtp_ivi_generic-objs := bxtp_ivi_generic.o
  snd-soc-apli_lhcrb_dummy-objs := apli_lhcrb_dummy.o
  snd-soc-apli_lhcrb_wm8731-objs := apli_lhcrb_wm8731.o
@@ -78,7 +78,7 @@ index b243219..495aba5 100644
  
  obj-$(CONFIG_SND_SOC_INTEL_HASWELL_MACH) += snd-soc-sst-haswell.o
  obj-$(CONFIG_SND_SOC_INTEL_BYT_RT5640_MACH) += snd-soc-sst-byt-rt5640-mach.o
-@@ -64,3 +66,5 @@ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_M3_MACH) += snd-soc-bxtp_ivi_m3.o
+@@ -66,3 +68,5 @@ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_M3_MACH) += snd-soc-bxtp_ivi_m3.o
  obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH) += snd-soc-bxtp_ivi_generic.o
  obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_DUMMY_MACH) += snd-soc-apli_lhcrb_dummy.o
  obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH) += snd-soc-apli_lhcrb_wm8731.o

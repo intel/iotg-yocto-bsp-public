@@ -1,7 +1,7 @@
-From 91310fe5557f70de9b729b4541f8e5ab3318424a Mon Sep 17 00:00:00 2001
+From 563f43c433e692cf29dc76156adff8b53301d6ac Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Tue, 7 Nov 2017 10:37:57 +0800
-Subject: [PATCH 25/43] igb: Initialize the spinlock and replace the VLAN with
+Subject: [PATCH 25/41] igb: Initialize the spinlock and replace the VLAN with
  custom function
 
 Initialize the spinlock. Replace igb_vlan_rx_add_vid with

@@ -1,7 +1,7 @@
-From 83462ba19c6d31bf540b65924c3e0fb12e3b7c8e Mon Sep 17 00:00:00 2001
+From be4d08ea181e5ae61b3f1b99e16217636dcdb190 Mon Sep 17 00:00:00 2001
 From: Chandra Konduru <chandra.konduru@intel.com>
 Date: Sat, 12 May 2018 03:03:15 +0530
-Subject: [PATCH 27/41] drm/i915: Add NV12 support to intel_framebuffer_init
+Subject: [PATCH 27/44] drm/i915: Add NV12 support to intel_framebuffer_init
 
 This patch adds NV12 as supported format
 to intel_framebuffer_init and performs various checks.
@@ -84,10 +84,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 22 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 69df919..323d018 100644
+index 1c290de..c6361cf 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
-@@ -14686,6 +14686,20 @@ static int intel_framebuffer_init(struct intel_framebuffer *intel_fb,
+@@ -14748,6 +14748,20 @@ static int intel_framebuffer_init(struct intel_framebuffer *intel_fb,
  			goto err;
  		}
  		break;
@@ -108,7 +108,7 @@ index 69df919..323d018 100644
  	default:
  		DRM_DEBUG_KMS("unsupported pixel format: %s\n",
  			      drm_get_format_name(mode_cmd->pixel_format, &format_name));
-@@ -14698,6 +14712,14 @@ static int intel_framebuffer_init(struct intel_framebuffer *intel_fb,
+@@ -14760,6 +14774,14 @@ static int intel_framebuffer_init(struct intel_framebuffer *intel_fb,
  
  	drm_helper_mode_fill_fb_struct(&dev_priv->drm, fb, mode_cmd);
  

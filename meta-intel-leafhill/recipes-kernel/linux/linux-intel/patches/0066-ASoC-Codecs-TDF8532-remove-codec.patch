@@ -1,7 +1,7 @@
-From 2d819f33ba4c400d3d621d3ac65cb9bf5893f600 Mon Sep 17 00:00:00 2001
+From 77620c36a0a159ef4418547e69f98550901e02e8 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Fri, 30 Jun 2017 08:14:02 +0100
-Subject: [PATCH 66/96] ASoC: Codecs: TDF8532: remove codec
+Subject: [PATCH 066/102] ASoC: Codecs: TDF8532: remove codec
 
 This commit removes the TDF8532 codec and the Kconfig / Makefile entries.
 

@@ -1,7 +1,7 @@
-From ffd27dd144f1268ae51bbfe8b467356af87fe0cf Mon Sep 17 00:00:00 2001
+From 1ca3123372e460dbd18a600a61d95c3b7ceebfe7 Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Wed, 13 Jan 2016 14:21:19 +0100
-Subject: [PATCH 27/96] WORKAROUND ASoC: Intel: Boards: Pin ownership set to
+Subject: [PATCH 027/102] WORKAROUND ASoC: Intel: Boards: Pin ownership set to
  SSP
 
 Pin Ownership of SSP5,4,3,1,0 set to SSP function.

@@ -1,0 +1,418 @@
+From db7663c2cf8ea242d6513cbfeab9a9bb0adcbc51 Mon Sep 17 00:00:00 2001
+From: Ong Hock Yu <ong.hock.yu@intel.com>
+Date: Mon, 6 Aug 2018 08:33:33 +0800
+Subject: [PATCH 126/129] media: intel-ipu4: [VIRT] Fixed memory leak in BE get
+ buf function.
+
+Also fixed use of req after freeing its memory in poll function
+
+Replacing all printks with respective log level.
+
+Change-Id: I94a25bc2c2471f09d1801fe657e9a34c4f956e52
+Signed-off-by: Ong Hock Yu <ong.hock.yu@intel.com>
+---
+ .../pci/intel/virtio/intel-ipu4-para-virt-drv.c    | 18 +++----
+ .../pci/intel/virtio/intel-ipu4-para-virt-drv.h    |  2 +
+ .../pci/intel/virtio/intel-ipu4-virtio-be-bridge.c |  8 +--
+ .../intel/virtio/intel-ipu4-virtio-be-pipeline.c   |  4 +-
+ .../pci/intel/virtio/intel-ipu4-virtio-be-stream.c | 58 +++++++++++-----------
+ .../media/pci/intel/virtio/intel-ipu4-virtio-be.c  | 12 ++---
+ .../media/pci/intel/virtio/intel-ipu4-virtio-fe.c  |  1 -
+ 7 files changed, 50 insertions(+), 53 deletions(-)
+
+diff --git a/drivers/media/pci/intel/virtio/intel-ipu4-para-virt-drv.c b/drivers/media/pci/intel/virtio/intel-ipu4-para-virt-drv.c
+index af2aba3..fda27f4 100644
+--- a/drivers/media/pci/intel/virtio/intel-ipu4-para-virt-drv.c
++++ b/drivers/media/pci/intel/virtio/intel-ipu4-para-virt-drv.c
+@@ -22,9 +22,6 @@
+ #include "./ici/ici-isys-pipeline-device.h"
+ 
+ 
+-#define MAX_STREAM_DEVICES 64
+-#define MAX_PIPELINE_DEVICES 1
+-
+ static dev_t virt_pipeline_dev_t;
+ static struct class *virt_pipeline_class;
+ static struct ici_isys_pipeline_device *pipeline_dev;
+@@ -138,7 +135,6 @@ static int get_userpages(struct device *dev, struct ici_frame_plane *frame_plane
+ 	unsigned int i;
+ 	u64 page_table_ref;
+ 	u64 *page_table;
+-
+ 	addr = (unsigned long)frame_plane->mem.userptr;
+ 	start = addr & PAGE_MASK;
+ 	end = PAGE_ALIGN(addr + frame_plane->length);
+@@ -184,14 +180,13 @@ static int get_userpages(struct device *dev, struct ici_frame_plane *frame_plane
+ 	kframe_plane->npages = npages;
+ 	up_read(&current->mm->mmap_sem);
+ 	return ret;
+-
+ error_free_pages:
+ 	if (pages) {
+ 		for (i = 0; i < nr; i++)
+ 			put_page(pages[i]);
+ 	}
+ 	kfree(sgt);
+-	return -1;
++	return -ENOMEM;
+ }
+ 
+ static struct ici_frame_buf_wrapper *frame_buf_lookup(struct ici_isys_frame_buf_list *buf_list, struct ici_frame_info *user_frame_info)
+@@ -647,11 +642,13 @@ static unsigned int stream_fop_poll(struct file *file, struct ici_stream_device
+ 		kfree(req);
+ 		return rval;
+ 	}
+-	kfree(req);
+ 
+ 	mutex_unlock(&fop_mutex);
+ 
+-	return req->func_ret;
++	rval = req->func_ret;
++	kfree(req);
++
++	return rval;
+ }
+ 
+ static int virt_stream_fop_open(struct inode *inode, struct file *file)
+@@ -1288,12 +1285,13 @@ static int __init virt_ici_init(void)
+ 		mutex_unlock(&vstream->mutex);
+ 
+ 		if (rval)
+-			return rval;
++			goto init_fail;
+ 	}
+ 
+ 	rval = virt_ici_pipeline_init();
+ 	if (rval)
+-		return rval;
++		goto init_fail;
++
+ 	rval = virt_fe_init();
+ 	return rval;
+ 
+diff --git a/drivers/media/pci/intel/virtio/intel-ipu4-para-virt-drv.h b/drivers/media/pci/intel/virtio/intel-ipu4-para-virt-drv.h
+index 707ad5b..f44954b 100644
+--- a/drivers/media/pci/intel/virtio/intel-ipu4-para-virt-drv.h
++++ b/drivers/media/pci/intel/virtio/intel-ipu4-para-virt-drv.h
+@@ -18,6 +18,8 @@
+ #include "./ici/ici-isys-frame-buf.h"
+ #include "intel-ipu4-virtio-common.h"
+ 
++#define MAX_STREAM_DEVICES 64
++#define MAX_PIPELINE_DEVICES 1
+ #define MAX_ISYS_VIRT_STREAM 34
+ 
+ struct virtual_stream {
+diff --git a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be-bridge.c b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be-bridge.c
+index f51473a..a43d5e8 100644
+--- a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be-bridge.c
++++ b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be-bridge.c
+@@ -20,12 +20,12 @@ int intel_ipu4_virtio_msg_parse(int domid, struct ipu4_virtio_req *req)
+ {
+ 	int ret = 0;
+ 	if (!req) {
+-			printk(KERN_ERR "request is NULL\n");
+-			return -EINVAL;
+-		}
++		pr_err("IPU mediator: request is NULL\n");
++		return -EINVAL;
++	}
+ 	if ((req->cmd < IPU4_CMD_DEVICE_OPEN) ||
+ 			(req->cmd >= IPU4_CMD_GET_N)) {
+-			printk(KERN_ERR "invalid command\n");
++			pr_err("IPU mediator: invalid command\n");
+ 			return -EINVAL;
+ 	}
+ 	switch (req->cmd) {
+diff --git a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be-pipeline.c b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be-pipeline.c
+index b18a5f3..3adf5b4 100644
+--- a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be-pipeline.c
++++ b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be-pipeline.c
+@@ -25,7 +25,7 @@ int process_pipeline_open(int domid, struct ipu4_virtio_req *req)
+ 		return -1;
+ 	}
+ 
+-	printk(KERN_INFO "process_device_open: /dev/intel_pipeline");
++	pr_info("process_device_open: /dev/intel_pipeline");
+ 	pipeline = filp_open("/dev/intel_pipeline", O_RDWR | O_NONBLOCK, 0);
+ 	guestID = domid;
+ 
+@@ -52,7 +52,7 @@ int process_enum_nodes(int domid, struct ipu4_virtio_req *req)
+ 
+ 	host_virt = (struct ici_node_desc *)map_guest_phys(domid, req->payload, PAGE_SIZE);
+ 	if (host_virt == NULL) {
+-		printk(KERN_ERR "process_enum_nodes: NULL host_virt");
++		pr_err("process_enum_nodes: NULL host_virt");
+ 		return 0;
+ 	}
+ 
+diff --git a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be-stream.c b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be-stream.c
+index 7fe798e..5f8b9ac 100644
+--- a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be-stream.c
++++ b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be-stream.c
+@@ -48,18 +48,19 @@ int process_device_open(int domid, struct ipu4_virtio_req *req)
+ 		hash_init(STREAM_NODE_HASH);
+ 		hash_initialised = true;
+ 	}
+-	hash_for_each_possible(STREAM_NODE_HASH, sn, node, req->op[0])
++	hash_for_each_possible(STREAM_NODE_HASH, sn, node, req->op[0]) {
+ 		if (sn != NULL) {
+ 			if (sn->client_id != domid) {
+-				printk(KERN_ERR "process_device_open: stream device %d already opened by other guest!", sn->client_id);
++				pr_err("process_device_open: stream device %d already opened by other guest!", sn->client_id);
+ 				return -EBUSY;
+ 			}
+-			printk(KERN_INFO "process_device_open: stream device %d already opened by client %d", req->op[0], domid);
++			pr_info("process_device_open: stream device %d already opened by client %d", req->op[0], domid);
+ 			return 0;
+ 		}
++	}
+ 
+ 	sprintf(node_name, "/dev/intel_stream%d", req->op[0]);
+-	printk(KERN_INFO "process_device_open: %s", node_name);
++	pr_info("process_device_open: %s", node_name);
+ 	sn = kzalloc(sizeof(struct stream_node), GFP_KERNEL);
+ 	sn->f = filp_open(node_name, O_RDWR | O_NONBLOCK, 0);
+ 	sn->client_id = domid;
+@@ -75,14 +76,15 @@ int process_device_close(int domid, struct ipu4_virtio_req *req)
+ 	if (!hash_initialised)
+ 		return 0; //no node has been opened, do nothing
+ 
+-	printk(KERN_INFO "process_device_close: %d", req->op[0]);
++	pr_info("process_device_close: %d", req->op[0]);
+ 
+-	hash_for_each_possible(STREAM_NODE_HASH, sn, node, req->op[0])
+-	if (sn != NULL) {
+-		printk(KERN_INFO "process_device_close: %d closed", req->op[0]);
+-		hash_del(&sn->node);
+-		filp_close(sn->f, 0);
+-		kfree(sn);
++	hash_for_each_possible(STREAM_NODE_HASH, sn, node, req->op[0]) {
++		if (sn != NULL) {
++			pr_err("process_device_close: %d closed", req->op[0]);
++			hash_del(&sn->node);
++			filp_close(sn->f, 0);
++			kfree(sn);
++		}
+ 	}
+ 
+ 	return 0;
+@@ -95,16 +97,15 @@ int process_set_format(int domid, struct ipu4_virtio_req *req)
+ 	struct ici_stream_format *host_virt;
+ 	int err, found;
+ 
+-	printk(KERN_INFO "process_set_format: %d %d", hash_initialised, req->op[0]);
++	pr_debug("process_set_format: %d %d", hash_initialised, req->op[0]);
+ 
+ 	if (!hash_initialised)
+ 		return -1;
+ 
+ 	found = 0;
+ 	hash_for_each_possible(STREAM_NODE_HASH, sn, node, req->op[0]) {
+-		printk(KERN_INFO "process_set_format: sn %d %p", req->op[0], sn);
+ 		if (sn != NULL) {
+-			printk(KERN_INFO "process_set_format: node %d %p", req->op[0], sn);
++			pr_err("process_set_format: node %d %p", req->op[0], sn);
+ 			found = 1;
+ 			break;
+ 		}
+@@ -117,20 +118,20 @@ int process_set_format(int domid, struct ipu4_virtio_req *req)
+ 
+ 	strm_dev = sn->f->private_data;
+ 	if (strm_dev == NULL) {
+-		printk(KERN_ERR "Native IPU stream device not found\n");
++		pr_err("Native IPU stream device not found\n");
+ 		return -1;
+ 	}
+ 
+ 	host_virt = (struct ici_stream_format *)map_guest_phys(domid, req->payload, PAGE_SIZE);
+ 	if (host_virt == NULL) {
+-		printk(KERN_ERR "process_set_format: NULL host_virt");
++		pr_err("process_set_format: NULL host_virt");
+ 		return -1;
+ 	}
+ 
+ 	err = strm_dev->ipu_ioctl_ops->ici_set_format(sn->f, strm_dev, host_virt);
+ 
+ 	if (err)
+-		printk(KERN_ERR "intel_ipu4_pvirt: internal set fmt failed\n");
++		pr_err("intel_ipu4_pvirt: internal set fmt failed\n");
+ 
+ 	return 0;
+ }
+@@ -154,7 +155,6 @@ int process_put_buf(int domid, struct ipu4_virtio_req *req)
+ 
+ 	found = 0;
+ 	hash_for_each_possible(STREAM_NODE_HASH, sn, node, req->op[0]) {
+-		pr_debug("process_put_buf: sn %d %p", req->op[0], sn);
+ 		if (sn != NULL) {
+ 			pr_debug("process_put_buf: node %d %p", req->op[0], sn);
+ 			found = 1;
+@@ -204,7 +204,6 @@ int process_get_buf(int domid, struct ipu4_virtio_req *req)
+ 
+ 	found = 0;
+ 	hash_for_each_possible(STREAM_NODE_HASH, sn, node, req->op[0]) {
+-		pr_debug("process_get_buf: sn %d %p", req->op[0], sn);
+ 		if (sn != NULL) {
+ 			pr_debug("process_get_buf: node %d %p", req->op[0], sn);
+ 			found = 1;
+@@ -235,6 +234,7 @@ int process_get_buf(int domid, struct ipu4_virtio_req *req)
+ 	if (page_table == NULL) {
+ 		pr_err("SOS Failed to map page table\n");
+ 		req->stat = IPU4_REQ_ERROR;
++		kfree(data_pages);
+ 		return -1;
+ 	}
+ 
+@@ -257,6 +257,7 @@ int process_get_buf(int domid, struct ipu4_virtio_req *req)
+ 	strm_dev = sn->f->private_data;
+ 	if (strm_dev == NULL) {
+ 		pr_err("Native IPU stream device not found\n");
++		kfree(data_pages);
+ 		return -1;
+ 	}
+ 	err = strm_dev->ipu_ioctl_ops->ici_get_buf_virt(sn->f, strm_dev, shared_buf, data_pages);
+@@ -264,6 +265,7 @@ int process_get_buf(int domid, struct ipu4_virtio_req *req)
+ 	if (err)
+ 		pr_err("process_get_buf: ici_get_buf_virt failed\n");
+ 
++	kfree(data_pages);
+ 	return 0;
+ }
+ 
+@@ -274,16 +276,15 @@ int process_stream_on(int domid, struct ipu4_virtio_req *req)
+ 	struct ici_stream_device *strm_dev;
+ 	int err, found;
+ 
+-	printk(KERN_INFO "process_stream_on: %d %d", hash_initialised, req->op[0]);
++	pr_debug("process_stream_on: %d %d", hash_initialised, req->op[0]);
+ 
+ 	if (!hash_initialised)
+ 		return -1;
+ 
+ 	found = 0;
+ 	hash_for_each_possible(STREAM_NODE_HASH, sn, node, req->op[0]) {
+-		printk(KERN_INFO "process_stream_on: sn %d %p", req->op[0], sn);
+ 		if (sn != NULL) {
+-			printk(KERN_INFO "process_stream_on: node %d %p", req->op[0], sn);
++			pr_err("process_stream_on: node %d %p", req->op[0], sn);
+ 			found = 1;
+ 			break;
+ 		}
+@@ -296,7 +297,7 @@ int process_stream_on(int domid, struct ipu4_virtio_req *req)
+ 
+ 	strm_dev = sn->f->private_data;
+ 	if (strm_dev == NULL) {
+-		printk(KERN_ERR "Native IPU stream device not found\n");
++		pr_err("Native IPU stream device not found\n");
+ 		return -1;
+ 	}
+ 
+@@ -306,7 +307,7 @@ int process_stream_on(int domid, struct ipu4_virtio_req *req)
+ 	err = strm_dev->ipu_ioctl_ops->ici_stream_on(sn->f, strm_dev);
+ 
+ 	if (err)
+-		printk(KERN_ERR "process_stream_on: stream on failed\n");
++		pr_err("process_stream_on: stream on failed\n");
+ 
+ 	return 0;
+ }
+@@ -318,16 +319,15 @@ int process_stream_off(int domid, struct ipu4_virtio_req *req)
+ 	struct ici_isys_stream *as;
+ 	int err, found;
+ 
+-	printk(KERN_INFO "process_stream_off: %d %d", hash_initialised, req->op[0]);
++	pr_debug("process_stream_off: %d %d", hash_initialised, req->op[0]);
+ 
+ 	if (!hash_initialised)
+ 		return -1;
+ 
+ 	found = 0;
+ 	hash_for_each_possible(STREAM_NODE_HASH, sn, node, req->op[0]) {
+-		printk(KERN_INFO "process_stream_off: sn %d %p", req->op[0], sn);
+ 		if (sn != NULL) {
+-			printk(KERN_INFO "process_stream_off: node %d %p", req->op[0], sn);
++			pr_err("process_stream_off: node %d %p", req->op[0], sn);
+ 			found = 1;
+ 			break;
+ 		}
+@@ -340,7 +340,7 @@ int process_stream_off(int domid, struct ipu4_virtio_req *req)
+ 
+ 	strm_dev = sn->f->private_data;
+ 	if (strm_dev == NULL) {
+-		printk(KERN_ERR "Native IPU stream device not found\n");
++		pr_err("Native IPU stream device not found\n");
+ 		return -1;
+ 	}
+ 
+@@ -350,7 +350,7 @@ int process_stream_off(int domid, struct ipu4_virtio_req *req)
+ 	err = strm_dev->ipu_ioctl_ops->ici_stream_off(sn->f, strm_dev);
+ 
+ 	if (err)
+-		printk(KERN_ERR "process_stream_off: stream off failed\n");
++		pr_err("process_stream_off: stream off failed\n");
+ 
+ 	return 0;
+ }
+diff --git a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be.c b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be.c
+index c4ab255..011cb33 100644
+--- a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be.c
++++ b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-be.c
+@@ -327,8 +327,8 @@ static long ipu_vbk_ioctl(struct file *f, unsigned int ioctl,
+ 	int r;
+ 
+ 	if (priv == NULL) {
+-			printk(KERN_ERR "No IPU backend private data\n");
+-			return -EINVAL;
++		pr_err("No IPU backend private data\n");
++		return -EINVAL;
+ 	}
+ 	switch (ioctl) {
+ /*
+@@ -349,20 +349,19 @@ static long ipu_vbk_ioctl(struct file *f, unsigned int ioctl,
+ 		 * we handle this here because we want to register VHM client
+ 		 * after handling VBS_K_SET_VQ request
+ 		 */
+-		printk("VBS_K_SET_VQ ioctl:\n");
+ 		r = virtio_vqs_ioctl(&priv->dev, ioctl, argp);
+ 		if (r == -ENOIOCTLCMD) {
+-			printk(KERN_ERR "VBS_K_SET_VQ: virtio_vqs_ioctl failed!\n");
++			pr_err("VBS_K_SET_VQ: virtio_vqs_ioctl failed!\n");
+ 			return -EFAULT;
+ 		}
+ 		/* Register VHM client */
+ 		if (virtio_dev_register(&priv->dev) < 0) {
+-			printk(KERN_ERR "failed to register VHM client!\n");
++			pr_err("failed to register VHM client!\n");
+ 			return -EFAULT;
+ 		}
+ 		/* Added to local hash table */
+ 		if (ipu_vbk_hash_add(priv) < 0) {
+-			printk(KERN_ERR "failed to add to hashtable!\n");
++			pr_err("failed to add to hashtable!\n");
+ 			return -EFAULT;
+ 		}
+ 		/* Increment counter */
+@@ -370,7 +369,6 @@ static long ipu_vbk_ioctl(struct file *f, unsigned int ioctl,
+ 		return r;
+ 	default:
+ 		/*mutex_lock(&n->dev.mutex);*/
+-		printk("VBS_K generic ioctls!\n");
+ 		r = virtio_dev_ioctl(&priv->dev, ioctl, argp);
+ 		if (r == -ENOIOCTLCMD)
+ 			r = virtio_vqs_ioctl(&priv->dev, ioctl, argp);
+diff --git a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-fe.c b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-fe.c
+index a800113..d95e52a 100644
+--- a/drivers/media/pci/intel/virtio/intel-ipu4-virtio-fe.c
++++ b/drivers/media/pci/intel/virtio/intel-ipu4-virtio-fe.c
+@@ -79,7 +79,6 @@ static int ipu_virtio_fe_probe_common(struct virtio_device *vdev)
+ 	vq_callback_t *callbacks[] = {ipu_virtio_fe_tx_done_vq_0,
+ 							ipu_virtio_fe_tx_done_vq_1};
+ 	static const char *names[] = {"csi_queue_0", "csi_queue_1"};
+-	printk("Entering %s\n", __func__);
+ 	priv = kzalloc(sizeof(struct ipu4_virtio_uos), GFP_KERNEL);
+ 	if (!priv)
+ 		return -ENOMEM;
+-- 
+1.9.1
+

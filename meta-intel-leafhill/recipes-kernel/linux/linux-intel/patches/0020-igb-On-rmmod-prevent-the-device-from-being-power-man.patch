@@ -1,7 +1,7 @@
-From 722144beb7b3ddaafd9d7bb6cf25dc60b906dba8 Mon Sep 17 00:00:00 2001
+From 0b0d9bb6c023891c0797550186bd35d2067bf9e3 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 20 Dec 2016 13:16:25 +0800
-Subject: [PATCH 20/43] igb: On rmmod prevent the device from being power
+Subject: [PATCH 20/41] igb: On rmmod prevent the device from being power
  managed at run time
 
 By default, driver is loaded with runtime pm disabled, so we

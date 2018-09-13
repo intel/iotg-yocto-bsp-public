@@ -1,8 +1,8 @@
-From 59380c41519462aae00441a6f75fc2088ad98449 Mon Sep 17 00:00:00 2001
+From bc52e7302ab0892f3ff1d2b84ca81ef63003a629 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Wed, 1 Mar 2017 13:45:04 +0000
-Subject: [PATCH 56/96] ASoC: Intel: Boards: use designated initialisers for FE
- DAIs
+Subject: [PATCH 056/102] ASoC: Intel: Boards: use designated initialisers for
+ FE DAIs
 
 May need to access the individual DAI entries in the DAI array. Use
 designated initialisers so the entries can be easily referred to.

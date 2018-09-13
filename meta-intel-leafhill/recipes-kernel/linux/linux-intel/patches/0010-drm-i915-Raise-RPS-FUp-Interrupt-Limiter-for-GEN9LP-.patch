@@ -1,7 +1,7 @@
-From a5e66e95c0f119181f135b3f3497d49b096ee918 Mon Sep 17 00:00:00 2001
+From b898e537cc77c0245ab8e2409c5a713392697679 Mon Sep 17 00:00:00 2001
 From: Kai Chen <kai.chen@intel.com>
 Date: Fri, 14 Apr 2017 15:04:02 -0700
-Subject: [PATCH 10/41] drm/i915: Raise RPS FUp Interrupt Limiter for GEN9LP
+Subject: [PATCH 10/44] drm/i915: Raise RPS FUp Interrupt Limiter for GEN9LP
  above softmax (v7)
 
 On GEN9LP, raise the RPS FUp Interrupt Limiter above softmax so that the HW
@@ -19,10 +19,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 671561e..5dbd311 100644
+index b380c5d..dcb7032 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
-@@ -6063,7 +6063,20 @@ static u32 intel_rps_limits(struct drm_i915_private *dev_priv, u8 val)
+@@ -6113,7 +6113,20 @@ static u32 intel_rps_limits(struct drm_i915_private *dev_priv, u8 val)
  	 * frequency, if the down threshold expires in that window we will not
  	 * receive a down interrupt. */
  	if (INTEL_GEN(dev_priv) >= 9) {
