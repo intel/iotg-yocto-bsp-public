@@ -2,10 +2,9 @@ require ${COREBASE}/meta/recipes-graphics/mesa/mesa.inc
 
 inherit pythonnative update-alternatives
 
-DEPENDS += "python-mako-native wayland-native wayland wayland-protocols"
+DEPENDS += "python-mako-native wayland-native wayland wayland-protocols xrandr"
 
-SRC_URI = "git://anongit.freedesktop.org/mesa/mesa;branch=18.0 \
-           file://mesa_version_diff.patch \
+SRC_URI = "git://github.com/intel/external-mesa.git;branch=release-july \
            file://disable-asm-on-non-gcc.patch \
            file://0001-Use-wayland-scanner-in-the-path.patch \
            file://0002-hardware-gloat.patch \
@@ -14,11 +13,11 @@ SRC_URI = "git://anongit.freedesktop.org/mesa/mesa;branch=18.0 \
            file://0001-Makefile.vulkan.am-explictly-add-lib-expat-to-intel-.patch \
           "
 
-PV = "18.2.0-devel"
+PV = "18.2.0-rc4"
 
 S = "${WORKDIR}/git"
 
-SRCREV = "d23dc99cc8ab9a31853db66d2bf09c1ff7f2594e"
+SRCREV = "2b825b6884fddf9c1541c9a59a7fd78096b0fedf"
 
 #because we cannot rely on the fact that all apps will use pkgconfig,
 #make eglplatform.h independent of MESA_EGL_NO_X11_HEADER
@@ -27,3 +26,5 @@ do_install_append() {
         sed -i -e 's/^#if defined(MESA_EGL_NO_X11_HEADERS)$/#if defined(MESA_EGL_NO_X11_HEADERS) || ${@bb.utils.contains('PACKAGECONFIG', 'x11', '0', '1', d)}/' ${D}${includedir}/EGL/eglplatform.h
     fi
 }
+
+PACKAGECONFIG_remove += "vulkan"

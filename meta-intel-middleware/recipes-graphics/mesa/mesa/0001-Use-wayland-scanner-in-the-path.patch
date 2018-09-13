@@ -1,6 +1,6 @@
-From bb832b0f2e3965a3ac508caec3f9511043a7ecfe Mon Sep 17 00:00:00 2001
+From 16359cd6467596d78ff013ad2c813f801927bea6 Mon Sep 17 00:00:00 2001
 From: Chong Yi Chai <chong.yi.chai@intel.com>
-Date: Wed, 23 May 2018 09:36:45 +0800
+Date: Tue, 24 Jul 2018 09:39:47 +0800
 Subject: [PATCH] Simplify wayland-scanner lookup
 
 Don't use pkg-config to lookup the path of a binary that's in the path.
@@ -16,11 +16,11 @@ Signed-off-by: Chong Yi Chai <chong.yi.chai@intel.com>
  1 file changed, 1 insertion(+), 6 deletions(-)
 
 diff --git a/configure.ac b/configure.ac
-index 28c1dda..f25165c 100644
+index f135d05..d3dc517 100644
 --- a/configure.ac
 +++ b/configure.ac
-@@ -1796,12 +1796,7 @@ for plat in $platforms; do
-         PKG_CHECK_MODULES([WAYLAND_PROTOCOLS], [wayland-protocols >= $WAYLAND_PROTOCOLS_REQUIRED])
+@@ -1806,12 +1806,7 @@ for plat in $platforms; do
+         fi
          WAYLAND_PROTOCOLS_DATADIR=`$PKG_CONFIG --variable=pkgdatadir wayland-protocols`
  
 -        PKG_CHECK_MODULES([WAYLAND_SCANNER], [wayland-scanner],
