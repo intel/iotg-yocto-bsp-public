@@ -5,10 +5,10 @@ SRC_URI += "file://brcmfmac43241b4-sdio.txt \
         file://0002-i915-GuC-firmware-for-Broxton-v9.37.patch \
            "
 
-LIC_FILES_CHKSUM_remove = " file://WHENCE;md5=ec6f70c8a1104ff87f6aa144d926f0dd \
+LIC_FILES_CHKSUM_remove = " file://WHENCE;md5=eaaf310bac02fee05ea1b334f58c5caf \
 "
 
-LIC_FILES_CHKSUM_append = " file://WHENCE;md5=73d1c5e1809c7a79b66f7ffd0ea2c482 \
+LIC_FILES_CHKSUM_append = " file://WHENCE;md5=20bb19619f53d3fcc9fe32106177acb9 \
 "
 
 RDEPENDS_${PN} += " python"
