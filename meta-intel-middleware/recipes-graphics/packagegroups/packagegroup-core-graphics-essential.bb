@@ -12,7 +12,6 @@ ALLOW_EMPTY_${PN} = "1"
 RDEPENDS_packagegroup-core-graphics-essential = "\
     cairo \
     dmidecode \
-    ffmpeg \
     flac \
     fontconfig \
     freetype \
