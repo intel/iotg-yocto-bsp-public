@@ -137,8 +137,8 @@ test_python () {
 test_network_fetching () {
 	# Checking if you are not behind corporate proxy and have not setup
 	# your proxy correctly
-	HTTP_PATH='http://git.yoctoproject.org/cgit/cgit.cgi/meta-jarvis/tree/meta-jarvis'
-	TEST_FILE="jarvis.bb"
+	HTTP_PATH='https://raw.githubusercontent.com/openembedded/openembedded-core/master/meta/conf'
+	TEST_FILE="layer.conf"
 
 	wget -T 10 $HTTP_PATH/${TEST_FILE}
 
