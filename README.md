@@ -90,7 +90,7 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
 	- check for required software dependencies (this is only performed for Linux Ubuntu 14.04)
 	- test python, network, gitconfig and git proxy
 	- Prepare sources
-	- download Linux kernel v4.14.67 from Intel Linux Kernel from github.
+	- download Linux kernel v4.14.92 from Intel Linux Kernel from github.
 	- combolayer downloads Poky Sumo v2.5.1 and other meta layers based on setup/combolayer.conf
 	- setup bblayers for bitbake build
 	- setup local.conf for bitbake build
@@ -99,7 +99,7 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
 
 - This process will create a build folder named "yocto_build" at the same level directory as your bsp-apollolake-i.
   Yocto bitbake will be running at this directory <your path>/yocto_build/build/.
-  For setup.sh to run completely, this process may take up to 5 hours or more depending on the performance
+  For setup.sh to run completely, this process may take serveral hours or more depending on the performance
   of your build machine. When the build process is completed, you may browse for the image from the path:
 
    Your bootable image location is:-
