@@ -1,7 +1,7 @@
-From ddad7dc821d3a15d3f926e273a0818130f56a882 Mon Sep 17 00:00:00 2001
+From f59467bea92e4cc1cbd859f254ed680c9ad5e10a Mon Sep 17 00:00:00 2001
 From: Owen Zhang <owen.zhang@intel.com>
 Date: Thu, 8 Jun 2017 15:47:02 +0800
-Subject: [PATCH 10/14] intel: add the new bo emit reloc2 for bo offset
+Subject: [PATCH 2/6] intel: add the new bo emit reloc2 for bo offset
 
 with this new interface, the KMD will reloc BO when the offset mismatch.
 
@@ -15,13 +15,13 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  4 files changed, 112 insertions(+)
 
 diff --git a/intel/intel_bufmgr.c b/intel/intel_bufmgr.c
-index 192de09..1033cfb 100644
+index 68d97c0..23afb3c 100644
 --- a/intel/intel_bufmgr.c
 +++ b/intel/intel_bufmgr.c
 @@ -196,6 +196,18 @@ drm_intel_bo_flink(drm_intel_bo *bo, uint32_t * name)
  }
  
- int
+ drm_public int
 +drm_intel_bo_emit_reloc2(drm_intel_bo *bo, uint32_t offset,
 +			drm_intel_bo *target_bo, uint32_t target_offset,
 +			uint32_t read_domains, uint32_t write_domain,
@@ -33,7 +33,7 @@ index 192de09..1033cfb 100644
 +					 presumed_offset);
 +}
 +
-+int
++drm_public int
  drm_intel_bo_emit_reloc(drm_intel_bo *bo, uint32_t offset,
  			drm_intel_bo *target_bo, uint32_t target_offset,
  			uint32_t read_domains, uint32_t write_domain)
@@ -53,10 +53,10 @@ index 50483af..38068d6 100644
  				  drm_intel_bo *target_bo,
  				  uint32_t target_offset,
 diff --git a/intel/intel_bufmgr_gem.c b/intel/intel_bufmgr_gem.c
-index 730f425..f1bc491 100644
+index a50e9be..41b094a 100644
 --- a/intel/intel_bufmgr_gem.c
 +++ b/intel/intel_bufmgr_gem.c
-@@ -2167,6 +2167,83 @@ do_bo_emit_reloc(drm_intel_bo *bo, uint32_t offset,
+@@ -2168,6 +2168,83 @@ do_bo_emit_reloc(drm_intel_bo *bo, uint32_t offset,
  	return 0;
  }
  
@@ -140,7 +140,7 @@ index 730f425..f1bc491 100644
  static void
  drm_intel_gem_bo_use_48b_address_range(drm_intel_bo *bo, uint32_t enable)
  {
-@@ -2233,6 +2310,20 @@ drm_intel_gem_bo_emit_reloc(drm_intel_bo *bo, uint32_t offset,
+@@ -2234,6 +2311,20 @@ drm_intel_gem_bo_emit_reloc(drm_intel_bo *bo, uint32_t offset,
  }
  
  static int
@@ -161,7 +161,7 @@ index 730f425..f1bc491 100644
  drm_intel_gem_bo_emit_reloc_fence(drm_intel_bo *bo, uint32_t offset,
  				  drm_intel_bo *target_bo,
  				  uint32_t target_offset,
-@@ -3928,6 +4019,7 @@ drm_intel_bufmgr_gem_init(int fd, int batch_size)
+@@ -3922,6 +4013,7 @@ drm_intel_bufmgr_gem_init(int fd, int batch_size)
  	bufmgr_gem->bufmgr.bo_get_subdata = drm_intel_gem_bo_get_subdata;
  	bufmgr_gem->bufmgr.bo_wait_rendering = drm_intel_gem_bo_wait_rendering;
  	bufmgr_gem->bufmgr.bo_emit_reloc = drm_intel_gem_bo_emit_reloc;

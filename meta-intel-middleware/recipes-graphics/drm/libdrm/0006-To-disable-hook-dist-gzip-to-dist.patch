@@ -1,7 +1,7 @@
-From 1f0a895aec61baae73b0c00a67efd2993cc1009b Mon Sep 17 00:00:00 2001
+From 84d85004983b5c3d5a5ceee00f9e45cfd18a3a23 Mon Sep 17 00:00:00 2001
 From: Lim Siew Hoon <siew.hoon.lim@intel.com>
 Date: Thu, 5 Jul 2018 20:33:31 +0800
-Subject: [PATCH 14/14] To disable hook dist-gzip to dist.
+Subject: [PATCH 6/6] To disable hook dist-gzip to dist.
 
 dist-gzip will be added "--best" option which gzip unrecognized
 it in MR4 kernel 4.14 Yocto Linux Rootfs build environment, but it
@@ -21,7 +21,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/configure.ac b/configure.ac
-index 965220d..3364ddb 100644
+index 3e44805..8c5e941 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -37,7 +37,7 @@ XORG_MACROS_VERSION(1.12)

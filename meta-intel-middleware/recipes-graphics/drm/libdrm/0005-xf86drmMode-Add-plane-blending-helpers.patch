@@ -1,7 +1,7 @@
-From 6536d4a691d47b6a7badebe54bf546fddb23ea04 Mon Sep 17 00:00:00 2001
+From e644dda6f8ff032a30f1f24413bc29bf6d944692 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Fri, 12 Feb 2016 17:59:11 -0800
-Subject: [PATCH 13/14] xf86drmMode: Add plane blending helpers
+Subject: [PATCH 5/6] xf86drmMode: Add plane blending helpers
 
 For use with kernel's GL-style plane blending properties.
 
@@ -12,10 +12,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  2 files changed, 18 insertions(+)
 
 diff --git a/tests/modetest/modetest.c b/tests/modetest/modetest.c
-index 62957d8..243f513 100644
+index 975dcbc..d46e61f 100644
 --- a/tests/modetest/modetest.c
 +++ b/tests/modetest/modetest.c
-@@ -615,6 +615,7 @@ static struct resources *get_resources(struct device *dev)
+@@ -618,6 +618,7 @@ static struct resources *get_resources(struct device *dev)
  		return NULL;
  
  	drmSetClientCap(dev->fd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);

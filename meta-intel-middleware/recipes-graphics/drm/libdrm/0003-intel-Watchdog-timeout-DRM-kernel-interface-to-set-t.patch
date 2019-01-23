@@ -1,8 +1,8 @@
-From 124b412e9ad64c84ed5702fb7df6bd5522bb615d Mon Sep 17 00:00:00 2001
+From b714581a57f9a22623ca3d77f2618b8c6cac690c Mon Sep 17 00:00:00 2001
 From: Jeff McGee <jeff.mcgee@intel.com>
 Date: Fri, 21 Apr 2017 09:44:06 -0700
-Subject: [PATCH 11/14] intel: Watchdog timeout: DRM kernel interface to set
- the timeout
+Subject: [PATCH 3/6] intel: Watchdog timeout: DRM kernel interface to set the
+ timeout
 
 Signed-off-by: Jeff McGee <jeff.mcgee@intel.com>
 Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
@@ -11,10 +11,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 1 insertion(+)
 
 diff --git a/include/drm/i915_drm.h b/include/drm/i915_drm.h
-index 16e452a..c762f63 100644
+index 268b585..87e94b4 100644
 --- a/include/drm/i915_drm.h
 +++ b/include/drm/i915_drm.h
-@@ -1456,6 +1456,7 @@ struct drm_i915_gem_context_param {
+@@ -1478,6 +1478,7 @@ struct drm_i915_gem_context_param {
  #define   I915_CONTEXT_MAX_USER_PRIORITY	1023 /* inclusive */
  #define   I915_CONTEXT_DEFAULT_PRIORITY		0
  #define   I915_CONTEXT_MIN_USER_PRIORITY	-1023 /* inclusive */

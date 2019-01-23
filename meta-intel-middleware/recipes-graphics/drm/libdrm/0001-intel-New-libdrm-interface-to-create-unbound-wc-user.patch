@@ -1,7 +1,7 @@
-From 08154c604f2b26fd8c7168fcaab666ae9d979137 Mon Sep 17 00:00:00 2001
+From 8f383dcbc3299048a16d392b4c651d2f5306d34b Mon Sep 17 00:00:00 2001
 From: Akash Goel <akash.goel@intel.com>
 Date: Sat, 18 Oct 2014 17:48:34 +0530
-Subject: [PATCH 09/14] intel: New libdrm interface to create unbound wc user
+Subject: [PATCH 1/6] intel: New libdrm interface to create unbound wc user
  mappings for objects
 
 A new libdrm interface 'drm_intel_gem_bo_map_wc' is provided by this
@@ -43,8 +43,8 @@ Issue: GMINL-4760
 Change-Id: I512c3a9597c0890a9cd8973198766404ec75a01d
 ---
  intel/intel_bufmgr.h     |   3 +
- intel/intel_bufmgr_gem.c | 148 +++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 151 insertions(+)
+ intel/intel_bufmgr_gem.c | 149 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 152 insertions(+)
 
 diff --git a/intel/intel_bufmgr.h b/intel/intel_bufmgr.h
 index 693472a..50483af 100644
@@ -61,7 +61,7 @@ index 693472a..50483af 100644
  #define HAVE_DRM_INTEL_GEM_BO_DISABLE_IMPLICIT_SYNC 1
  int drm_intel_bufmgr_gem_can_disable_implicit_sync(drm_intel_bufmgr *bufmgr);
 diff --git a/intel/intel_bufmgr_gem.c b/intel/intel_bufmgr_gem.c
-index 8c3a4b2..730f425 100644
+index fbf4873..a50e9be 100644
 --- a/intel/intel_bufmgr_gem.c
 +++ b/intel/intel_bufmgr_gem.c
 @@ -146,6 +146,7 @@ typedef struct _drm_intel_bufmgr_gem {
@@ -199,7 +199,7 @@ index 8c3a4b2..730f425 100644
 +}
 +
 +/* To be used in a similar way to mmap_gtt */
-+int
++drm_public int
 +drm_intel_gem_bo_map_wc(drm_intel_bo *bo) {
 +	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
 +	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
@@ -241,7 +241,7 @@ index 8c3a4b2..730f425 100644
 +	return 0;
 +}
 +
-+int
++drm_public int
 +drm_intel_gem_bo_map_wc_unsynchronized(drm_intel_bo *bo) {
 +	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
 +#ifdef HAVE_VALGRIND
@@ -273,19 +273,20 @@ index 8c3a4b2..730f425 100644
  		mmap_arg.size = bo->size;
  		ret = drmIoctl(bufmgr_gem->fd,
  			       DRM_IOCTL_I915_GEM_MMAP,
-@@ -1710,6 +1849,11 @@ static int drm_intel_gem_bo_unmap(drm_intel_bo *bo)
- 	return ret;
+@@ -1711,6 +1850,12 @@ static int drm_intel_gem_bo_unmap(drm_intel_bo *bo)
  }
  
-+int drm_intel_gem_bo_unmap_wc(drm_intel_bo *bo)
+ drm_public int
++drm_intel_gem_bo_unmap_wc(drm_intel_bo *bo)
 +{
 +	return drm_intel_gem_bo_unmap(bo);
 +}
 +
- int
++drm_public int
  drm_intel_gem_bo_unmap_gtt(drm_intel_bo *bo)
  {
-@@ -3727,6 +3871,10 @@ drm_intel_bufmgr_gem_init(int fd, int batch_size)
+ 	return drm_intel_gem_bo_unmap(bo);
+@@ -3720,6 +3865,10 @@ drm_intel_bufmgr_gem_init(int fd, int batch_size)
  	if (ret == 0 && *gp.value > 0)
  		bufmgr_gem->bufmgr.bo_set_softpin_offset = drm_intel_gem_bo_set_softpin_offset;
  

@@ -1,7 +1,7 @@
-From 14687358d3766a137bac7ac7ea45db7f38a05e8c Mon Sep 17 00:00:00 2001
+From b9f988eac0db84625bfdec14e9eaec1c80076677 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Wed, 21 Oct 2015 17:12:51 -0700
-Subject: [PATCH 12/14] xf86drmMode: Add RGBA property helpers
+Subject: [PATCH 4/6] xf86drmMode: Add RGBA property helpers
 
 Now that we've added an RGBA property type to the kernel that handles
 RGBA values with a specific bit layout, let's add a userspace helper to
@@ -15,10 +15,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  2 files changed, 42 insertions(+)
 
 diff --git a/xf86drmMode.c b/xf86drmMode.c
-index 9a15b5e..c7d9269 100644
+index 8f8633e..7de2af3 100644
 --- a/xf86drmMode.c
 +++ b/xf86drmMode.c
-@@ -1581,3 +1581,38 @@ drmModeRevokeLease(int fd, uint32_t lessee_id)
+@@ -1593,3 +1593,38 @@ drmModeRevokeLease(int fd, uint32_t lessee_id)
  		return 0;
  	return -errno;
  }
@@ -28,7 +28,7 @@ index 9a15b5e..c7d9269 100644
 + * by DRM RGBA properties.  @bpc is the number of bits per component value
 + * being provided as parameters.
 + */
-+uint64_t
++drm_public uint64_t
 +drmModeRGBA(unsigned bpc,
 +	    uint16_t red,
 +	    uint16_t green,
