@@ -1,7 +1,7 @@
-From 3e781f5f7d1d60769432fc84e4723ab10d01e279 Mon Sep 17 00:00:00 2001
+From aa58a7dc50f895a37c2339cc03bbf97b569fa0b3 Mon Sep 17 00:00:00 2001
 From: Damien Lespiau <damien.lespiau@intel.com>
 Date: Mon, 7 May 2018 13:32:09 -0700
-Subject: [PATCH 08/44] drm: Add an blend_color property (v3)
+Subject: [PATCH 08/45] drm: Add an blend_color property (v3)
 
 Add blend color property and update the
 documentation for the same
@@ -65,7 +65,7 @@ index 18cdd46..dc16a14 100644
  }
  
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index fbe1dd4..27b5aa7 100644
+index 510883d..906b63b 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -10720,7 +10720,7 @@ int intel_plane_atomic_calc_changes(struct drm_crtc_state *crtc_state,

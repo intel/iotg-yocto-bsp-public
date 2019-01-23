@@ -1,4 +1,4 @@
-From f4b759487c059030f64a8e87fd29dee6c98a9e44 Mon Sep 17 00:00:00 2001
+From 8d3d40e0171738f6fca6f7ee2a42260cb2776123 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Thu, 29 Dec 2016 11:40:59 +0800
 Subject: [PATCH 30/42] igb: Handling of igb_get_stats64 when called in

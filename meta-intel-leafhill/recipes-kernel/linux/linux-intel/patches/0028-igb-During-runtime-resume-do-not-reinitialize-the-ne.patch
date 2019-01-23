@@ -1,4 +1,4 @@
-From 3c13869b4e8b9e6b3fb94ca37a8b01222d64f88f Mon Sep 17 00:00:00 2001
+From 022e07718980d9fa61c25bd2c05575475513dec7 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 17:39:41 +0800
 Subject: [PATCH 28/42] igb: During runtime resume do not reinitialize the net

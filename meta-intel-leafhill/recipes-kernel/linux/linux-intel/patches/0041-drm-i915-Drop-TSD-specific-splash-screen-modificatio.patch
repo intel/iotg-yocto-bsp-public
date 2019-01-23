@@ -1,7 +1,7 @@
-From 5c328389d07b531f304d84ce86d4f8f8c32d3b90 Mon Sep 17 00:00:00 2001
+From 5bb502fcfb0c80999057cf594573e0b73c4647f2 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Tue, 21 Aug 2018 14:05:09 -0700
-Subject: [PATCH 41/44] drm/i915: Drop TSD-specific splash-screen modifications
+Subject: [PATCH 41/45] drm/i915: Drop TSD-specific splash-screen modifications
 
 TSD made a few changes to the i915 splash screen support that that has
 been delivered to the rest of IOTG:  they changed the image format from
@@ -44,7 +44,7 @@ Reviewed-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
  2 files changed, 12 insertions(+), 42 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 343990a..f49388c 100644
+index 26eb454..4c46eec 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -4044,6 +4044,16 @@ static void intel_update_background_color(struct intel_crtc *crtc)

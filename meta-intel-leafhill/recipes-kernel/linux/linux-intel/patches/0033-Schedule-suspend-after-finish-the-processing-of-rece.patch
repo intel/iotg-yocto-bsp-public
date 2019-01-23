@@ -1,4 +1,4 @@
-From 4a6405e63e53ea6f656154f479f1d385f4f2e10e Mon Sep 17 00:00:00 2001
+From b584fa2f582fd42a39e95ba29fadcd2ec19b384d Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 27 Sep 2017 14:01:17 +0800
 Subject: [PATCH 33/42] Schedule suspend after finish the processing of

@@ -1,7 +1,7 @@
-From 7bec960f43787d7ed0f118cb66f46c5f35c8cdcf Mon Sep 17 00:00:00 2001
+From 81d92d4afadc8e739e52839c7b333cc688801576 Mon Sep 17 00:00:00 2001
 From: Uma Shankar <uma.shankar@intel.com>
 Date: Tue, 20 Dec 2016 10:24:29 -0800
-Subject: [PATCH 40/44] drm/i915/bxt: Disable device ready before shutdown
+Subject: [PATCH 40/45] drm/i915/bxt: Disable device ready before shutdown
  command (v2)
 
 Disable device ready before MIPI port shutdown command. This helps

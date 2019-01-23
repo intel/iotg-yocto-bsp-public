@@ -1,8 +1,8 @@
-From b04b27e93e3ce8782deddfc39f8348c780be1ae6 Mon Sep 17 00:00:00 2001
+From 00a3ae2c6e945f3f5c70071cb77add31e4de00a6 Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Thu, 5 Nov 2015 15:44:33 +0100
-Subject: [PATCH 18/98] ASoC: Intel: Boards: New machine driver integrated for
- GP MRB board
+Subject: [PATCH 018/100] ASoC: Intel: Boards: New machine driver integrated
+ for GP MRB board
 
   Intial version of the Bxt GP MRB machine driver added.
   The machine driver is able to handle the four channel amplifier

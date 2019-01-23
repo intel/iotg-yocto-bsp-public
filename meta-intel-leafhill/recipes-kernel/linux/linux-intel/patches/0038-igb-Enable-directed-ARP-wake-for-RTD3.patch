@@ -1,4 +1,4 @@
-From d05c01995878549f30794002264276c64f3132b8 Mon Sep 17 00:00:00 2001
+From 2e3284e40c34992ff5437c581138a11ba3529777 Mon Sep 17 00:00:00 2001
 From: "Lai, Poey Seng" <poey.seng.lai@intel.com>
 Date: Thu, 23 Feb 2017 14:18:02 +0800
 Subject: [PATCH 38/42] igb: Enable directed ARP wake for RTD3

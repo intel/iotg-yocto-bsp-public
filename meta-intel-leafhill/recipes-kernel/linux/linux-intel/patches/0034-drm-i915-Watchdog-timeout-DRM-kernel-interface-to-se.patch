@@ -1,7 +1,7 @@
-From 2eab39fd60a900e28e378cff9d1f8563a9c288aa Mon Sep 17 00:00:00 2001
+From 1be199119e39b15a022e944f67efba42d8086d76 Mon Sep 17 00:00:00 2001
 From: Michel Thierry <michel.thierry@intel.com>
 Date: Fri, 21 Apr 2017 09:37:31 -0700
-Subject: [PATCH 34/44] drm/i915: Watchdog timeout: DRM kernel interface to set
+Subject: [PATCH 34/45] drm/i915: Watchdog timeout: DRM kernel interface to set
  the timeout
 
 Final enablement patch for GPU hang detection using watchdog timeout.
@@ -46,10 +46,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  3 files changed, 138 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
-index 94f3f11..8f0fe93 100644
+index d9e426b..ab67981 100644
 --- a/drivers/gpu/drm/i915/i915_drv.h
 +++ b/drivers/gpu/drm/i915/i915_drv.h
-@@ -3772,6 +3772,35 @@ void i915_gem_object_save_bit_17_swizzle(struct drm_i915_gem_object *obj,
+@@ -3765,6 +3765,35 @@ void i915_gem_object_save_bit_17_swizzle(struct drm_i915_gem_object *obj,
  	return &vm->timeline.engine[engine->id];
  }
  

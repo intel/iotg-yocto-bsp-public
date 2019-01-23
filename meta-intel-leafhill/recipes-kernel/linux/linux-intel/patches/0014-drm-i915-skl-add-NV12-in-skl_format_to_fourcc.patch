@@ -1,7 +1,7 @@
-From 43fb1524db013c2c8ad7308b6d7815799a3f56b7 Mon Sep 17 00:00:00 2001
+From bf1d375cc826a3f78a0f22539a1647b403a229cf Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:02 +0530
-Subject: [PATCH 14/44] drm/i915/skl+: add NV12 in skl_format_to_fourcc
+Subject: [PATCH 14/45] drm/i915/skl+: add NV12 in skl_format_to_fourcc
 
 Add support of recognizing DRM_FORMAT_NV12 from plane_format
 register value.
@@ -25,7 +25,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 601a989..8d1d812 100644
+index 6bd20e3..c67b933 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -2658,6 +2658,8 @@ static int skl_format_to_fourcc(int format, bool rgb_order, bool alpha)

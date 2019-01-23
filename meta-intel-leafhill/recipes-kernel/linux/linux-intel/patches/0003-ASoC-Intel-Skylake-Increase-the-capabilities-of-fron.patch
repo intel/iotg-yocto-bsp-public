@@ -1,7 +1,7 @@
-From 28a6d073f364e20556f5366f8037af0821a1a0af Mon Sep 17 00:00:00 2001
+From 01d5301256dd9338f38270d3217746a12319fc07 Mon Sep 17 00:00:00 2001
 From: Mousumi Jana <mousumix.jana@intel.com>
 Date: Tue, 26 Jul 2016 23:50:50 +0530
-Subject: [PATCH 03/98] ASoC: Intel: Skylake: Increase the capabilities of
+Subject: [PATCH 003/100] ASoC: Intel: Skylake: Increase the capabilities of
  front end streams
 
 Add more capabilities to the existing streams so as to support

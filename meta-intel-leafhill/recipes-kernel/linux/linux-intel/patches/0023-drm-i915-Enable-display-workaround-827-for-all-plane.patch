@@ -1,7 +1,7 @@
-From 5907d5350d349f78acc27028fdce9420214854ad Mon Sep 17 00:00:00 2001
+From e4e1fa92f2efc4ef912213ee974949aa286bd5d7 Mon Sep 17 00:00:00 2001
 From: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
 Date: Sat, 12 May 2018 03:03:12 +0530
-Subject: [PATCH 23/44] drm/i915: Enable display workaround 827 for all planes,
+Subject: [PATCH 23/45] drm/i915: Enable display workaround 827 for all planes,
  v2.
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -56,7 +56,7 @@ index 1a1ec0f..c5d8c7b 100644
  }
  
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 0564454..d14a8a4 100644
+index 6389f52..b87d8ad 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -5268,6 +5268,22 @@ static void intel_crtc_dpms_overlay_disable(struct intel_crtc *intel_crtc)
@@ -139,7 +139,7 @@ index 0564454..d14a8a4 100644
  	 * Vblank time updates from the shadow to live plane control register
  	 * are blocked if the memory self-refresh mode is active at that
 diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
-index 143f1ca..55ac6d7 100644
+index a5cde52..b529884 100644
 --- a/drivers/gpu/drm/i915/intel_drv.h
 +++ b/drivers/gpu/drm/i915/intel_drv.h
 @@ -867,6 +867,7 @@ struct intel_crtc_state {

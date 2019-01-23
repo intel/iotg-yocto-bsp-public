@@ -1,7 +1,7 @@
-From 0824a91427830fae87d966b7cde50088adf7be73 Mon Sep 17 00:00:00 2001
+From 4b100ad530ffdeadbb8b39707714c14c41e85392 Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:01 +0530
-Subject: [PATCH 13/44] drm/i915/skl+: refactor WM calculation for NV12
+Subject: [PATCH 13/45] drm/i915/skl+: refactor WM calculation for NV12
 
 Current code calculates DDB for planar formats in such a way that we
 store DDB of plane-0 in plane 1 & vice-versa.
@@ -58,10 +58,10 @@ index fd52e6f..5a4871a 100644
  
  	drm_modeset_unlock_all(dev);
 diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
-index 66a5666..d571297 100644
+index 3e2057c..30de3c5 100644
 --- a/drivers/gpu/drm/i915/i915_drv.h
 +++ b/drivers/gpu/drm/i915/i915_drv.h
-@@ -1815,8 +1815,9 @@ static inline bool skl_ddb_entry_equal(const struct skl_ddb_entry *e1,
+@@ -1810,8 +1810,9 @@ static inline bool skl_ddb_entry_equal(const struct skl_ddb_entry *e1,
  }
  
  struct skl_ddb_allocation {
@@ -74,7 +74,7 @@ index 66a5666..d571297 100644
  
  struct skl_ddb_values {
 diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
-index 2b3c7ea..8ec8f7f 100644
+index 191f556..69ace84 100644
 --- a/drivers/gpu/drm/i915/intel_drv.h
 +++ b/drivers/gpu/drm/i915/intel_drv.h
 @@ -597,6 +597,7 @@ struct intel_pipe_wm {
@@ -86,7 +86,7 @@ index 2b3c7ea..8ec8f7f 100644
  
  struct skl_pipe_wm {
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 928e660..2bbad31 100644
+index ae1173c..811bb3d 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
 @@ -3988,9 +3988,9 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
@@ -403,7 +403,7 @@ index 928e660..2bbad31 100644
  			continue;
  
  		plane_state = drm_atomic_get_plane_state(state, plane);
-@@ -5095,8 +5101,8 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
+@@ -5104,8 +5110,8 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
  		      struct skl_ddb_values *src,
  		      enum pipe pipe)
  {

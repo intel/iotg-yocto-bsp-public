@@ -1,4 +1,4 @@
-From 90ca9b85baaa06d90507af05e71e22cd7d62c28f Mon Sep 17 00:00:00 2001
+From dde337fd36cbaaacfb8a937ef51c8841fe348ad9 Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:03:24 +0100
 Subject: [PATCH 05/42] intel_pstate: Add pstate notifier callback

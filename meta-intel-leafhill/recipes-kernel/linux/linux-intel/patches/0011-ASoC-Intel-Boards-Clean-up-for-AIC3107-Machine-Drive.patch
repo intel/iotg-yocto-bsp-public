@@ -1,7 +1,7 @@
-From 3369f939e61c70c3a3e5a35724f253e399bb19ae Mon Sep 17 00:00:00 2001
+From 109071d34e4fca6eed276e3677025bcc525cadf9 Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Fri, 14 Sep 2018 19:10:26 +0800
-Subject: [PATCH 11/98] ASoC: Intel: Boards: Clean up for AIC3107 Machine
+Subject: [PATCH 011/100] ASoC: Intel: Boards: Clean up for AIC3107 Machine
  Driver
 
 Clean up for AIC3107 machine driver especially on the

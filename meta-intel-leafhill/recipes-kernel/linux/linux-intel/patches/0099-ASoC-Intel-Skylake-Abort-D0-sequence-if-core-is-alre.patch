@@ -1,0 +1,28 @@
+From 8a185a64e8a8c586d20fdf2ee51fb7fff5985df3 Mon Sep 17 00:00:00 2001
+From: Cezary Rojewski <cezary.rojewski@intel.com>
+Date: Fri, 12 Oct 2018 22:57:18 +0200
+Subject: [PATCH 099/100] ASoC: Intel: Skylake: Abort D0 sequence if core is
+ already running.
+
+Change-Id: I039d55442cbcb005f1ae4f01053e93508a0fb9e6
+Signed-off-by: Cezary Rojewski <cezary.rojewski@intel.com>
+---
+ sound/soc/intel/skylake/bxt-sst.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/sound/soc/intel/skylake/bxt-sst.c b/sound/soc/intel/skylake/bxt-sst.c
+index 004d304..13d1c6d 100644
+--- a/sound/soc/intel/skylake/bxt-sst.c
++++ b/sound/soc/intel/skylake/bxt-sst.c
+@@ -514,6 +514,8 @@ static int bxt_set_dsp_D0(struct sst_dsp *ctx, unsigned int core_id)
+ 		}
+ 		skl->cores.state[core_id] = SKL_DSP_RUNNING;
+ 		return ret;
++	} else if (skl->cores.state[core_id] == SKL_DSP_RUNNING) {
++		return 0;
+ 	}
+ 
+ 	/* If core 0 is being turned on, turn on core 1 as well */
+-- 
+1.9.1
+

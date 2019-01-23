@@ -1,7 +1,7 @@
-From 14434e09b7e22bcae102e57c338049d355d7e96f Mon Sep 17 00:00:00 2001
+From eeb50dbff014b318350b0f8c60c35a6c4484bb6b Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Wed, 10 Feb 2016 08:49:25 +0100
-Subject: [PATCH 20/98] ASoC: Intel: DAIs and pin ownership updated
+Subject: [PATCH 020/100] ASoC: Intel: DAIs and pin ownership updated
 
 * platform Dais adapted to GP MRB needs
 * Pin ownership workaround fixed in gp mrb machine driver

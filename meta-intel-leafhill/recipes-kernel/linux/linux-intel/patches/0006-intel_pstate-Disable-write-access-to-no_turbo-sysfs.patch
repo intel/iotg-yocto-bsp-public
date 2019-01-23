@@ -1,4 +1,4 @@
-From dccd293c262ca399d1600ca4fcd24e1f07446117 Mon Sep 17 00:00:00 2001
+From 49d7afc1ea6189b855a702f1c8bd5c78c08c6b63 Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:04:32 +0100
 Subject: [PATCH 06/42] intel_pstate: Disable write access to no_turbo sysfs

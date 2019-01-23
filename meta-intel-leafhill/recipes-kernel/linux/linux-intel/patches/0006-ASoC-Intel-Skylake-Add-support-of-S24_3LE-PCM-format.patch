@@ -1,7 +1,7 @@
-From f905edb848e1acdf7bf4a1eea15e1248fd9a03f7 Mon Sep 17 00:00:00 2001
+From 61c660f7d3a9c2454537ed93106f9ba77024d58a Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Thu, 21 Sep 2017 09:52:34 +0800
-Subject: [PATCH 06/98] ASoC: Intel: Skylake: Add support of S24_3LE PCM
+Subject: [PATCH 006/100] ASoC: Intel: Skylake: Add support of S24_3LE PCM
  formats for FE
 
 Add support of missing S24_3LE PCM formats for System Pin 6,

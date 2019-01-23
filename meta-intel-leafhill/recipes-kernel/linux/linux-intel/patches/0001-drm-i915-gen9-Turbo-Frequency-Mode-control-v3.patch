@@ -1,4 +1,4 @@
-From ce3b287b74828d79b803916526c9b571149db85e Mon Sep 17 00:00:00 2001
+From d6ebc862d1d62c02bf0ab36e4a621774b99b6528 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Wed, 18 Jan 2017 14:02:16 -0800
 Subject: [PATCH 01/42] drm/i915/gen9: Turbo Frequency Mode control (v3).

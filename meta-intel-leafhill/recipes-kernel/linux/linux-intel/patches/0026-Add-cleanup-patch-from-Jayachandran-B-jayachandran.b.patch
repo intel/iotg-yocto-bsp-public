@@ -1,7 +1,7 @@
-From 28e287efe4e6fa1d9cc1f0ff98699e21f265239e Mon Sep 17 00:00:00 2001
+From c6ad84dccbdde09ad6954f50832730785d649700 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Thu, 23 Jun 2016 10:20:21 +0100
-Subject: [PATCH 26/98] Add cleanup patch from Jayachandran B
+Subject: [PATCH 026/100] Add cleanup patch from Jayachandran B
  <jayachandran.b@intel.com>
 
 ---
@@ -9,7 +9,7 @@ Subject: [PATCH 26/98] Add cleanup patch from Jayachandran B
  1 file changed, 55 insertions(+), 55 deletions(-)
 
 diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
-index 003a02f..6f7ccb6 100644
+index fe3e785..56b23ef 100644
 --- a/sound/soc/codecs/tdf8532.c
 +++ b/sound/soc/codecs/tdf8532.c
 @@ -10,9 +10,6 @@
@@ -41,7 +41,7 @@ index 003a02f..6f7ccb6 100644
  	return 0;
  }
  
-@@ -38,68 +32,67 @@ static int tdf8532_dai_hw_params(struct snd_pcm_substream *substream,
+@@ -38,22 +32,25 @@ static int tdf8532_dai_hw_params(struct snd_pcm_substream *substream,
  		struct snd_pcm_hw_params *params,
  		struct snd_soc_dai *dai)
  {
@@ -71,8 +71,10 @@ index 003a02f..6f7ccb6 100644
  		break;
  
  	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
- 	case SNDRV_PCM_TRIGGER_SUSPEND:
- 	case SNDRV_PCM_TRIGGER_STOP:
+@@ -62,47 +59,43 @@ static int tdf8532_dai_trigger(struct snd_pcm_substream *substream, int cmd,
+ 		/* WA on unexpected codec down during S3
+ 		 SNDRV_PCM_TRIGGER_STOP fails so skip set ret */
+ 		tdf8532_stop_play(tdf8532);
 -		data[5]=0x00;
 +		data[5] = 0x00;
  		break;
@@ -139,7 +141,7 @@ index 003a02f..6f7ccb6 100644
  };
  
  
-@@ -107,18 +100,25 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
+@@ -110,18 +103,25 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
  		const struct i2c_device_id *id)
  {
  	int ret;
@@ -173,7 +175,7 @@ index 003a02f..6f7ccb6 100644
  
  }
  
-@@ -129,20 +129,20 @@ static int tdf8532_i2c_remove(struct i2c_client *i2c)
+@@ -132,20 +132,20 @@ static int tdf8532_i2c_remove(struct i2c_client *i2c)
  }
  
  static const struct i2c_device_id tdf8532_i2c_id[] = {

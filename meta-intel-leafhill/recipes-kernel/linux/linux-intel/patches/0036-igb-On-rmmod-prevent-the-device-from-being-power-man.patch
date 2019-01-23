@@ -1,4 +1,4 @@
-From 136598ba6ca1468dadc857ce86c4abeeb6eca046 Mon Sep 17 00:00:00 2001
+From 6bc451631817a501d846aced07a5cb6b29d4156a Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 20 Dec 2016 13:16:25 +0800
 Subject: [PATCH 36/42] igb: On rmmod prevent the device from being power

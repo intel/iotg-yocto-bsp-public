@@ -1,7 +1,7 @@
-From 038ba2c2d8e5e1fe3130ac6ae636f4529554f601 Mon Sep 17 00:00:00 2001
+From 5da1620676f529207c5ef12d07fe953f59942414 Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Tue, 16 Feb 2016 10:26:40 +0100
-Subject: [PATCH 21/98] ASoC: Codecs: Add codec driver for TDF8532
+Subject: [PATCH 021/100] ASoC: Codecs: Add codec driver for TDF8532
 
  I2C based codec driver for TDF8532 added. Driver
  sends enable/disbale command via I2C in dai_trigger callback.
@@ -21,15 +21,15 @@ Conflicts:
  arch/x86/platform/bxt/gpmrb-board.c |  23 ++
  sound/soc/codecs/Kconfig            |   2 +-
  sound/soc/codecs/Makefile           |   2 +
- sound/soc/codecs/tdf8532.c          | 379 +++++--------------------
+ sound/soc/codecs/tdf8532.c          | 378 +++++--------------------
  sound/soc/intel/boards/Kconfig      |   2 +
  sound/soc/intel/boards/bxt_gpmrb.c  | 544 ++++++++++++++++++------------------
- 8 files changed, 379 insertions(+), 577 deletions(-)
+ 8 files changed, 379 insertions(+), 576 deletions(-)
  create mode 100644 arch/x86/platform/bxt/Makefile
  create mode 100644 arch/x86/platform/bxt/gpmrb-board.c
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index ffd5802..67c33f5 100644
+index 0e93905..f1aed2f 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -1,4 +1,7 @@
@@ -110,10 +110,10 @@ index 8a6ee2c..fedef12 100644
  obj-$(CONFIG_SND_SOC_ES8328_I2C)+= snd-soc-es8328-i2c.o
  obj-$(CONFIG_SND_SOC_ES8328_SPI)+= snd-soc-es8328-spi.o
 diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
-index c7bdb39..003a02f 100644
+index 3180d4f4..fe3e785 100644
 --- a/sound/soc/codecs/tdf8532.c
 +++ b/sound/soc/codecs/tdf8532.c
-@@ -1,383 +1,152 @@
+@@ -1,385 +1,155 @@
  /*
 - * Codec driver for NXP Semiconductors - TDF8532
 - * Copyright (c) 2017, Intel Corporation.
@@ -217,7 +217,7 @@ index c7bdb39..003a02f 100644
  }
  
 -
--static uint8_t tdf8532_read_wait_ack(struct tdf8532_priv *dev_data,
+-static int tdf8532_read_wait_ack(struct tdf8532_priv *dev_data,
 -						unsigned long timeout)
 -{
 -	uint8_t ack_repl[HEADER_SIZE] = {0, 0, 0};
@@ -409,7 +409,9 @@ index c7bdb39..003a02f 100644
  	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
  	case SNDRV_PCM_TRIGGER_SUSPEND:
  	case SNDRV_PCM_TRIGGER_STOP:
--		ret = tdf8532_stop_play(tdf8532);
+ 		/* WA on unexpected codec down during S3
+ 		 SNDRV_PCM_TRIGGER_STOP fails so skip set ret */
+ 		tdf8532_stop_play(tdf8532);
 +		data[5]=0x00;
  		break;
  	}

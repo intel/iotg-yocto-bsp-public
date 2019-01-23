@@ -1,7 +1,7 @@
-From ad1e7b4f2d2699a183f7b8f53b79f290e695c84b Mon Sep 17 00:00:00 2001
+From ccbc070a4c1147a90c59b89f8559e967d7f50ffd Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Thu, 28 Jan 2016 09:06:14 +0100
-Subject: [PATCH 19/98] ASoC: Intel: Boards: DAPM routes changed of GP MRB
+Subject: [PATCH 019/100] ASoC: Intel: Boards: DAPM routes changed of GP MRB
  machine driver
 
 DAPM for GP MRB Modem path changed.

@@ -1,7 +1,7 @@
-From 4e2e659b47f37df5a6c94629bf7e84b5bd06d5a8 Mon Sep 17 00:00:00 2001
+From 24fe2f84415f74c8f4a7aab883129a7c2928b0e1 Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:05 +0530
-Subject: [PATCH 17/44] drm/i915/skl+: pass skl_wm_level struct to wm compute
+Subject: [PATCH 17/45] drm/i915/skl+: pass skl_wm_level struct to wm compute
  func
 
 This patch passes skl_wm_level structure itself to watermark
@@ -31,7 +31,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 8 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index cce7a70..11581ac 100644
+index abd42b9..7134df1 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
 @@ -4511,9 +4511,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,

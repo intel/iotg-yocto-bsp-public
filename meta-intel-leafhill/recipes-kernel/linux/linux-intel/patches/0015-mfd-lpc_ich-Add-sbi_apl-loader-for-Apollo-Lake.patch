@@ -1,4 +1,4 @@
-From 5554f77c77a40aac69dacdc29723a33107ee64fa Mon Sep 17 00:00:00 2001
+From 8fe316f26a5889abff5cd4f0a88f8829e8f55c88 Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Tue, 26 Sep 2017 16:35:26 +0800
 Subject: [PATCH 15/42] mfd: lpc_ich: Add sbi_apl loader for Apollo Lake

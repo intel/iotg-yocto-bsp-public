@@ -1,8 +1,8 @@
-From fdc4f94b12377f8400febc3bc5c4ef4f4d64220a Mon Sep 17 00:00:00 2001
+From f9c07d45eb14252afeaf399ec8fa790fcea26994 Mon Sep 17 00:00:00 2001
 From: Jakub Dorzak <jdorzakx@intel.com>
 Date: Tue, 26 Jul 2016 14:59:58 +0100
-Subject: [PATCH 36/98] ASoC: Intel: Boards: Added option to enable TDF8532 DAI
- link
+Subject: [PATCH 036/100] ASoC: Intel: Boards: Added option to enable TDF8532
+ DAI link
 
 Added Kconfig option that allows user to switch between TDF8532
 and snd-soc-dummy in DAI link struct for GPMRB machine driver.

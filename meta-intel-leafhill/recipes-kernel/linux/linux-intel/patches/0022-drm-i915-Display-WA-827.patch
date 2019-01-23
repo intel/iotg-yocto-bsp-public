@@ -1,7 +1,7 @@
-From 727ab3cae0e84bd50e1f0af3c019f2b267e88bad Mon Sep 17 00:00:00 2001
+From 236bced021bec1268f206c7634935c784d6f074f Mon Sep 17 00:00:00 2001
 From: Vidya Srinivas <vidya.srinivas@intel.com>
 Date: Mon, 9 Apr 2018 09:11:09 +0530
-Subject: [PATCH 22/44] drm/i915: Display WA 827
+Subject: [PATCH 22/45] drm/i915: Display WA 827
 
 Display WA 827 applies to GEN9 (excluede GLK) and CNL.
 Switching the plane format from NV12 to RGB and leaving system idle
@@ -30,7 +30,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  2 files changed, 37 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/i915_reg.h b/drivers/gpu/drm/i915/i915_reg.h
-index b037b3c..5bbcca8 100644
+index 758221c..d424db5 100644
 --- a/drivers/gpu/drm/i915/i915_reg.h
 +++ b/drivers/gpu/drm/i915/i915_reg.h
 @@ -3817,6 +3817,9 @@ enum {
@@ -44,7 +44,7 @@ index b037b3c..5bbcca8 100644
  #define   DPF_RAM_GATING_DIS		(1 << 9)
  #define   DPFR_GATING_DIS		(1 << 8)
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 10995f594..0564454 100644
+index 0c71e87..6389f52 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -494,6 +494,21 @@ static void intel_update_czclk(struct drm_i915_private *dev_priv)

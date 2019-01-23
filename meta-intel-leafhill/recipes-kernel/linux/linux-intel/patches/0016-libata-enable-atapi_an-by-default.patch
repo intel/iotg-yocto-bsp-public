@@ -1,4 +1,4 @@
-From 2a8dfb5285c3e7e75d24e59aaaf8fb4862fac83d Mon Sep 17 00:00:00 2001
+From 6f522a776ee7b40b6c307b996565ddb1d02bb912 Mon Sep 17 00:00:00 2001
 From: Vitaly Wool <vwool@dev.rtsoft.ru>
 Date: Thu, 30 Jun 2016 07:06:52 +0000
 Subject: [PATCH 16/42] libata: enable atapi_an by default

@@ -1,7 +1,7 @@
-From 70226a089fabfb60bf2991a78437abf95f293f7b Mon Sep 17 00:00:00 2001
+From a934d42f6eb0933e5e68f5f08198ccbdb866fdf5 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Thu, 23 Jun 2016 12:38:27 +0100
-Subject: [PATCH 27/98] ASoC: Codecs: TDF8532 ACPI enumeration and i2c mute
+Subject: [PATCH 027/100] ASoC: Codecs: TDF8532 ACPI enumeration and i2c mute
 
 Added codec ACPI ID to allow enumeration via ACPI.
 Digital mute function using i2c command.
@@ -12,7 +12,7 @@ Signed-off-by: CraigX Kewley <craigx.kewley@intel.com>
  1 file changed, 57 insertions(+), 3 deletions(-)
 
 diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
-index 6f7ccb6..f0ca9c0 100644
+index 56b23ef..a99f10c 100644
 --- a/sound/soc/codecs/tdf8532.c
 +++ b/sound/soc/codecs/tdf8532.c
 @@ -13,7 +13,7 @@
@@ -42,7 +42,7 @@ index 6f7ccb6..f0ca9c0 100644
  
  	dev_dbg(codec->dev, "%s: cmd = %d\n", __func__, cmd);
  
-@@ -66,17 +68,54 @@ static int tdf8532_dai_trigger(struct snd_pcm_substream *substream, int cmd,
+@@ -69,17 +71,54 @@ static int tdf8532_dai_trigger(struct snd_pcm_substream *substream, int cmd,
  	return ret;
  }
  
@@ -98,7 +98,7 @@ index 6f7ccb6..f0ca9c0 100644
  };
  
  static struct snd_soc_codec_driver soc_codec_tdf8532;
-@@ -113,6 +152,11 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
+@@ -116,6 +155,11 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
  	tdf8532->i2c = i2c;
  	i2c_set_clientdata(i2c, tdf8532);
  
@@ -110,7 +110,7 @@ index 6f7ccb6..f0ca9c0 100644
  	ret = snd_soc_register_codec(&i2c->dev, &soc_codec_tdf8532,
  			tdf8532_dai, ARRAY_SIZE(tdf8532_dai));
  	if (ret != 0)
-@@ -135,10 +179,20 @@ static int tdf8532_i2c_remove(struct i2c_client *i2c)
+@@ -138,10 +182,20 @@ static int tdf8532_i2c_remove(struct i2c_client *i2c)
  
  MODULE_DEVICE_TABLE(i2c, tdf8532_i2c_id);
  

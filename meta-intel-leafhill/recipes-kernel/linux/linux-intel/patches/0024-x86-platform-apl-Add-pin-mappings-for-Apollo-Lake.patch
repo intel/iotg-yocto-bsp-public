@@ -1,4 +1,4 @@
-From 02613a33c21e532c2b531e3ac71430d5269d4714 Mon Sep 17 00:00:00 2001
+From edd9ef4da5453a8d48ffd0cda374cdf786f6a1c5 Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Thu, 13 Apr 2017 12:04:43 +0800
 Subject: [PATCH 24/42] x86/platform/apl: Add pin mappings for Apollo Lake

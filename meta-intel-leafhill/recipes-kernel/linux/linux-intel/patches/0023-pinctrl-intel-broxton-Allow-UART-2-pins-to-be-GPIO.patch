@@ -1,4 +1,4 @@
-From 43c87fd2b7556f1ac348f70012c2ccb8f90229fc Mon Sep 17 00:00:00 2001
+From 9bc61b2fa9d719610bfdf86c52f7d59621dbd117 Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Mon, 11 Jul 2016 18:01:59 +0300
 Subject: [PATCH 23/42] pinctrl: intel: broxton: Allow UART 2 pins to be GPIO

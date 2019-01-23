@@ -1,7 +1,7 @@
-From 5bc7bcf32500ee6077cc8f3844f05706f6872138 Mon Sep 17 00:00:00 2001
+From 40f7533054c45442fe0ac9a32845ce4de4ca4b4f Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Mon, 25 Jul 2016 14:15:24 +0100
-Subject: [PATCH 31/98] ASoC: Intel: Boards: Add SND_SOC_COMPRESS dependency
+Subject: [PATCH 031/100] ASoC: Intel: Boards: Add SND_SOC_COMPRESS dependency
 
 SND_SOC_COMPRESS was moved out to an optional config
 option, enable it when the GP MRB machine driver is

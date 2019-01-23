@@ -1,4 +1,4 @@
-From f4748bc32fc956cea34f9726a8fcd9305b2c3a18 Mon Sep 17 00:00:00 2001
+From 0a8744301e6da79c7d6651d65254527109c07f3b Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Tue, 7 Nov 2017 10:37:57 +0800
 Subject: [PATCH 41/42] igb: Initialize the spinlock and replace the VLAN with

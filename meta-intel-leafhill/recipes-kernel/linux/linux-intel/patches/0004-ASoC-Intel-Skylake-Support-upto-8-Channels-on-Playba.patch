@@ -1,7 +1,7 @@
-From 04f92a594a573820c35f8bc3d252f6b3aae8f54b Mon Sep 17 00:00:00 2001
+From 08a23e139465665115b2d5d861c3ed560456a531 Mon Sep 17 00:00:00 2001
 From: Pardha Saradhi K <pardha.saradhi.kesapragada@intel.com>
 Date: Fri, 5 Aug 2016 15:19:15 +0530
-Subject: [PATCH 04/98] ASoC: Intel: Skylake: Support upto 8 Channels on
+Subject: [PATCH 004/100] ASoC: Intel: Skylake: Support upto 8 Channels on
  Playback & Capture
 
 Add capabilities to FE streams such that Playback and Capture

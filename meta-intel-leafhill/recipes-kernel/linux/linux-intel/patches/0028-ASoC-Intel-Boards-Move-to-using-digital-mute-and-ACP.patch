@@ -1,7 +1,7 @@
-From f099b4d43f8f41abe69d6567bd51d13c4d0dc3e6 Mon Sep 17 00:00:00 2001
+From 725a1d04530adacc8e1ea9e28c330a9fe4ee1881 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Thu, 23 Jun 2016 12:47:51 +0100
-Subject: [PATCH 28/98] ASoC: Intel: Boards: Move to using digital mute and
+Subject: [PATCH 028/100] ASoC: Intel: Boards: Move to using digital mute and
  ACPI.
 
 Removed dependency on board driver as codec now enumerated via ACPI.

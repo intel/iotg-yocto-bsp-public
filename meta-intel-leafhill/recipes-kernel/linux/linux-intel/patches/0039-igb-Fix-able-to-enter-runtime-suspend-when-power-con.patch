@@ -1,4 +1,4 @@
-From 1a23988ba520053f70b28cd92cdf59c8310fa052 Mon Sep 17 00:00:00 2001
+From 8c4914279b189bf111482bcf3fb20a0d8ca8c2f7 Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Wed, 22 Feb 2017 14:07:15 +0800
 Subject: [PATCH 39/42] igb: Fix able to enter runtime suspend when

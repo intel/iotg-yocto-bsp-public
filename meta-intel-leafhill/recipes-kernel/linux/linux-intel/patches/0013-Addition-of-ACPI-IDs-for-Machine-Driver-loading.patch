@@ -1,7 +1,7 @@
-From a1e06831361717d88279d1b06f43640e2795ee4f Mon Sep 17 00:00:00 2001
+From 80c85f5a70200be0ba866bde6f7c25201e2abe38 Mon Sep 17 00:00:00 2001
 From: "Nahulanthran, Sanjeev" <sanjeev.nahulanthran@intel.com>
 Date: Fri, 14 Sep 2018 11:28:58 +0800
-Subject: [PATCH 13/98] Addition of ACPI IDs for Machine Driver loading
+Subject: [PATCH 013/100] Addition of ACPI IDs for Machine Driver loading
 
 Adding ACPI IDs for BroadMarket and IVI machine driver dynamic
 loading. Additions were made to soc-acpi-intel-bxt-match.c and
@@ -20,7 +20,7 @@ Signed-off-by: Nahulanthran, Sanjeev <sanjeev.nahulanthran@intel.com>
  1 file changed, 30 insertions(+)
 
 diff --git a/sound/soc/intel/common/soc-acpi-intel-bxt-match.c b/sound/soc/intel/common/soc-acpi-intel-bxt-match.c
-index f39386e5..421fd39 100644
+index 2d4f608..fc36051 100644
 --- a/sound/soc/intel/common/soc-acpi-intel-bxt-match.c
 +++ b/sound/soc/intel/common/soc-acpi-intel-bxt-match.c
 @@ -17,8 +17,13 @@
@@ -37,7 +37,7 @@ index f39386e5..421fd39 100644
  	},
  	{
  		.id = "DLGS7219",
-@@ -51,6 +56,31 @@ struct snd_soc_acpi_mach snd_soc_acpi_intel_bxt_machines[] = {
+@@ -52,6 +57,31 @@ struct snd_soc_acpi_mach snd_soc_acpi_intel_bxt_machines[] = {
  		.sof_tplg_filename = "intel/sof-apl-tdf8532.tplg",
  		.asoc_plat_name = "0000:00:0e.0",
  	},

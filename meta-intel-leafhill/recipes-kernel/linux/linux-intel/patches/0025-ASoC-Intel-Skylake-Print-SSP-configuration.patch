@@ -1,7 +1,7 @@
-From 2c31c24d9bca0890a9d1fb88bfa8e398c4b06f88 Mon Sep 17 00:00:00 2001
+From f5d7ecf60e7382a187c8ddfe881fb3e6df673291 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Wed, 1 Jun 2016 14:39:46 +0100
-Subject: [PATCH 25/98] ASoC: Intel: Skylake: Print SSP configuration
+Subject: [PATCH 025/100] ASoC: Intel: Skylake: Print SSP configuration
 
 Print SSP configuration (debug level) when a pipeline is opened.
 
@@ -14,7 +14,7 @@ Conflicts:
  1 file changed, 3 insertions(+)
 
 diff --git a/sound/soc/intel/skylake/skl-topology.c b/sound/soc/intel/skylake/skl-topology.c
-index fe677b7..0b27155 100644
+index 878964b..b2fe4dc 100644
 --- a/sound/soc/intel/skylake/skl-topology.c
 +++ b/sound/soc/intel/skylake/skl-topology.c
 @@ -2997,6 +2997,9 @@ static int skl_tplg_be_fill_pipe_params(struct snd_soc_dai *dai,

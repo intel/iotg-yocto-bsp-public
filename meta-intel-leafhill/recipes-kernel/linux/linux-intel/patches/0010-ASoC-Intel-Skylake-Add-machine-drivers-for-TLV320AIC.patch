@@ -1,7 +1,7 @@
-From 2982e7c8221b70ee3fb3afc278708cff4aab0ba8 Mon Sep 17 00:00:00 2001
+From 1c9e19ba1a6dc8babba4d35632d7b0038e44ddbd Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Mon, 4 Jul 2016 17:34:05 +0800
-Subject: [PATCH 10/98] ASoC: Intel: Skylake: Add machine drivers for
+Subject: [PATCH 010/100] ASoC: Intel: Skylake: Add machine drivers for
  TLV320AIC3107
 
 This commit is to add new machine drivers for TI codec,
@@ -26,7 +26,7 @@ Conflicts:
  create mode 100644 sound/soc/intel/boards/apli_lhcrb_aic3107S.c
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 4377c54..0e0a577 100644
+index 9e53d4f..3a42e4d 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
 @@ -12554,6 +12554,13 @@ M:	Tan, Seng Kai <seng.kai.tan@intel.com>

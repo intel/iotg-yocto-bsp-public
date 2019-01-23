@@ -1,7 +1,7 @@
-From 597342e2eb6a1cb50f167ed8e26a92c5ee5a73d4 Mon Sep 17 00:00:00 2001
+From b63d6413fe10217ca650fd5df6c7880b8e768368 Mon Sep 17 00:00:00 2001
 From: "Kumar, Mahesh" <mahesh1.kumar@intel.com>
 Date: Thu, 17 Aug 2017 19:15:23 +0530
-Subject: [PATCH 11/44] drm/i915/skl+: Optimize WM calculation
+Subject: [PATCH 11/45] drm/i915/skl+: Optimize WM calculation
 
 Plane configuration parameters doesn't change for each WM-level
 calculation. Currently we compute same parameters 8 times for each
@@ -25,10 +25,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  2 files changed, 133 insertions(+), 93 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
-index 4f90933..261d28f 100644
+index b0d36c5..fa8c93d 100644
 --- a/drivers/gpu/drm/i915/i915_drv.h
 +++ b/drivers/gpu/drm/i915/i915_drv.h
-@@ -1830,6 +1830,20 @@ struct skl_wm_level {
+@@ -1825,6 +1825,20 @@ struct skl_wm_level {
  	uint8_t plane_res_l;
  };
  
@@ -50,7 +50,7 @@ index 4f90933..261d28f 100644
   * This struct helps tracking the state needed for runtime PM, which puts the
   * device in PCI D3 state. Notice that when this happens, nothing on the
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index dcb7032..09bc121 100644
+index 697dd1c..f49e448 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
 @@ -4373,146 +4373,156 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,

@@ -1,7 +1,7 @@
-From 92a8abafc030c970d6cb54f7c4b86639af0f80f2 Mon Sep 17 00:00:00 2001
+From c3d8263adb75da794ddba950798c4918fa0b984e Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Thu, 1 Sep 2016 15:10:05 +0100
-Subject: [PATCH 37/98] ASoC: Codecs: TDF8532 change i2c sequence to be
+Subject: [PATCH 037/100] ASoC: Codecs: TDF8532 change i2c sequence to be
  compatible with GP MRB fab D
 
 Updated i2c sequence and refactored common i2c code. Added delay before
@@ -13,7 +13,7 @@ Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
  1 file changed, 61 insertions(+), 32 deletions(-)
 
 diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
-index 3c8b46b..f94eb98 100644
+index 022d36c..04ab478 100644
 --- a/sound/soc/codecs/tdf8532.c
 +++ b/sound/soc/codecs/tdf8532.c
 @@ -13,6 +13,7 @@
@@ -87,7 +87,7 @@ index 3c8b46b..f94eb98 100644
  
  	dev_dbg(codec->dev, "%s: cmd = %d\n", __func__, cmd);
  
-@@ -54,26 +81,38 @@ static int tdf8532_dai_trigger(struct snd_pcm_substream *substream, int cmd,
+@@ -54,7 +81,8 @@ static int tdf8532_dai_trigger(struct snd_pcm_substream *substream, int cmd,
  	case SNDRV_PCM_TRIGGER_START:
  	case SNDRV_PCM_TRIGGER_PAUSE_RELEASE:
  	case SNDRV_PCM_TRIGGER_RESUME:
@@ -97,8 +97,10 @@ index 3c8b46b..f94eb98 100644
  		break;
  
  	case SNDRV_PCM_TRIGGER_PAUSE_PUSH:
- 	case SNDRV_PCM_TRIGGER_SUSPEND:
- 	case SNDRV_PCM_TRIGGER_STOP:
+@@ -63,20 +91,31 @@ static int tdf8532_dai_trigger(struct snd_pcm_substream *substream, int cmd,
+ 		/* WA on unexpected codec down during S3
+ 		 SNDRV_PCM_TRIGGER_STOP fails so skip set ret */
+ 		tdf8532_stop_play(tdf8532);
 -		data[5] = 0x00;
 +		data[4] = 0x27;
 +		ret = tdf8532_cmd_send(tdf8532, data, ARRAY_SIZE(data));
@@ -133,7 +135,7 @@ index 3c8b46b..f94eb98 100644
  }
  
  
-@@ -82,7 +121,6 @@ static int tdf8532_dai_prepare(struct snd_pcm_substream *substream,
+@@ -85,7 +124,6 @@ static int tdf8532_dai_prepare(struct snd_pcm_substream *substream,
  
  static int tdf8532_mute(struct snd_soc_dai *dai, int mute)
  {
@@ -141,7 +143,7 @@ index 3c8b46b..f94eb98 100644
  	struct tdf8532_priv *tdf8532 = snd_soc_codec_get_drvdata(dai->codec);
  	unsigned char data[] = {0x02, (tdf8532->packet_id)++, 0x03,
  					0x80, MUTE, 0x1F};
-@@ -92,32 +130,22 @@ static int tdf8532_mute(struct snd_soc_dai *dai, int mute)
+@@ -95,32 +133,22 @@ static int tdf8532_mute(struct snd_soc_dai *dai, int mute)
  	else
  		data[4] = MUTE;
  
@@ -178,7 +180,7 @@ index 3c8b46b..f94eb98 100644
  	.trigger  = tdf8532_dai_trigger,
  	.prepare  = tdf8532_dai_prepare,
  	.digital_mute = tdf8532_mute,
-@@ -130,7 +158,7 @@ static int tdf8532_set_fast_mute(struct tdf8532_priv *tdf8532)
+@@ -133,7 +161,7 @@ static int tdf8532_set_fast_mute(struct tdf8532_priv *tdf8532)
  		.name = "tdf8532-hifi",
  		.playback = {
  			.stream_name = "Playback",
@@ -187,7 +189,7 @@ index 3c8b46b..f94eb98 100644
  			.channels_max = 4,
  			.rates = SNDRV_PCM_RATE_48000,
  			.formats = SNDRV_PCM_FMTBIT_S16_LE,
-@@ -167,7 +195,7 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
+@@ -170,7 +198,7 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
  	ret = snd_soc_register_codec(&i2c->dev, &soc_codec_tdf8532,
  			tdf8532_dai, ARRAY_SIZE(tdf8532_dai));
  	if (ret != 0)
@@ -196,7 +198,7 @@ index 3c8b46b..f94eb98 100644
  
  	return ret;
  
-@@ -176,6 +204,7 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
+@@ -179,6 +207,7 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
  static int tdf8532_i2c_remove(struct i2c_client *i2c)
  {
  	snd_soc_unregister_codec(&i2c->dev);

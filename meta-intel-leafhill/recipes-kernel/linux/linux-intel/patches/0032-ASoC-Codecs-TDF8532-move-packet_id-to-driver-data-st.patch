@@ -1,7 +1,7 @@
-From 05db481ccfe1241f071c51ba1f9743280f2c5b63 Mon Sep 17 00:00:00 2001
+From e1564f45f377878a299156e7a119e8179e2d881b Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Wed, 20 Jul 2016 11:37:30 +0100
-Subject: [PATCH 32/98] ASoC: Codecs: TDF8532: move packet_id to driver data
+Subject: [PATCH 032/100] ASoC: Codecs: TDF8532: move packet_id to driver data
  struct
 
 Move packet_id to driver data structure. The packet_id variable is incremented
@@ -14,7 +14,7 @@ Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
  1 file changed, 16 insertions(+), 9 deletions(-)
 
 diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
-index f0ca9c0..3c8b46b 100644
+index a99f10c..022d36c 100644
 --- a/sound/soc/codecs/tdf8532.c
 +++ b/sound/soc/codecs/tdf8532.c
 @@ -20,9 +20,10 @@
@@ -40,7 +40,7 @@ index f0ca9c0..3c8b46b 100644
  
  	dev_dbg(codec->dev, "%s: cmd = %d\n", __func__, cmd);
  
-@@ -82,7 +84,8 @@ static int tdf8532_mute(struct snd_soc_dai *dai, int mute)
+@@ -85,7 +87,8 @@ static int tdf8532_mute(struct snd_soc_dai *dai, int mute)
  {
  	int ret;
  	struct tdf8532_priv *tdf8532 = snd_soc_codec_get_drvdata(dai->codec);
@@ -50,7 +50,7 @@ index f0ca9c0..3c8b46b 100644
  
  	if (!mute)
  		data[4] = UNMUTE;
-@@ -97,15 +100,17 @@ static int tdf8532_mute(struct snd_soc_dai *dai, int mute)
+@@ -100,15 +103,17 @@ static int tdf8532_mute(struct snd_soc_dai *dai, int mute)
  	return 0;
  }
  
@@ -72,7 +72,7 @@ index f0ca9c0..3c8b46b 100644
  
  	return ret;
  }
-@@ -150,9 +155,11 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
+@@ -153,9 +158,11 @@ static int tdf8532_i2c_probe(struct i2c_client *i2c,
  		return -ENOMEM;
  
  	tdf8532->i2c = i2c;

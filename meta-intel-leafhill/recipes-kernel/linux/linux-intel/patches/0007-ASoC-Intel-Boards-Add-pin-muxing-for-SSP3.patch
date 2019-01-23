@@ -1,7 +1,7 @@
-From 73eef2ab3a9f70426684b281c5cfecaf9e806cc1 Mon Sep 17 00:00:00 2001
+From b815601056de30ed927f24f11bb57c64953cd190 Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Thu, 6 Sep 2018 11:02:25 +0800
-Subject: [PATCH 07/98] ASoC: Intel: Boards: Add pin muxing for SSP3
+Subject: [PATCH 007/100] ASoC: Intel: Boards: Add pin muxing for SSP3
 
 Add SSP3 pin muxing information for IVI generic machine
 driver.

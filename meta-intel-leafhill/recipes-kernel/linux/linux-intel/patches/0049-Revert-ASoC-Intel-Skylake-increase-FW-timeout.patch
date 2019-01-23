@@ -1,7 +1,7 @@
-From 2c370ff30b9f8eb2e26331824930524485f6680c Mon Sep 17 00:00:00 2001
+From f7fdf1a839cd4cf15902d26f5a39bdc223a9076a Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Tue, 14 Mar 2017 14:38:28 +0000
-Subject: [PATCH 49/98] Revert "ASoC: Intel: Skylake: increase FW timeout"
+Subject: [PATCH 049/100] Revert "ASoC: Intel: Skylake: increase FW timeout"
 
 This reverts commit f0559a77990752805cb44aa4665106a959ef3982.
 
@@ -12,7 +12,7 @@ Conflicts:
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/sound/soc/intel/skylake/bxt-sst.c b/sound/soc/intel/skylake/bxt-sst.c
-index 1b192c0..e6b6a17 100644
+index 6335670..97a3210 100644
 --- a/sound/soc/intel/skylake/bxt-sst.c
 +++ b/sound/soc/intel/skylake/bxt-sst.c
 @@ -24,7 +24,7 @@

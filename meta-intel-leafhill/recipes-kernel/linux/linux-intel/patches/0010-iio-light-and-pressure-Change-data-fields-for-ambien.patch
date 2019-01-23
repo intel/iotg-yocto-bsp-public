@@ -1,4 +1,4 @@
-From f2df21d12108d6891f3aa6a7f5fe239243d062e5 Mon Sep 17 00:00:00 2001
+From 4a1e43efc164211aa38f9026937a063058b3dfc7 Mon Sep 17 00:00:00 2001
 From: "Ooi, Joyce" <joyce.ooi@intel.com>
 Date: Tue, 21 Jun 2016 11:42:11 +0800
 Subject: [PATCH 10/42] iio: light and pressure: Change data fields for ambient

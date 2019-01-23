@@ -1,4 +1,4 @@
-From 2fb8da083c60556e760bcca56ae9a8e6075f8d4d Mon Sep 17 00:00:00 2001
+From de5549e8177f8c706537b5d1de11298582b14bc5 Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:16:12 +0100
 Subject: [PATCH 08/42] intel_pstate: Add functions required for TFM driver

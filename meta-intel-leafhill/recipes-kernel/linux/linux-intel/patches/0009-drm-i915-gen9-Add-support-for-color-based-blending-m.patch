@@ -1,7 +1,7 @@
-From 8aacaf6c8e0527a867f614f4bd47afb466227502 Mon Sep 17 00:00:00 2001
+From 8a7f6fc5ddf83a989f8d78baec30fc28c3d27195 Mon Sep 17 00:00:00 2001
 From: Damien Lespiau <damien.lespiau@intel.com>
 Date: Mon, 7 May 2018 13:32:10 -0700
-Subject: [PATCH 09/44] drm/i915/gen9: Add support for color-based blending
+Subject: [PATCH 09/45] drm/i915/gen9: Add support for color-based blending
  modes (v3)
 
 This patch adds support for blending modes involving
@@ -30,7 +30,7 @@ Signed-off-by: Paauwe, Bob J <bob.j.paauwe@intel.com>
  5 files changed, 53 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_reg.h b/drivers/gpu/drm/i915/i915_reg.h
-index 4194ddf..b3cb420 100644
+index e89247f..3adb1df 100644
 --- a/drivers/gpu/drm/i915/i915_reg.h
 +++ b/drivers/gpu/drm/i915/i915_reg.h
 @@ -6416,6 +6416,10 @@ enum {
@@ -59,7 +59,7 @@ index 838f01c..1a1ec0f 100644
  
  	return state;
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 27b5aa7..601a989 100644
+index 906b63b..6bd20e3 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -3620,6 +3620,8 @@ static void skylake_update_primary_plane(struct intel_plane *plane,
@@ -127,7 +127,7 @@ index 27b5aa7..601a989 100644
  		return -EINVAL;
  	}
  
-@@ -13722,6 +13755,11 @@ void intel_plane_add_blend_properties(struct intel_plane *plane)
+@@ -13719,6 +13752,11 @@ void intel_plane_add_blend_properties(struct intel_plane *plane)
  	if (prop)
  		drm_object_attach_property(&plane->base.base, prop,
  					   DRM_BLEND_FUNC(AUTO, AUTO));
@@ -140,7 +140,7 @@ index 27b5aa7..601a989 100644
  
  static struct intel_plane *
 diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
-index 3015572..7e22c4b 100644
+index a93f6aa..6bc9361 100644
 --- a/drivers/gpu/drm/i915/intel_drv.h
 +++ b/drivers/gpu/drm/i915/intel_drv.h
 @@ -527,6 +527,7 @@ struct intel_plane_state {

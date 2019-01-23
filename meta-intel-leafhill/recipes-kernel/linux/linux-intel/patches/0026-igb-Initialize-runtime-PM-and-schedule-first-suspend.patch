@@ -1,4 +1,4 @@
-From 4db2d1b0f208b057d10f531ce6b3dfdd365826ac Mon Sep 17 00:00:00 2001
+From 939ea3b2951d7ab7bf9b6013d675e9bf86a896b8 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 16:24:14 +0800
 Subject: [PATCH 26/42] igb: Initialize runtime PM and schedule first suspend

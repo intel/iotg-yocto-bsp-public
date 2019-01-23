@@ -1,7 +1,7 @@
-From 08aeb0a9d2ffa9a36c8da1c639df30090598f7f8 Mon Sep 17 00:00:00 2001
+From f680d7bf28b4c68a05c9b0c64f1f92186c3f9132 Mon Sep 17 00:00:00 2001
 From: Damien Lespiau <damien.lespiau@intel.com>
 Date: Mon, 7 May 2018 13:32:07 -0700
-Subject: [PATCH 06/44] drm: Introduce the blend-func property (v3)
+Subject: [PATCH 06/45] drm: Introduce the blend-func property (v3)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -114,7 +114,7 @@ index f1aefd5..219fcdb 100644
  	 * the position of the output on the host's screen.
  	 */
 diff --git a/include/drm/drm_plane.h b/include/drm/drm_plane.h
-index 73f90f9..ad553c3 100644
+index 73f90f9d..ad553c3 100644
 --- a/include/drm/drm_plane.h
 +++ b/include/drm/drm_plane.h
 @@ -31,6 +31,10 @@

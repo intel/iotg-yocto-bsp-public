@@ -1,4 +1,4 @@
-From 866a2c8aff15a9c9588e56704f3ce76c28e4ca3f Mon Sep 17 00:00:00 2001
+From d78bf9c5581f723ca60f406016e0608984bb2282 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 18:23:30 +0800
 Subject: [PATCH 31/42] igb: Watchdog task changes for runtime pm based on

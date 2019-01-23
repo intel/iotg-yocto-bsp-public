@@ -1,7 +1,7 @@
-From 5ae2d7ce55a7678b6a6586762c11f25745a70d75 Mon Sep 17 00:00:00 2001
+From d3ce8e45422a09b039652369cb3704c23faed6e9 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Wed, 13 Jul 2016 09:18:04 +0100
-Subject: [PATCH 30/98] Arch: x86: Clean up Kconfig after GP MRB board driver
+Subject: [PATCH 030/100] Arch: x86: Clean up Kconfig after GP MRB board driver
  was removed
 
 Remove leftover Kconfig option after GP MRB board driver was removed.
@@ -15,7 +15,7 @@ Conflicts:
  1 file changed, 3 deletions(-)
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 67c33f5..ffd5802 100644
+index f1aed2f..0e93905 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -1,7 +1,4 @@

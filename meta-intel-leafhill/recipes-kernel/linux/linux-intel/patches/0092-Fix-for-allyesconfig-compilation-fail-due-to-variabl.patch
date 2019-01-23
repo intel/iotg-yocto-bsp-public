@@ -1,0 +1,35 @@
+From bb0c5e4a39229343ad9b430a5498d8581c429b31 Mon Sep 17 00:00:00 2001
+From: Gaurav Vohra <gauravx.vohra.gaurav.vohra@intel.com>
+Date: Wed, 26 Sep 2018 10:52:07 +0800
+Subject: [PATCH 092/100] Fix for allyesconfig compilation fail due to variable
+ name change from be_id to id
+
+---
+ sound/soc/intel/boards/bxt_ull.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/intel/boards/bxt_ull.c b/sound/soc/intel/boards/bxt_ull.c
+index 03ee20a..229f44e 100644
+--- a/sound/soc/intel/boards/bxt_ull.c
++++ b/sound/soc/intel/boards/bxt_ull.c
+@@ -120,7 +120,7 @@
+ 	/* back ends */
+ 	{
+ 		.name = "Playback BE",
+-		.be_id = 2,
++		.id = 2,
+ 		.cpu_dai_name = "SSP2 Pin",
+ 		.platform_name = "0000:00:0e.0",
+ 		.codec_name = "snd-soc-dummy",
+@@ -133,7 +133,7 @@
+ 	},
+ 	{
+ 		.name = "Capture heartbeat BE",
+-		.be_id = 3,
++		.id = 3,
+ 		.cpu_dai_name = "SSP0 Pin",
+ 		.platform_name = "0000:00:0e.0",
+ 		.codec_name = "snd-soc-dummy",
+-- 
+1.9.1
+

@@ -1,7 +1,7 @@
-From 058f9091756203a6c4ecca3897ca284cb7389717 Mon Sep 17 00:00:00 2001
+From 5fcd85d8ae507b4ccaf677573c8d27ac37e72ea8 Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:06 +0530
-Subject: [PATCH 18/44] drm/i915/skl+: make sure higher latency level has
+Subject: [PATCH 18/45] drm/i915/skl+: make sure higher latency level has
  higher wm value
 
 DDB allocation optimization algorithm requires/assumes ddb allocation for
@@ -34,7 +34,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 18 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 11581ac..7edab4d 100644
+index 7134df1..d8d7c77 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
 @@ -4511,6 +4511,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,

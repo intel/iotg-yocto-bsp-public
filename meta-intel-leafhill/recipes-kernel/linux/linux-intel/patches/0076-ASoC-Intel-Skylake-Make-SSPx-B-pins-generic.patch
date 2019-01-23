@@ -1,0 +1,66 @@
+From dd3786e62779b86b8acb259eb04d476f22161b6d Mon Sep 17 00:00:00 2001
+From: Craig Kewley <craigx.kewley@intel.com>
+Date: Thu, 5 Apr 2018 12:02:39 +0100
+Subject: [PATCH 076/100] ASoC: Intel: Skylake: Make SSPx-B pins generic
+
+None -B pins are generic so lets make the -B pins the same.
+
+Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl-pcm.c
+---
+ sound/soc/intel/skylake/skl-pcm.c | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index 60ce275..e8bf10f 100644
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -1565,17 +1565,17 @@ struct skl_dsp_notify_ops cb_ops = {
+ 	.ops = &skl_be_ssp_dai_ops,
+ 	.playback = {
+ 		.stream_name = "ssp1-b Tx",
+-		.channels_min = HDA_STEREO,
++		.channels_min = HDA_MONO,
+ 		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_48000,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+ 		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
+ 			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+ 	},
+ 	.capture = {
+ 		.stream_name = "ssp1-b Rx",
+-		.channels_min = HDA_STEREO,
++		.channels_min = HDA_MONO,
+ 		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_48000,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+ 		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
+ 			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+ 	},
+@@ -1605,17 +1605,17 @@ struct skl_dsp_notify_ops cb_ops = {
+ 	.ops = &skl_be_ssp_dai_ops,
+ 	.playback = {
+ 		.stream_name = "ssp2-b Tx",
+-		.channels_min = HDA_STEREO,
++		.channels_min = HDA_MONO,
+ 		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_44100 | SNDRV_PCM_RATE_48000,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+ 		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
+ 			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+ 	},
+ 	.capture = {
+ 		.stream_name = "ssp2-b Rx",
+-		.channels_min = HDA_STEREO,
++		.channels_min = HDA_MONO,
+ 		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_44100 | SNDRV_PCM_RATE_48000,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+ 		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
+ 			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+ 	},
+-- 
+1.9.1
+

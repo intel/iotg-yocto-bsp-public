@@ -1,0 +1,91 @@
+From fd59cb1c1842816814a6ee01c533638ec38c651a Mon Sep 17 00:00:00 2001
+From: Craig Kewley <craigx.kewley@intel.com>
+Date: Mon, 18 Sep 2017 15:24:08 +0100
+Subject: [PATCH 069/100] ASoC: TDF8532: add wait_for_state_or_higher macro
+
+Sometimes the amplifier would be in the playing state for too long
+before the clock was applied. This would lead to the amp moving to
+the clock_fail state. Then when we're waiting for the device to
+report it's in the playing state we timeout since it's in clock_fail.
+
+To fix this, an option to check for the correct state or higher is
+added. Macros are used to set this option to 0 or 1.
+
+Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
+---
+ sound/soc/codecs/tdf8532.c | 22 +++++++++++++++-------
+ sound/soc/codecs/tdf8532.h |  7 +++++++
+ 2 files changed, 22 insertions(+), 7 deletions(-)
+
+diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
+index c3abe64..e1b2e5e 100644
+--- a/sound/soc/codecs/tdf8532.c
++++ b/sound/soc/codecs/tdf8532.c
+@@ -210,8 +210,8 @@ static int tdf8532_dump_dev_error(struct tdf8532_priv *dev_data)
+ 	return ret;
+ }
+ 
+-static int tdf8532_wait_state(struct tdf8532_priv *dev_data, u8 req_state,
+-					unsigned long timeout_val)
++static int __tdf8532_wait_state(struct tdf8532_priv *dev_data, u8 req_state,
++					unsigned long timeout_val, u8 or_higher)
+ {
+ 	int ret;
+ 	u8 state;
+@@ -225,14 +225,21 @@ static int tdf8532_wait_state(struct tdf8532_priv *dev_data, u8 req_state,
+ 
+ 	} while (time_before(jiffies, timeout) && state != req_state);
+ 
+-	if (state != req_state) {
+-		ret = -ETIME;
+-		dev_err(dev, "State: %u, req_state: %u, ret: %d\n", state,
+-				req_state, ret);
++	if (or_higher) {
++		if (state < req_state)
++			goto out_timeout;
++	} else {
++		if (state != req_state)
++			goto out_timeout;
+ 	}
+ 
+ out:
+ 	return ret;
++out_timeout:
++	ret = -ETIME;
++	dev_err(dev, "State: %u, req_state: %u, ret: %d\n", state,
++			req_state, ret);
++	return ret;
+ }
+ 
+ static int tdf8532_start_play(struct tdf8532_priv *tdf8532)
+@@ -256,7 +263,8 @@ static int tdf8532_start_play(struct tdf8532_priv *tdf8532)
+ 	ret = tdf8532_dump_dev_error(tdf8532);
+ 
+ 	if (ret >= 0)
+-		ret = tdf8532_wait_state(tdf8532, STATE_PLAY, ACK_TIMEOUT);
++		ret = tdf8532_wait_state_or_higher(tdf8532, STATE_PLAY,
++				ACK_TIMEOUT);
+ 
+ 	return ret;
+ }
+diff --git a/sound/soc/codecs/tdf8532.h b/sound/soc/codecs/tdf8532.h
+index 120567a..a2bb768 100644
+--- a/sound/soc/codecs/tdf8532.h
++++ b/sound/soc/codecs/tdf8532.h
+@@ -79,6 +79,13 @@ struct get_dev_status_repl {
+ #define tdf8532_amp_write(dev_data, ...)\
+ 	__tdf8532_single_write(dev_data, 0, AMP_MOD, __VA_ARGS__, END)
+ 
++#define tdf8532_wait_state(dev_data, state, tm)\
++	__tdf8532_wait_state(dev_data, state, tm, 0)
++
++#define tdf8532_wait_state_or_higher(dev_data, state, tm)\
++	__tdf8532_wait_state(dev_data, state, tm, 1)
++
++
+ struct tdf8532_priv {
+ 	struct i2c_client *i2c;
+ 	u8 channels;
+-- 
+1.9.1
+

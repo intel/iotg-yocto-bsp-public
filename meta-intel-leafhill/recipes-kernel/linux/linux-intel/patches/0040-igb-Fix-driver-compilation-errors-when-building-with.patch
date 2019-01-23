@@ -1,4 +1,4 @@
-From e6ce9172565233fdf9ce611ca5175c55b741b23b Mon Sep 17 00:00:00 2001
+From ff2f7b89037b3291a919f0464f5aa806b3c309ae Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Fri, 24 Mar 2017 09:37:08 +0800
 Subject: [PATCH 40/42] igb: Fix driver compilation errors when building

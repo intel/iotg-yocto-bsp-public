@@ -1,7 +1,7 @@
-From 0b48d6d409bdf9422283764da2cc1bd2f93b7dea Mon Sep 17 00:00:00 2001
+From 37008801e14dd06766939f371d5aab3fb37d79e6 Mon Sep 17 00:00:00 2001
 From: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
 Date: Sat, 12 May 2018 03:03:14 +0530
-Subject: [PATCH 26/44] drm/i915: Add skl_check_nv12_surface for NV12
+Subject: [PATCH 26/45] drm/i915: Add skl_check_nv12_surface for NV12
 
 We skip src trunction/adjustments for
 NV12 case and handle the sizes directly.
@@ -32,7 +32,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  2 files changed, 28 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index ad01921..1c290de 100644
+index 13ed883..d8ee882 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -3071,6 +3071,28 @@ static int skl_check_main_surface(struct intel_plane_state *plane_state)

@@ -1,7 +1,7 @@
-From 704ae536108b99ac9493287625e0dec892b3ca65 Mon Sep 17 00:00:00 2001
+From 6018fd8b382e1c7c873350aea04eea2f19443b32 Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:00 +0530
-Subject: [PATCH 12/44] drm/i915/skl+: rename skl_wm_values struct to
+Subject: [PATCH 12/45] drm/i915/skl+: rename skl_wm_values struct to
  skl_ddb_values
 
 skl_wm_values struct contains values of pipe/plane DDB only.
@@ -32,10 +32,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  3 files changed, 11 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
-index 261d28f..66a5666 100644
+index fa8c93d..3e2057c 100644
 --- a/drivers/gpu/drm/i915/i915_drv.h
 +++ b/drivers/gpu/drm/i915/i915_drv.h
-@@ -1819,7 +1819,7 @@ struct skl_ddb_allocation {
+@@ -1814,7 +1814,7 @@ struct skl_ddb_allocation {
  	struct skl_ddb_entry y_plane[I915_MAX_PIPES][I915_MAX_PLANES];
  };
  
@@ -44,7 +44,7 @@ index 261d28f..66a5666 100644
  	unsigned dirty_pipes;
  	struct skl_ddb_allocation ddb;
  };
-@@ -2497,7 +2497,7 @@ struct drm_i915_private {
+@@ -2490,7 +2490,7 @@ struct drm_i915_private {
  		/* current hardware state */
  		union {
  			struct ilk_wm_values hw;
@@ -54,7 +54,7 @@ index 261d28f..66a5666 100644
  			struct g4x_wm_values g4x;
  		};
 diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
-index 7e22c4b..2b3c7ea 100644
+index 6bc9361..191f556 100644
 --- a/drivers/gpu/drm/i915/intel_drv.h
 +++ b/drivers/gpu/drm/i915/intel_drv.h
 @@ -474,7 +474,7 @@ struct intel_atomic_state {
@@ -67,10 +67,10 @@ index 7e22c4b..2b3c7ea 100644
  	struct i915_sw_fence commit_ready;
  
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 09bc121..928e660 100644
+index f49e448..ae1173c 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
-@@ -5091,9 +5091,9 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
+@@ -5100,9 +5100,9 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
  }
  
  static void
@@ -83,7 +83,7 @@ index 09bc121..928e660 100644
  {
  	memcpy(dst->ddb.y_plane[pipe], src->ddb.y_plane[pipe],
  	       sizeof(dst->ddb.y_plane[pipe]));
-@@ -5144,7 +5144,7 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
+@@ -5153,7 +5153,7 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
  	struct drm_crtc *crtc;
  	struct drm_crtc_state *cstate;
  	struct intel_atomic_state *intel_state = to_intel_atomic_state(state);
@@ -92,7 +92,7 @@ index 09bc121..928e660 100644
  	struct drm_device *dev = state->dev;
  	struct drm_i915_private *dev_priv = to_i915(intel_state->base.dev);
  	struct skl_pipe_wm *pipe_wm;
-@@ -5262,8 +5262,8 @@ static void skl_initial_wm(struct intel_atomic_state *state,
+@@ -5271,8 +5271,8 @@ static void skl_initial_wm(struct intel_atomic_state *state,
  	struct intel_crtc *intel_crtc = to_intel_crtc(cstate->base.crtc);
  	struct drm_device *dev = intel_crtc->base.dev;
  	struct drm_i915_private *dev_priv = to_i915(dev);
@@ -103,7 +103,7 @@ index 09bc121..928e660 100644
  	enum pipe pipe = intel_crtc->pipe;
  
  	if ((results->dirty_pipes & drm_crtc_mask(&intel_crtc->base)) == 0)
-@@ -5274,7 +5274,7 @@ static void skl_initial_wm(struct intel_atomic_state *state,
+@@ -5283,7 +5283,7 @@ static void skl_initial_wm(struct intel_atomic_state *state,
  	if (cstate->base.active_changed)
  		skl_atomic_update_crtc_wm(state, cstate);
  
@@ -112,7 +112,7 @@ index 09bc121..928e660 100644
  
  	mutex_unlock(&dev_priv->wm.wm_mutex);
  }
-@@ -5406,7 +5406,7 @@ void skl_pipe_wm_get_hw_state(struct drm_crtc *crtc,
+@@ -5415,7 +5415,7 @@ void skl_pipe_wm_get_hw_state(struct drm_crtc *crtc,
  void skl_wm_get_hw_state(struct drm_device *dev)
  {
  	struct drm_i915_private *dev_priv = to_i915(dev);

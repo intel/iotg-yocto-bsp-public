@@ -1,7 +1,7 @@
-From 95a835b3ce70b5161047c89da01be73c7230fabb Mon Sep 17 00:00:00 2001
+From 8ae379a9bbcbf73a7cb7b2f9bb0b88462b8e9ff4 Mon Sep 17 00:00:00 2001
 From: Pardha Saradhi K <pardha.saradhi.kesapragada@intel.com>
 Date: Tue, 7 Jun 2016 13:43:39 +0530
-Subject: [PATCH 02/98] ASoC: Intel: Skylake: Add support for various PCM
+Subject: [PATCH 002/100] ASoC: Intel: Skylake: Add support for various PCM
  formats
 
 Add support for S24_LE, S24_3LE, S32_LE and FLOAT PCM formats.
@@ -89,7 +89,7 @@ index a8d9ae0..71099b5 100644
  },
  {
 diff --git a/sound/soc/intel/skylake/skl-topology.c b/sound/soc/intel/skylake/skl-topology.c
-index 8400959..fe677b7 100644
+index 7458cb3..878964b 100644
 --- a/sound/soc/intel/skylake/skl-topology.c
 +++ b/sound/soc/intel/skylake/skl-topology.c
 @@ -2715,7 +2715,8 @@ static int skl_tplg_tlv_probe_set(struct snd_kcontrol *kcontrol,

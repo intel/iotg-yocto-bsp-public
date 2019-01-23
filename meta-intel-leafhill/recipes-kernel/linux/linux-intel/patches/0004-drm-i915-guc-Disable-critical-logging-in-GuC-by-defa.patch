@@ -1,7 +1,7 @@
-From 265f611da758bad9e4283dadd6cce1a5e55f45fc Mon Sep 17 00:00:00 2001
+From e563bb7693a8914ac29f0ebe74601ca7a8579028 Mon Sep 17 00:00:00 2001
 From: Sagar Arun Kamble <sagar.a.kamble@intel.com>
 Date: Thu, 23 Mar 2017 13:50:56 -0700
-Subject: [PATCH 04/44] drm/i915/guc: Disable critical logging in GuC by
+Subject: [PATCH 04/45] drm/i915/guc: Disable critical logging in GuC by
  default from GuC v9
 
 From GuC v9 firmware (for KBL v9.39+), separate control is added to enable
@@ -35,13 +35,13 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  5 files changed, 45 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_params.c b/drivers/gpu/drm/i915/i915_params.c
-index 81c2918..e88a2f5 100644
+index 5d46c69..d20cc90 100644
 --- a/drivers/gpu/drm/i915/i915_params.c
 +++ b/drivers/gpu/drm/i915/i915_params.c
 @@ -87,6 +87,7 @@ struct i915_params i915_modparams __read_mostly = {
  	.bg_color = 0x00000000,
  	.gvt_emulate_hdmi = true,
- 	.domain_scaler_owner = 0x21100,
+ 	.domain_scaler_owner = 0x11100,
 +	.enable_guc_critical_logging = false,
  };
  

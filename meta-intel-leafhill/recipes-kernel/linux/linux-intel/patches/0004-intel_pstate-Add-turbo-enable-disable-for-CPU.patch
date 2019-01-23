@@ -1,4 +1,4 @@
-From f46cdbdd626eff8d8cd6f5a2b3631f63e2134dc8 Mon Sep 17 00:00:00 2001
+From 5fab1ecffad3989ecef67dea814f375c03d0ce86 Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:01:42 +0100
 Subject: [PATCH 04/42] intel_pstate: Add turbo enable/disable for CPU

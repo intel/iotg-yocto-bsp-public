@@ -1,4 +1,4 @@
-From e0125586311fde96ae6408449fc2c0c78da66c54 Mon Sep 17 00:00:00 2001
+From 1bd8b314bfc70b5089d187e851fae178ecf2d4c4 Mon Sep 17 00:00:00 2001
 From: "Ruslan, Rusaimi Amira" <rusaimi.amira.ruslan@intel.com>
 Date: Fri, 13 Apr 2018 17:49:19 +0800
 Subject: [PATCH 13/42] misc: intel-ish-clients: Remove linux header file for

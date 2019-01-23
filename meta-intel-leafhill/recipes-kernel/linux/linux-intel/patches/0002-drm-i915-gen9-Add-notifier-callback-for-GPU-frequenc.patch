@@ -1,4 +1,4 @@
-From 89de2b043db9c6de1aa7903a9bf8117cb55e0757 Mon Sep 17 00:00:00 2001
+From 12e40bef047d44aab84cd1250d0d78a2a39aa9cc Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Mon, 7 Nov 2016 10:52:45 -0800
 Subject: [PATCH 02/42] drm/i915/gen9: Add notifier callback for GPU frequency

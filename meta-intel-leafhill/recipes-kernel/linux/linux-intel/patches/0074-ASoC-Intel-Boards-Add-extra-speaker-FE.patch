@@ -1,0 +1,53 @@
+From d133c1372ab68eec51276803b29b612340f59752 Mon Sep 17 00:00:00 2001
+From: Craig Kewley <craigx.kewley@intel.com>
+Date: Mon, 21 Aug 2017 15:21:50 +0100
+Subject: [PATCH 074/100] ASoC: Intel: Boards: Add extra speaker FE
+
+On the GPMRB the early audio application holds the speaker audio device
+open so that it can quickly playback important audio, such as parking
+indicators. This blocks other applications from playing to the speakers.
+
+This patch adds a second front end for other applications to use. This
+will be mixed with the original in the back end and output to the amp.
+
+Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
+---
+ sound/soc/intel/boards/bxt_gpmrb.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/sound/soc/intel/boards/bxt_gpmrb.c b/sound/soc/intel/boards/bxt_gpmrb.c
+index 319f710..c8b6dca 100644
+--- a/sound/soc/intel/boards/bxt_gpmrb.c
++++ b/sound/soc/intel/boards/bxt_gpmrb.c
+@@ -44,6 +44,7 @@ struct bxtp_gpmrb_prv {
+ 
+ enum {
+ 	BXT_AUDIO_SPEAKER = 0,
++	BXT_AUDIO_EARLY,
+ 	BXT_AUDIO_TUNER,
+ 	BXT_AUDIO_AUX,
+ 	BXT_AUDIO_MIC,
+@@ -308,6 +309,20 @@ static int broxton_gpmrb_tdf8532_startup(struct snd_pcm_substream *substream)
+ 		.dpcm_playback = 1,
+ 		.ops = &broxton_gpmrb_tdf8532_ops,
+ 	},
++	[BXT_AUDIO_EARLY] = {
++		.name = "Early Port",
++		.stream_name = "Early",
++		.cpu_dai_name = "System Pin 9",
++		.platform_name = "0000:00:0e.0",
++		.nonatomic = 1,
++		.dynamic = 1,
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
++			    SND_SOC_DPCM_TRIGGER_POST},
++		.dpcm_playback = 1,
++		.ops = &broxton_gpmrb_tdf8532_ops,
++	},
+ 	[BXT_AUDIO_TUNER] = {
+ 		.name = "Dirana Tuner Port",
+ 		.stream_name = "Dirana Tuner",
+-- 
+1.9.1
+

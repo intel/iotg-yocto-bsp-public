@@ -1,4 +1,4 @@
-From c464d0f8bc36e4b585a42c1b9f92fc083aecc36a Mon Sep 17 00:00:00 2001
+From 7871742251a961a29fce22071aa648936f69dcec Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 16 Nov 2016 10:34:58 +0800
 Subject: [PATCH 34/42] igb: Enabling wake on unicast

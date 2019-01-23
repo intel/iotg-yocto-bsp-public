@@ -1,7 +1,7 @@
-From f0a660692d04ad5cadfcd9414e151eb05ff2588a Mon Sep 17 00:00:00 2001
+From dd2158edd7c3604c11f56fbf6bdb88c379dbf5c2 Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:04 +0530
-Subject: [PATCH 16/44] drm/i915/skl+: NV12 related changes for WM
+Subject: [PATCH 16/45] drm/i915/skl+: NV12 related changes for WM
 
 NV12 requires WM calculation for UV plane as well.
 UV plane WM should also fulfill all the WM related restrictions.
@@ -33,10 +33,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  3 files changed, 54 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
-index d571297..c521f62 100644
+index 30de3c5..215b082 100644
 --- a/drivers/gpu/drm/i915/i915_drv.h
 +++ b/drivers/gpu/drm/i915/i915_drv.h
-@@ -1835,6 +1835,7 @@ struct skl_wm_level {
+@@ -1830,6 +1830,7 @@ struct skl_wm_level {
  struct skl_wm_params {
  	bool x_tiled, y_tiled;
  	bool rc_surface;
@@ -45,7 +45,7 @@ index d571297..c521f62 100644
  	uint8_t cpp;
  	uint32_t plane_pixel_rate;
 diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
-index e680a74..143f1ca 100644
+index 4d4f44d..a5cde52 100644
 --- a/drivers/gpu/drm/i915/intel_drv.h
 +++ b/drivers/gpu/drm/i915/intel_drv.h
 @@ -596,6 +596,7 @@ struct intel_pipe_wm {
@@ -57,7 +57,7 @@ index e680a74..143f1ca 100644
  	bool is_planar;
  };
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 4e757e0..cce7a70 100644
+index 5979af8..abd42b9 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
 @@ -4398,7 +4398,7 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,

@@ -1,7 +1,7 @@
-From ed7f7a274d48979cc087cf530622f56bf91b5dd0 Mon Sep 17 00:00:00 2001
+From 949c4d19e12cb7c6055f9d0749643692ccb94455 Mon Sep 17 00:00:00 2001
 From: Chandra Konduru <chandra.konduru@intel.com>
 Date: Mon, 9 Apr 2018 09:11:13 +0530
-Subject: [PATCH 25/44] drm/i915: Upscale scaler max scale for NV12
+Subject: [PATCH 25/45] drm/i915: Upscale scaler max scale for NV12
 
 This patch updates scaler max limit support for NV12
 
@@ -84,7 +84,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  3 files changed, 46 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 5f43361..ad01921 100644
+index 4ae7a61..13ed883 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -3505,6 +3505,8 @@ static u32 skl_plane_ctl_format(uint32_t pixel_format, enum i915_alpha alpha)
@@ -213,7 +213,7 @@ index 5f43361..ad01921 100644
  		can_position = true;
  	}
 diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
-index 55ac6d7..c009937 100644
+index b529884..8a771a5 100644
 --- a/drivers/gpu/drm/i915/intel_drv.h
 +++ b/drivers/gpu/drm/i915/intel_drv.h
 @@ -547,6 +547,8 @@ struct intel_initial_plane_config {
@@ -225,7 +225,7 @@ index 55ac6d7..c009937 100644
  
  struct intel_scaler {
  	int in_use;
-@@ -1569,7 +1571,8 @@ void intel_mode_from_pipe_config(struct drm_display_mode *mode,
+@@ -1568,7 +1570,8 @@ void intel_mode_from_pipe_config(struct drm_display_mode *mode,
  				 struct intel_crtc_state *pipe_config);
  
  int skl_update_scaler_crtc(struct intel_crtc_state *crtc_state);

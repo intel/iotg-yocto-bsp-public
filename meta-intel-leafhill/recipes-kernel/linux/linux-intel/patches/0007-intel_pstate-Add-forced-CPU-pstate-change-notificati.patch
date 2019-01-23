@@ -1,4 +1,4 @@
-From e1f0241adc2d53e5144125d060e24fc7772f82d3 Mon Sep 17 00:00:00 2001
+From b6557a93ad145e9ecd6a1041a63e2b97c84b3be5 Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:11:48 +0100
 Subject: [PATCH 07/42] intel_pstate: Add forced CPU pstate change notification

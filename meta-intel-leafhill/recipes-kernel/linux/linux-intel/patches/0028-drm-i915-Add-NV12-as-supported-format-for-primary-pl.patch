@@ -1,7 +1,7 @@
-From 11f2be0d9c0163737e325584f5927d6500036fc4 Mon Sep 17 00:00:00 2001
+From 96e984217021d72c27ef082a8156564849a958fd Mon Sep 17 00:00:00 2001
 From: Chandra Konduru <chandra.konduru@intel.com>
 Date: Sat, 12 May 2018 03:03:16 +0530
-Subject: [PATCH 28/44] drm/i915: Add NV12 as supported format for primary
+Subject: [PATCH 28/45] drm/i915: Add NV12 as supported format for primary
  plane
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -83,7 +83,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  2 files changed, 51 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index c6361cf..8c27167 100644
+index 5da4950..5d0437f 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -92,6 +92,22 @@
@@ -175,10 +175,10 @@ index c6361cf..8c27167 100644
  			modifiers = skl_format_modifiers_ccs;
  		else
 diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
-index c009937..eb52351 100644
+index 8a771a5..187e2d8 100644
 --- a/drivers/gpu/drm/i915/intel_drv.h
 +++ b/drivers/gpu/drm/i915/intel_drv.h
-@@ -2029,6 +2029,8 @@ void skl_update_plane(struct intel_plane *plane,
+@@ -2028,6 +2028,8 @@ void skl_update_plane(struct intel_plane *plane,
  		const struct intel_plane_state *plane_state);
  void skl_disable_plane(struct intel_plane *plane, struct intel_crtc *crtc);
  bool skl_plane_get_hw_state(struct intel_plane *plane);

@@ -1,7 +1,7 @@
-From 92b31860f6d65bdfc0a064298a97bb719dbbde81 Mon Sep 17 00:00:00 2001
+From 287bb3c67439bb63a845863662b714d51acdb59c Mon Sep 17 00:00:00 2001
 From: Yetunde Adebisi <yetundex.adebisi@intel.com>
 Date: Tue, 5 Apr 2016 13:56:01 +0100
-Subject: [PATCH 05/44] drm/i915: Add backlight Control using DPCD registers
+Subject: [PATCH 05/45] drm/i915: Add backlight Control using DPCD registers
  for DP connectors
 
 This patch enables support for DPCD backlight control for DP connectors.
@@ -84,10 +84,10 @@ index 2bb2ceb..090b9cf 100644
 +			enable);
 +}
 diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
-index 2e6e18d..ed088f3 100644
+index 392df36..17a2fb2 100644
 --- a/drivers/gpu/drm/i915/intel_drv.h
 +++ b/drivers/gpu/drm/i915/intel_drv.h
-@@ -1651,6 +1651,8 @@ bool intel_digital_port_connected(struct drm_i915_private *dev_priv,
+@@ -1650,6 +1650,8 @@ bool intel_digital_port_connected(struct drm_i915_private *dev_priv,
  
  /* intel_dp_aux_backlight.c */
  int intel_dp_aux_init_backlight_funcs(struct intel_connector *intel_connector);

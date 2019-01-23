@@ -1,4 +1,4 @@
-From 265b4148bcdf8b359a18ae03d38b85062295b35d Mon Sep 17 00:00:00 2001
+From a9fcc35e3f4b4d5bbfaea0100d3551fc3064b49c Mon Sep 17 00:00:00 2001
 From: Sachin Mokashi <sachinx.mokashi@intel.com>
 Date: Thu, 5 Oct 2017 13:28:07 +0800
 Subject: [PATCH 22/42] x86/platform/apl: Enable spi-pxa2xx auto switch between
