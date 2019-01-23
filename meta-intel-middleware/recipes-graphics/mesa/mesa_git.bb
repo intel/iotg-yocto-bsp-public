@@ -13,7 +13,7 @@ SRC_URI = "git://github.com/intel/external-mesa.git;branch=release-july \
            file://0001-Makefile.vulkan.am-explictly-add-lib-expat-to-intel-.patch \
           "
 
-PV = "18.2.0-rc4"
+PV = "18.2.6"
 
 S = "${WORKDIR}/git"
 
