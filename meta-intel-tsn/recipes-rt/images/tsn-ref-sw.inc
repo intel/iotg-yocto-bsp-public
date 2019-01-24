@@ -1,0 +1,15 @@
+DESCRIPTION = "Additional packages for TSN SW Ref"
+
+IMAGE_INSTALL_append = " ethtool"
+IMAGE_INSTALL_append = " tcpdump"
+IMAGE_INSTALL_append = " iperf3"
+IMAGE_INSTALL_append = " ruby"
+IMAGE_INSTALL_append = " gnuplot-x11"
+IMAGE_INSTALL_append = " open62541"
+IMAGE_INSTALL_append = " openavnu"
+IMAGE_INSTALL_append = " gptp"
+IMAGE_INSTALL_append = " linuxptp"
+IMAGE_INSTALL_append = " iproute2 iproute2-tc"
+IMAGE_INSTALL_append = " iotg-tsn-ref-sw"
+
+PREFERRED_VERSION_linuxptp = "2.0"

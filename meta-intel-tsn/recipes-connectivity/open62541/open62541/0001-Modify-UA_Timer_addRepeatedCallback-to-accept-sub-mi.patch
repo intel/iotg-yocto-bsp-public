@@ -1,0 +1,180 @@
+From c9cb3c0587c18a5b8750ca232d86d69031d8a6d5 Mon Sep 17 00:00:00 2001
+From: "Wong, Vincent Por Yin" <vincent.por.yin.wong@intel.com>
+Date: Fri, 16 Nov 2018 10:49:32 +0000
+Subject: [PATCH 1/4] Modify UA_Timer_addRepeatedCallback to accept
+ sub-millisecond intervals.
+
+Signed-off-by: Wong, Vincent Por Yin <vincent.por.yin.wong@intel.com>
+---
+ examples/pubsub/tutorial_pubsub_publish.c | 2 +-
+ include/ua_client.h                       | 2 +-
+ include/ua_server.h                       | 2 +-
+ src/client/ua_client.c                    | 2 +-
+ src/pubsub/ua_pubsub.c                    | 2 +-
+ src/pubsub/ua_pubsub_manager.c            | 2 +-
+ src/pubsub/ua_pubsub_manager.h            | 2 +-
+ src/server/ua_server.c                    | 4 ++--
+ src/ua_timer.c                            | 8 ++++----
+ src/ua_timer.h                            | 2 +-
+ 10 files changed, 14 insertions(+), 14 deletions(-)
+
+diff --git a/examples/pubsub/tutorial_pubsub_publish.c b/examples/pubsub/tutorial_pubsub_publish.c
+index 735d5687..16523601 100644
+--- a/examples/pubsub/tutorial_pubsub_publish.c
++++ b/examples/pubsub/tutorial_pubsub_publish.c
+@@ -98,7 +98,7 @@ addWriterGroup(UA_Server *server) {
+     UA_WriterGroupConfig writerGroupConfig;
+     memset(&writerGroupConfig, 0, sizeof(UA_WriterGroupConfig));
+     writerGroupConfig.name = UA_STRING("Demo WriterGroup");
+-    writerGroupConfig.publishingInterval = 100;
++    writerGroupConfig.publishingInterval = 0.031; //ms
+     writerGroupConfig.enabled = UA_FALSE;
+     writerGroupConfig.writerGroupId = 100;
+     writerGroupConfig.encodingMimeType = UA_PUBSUB_ENCODING_UADP;
+diff --git a/include/ua_client.h b/include/ua_client.h
+index e73e4ce8..86f00804 100644
+--- a/include/ua_client.h
++++ b/include/ua_client.h
+@@ -478,7 +478,7 @@ typedef void (*UA_ClientCallback)(UA_Client *client, void *data);
+ UA_StatusCode
+ UA_Client_addRepeatedCallback(UA_Client *client,
+                               UA_ClientCallback callback,
+-                              void *data, UA_UInt32 interval,
++                              void *data, UA_Double interval,
+                               UA_UInt64 *callbackId);
+ 
+ UA_StatusCode
+diff --git a/include/ua_server.h b/include/ua_server.h
+index 9eeea1e7..5f72a955 100644
+--- a/include/ua_server.h
++++ b/include/ua_server.h
+@@ -94,7 +94,7 @@ typedef void (*UA_ServerCallback)(UA_Server *server, void *data);
+  *         An error code otherwise. */
+ UA_StatusCode UA_EXPORT
+ UA_Server_addRepeatedCallback(UA_Server *server, UA_ServerCallback callback,
+-                              void *data, UA_UInt32 interval, UA_UInt64 *callbackId);
++                              void *data, UA_Double interval, UA_UInt64 *callbackId);
+ 
+ UA_StatusCode UA_EXPORT
+ UA_Server_changeRepeatedCallbackInterval(UA_Server *server, UA_UInt64 callbackId,
+diff --git a/src/client/ua_client.c b/src/client/ua_client.c
+index 4aa26e6b..c42882bf 100644
+--- a/src/client/ua_client.c
++++ b/src/client/ua_client.c
+@@ -632,7 +632,7 @@ UA_Client_sendAsyncRequest(UA_Client *client, const void *request,
+ 
+ UA_StatusCode
+ UA_Client_addRepeatedCallback(UA_Client *client, UA_ClientCallback callback,
+-                              void *data, UA_UInt32 interval,
++                              void *data, UA_Double interval,
+                               UA_UInt64 *callbackId) {
+     return UA_Timer_addRepeatedCallback(&client->timer,
+                                         (UA_ApplicationCallback) callback, client, data,
+diff --git a/src/pubsub/ua_pubsub.c b/src/pubsub/ua_pubsub.c
+index 688cada0..f8c4ff07 100644
+--- a/src/pubsub/ua_pubsub.c
++++ b/src/pubsub/ua_pubsub.c
+@@ -1154,7 +1154,7 @@ UA_StatusCode
+ UA_WriterGroup_addPublishCallback(UA_Server *server, UA_WriterGroup *writerGroup) {
+     UA_StatusCode retval =
+             UA_PubSubManager_addRepeatedCallback(server, (UA_ServerCallback) UA_WriterGroup_publishCallback,
+-                                                 writerGroup, (UA_UInt32) writerGroup->config.publishingInterval,
++                                                 writerGroup, writerGroup->config.publishingInterval,
+                                                  &writerGroup->publishCallbackId);
+     if(retval == UA_STATUSCODE_GOOD)
+         writerGroup->publishCallbackIsRegistered = true;
+diff --git a/src/pubsub/ua_pubsub_manager.c b/src/pubsub/ua_pubsub_manager.c
+index a85d4b15..9094181b 100644
+--- a/src/pubsub/ua_pubsub_manager.c
++++ b/src/pubsub/ua_pubsub_manager.c
+@@ -310,7 +310,7 @@ UA_PubSubManager_delete(UA_Server *server, UA_PubSubManager *pubSubManager) {
+ /***********************************/
+ UA_StatusCode
+ UA_PubSubManager_addRepeatedCallback(UA_Server *server, UA_ServerCallback callback,
+-                                     void *data, UA_UInt32 interval, UA_UInt64 *callbackId) {
++                                     void *data, UA_Double interval, UA_UInt64 *callbackId) {
+     return UA_Timer_addRepeatedCallback(&server->timer, (UA_ApplicationCallback)callback,
+                                         server, data, interval, callbackId);
+ }
+diff --git a/src/pubsub/ua_pubsub_manager.h b/src/pubsub/ua_pubsub_manager.h
+index 5fb6d84f..13378aa8 100644
+--- a/src/pubsub/ua_pubsub_manager.h
++++ b/src/pubsub/ua_pubsub_manager.h
+@@ -37,7 +37,7 @@ UA_PubSubConfigurationVersionTimeDifference(void);
+ /***********************************/
+ UA_StatusCode
+ UA_PubSubManager_addRepeatedCallback(UA_Server *server, UA_ServerCallback callback,
+-                                     void *data, UA_UInt32 interval, UA_UInt64 *callbackId);
++                                     void *data, UA_Double interval, UA_UInt64 *callbackId);
+ UA_StatusCode
+ UA_PubSubManager_changeRepeatedCallbackInterval(UA_Server *server, UA_UInt64 callbackId,
+                                                 UA_UInt32 interval);
+diff --git a/src/server/ua_server.c b/src/server/ua_server.c
+index f7719fa2..a201d029 100644
+--- a/src/server/ua_server.c
++++ b/src/server/ua_server.c
+@@ -343,7 +343,7 @@ UA_Server_new(const UA_ServerConfig *config) {
+ 
+ UA_StatusCode
+ UA_Server_addRepeatedCallback(UA_Server *server, UA_ServerCallback callback,
+-                              void *data, UA_UInt32 interval,
++                              void *data, UA_Double interval,
+                               UA_UInt64 *callbackId) {
+     return UA_Timer_addRepeatedCallback(&server->timer,
+                                         (UA_ApplicationCallback)callback,
+@@ -496,7 +496,7 @@ UA_Server_run_iterate(UA_Server *server, UA_Boolean waitInternal) {
+     /* Listen on the networklayer */
+     for(size_t i = 0; i < server->config.networkLayersSize; ++i) {
+         UA_ServerNetworkLayer *nl = &server->config.networkLayers[i];
+-        nl->listen(nl, server, timeout);
++        nl->listen(nl, server, 0);
+     }
+ 
+ #if defined(UA_ENABLE_DISCOVERY_MULTICAST) && !defined(UA_ENABLE_MULTITHREADING)
+diff --git a/src/ua_timer.c b/src/ua_timer.c
+index 370f1ca7..b5994936 100644
+--- a/src/ua_timer.c
++++ b/src/ua_timer.c
+@@ -90,14 +90,14 @@ dequeueChange(UA_Timer *t) {
+  * correct place. So that the next execution takes place ät "nextTime". */
+ UA_StatusCode
+ UA_Timer_addRepeatedCallback(UA_Timer *t, UA_ApplicationCallback callback,
+-                             void *application, void *data, UA_UInt32 interval,
++                             void *application, void *data, UA_Double interval,
+                              UA_UInt64 *callbackId) {
+     /* A callback method needs to be present */
+     if(!callback)
+         return UA_STATUSCODE_BADINTERNALERROR;
+ 
+-    /* The interval needs to be at least 5ms */
+-    if(interval < 5)
++    /* The interval needs to be at least 1us. Decimals for backwards compatibility */
++    if(interval < 0.001)
+         return UA_STATUSCODE_BADINTERNALERROR;
+ 
+     /* Allocate the repeated callback structure */
+@@ -107,7 +107,7 @@ UA_Timer_addRepeatedCallback(UA_Timer *t, UA_ApplicationCallback callback,
+         return UA_STATUSCODE_BADOUTOFMEMORY;
+ 
+     /* Set the repeated callback */
+-    tc->interval = (UA_UInt64)interval * UA_DATETIME_MSEC;
++    tc->interval = (UA_UInt64) (interval * UA_DATETIME_MSEC);
+     tc->id = ++t->idCounter;
+     tc->callback = callback;
+     tc->application = application;
+diff --git a/src/ua_timer.h b/src/ua_timer.h
+index dcec52ad..cbc5760d 100644
+--- a/src/ua_timer.h
++++ b/src/ua_timer.h
+@@ -52,7 +52,7 @@ void UA_Timer_init(UA_Timer *t);
+  * with UA_Timer_process. */
+ UA_StatusCode
+ UA_Timer_addRepeatedCallback(UA_Timer *t, UA_ApplicationCallback callback, void *application,
+-                             void *data, UA_UInt32 interval, UA_UInt64 *callbackId);
++                             void *data, UA_Double interval, UA_UInt64 *callbackId);
+ 
+ /* Change the callback interval. If this is called from within the callback. The
+  * adjustment is made during the next _process call. */
+-- 
+2.17.1
+

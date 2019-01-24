@@ -1,0 +1,41 @@
+From 5f3d8b0df198a60328354b7882b5fd67fc49f75f Mon Sep 17 00:00:00 2001
+From: "Syed Mohamad Fauzi, Syed Johan Arif"
+ <syed.johan.arif.syed.mohamad.fauzi@intel.com>
+Date: Wed, 15 Aug 2018 16:09:11 +0800
+Subject: [PATCH] raw: [WORKAROUND] add SO_PRIORITY for raw packet to direct
+ PTP frame to the right Tx Queue
+
+This is a workaround to assign socket priority 7 to PTP packets to
+route them to the highest priority TX queue
+
+Signed-off-by: Syed Mohamad Fauzi, Syed Johan Arif <syed.johan.arif.syed.mohamad.fauzi@intel.com>
+---
+ raw.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/raw.c b/raw.c
+index f51c829..ab8cb1b 100644
+--- a/raw.c
++++ b/raw.c
+@@ -154,6 +154,7 @@ static int open_socket(const char *name, int event, unsigned char *ptp_dst_mac,
+ {
+ 	struct sockaddr_ll addr;
+ 	int fd, index;
++	int so_priority = 7;
+
+ 	fd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
+ 	if (fd < 0) {
+@@ -176,6 +177,10 @@ static int open_socket(const char *name, int event, unsigned char *ptp_dst_mac,
+ 		pr_err("setsockopt SO_BINDTODEVICE failed: %m");
+ 		goto no_option;
+ 	}
++	if (setsockopt(fd, SOL_SOCKET, SO_PRIORITY, &so_priority, sizeof(so_priority))) {
++		pr_err("Couldn't set priority");
++		goto no_option;
++	}
+ 	if (raw_configure(fd, event, index, ptp_dst_mac, p2p_dst_mac, 1))
+ 		goto no_option;
+
+--
+1.9.1
+

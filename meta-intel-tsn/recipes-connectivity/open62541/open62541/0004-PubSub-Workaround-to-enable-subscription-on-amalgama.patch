@@ -1,0 +1,286 @@
+From ab33221f962052d00637bcb5730c6277594377a7 Mon Sep 17 00:00:00 2001
+From: "Wong, Vincent Por Yin" <vincent.por.yin.wong@intel.com>
+Date: Sat, 15 Dec 2018 10:58:28 +0000
+Subject: [PATCH 4/4] PubSub: Workaround to enable subscription on amalgamation
+ compilations.
+
+Signed-off-by: Wong, Vincent Por Yin <vincent.por.yin.wong@intel.com>
+---
+ examples/pubsub/tutorial_pubsub_subscribe.c |  40 +++++--
+ include/ua_config.h.in                      |   1 +
+ include/ua_server_pubsub.h                  |   8 ++
+ src/pubsub/ua_pubsub.c                      | 113 ++++++++++++++++++++
+ src/pubsub/ua_pubsub.h                      |   6 ++
+ 5 files changed, 157 insertions(+), 11 deletions(-)
+
+diff --git a/examples/pubsub/tutorial_pubsub_subscribe.c b/examples/pubsub/tutorial_pubsub_subscribe.c
+index 5058db02..166153fc 100644
+--- a/examples/pubsub/tutorial_pubsub_subscribe.c
++++ b/examples/pubsub/tutorial_pubsub_subscribe.c
+@@ -9,16 +9,21 @@
+  * The following code uses internal API which will be later replaced by the higher-level
+  * PubSub subscriber API.
+ */
+-#include "ua_pubsub_networkmessage.h"
+-#include "ua_log_stdout.h"
+-#include "ua_server.h"
+-#include "ua_config_default.h"
+-#include "ua_pubsub.h"
+-#include "ua_network_pubsub_udp.h"
+-#ifdef UA_ENABLE_PUBSUB_ETH_UADP
+-#include "ua_network_pubsub_ethernet.h"
++#ifndef UA_ENABLE_PUBSUB_SUBSCRIBER_AMALGAMATION
++    #include "ua_pubsub_networkmessage.h"
++    #include "ua_log_stdout.h"
++    #include "ua_server.h"
++    #include "ua_config_default.h"
++    #include "ua_pubsub.h"
++    #include "ua_network_pubsub_udp.h"
++    #ifdef UA_ENABLE_PUBSUB_ETH_UADP
++    #include "ua_network_pubsub_ethernet.h"
++    #endif
++    #include "src_generated/ua_types_generated.h"
++#else
++    /* WORKAROUND to enable amalgamation for subscriber due to incomplete API */
++    #include "open62541.h"
+ #endif
+-#include "src_generated/ua_types_generated.h"
+ #include <stdio.h>
+ #include <signal.h>
+ 
+@@ -28,6 +33,7 @@ static void stopHandler(int sign) {
+     running = false;
+ }
+ 
++#ifndef UA_ENABLE_PUBSUB_SUBSCRIBER_AMALGAMATION
+ static void
+ subscriptionPollingCallback(UA_Server *server, UA_PubSubConnection *connection) {
+     UA_ByteString buffer;
+@@ -95,6 +101,7 @@ subscriptionPollingCallback(UA_Server *server, UA_PubSubConnection *connection)
+  cleanup:
+     UA_NetworkMessage_deleteMembers(&networkMessage);
+ }
++#endif
+ 
+ static int
+ run(UA_String *transportProfile, UA_NetworkAddressUrlDataType *networkAddressUrl) {
+@@ -132,6 +139,7 @@ run(UA_String *transportProfile, UA_NetworkAddressUrlDataType *networkAddressUrl
+         UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
+                     "The PubSub Connection was created successfully!");
+ 
++#ifndef UA_ENABLE_PUBSUB_SUBSCRIBER_AMALGAMATION
+     /* The following lines register the listening on the configured multicast
+      * address and configure a repeated job, which is used to handle received
+      * messages. */
+@@ -145,9 +153,20 @@ run(UA_String *transportProfile, UA_NetworkAddressUrlDataType *networkAddressUrl
+                                           connection, 100, &subscriptionCallbackId);
+         } else {
+             UA_LOG_WARNING(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "register channel failed: %s!",
+-                           UA_StatusCode_name(rv));
++                        UA_StatusCode_name(rv));
+         }
+     }
++#else
++    /* WORKAROUND */
++    UA_NodeId writerGroupIdent;
++    UA_WriterGroupConfig writerGroupConfig;
++    memset(&writerGroupConfig, 0, sizeof(UA_WriterGroupConfig));
++    writerGroupConfig.name = UA_STRING("Subscriber WriterGroup");
++    writerGroupConfig.enabled = UA_FALSE;
++    writerGroupConfig.writerGroupId = 100;
++    writerGroupConfig.encodingMimeType = UA_PUBSUB_ENCODING_UADP;
++    UA_Server_addSubscriberWriterGroup(server, connectionIdent, &writerGroupConfig, &writerGroupIdent);
++#endif
+ 
+     retval |= UA_Server_run(server, &running);
+     UA_Server_delete(server);
+@@ -155,7 +174,6 @@ run(UA_String *transportProfile, UA_NetworkAddressUrlDataType *networkAddressUrl
+     return (int)retval;
+ }
+ 
+-
+ static void
+ usage(char *progname) {
+     printf("usage: %s <uri> [device]\n", progname);
+diff --git a/include/ua_config.h.in b/include/ua_config.h.in
+index 2b6e67ce..94709f2c 100644
+--- a/include/ua_config.h.in
++++ b/include/ua_config.h.in
+@@ -28,6 +28,7 @@
+ #cmakedefine UA_ENABLE_PUBSUB_DELTAFRAMES
+ #cmakedefine UA_ENABLE_PUBSUB_INFORMATIONMODEL
+ #cmakedefine UA_ENABLE_PUBSUB_SOTXTIME
++#cmakedefine UA_ENABLE_PUBSUB_SUBSCRIBER_AMALGAMATION
+ #cmakedefine UA_ENABLE_ENCRYPTION
+ #cmakedefine UA_ENABLE_HISTORIZING
+ #cmakedefine UA_ENABLE_SUBSCRIPTIONS_EVENTS
+diff --git a/include/ua_server_pubsub.h b/include/ua_server_pubsub.h
+index 410d4606..71626cff 100644
+--- a/include/ua_server_pubsub.h
++++ b/include/ua_server_pubsub.h
+@@ -311,6 +311,14 @@ UA_Server_addWriterGroup(UA_Server *server, const UA_NodeId connection,
+                          const UA_WriterGroupConfig *writerGroupConfig,
+                          UA_NodeId *writerGroupIdentifier);
+ 
++#ifdef UA_ENABLE_PUBSUB_SUBSCRIBER_AMALGAMATION
++/* WORKAROUND to add a new Subscriber-specific WriterGroup to an existing Connection */
++UA_StatusCode UA_EXPORT
++UA_Server_addSubscriberWriterGroup(UA_Server *server, const UA_NodeId connection,
++                         const UA_WriterGroupConfig *writerGroupConfig,
++                         UA_NodeId *writerGroupIdentifier);
++#endif
++
+ /* Returns a deep copy of the config */
+ UA_StatusCode UA_EXPORT
+ UA_Server_getWriterGroupConfig(UA_Server *server, const UA_NodeId writerGroup,
+diff --git a/src/pubsub/ua_pubsub.c b/src/pubsub/ua_pubsub.c
+index 2df86e6d..1e3c850c 100644
+--- a/src/pubsub/ua_pubsub.c
++++ b/src/pubsub/ua_pubsub.c
+@@ -21,6 +21,10 @@
+ #include "ua_pubsub_ns0.h"
+ #endif
+ 
++#ifdef UA_ENABLE_PUBSUB_SUBSCRIBER_AMALGAMATION
++#include "ua_log_stdout.h"
++#endif
++
+ /* Forward declaration */
+ static void
+ UA_WriterGroup_deleteMembers(UA_Server *server, UA_WriterGroup *writerGroup);
+@@ -148,6 +152,115 @@ UA_Server_addWriterGroup(UA_Server *server, const UA_NodeId connection,
+     return retVal;
+ }
+ 
++#ifdef UA_ENABLE_PUBSUB_SUBSCRIBER_AMALGAMATION
++/* WORKAROUND: this function is copied from the pubsub-subscriber example
++ * to enable subscriber example to be compiled without internal headers, to just
++ * use the amalgamation header (open62541.h). A proper implementation would be to
++ * take specific config options to change subscriber's behaviour.
++ */
++void
++subscriptionPollingCallback(UA_Server *server, UA_PubSubConnection *connection) {
++    UA_ByteString buffer;
++    if (UA_ByteString_allocBuffer(&buffer, 512) != UA_STATUSCODE_GOOD) {
++        UA_LOG_ERROR(UA_Log_Stdout, UA_LOGCATEGORY_SERVER,
++                     "Message buffer allocation failed!");
++        return;
++    }
++
++    /* Receive the message. Blocks for 5ms */
++    UA_StatusCode retval =
++        connection->channel->receive(connection->channel, &buffer, NULL, 5);
++    if(retval != UA_STATUSCODE_GOOD || buffer.length == 0) {
++        /* Workaround!! Reset buffer length. Receive can set the length to zero.
++         * Then the buffer is not deleted because no memory allocation is
++         * assumed.
++         * TODO: Return an error code in 'receive' instead of setting the buf
++         * length to zero. */
++        buffer.length = 512;
++        UA_ByteString_deleteMembers(&buffer);
++        return;
++    }
++
++    /* Decode the message */
++    UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,
++                "Message length: %lu", (unsigned long) buffer.length);
++    UA_NetworkMessage networkMessage;
++    memset(&networkMessage, 0, sizeof(UA_NetworkMessage));
++    size_t currentPosition = 0;
++    UA_NetworkMessage_decodeBinary(&buffer, &currentPosition, &networkMessage);
++    UA_ByteString_deleteMembers(&buffer);
++
++    /* Is this the correct message type? */
++    if(networkMessage.networkMessageType != UA_NETWORKMESSAGE_DATASET)
++        goto cleanup;
++
++    /* At least one DataSetMessage in the NetworkMessage? */
++    if(networkMessage.payloadHeaderEnabled &&
++       networkMessage.payloadHeader.dataSetPayloadHeader.count < 1)
++        goto cleanup;
++
++    /* Is this a KeyFrame-DataSetMessage? */
++    UA_DataSetMessage *dsm = &networkMessage.payload.dataSetPayload.dataSetMessages[0];
++    if(dsm->header.dataSetMessageType != UA_DATASETMESSAGE_DATAKEYFRAME)
++        goto cleanup;
++
++    /* Loop over the fields and print well-known content types */
++    for(int i = 0; i < dsm->data.keyFrameData.fieldCount; i++) {
++        const UA_DataType *currentType = dsm->data.keyFrameData.dataSetFields[i].value.type;
++        if(currentType == &UA_TYPES[UA_TYPES_BYTE]) {
++            UA_Byte value = *(UA_Byte *)dsm->data.keyFrameData.dataSetFields[i].value.data;
++            UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,
++                        "Message content: [Byte] \tReceived data: %i", value);
++        } else if (currentType == &UA_TYPES[UA_TYPES_DATETIME]) {
++            UA_DateTime value = *(UA_DateTime *)dsm->data.keyFrameData.dataSetFields[i].value.data;
++            UA_DateTimeStruct receivedTime = UA_DateTime_toStruct(value);
++            UA_LOG_INFO(UA_Log_Stdout, UA_LOGCATEGORY_USERLAND,
++                        "Message content: [DateTime] \t"
++                        "Received date: %02i-%02i-%02i Received time: %02i:%02i:%02i",
++                        receivedTime.year, receivedTime.month, receivedTime.day,
++                        receivedTime.hour, receivedTime.min, receivedTime.sec);
++        }
++    }
++
++ cleanup:
++    UA_NetworkMessage_deleteMembers(&networkMessage);
++}
++
++/* WORKAROUND: this function is exported for users to create and
++ * register the subscriber. A proper implementation would involve using writerGroup
++ * configs to specify subscriber properties/settings and passing them to this function.
++ * Currently this just hardcodes a specific subscriber behaviour/callback. Existing
++ * writerGroup functions are designed for publisher only.
++ */
++UA_StatusCode
++UA_Server_addSubscriberWriterGroup(UA_Server *server, const UA_NodeId connection,
++                         const UA_WriterGroupConfig *writerGroupConfig,
++                         UA_NodeId *writerGroupIdentifier) {
++    UA_StatusCode retVal = UA_STATUSCODE_GOOD;
++
++    if(!writerGroupConfig)
++        return UA_STATUSCODE_BADINVALIDARGUMENT;
++
++    //search the connection by the given connectionIdentifier
++    UA_PubSubConnection *currentConnectionContext =
++         UA_PubSubConnection_findConnectionbyId(server, connection);
++    if(!currentConnectionContext)
++         return UA_STATUSCODE_BADNOTFOUND;
++
++    retVal = currentConnectionContext->channel->regist(currentConnectionContext->channel, NULL);
++    if (retVal == UA_STATUSCODE_GOOD) {
++        UA_UInt64 subscriptionCallbackId;
++        retVal = UA_Server_addRepeatedCallback(server, (UA_ServerCallback)subscriptionPollingCallback,
++                                               currentConnectionContext, 100, &subscriptionCallbackId);
++    } else {
++        UA_LOG_WARNING(UA_Log_Stdout, UA_LOGCATEGORY_SERVER, "register channel failed: %s!",
++                       UA_StatusCode_name(retVal));
++    }
++
++    return retVal;
++}
++#endif  //UA_ENABLE_PUBSUB_SUBSCRIBER_AMALGAMATION
++
+ UA_StatusCode
+ UA_Server_removeWriterGroup(UA_Server *server, const UA_NodeId writerGroup){
+     UA_WriterGroup *wg = UA_WriterGroup_findWGbyId(server, writerGroup);
+diff --git a/src/pubsub/ua_pubsub.h b/src/pubsub/ua_pubsub.h
+index 9e8a89f8..e593ef3f 100644
+--- a/src/pubsub/ua_pubsub.h
++++ b/src/pubsub/ua_pubsub.h
+@@ -146,6 +146,12 @@ UA_WriterGroup_addPublishCallback(UA_Server *server, UA_WriterGroup *writerGroup
+ void
+ UA_WriterGroup_publishCallback(UA_Server *server, UA_WriterGroup *writerGroup);
+ 
++#ifdef UA_ENABLE_PUBSUB_SUBSCRIBER_AMALGAMATION
++/* WORKAROUND by moving callback from pubsub-subscriber examples into library */
++void
++subscriptionPollingCallback(UA_Server *server, UA_PubSubConnection *connection);
++#endif
++
+ #endif /* UA_ENABLE_PUBSUB */
+ 
+ _UA_END_DECLS
+-- 
+2.17.1
+
