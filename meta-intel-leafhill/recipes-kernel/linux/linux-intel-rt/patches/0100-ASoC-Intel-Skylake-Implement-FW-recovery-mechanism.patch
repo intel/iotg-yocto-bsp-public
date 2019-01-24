@@ -1,0 +1,45 @@
+From 88dc8fc44c3f4def8d76510413f597157f2c744f Mon Sep 17 00:00:00 2001
+From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
+Date: Thu, 25 Oct 2018 17:56:20 +0800
+Subject: [PATCH 100/100] ASoC: Intel: Skylake: Implement FW recovery mechanism
+ when encountering FW boot timeout error
+
+When FW boots with timeout error, reinitialize, transfer
+and boot firmware to recover audio.
+
+Signed-off-by: Ho, Yu Xin <yu.xin.ho@intel.com>
+---
+ sound/soc/intel/skylake/bxt-sst.c | 14 ++++++++++++--
+ 1 file changed, 12 insertions(+), 2 deletions(-)
+ mode change 100644 => 100755 sound/soc/intel/skylake/bxt-sst.c
+
+diff --git a/sound/soc/intel/skylake/bxt-sst.c b/sound/soc/intel/skylake/bxt-sst.c
+old mode 100644
+new mode 100755
+index 13d1c6d..2abfce3
+--- a/sound/soc/intel/skylake/bxt-sst.c
++++ b/sound/soc/intel/skylake/bxt-sst.c
+@@ -559,8 +559,18 @@ static int bxt_set_dsp_D0(struct sst_dsp *ctx, unsigned int core_id)
+ 				sst_dsp_shim_read(ctx, BXT_ADSP_ERROR_CODE),
+ 				sst_dsp_shim_read(ctx, BXT_ADSP_FW_STATUS));
+ 			dev_err(ctx->dev, "Failed to set core0 to D0 state\n");
+-			ret = -EIO;
+-			goto err;
++
++			dev_err(ctx->dev, "Trying to reinitialize FW to recover audio\n");
++
++			ret = bxt_sst_init_fw(ctx->dev, skl);
++			if (ret < 0)
++			{
++				ret = -EIO;
++				goto err;
++			}
++			else
++				dev_err(ctx->dev, "FW recovery & reinitialization successful!\n");
++
+ 		}
+ 	}
+ 
+-- 
+1.9.1
+

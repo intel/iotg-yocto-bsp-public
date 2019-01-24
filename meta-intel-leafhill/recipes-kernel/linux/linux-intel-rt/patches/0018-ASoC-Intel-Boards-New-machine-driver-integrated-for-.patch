@@ -1,0 +1,68 @@
+From d23e4e5148334f1b90298ed35cb8be6bcd6acc7a Mon Sep 17 00:00:00 2001
+From: Markus Schweikhardt <markus.schweikhardt@intel.com>
+Date: Thu, 5 Nov 2015 15:44:33 +0100
+Subject: [PATCH 018/100] ASoC: Intel: Boards: New machine driver integrated
+ for GP MRB board
+
+  Intial version of the Bxt GP MRB machine driver added.
+  The machine driver is able to handle the four channel amplifier
+  FE playback stream and the stereo FE capture stream of the AM/FM
+  tuner.
+
+Signed-off-by: Markus Schweikhardt <markus.schweikhardt@intel.com>
+
+Conflicts:
+	sound/soc/intel/boards/Makefile
+	sound/soc/intel/boards/bxt_gpmrb.c
+
+Conflicts:
+	sound/soc/intel/Kconfig
+
+Conflicts:
+	sound/soc/intel/boards/Kconfig
+	sound/soc/intel/boards/Makefile
+---
+ sound/soc/intel/boards/Kconfig  | 9 +++++++++
+ sound/soc/intel/boards/Makefile | 2 ++
+ 2 files changed, 11 insertions(+)
+
+diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
+index 5f49025..dab339c 100644
+--- a/sound/soc/intel/boards/Kconfig
++++ b/sound/soc/intel/boards/Kconfig
+@@ -387,6 +387,15 @@ config SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH
+ 	   Say Y or m if you have such a device. This is a recommended option.
+ 	   If unsure select "N".
+ 
++config SND_SOC_INTEL_BXT_GPMRB_MACH
++	tristate "ASoC Audio driver for BXT IVI GP MRB"
++	select SND_SOC_INTEL_SST
++	default n
++	help
++	   This adds support for ASoC machine driver for Broxton IVI GP MRB platform
++	   Say Y if you have such a device
++	   If unsure select "N".
++
+ endif ## SND_SOC_INTEL_SKYLAKE
+ 
+ if SND_SOC_INTEL_SKYLAKE || SND_SOC_SOF_CANNONLAKE
+diff --git a/sound/soc/intel/boards/Makefile b/sound/soc/intel/boards/Makefile
+index 70c8ffa..e192d6e 100644
+--- a/sound/soc/intel/boards/Makefile
++++ b/sound/soc/intel/boards/Makefile
+@@ -33,6 +33,7 @@ snd-soc-bxtp_ivi_generic-objs := bxtp_ivi_generic.o
+ snd-soc-apli_lhcrb_wm8731-objs := apli_lhcrb_wm8731.o
+ snd-soc-apli_lhcrb_aic3107M-objs := apli_lhcrb_aic3107M.o
+ snd-soc-apli_lhcrb_aic3107S-objs := apli_lhcrb_aic3107S.o
++snd-soc-bxt_gpmrb-objs := bxt_gpmrb.o
+ 
+ obj-$(CONFIG_SND_SOC_INTEL_HASWELL_MACH) += snd-soc-sst-haswell.o
+ obj-$(CONFIG_SND_SOC_INTEL_BYT_RT5640_MACH) += snd-soc-sst-byt-rt5640-mach.o
+@@ -68,3 +69,4 @@ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH) += snd-soc-bxtp_ivi_generic.o
+ obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH) += snd-soc-apli_lhcrb_wm8731.o
+ obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH) += snd-soc-apli_lhcrb_aic3107M.o
+ obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH) += snd-soc-apli_lhcrb_aic3107S.o
++obj-$(CONFIG_SND_SOC_INTEL_BXT_GPMRB_MACH) += snd-soc-bxt_gpmrb.o
+-- 
+1.9.1
+

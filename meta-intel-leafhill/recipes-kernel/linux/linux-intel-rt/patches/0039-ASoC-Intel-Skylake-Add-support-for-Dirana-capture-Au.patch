@@ -1,0 +1,57 @@
+From 82036be4dba33b60d46597ff4c29e30b0bd358f3 Mon Sep 17 00:00:00 2001
+From: Jakub Dorzak <jakubx.dorzak@intel.com>
+Date: Tue, 6 Dec 2016 12:56:52 +0000
+Subject: [PATCH 039/100] ASoC: Intel: Skylake: Add support for Dirana capture
+ Aux, Mic and Tuner
+
+Signed-off-by: Jakub Dorzak <jakubx.dorzak@intel.com>
+---
+ sound/soc/intel/boards/bxt_gpmrb.c | 32 +++++++++++++++++++++++++++++---
+ 1 file changed, 29 insertions(+), 3 deletions(-)
+
+diff --git a/sound/soc/intel/boards/bxt_gpmrb.c b/sound/soc/intel/boards/bxt_gpmrb.c
+index 7c1b8d9..8eb966e 100644
+--- a/sound/soc/intel/boards/bxt_gpmrb.c
++++ b/sound/soc/intel/boards/bxt_gpmrb.c
+@@ -93,9 +93,35 @@
+ 		.dpcm_playback = 1,
+ 	},
+ 	{
+-		.name = "Dirana Cp Port",
+-		.stream_name = "Dirana Cp",
+-		.cpu_dai_name = "Dirana Cp Pin",
++		.name = "Dirana Tuner Cp Port",
++		.stream_name = "Dirana Tuner Cp",
++		.cpu_dai_name = "Dirana Tuner Cp Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = "0000:00:0e.0",
++		.init = NULL,
++		.dpcm_capture = 1,
++		.ignore_suspend = 1,
++		.nonatomic = 1,
++		.dynamic = 1,
++	},
++	{
++		.name = "Dirana Aux Cp Port",
++		.stream_name = "Dirana Aux Cp",
++		.cpu_dai_name = "Dirana Aux Cp Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = "0000:00:0e.0",
++		.init = NULL,
++		.dpcm_capture = 1,
++		.ignore_suspend = 1,
++		.nonatomic = 1,
++		.dynamic = 1,
++	},
++	{
++		.name = "Dirana Mic Cp Port",
++		.stream_name = "Dirana Mic Cp",
++		.cpu_dai_name = "Dirana Mic Cp Pin",
+ 		.codec_name = "snd-soc-dummy",
+ 		.codec_dai_name = "snd-soc-dummy-dai",
+ 		.platform_name = "0000:00:0e.0",
+-- 
+1.9.1
+

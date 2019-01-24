@@ -1,0 +1,26 @@
+From 3586a3534cc7fff0da09051eacb1c41613560082 Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Fri, 25 Jan 2019 14:50:59 -0800
+Subject: [PATCH 45/45] Add IOTG kernel identifier
+
+---
+ drivers/gpu/drm/i915/i915_drv.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
+index e6a07bb..7583ec7 100644
+--- a/drivers/gpu/drm/i915/i915_drv.c
++++ b/drivers/gpu/drm/i915/i915_drv.c
+@@ -1425,6 +1425,9 @@ int i915_driver_load(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+ 	intel_runtime_pm_put(dev_priv);
+ 
++	printk(KERN_INFO "IOTG i915 driver 2019y-01m-25d-14h-50m-59s -0800\n");
++	printk(KERN_INFO "44 patches carried on top of PK commit 347fb84f\n");
++
+ 	return 0;
+ 
+ out_cleanup_hw:
+-- 
+1.9.1
+

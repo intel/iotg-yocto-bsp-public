@@ -1,0 +1,26 @@
+From 5ab7a0523289bb3e30ad3a8a2c2a9a7175f41570 Mon Sep 17 00:00:00 2001
+From: "Vohra, GauravX" <gauravx.vohra@intel.com>
+Date: Tue, 28 Aug 2018 17:09:12 +0800
+Subject: [PATCH 086/100] ASoC: Intel: Skylake: Fixed issue with compilation
+ DEBUG_FS=n
+
+---
+ sound/soc/intel/skylake/skl.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sound/soc/intel/skylake/skl.h b/sound/soc/intel/skylake/skl.h
+index 245b213..ce85cda 100644
+--- a/sound/soc/intel/skylake/skl.h
++++ b/sound/soc/intel/skylake/skl.h
+@@ -221,7 +221,7 @@ static inline void skl_debug_init_module(struct skl_debug *d,
+ {
+ 	return NULL;
+ }
+-void skl_dbg_event(struct skl_sst *ctx, int type)
++static inline void skl_dbg_event(struct skl_sst *ctx, int type)
+ {
+ }
+ #endif
+-- 
+1.9.1
+

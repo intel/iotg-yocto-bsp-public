@@ -1,0 +1,23 @@
+From ca61f0fd9b2d9a49d17aead60befc25b8484cff9 Mon Sep 17 00:00:00 2001
+From: Markus Schuetterle <markus.schuetterle@intel.com>
+Date: Thu, 28 Apr 2016 15:35:50 +0200
+Subject: [PATCH 057/100] ASoC: Intel: Remove symlink added by accident
+
+Change-Id: Id14a44262d17356d2b81deed19fa95dbdabfc11b
+Signed-off-by: Markus Schuetterle <markus.schuetterle@intel.com>
+---
+ source | 1 -
+ 1 file changed, 1 deletion(-)
+ delete mode 120000 source
+
+diff --git a/source b/source
+deleted file mode 120000
+index d600a8b..0000000
+--- a/source
++++ /dev/null
+@@ -1 +0,0 @@
+-/localdisk/mschweik/git/bsp_project/kernel
+\ No newline at end of file
+-- 
+1.9.1
+

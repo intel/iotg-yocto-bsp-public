@@ -1,0 +1,70 @@
+From 1a37a022f4e6355b808f07200aaacaf9c77903b0 Mon Sep 17 00:00:00 2001
+From: Markus Schweikhardt <markus.schweikhardt@intel.com>
+Date: Tue, 16 Feb 2016 16:05:47 +0100
+Subject: [PATCH 022/100] ASoC: Intel: Boards: Config define added to enable
+ pin ownership with BIOS
+
+ * CONFIG_SND_SOC_BXT_GPMRB_MACH_BIOS added to enable Pin ownership
+   workaround for BIOS version BXTI_IFWI_X64_R_2015_10_13_1544 or
+   BXTI_IFWI_X64_D_2015_10_13_1544
+
+Signed-off-by: Markus Schweikhardt <markus.schweikhardt@intel.com>
+
+Conflicts:
+	sound/soc/intel/Kconfig
+
+Conflicts:
+	sound/soc/intel/boards/Kconfig
+---
+ sound/soc/intel/boards/Kconfig     | 7 +++++++
+ sound/soc/intel/boards/bxt_gpmrb.c | 9 ++++++++-
+ 2 files changed, 15 insertions(+), 1 deletion(-)
+
+diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
+index c5c3fe6..1aa13b7 100644
+--- a/sound/soc/intel/boards/Kconfig
++++ b/sound/soc/intel/boards/Kconfig
+@@ -398,6 +398,13 @@ config SND_SOC_INTEL_BXT_GPMRB_MACH
+ 	   Say Y if you have such a device
+ 	   If unsure select "N".
+ 
++config SND_SOC_BXT_GPMRB_MACH_BIOS
++	bool "Select to enable BXT GPMRB Audio with BIOS"
++	default n
++	help
++	   This is a config define to enable Pin audio ownership workaround for BIOS
++	   version BXTI_IFWI_X64_R_2015_10_13_1544 or BXTI_IFWI_X64_D_2015_10_13_1544
++
+ endif ## SND_SOC_INTEL_SKYLAKE
+ 
+ if SND_SOC_INTEL_SKYLAKE || SND_SOC_SOF_CANNONLAKE
+diff --git a/sound/soc/intel/boards/bxt_gpmrb.c b/sound/soc/intel/boards/bxt_gpmrb.c
+index 4557aad..bef0185 100644
+--- a/sound/soc/intel/boards/bxt_gpmrb.c
++++ b/sound/soc/intel/boards/bxt_gpmrb.c
+@@ -328,6 +328,13 @@ static int broxton_gpmrb_hw_params(struct snd_pcm_substream *substream,
+ 
+ static int broxton_audio_probe(struct platform_device *pdev)
+ {
++/*
++ * WORKAROUND
++ * Required to set the proper pin ownership with BIOS
++ * version BXTI_IFWI_X64_R_2015_10_13_1544 or BXTI_IFWI_X64_D_2015_10_13_1544
++ */
++#if CONFIG_SND_SOC_BXT_GPMRB_MACH_BIOS
++
+ 	char *gpio_addr, *mclk_addr;
+ 	u32 gpio_value = 0;
+ 	u32 mclk_value = 0;
+@@ -450,7 +457,7 @@ static int broxton_audio_probe(struct platform_device *pdev)
+ 
+ 	iounmap(gpio_addr);
+ 	iounmap(mclk_addr);
+-
++#endif /* CONFIG_SND_SOC_BXT_GPMRB_MACH_BIOS*/
+ 
+ 	broxton_gpmrb.dev = &pdev->dev;
+ 	return snd_soc_register_card(&broxton_gpmrb);
+-- 
+1.9.1
+

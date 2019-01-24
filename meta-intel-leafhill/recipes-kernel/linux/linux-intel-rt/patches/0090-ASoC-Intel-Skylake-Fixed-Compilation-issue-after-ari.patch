@@ -1,0 +1,62 @@
+From a425bbceaafc7e0aed56eace75390eef86e57e0a Mon Sep 17 00:00:00 2001
+From: Gaurav Vohra <gauravx.vohra.gaurav.vohra@intel.com>
+Date: Wed, 5 Sep 2018 17:13:13 +0800
+Subject: [PATCH 090/100] ASoC: Intel: Skylake: Fixed Compilation issue after
+ arised resolving manual conflicts
+
+---
+ sound/soc/intel/skylake/skl-messages.c | 4 ----
+ sound/soc/intel/skylake/skl-sst-dsp.h  | 1 -
+ 2 files changed, 5 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-messages.c b/sound/soc/intel/skylake/skl-messages.c
+index 81241d6..03e64a8 100644
+--- a/sound/soc/intel/skylake/skl-messages.c
++++ b/sound/soc/intel/skylake/skl-messages.c
+@@ -301,7 +301,6 @@ static struct skl_dsp_loader_ops bxt_get_loader_ops(void)
+ 		.init = bxt_sst_dsp_init,
+ 		.init_fw = bxt_sst_init_fw,
+ 		.cleanup = bxt_sst_dsp_cleanup,
+-		.do_recovery = skl_do_recovery,
+ 		.min_fw_ver = {9, 22, 1, 3132}
+ 	},
+ 	{
+@@ -311,7 +310,6 @@ static struct skl_dsp_loader_ops bxt_get_loader_ops(void)
+ 		.init = bxt_sst_dsp_init,
+ 		.init_fw = bxt_sst_init_fw,
+ 		.cleanup = bxt_sst_dsp_cleanup,
+-		.do_recovery = skl_do_recovery,
+ 		.min_fw_ver = {9, 22, 1, 3366}
+ 	},
+ 	{
+@@ -321,7 +319,6 @@ static struct skl_dsp_loader_ops bxt_get_loader_ops(void)
+ 		.init = cnl_sst_dsp_init,
+ 		.init_fw = cnl_sst_init_fw,
+ 		.cleanup = cnl_sst_dsp_cleanup,
+-		.do_recovery = skl_do_recovery,
+ 		.min_fw_ver = {10, 23, 0, 1233}
+ 	},
+ 	{
+@@ -331,7 +328,6 @@ static struct skl_dsp_loader_ops bxt_get_loader_ops(void)
+ 		.init = cnl_sst_dsp_init,
+ 		.init_fw = cnl_sst_init_fw,
+ 		.cleanup = cnl_sst_dsp_cleanup,
+-		.do_recovery = skl_do_recovery,
+ 		.min_fw_ver = {10, 23, 0, 1233}
+ 	},
+ };
+diff --git a/sound/soc/intel/skylake/skl-sst-dsp.h b/sound/soc/intel/skylake/skl-sst-dsp.h
+index c14b0ed..5fbe887 100644
+--- a/sound/soc/intel/skylake/skl-sst-dsp.h
++++ b/sound/soc/intel/skylake/skl-sst-dsp.h
+@@ -209,7 +209,6 @@ struct skl_dsp_ops {
+ 			struct skl_sst **skl_sst, void *ptr);
+ 	int (*init_fw)(struct device *dev, struct skl_sst *ctx);
+ 	void (*cleanup)(struct device *dev, struct skl_sst *ctx);
+-	void (*do_recovery)(struct skl *skl);
+ };
+ 
+ struct skl_dsp_fw_ops {
+-- 
+1.9.1
+

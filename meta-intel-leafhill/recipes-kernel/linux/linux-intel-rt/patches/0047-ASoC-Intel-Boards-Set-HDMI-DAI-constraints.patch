@@ -1,0 +1,75 @@
+From adc23a953abdac2c97f11770fadfc1b6fd08a1bc Mon Sep 17 00:00:00 2001
+From: CraigX Kewley <craigx.kewley@intel.com>
+Date: Wed, 1 Mar 2017 15:56:02 +0000
+Subject: [PATCH 047/100] ASoC: Intel: Boards: Set HDMI DAI constraints
+
+HDMI chip is not controlled by an ASoC Codec driver so dummy codec is
+used. Set explicit constraints for the HDMI chip in the DAI startup
+callback.
+
+Signed-off-by: CraigX Kewley <craigx.kewley@intel.com>
+---
+ sound/soc/intel/boards/bxt_gpmrb.c | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+
+diff --git a/sound/soc/intel/boards/bxt_gpmrb.c b/sound/soc/intel/boards/bxt_gpmrb.c
+index 9e56503..a8386bf 100644
+--- a/sound/soc/intel/boards/bxt_gpmrb.c
++++ b/sound/soc/intel/boards/bxt_gpmrb.c
+@@ -27,6 +27,7 @@
+ 
+ #define CHANNELS_MONO 1
+ #define CHANNELS_STEREO 2
++#define CHANNELS_EIGHT 8
+ 
+ static struct snd_soc_dai_link broxton_gpmrb_dais[];
+ 
+@@ -176,6 +177,37 @@ static int broxton_gpmrb_dirana_startup(struct snd_pcm_substream *substream)
+ 	.startup = broxton_gpmrb_dirana_startup,
+ };
+ 
++static int broxton_gpmrb_hdmi_startup(struct snd_pcm_substream *substream)
++{
++	int ret;
++
++	ret = snd_pcm_hw_constraint_minmax(substream->runtime,
++			SNDRV_PCM_HW_PARAM_CHANNELS, CHANNELS_STEREO,
++			CHANNELS_EIGHT);
++
++	if (ret < 0)
++		goto out;
++
++	ret = snd_pcm_hw_constraint_single(substream->runtime,
++			SNDRV_PCM_HW_PARAM_RATE, 48000);
++
++	if (ret < 0)
++		goto out;
++
++	ret = snd_pcm_hw_constraint_mask64(substream->runtime,
++			SNDRV_PCM_HW_PARAM_FORMAT, SNDRV_PCM_FMTBIT_S32_LE);
++
++	if (ret < 0)
++		goto out;
++
++out:
++	return ret;
++}
++
++static struct snd_soc_ops broxton_gpmrb_hdmi_ops = {
++	.startup = broxton_gpmrb_hdmi_startup,
++};
++
+ /* broxton digital audio interface glue - connects codec <--> CPU */
+ static struct snd_soc_dai_link broxton_gpmrb_dais[] = {
+ 	/* Front End DAI links */
+@@ -342,6 +374,7 @@ static int broxton_gpmrb_dirana_startup(struct snd_pcm_substream *substream)
+ 		.ignore_suspend = 1,
+ 		.nonatomic = 1,
+ 		.dynamic = 1,
++		.ops = &broxton_gpmrb_hdmi_ops,
+ 	},
+ 	/* Trace Buffer & Probing DAI links */
+ 	{
+-- 
+1.9.1
+

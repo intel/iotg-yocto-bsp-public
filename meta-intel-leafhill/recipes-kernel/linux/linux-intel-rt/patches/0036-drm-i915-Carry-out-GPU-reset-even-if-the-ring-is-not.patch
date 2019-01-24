@@ -1,0 +1,66 @@
+From 19bd99a5069ef4cc8f58928cdc11b0689633688f Mon Sep 17 00:00:00 2001
+From: Antonio Argenziano <antonio.argenziano@intel.com>
+Date: Wed, 26 Apr 2017 12:48:43 -0700
+Subject: [PATCH 36/45] drm/i915: Carry out GPU reset even if the ring is not
+ ready
+
+When we attempt at a full GPU reset we try to get all engines ready before the
+actual reset is triggered. If we miss the acknowledgment, currently, we
+bail out the reset and declare the GPU wedged. This patch attempt to
+carry out a reset anyway, since it is not required to idle engines
+before resetting.
+
+Jeff: Remove gen8_unrequest_engine_reset func which is no longer needed. Shorten
+      the warning message and correctly report ring.
+
+Signed-off-by: Jeff McGee <jeff.mcgee@intel.com>
+Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
+---
+ drivers/gpu/drm/i915/intel_uncore.c | 18 ++----------------
+ 1 file changed, 2 insertions(+), 16 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_uncore.c b/drivers/gpu/drm/i915/intel_uncore.c
+index 4653b0e..5ac7203 100644
+--- a/drivers/gpu/drm/i915/intel_uncore.c
++++ b/drivers/gpu/drm/i915/intel_uncore.c
+@@ -1694,19 +1694,11 @@ static int gen8_reset_engine_start(struct intel_engine_cs *engine)
+ 					 RESET_CTL_READY_TO_RESET,
+ 					 700);
+ 	if (ret)
+-		DRM_ERROR("%s: reset request timeout\n", engine->name);
++		DRM_WARN("%s: reset request timeout\n", engine->name);
+ 
+ 	return ret;
+ }
+ 
+-static void gen8_reset_engine_cancel(struct intel_engine_cs *engine)
+-{
+-	struct drm_i915_private *dev_priv = engine->i915;
+-
+-	I915_WRITE_FW(RING_RESET_CTL(engine->mmio_base),
+-		      _MASKED_BIT_DISABLE(RESET_CTL_REQUEST_RESET));
+-}
+-
+ static int gen8_reset_engines(struct drm_i915_private *dev_priv,
+ 			      unsigned engine_mask)
+ {
+@@ -1715,15 +1707,9 @@ static int gen8_reset_engines(struct drm_i915_private *dev_priv,
+ 
+ 	for_each_engine_masked(engine, dev_priv, engine_mask, tmp)
+ 		if (gen8_reset_engine_start(engine))
+-			goto not_ready;
++			DRM_WARN("Ring: %s, did not ack reset. Reset anyway.\n", engine->name);
+ 
+ 	return gen6_reset_engines(dev_priv, engine_mask);
+-
+-not_ready:
+-	for_each_engine_masked(engine, dev_priv, engine_mask, tmp)
+-		gen8_reset_engine_cancel(engine);
+-
+-	return -EIO;
+ }
+ 
+ typedef int (*reset_func)(struct drm_i915_private *, unsigned engine_mask);
+-- 
+1.9.1
+

@@ -1,0 +1,42 @@
+From 09ddfe28bf512508560ec6c325bb0a5fbffa19da Mon Sep 17 00:00:00 2001
+From: Markus Schweikhardt <markus.schweikhardt@intel.com>
+Date: Wed, 17 Feb 2016 13:58:51 +0100
+Subject: [PATCH 023/100] ASoC: Intel: Skylake: increase FW timeout
+
+* BXT_FW_ROM_BASEFW_ENTERED_TIMEOUT icnreased to 6sec in order to
+  enable FW download with ABL.
+
+Signed-off-by: Markus Schweikhardt <markus.schweikhardt@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/bxt-sst.c
+---
+ sound/soc/intel/skylake/bxt-sst.c | 2 +-
+ source                            | 1 +
+ 2 files changed, 2 insertions(+), 1 deletion(-)
+ create mode 120000 source
+
+diff --git a/sound/soc/intel/skylake/bxt-sst.c b/sound/soc/intel/skylake/bxt-sst.c
+index 97a3210..6335670 100644
+--- a/sound/soc/intel/skylake/bxt-sst.c
++++ b/sound/soc/intel/skylake/bxt-sst.c
+@@ -24,7 +24,7 @@
+ #include "skl-fwlog.h"
+ #include "skl-sst-ipc.h"
+ 
+-#define BXT_BASEFW_TIMEOUT	3000
++#define BXT_BASEFW_TIMEOUT	6000
+ #define BXT_INIT_TIMEOUT	300
+ #define BXT_ROM_INIT_TIMEOUT	70
+ #define BXT_IPC_PURGE_FW	0x01004000
+diff --git a/source b/source
+new file mode 120000
+index 0000000..d600a8b
+--- /dev/null
++++ b/source
+@@ -0,0 +1 @@
++/localdisk/mschweik/git/bsp_project/kernel
+\ No newline at end of file
+-- 
+1.9.1
+

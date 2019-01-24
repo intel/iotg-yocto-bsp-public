@@ -1,0 +1,29 @@
+From b63099f75b8861d07f8e0a0750a4438f111758c7 Mon Sep 17 00:00:00 2001
+From: CraigX Kewley <craigx.kewley@intel.com>
+Date: Tue, 14 Mar 2017 14:38:28 +0000
+Subject: [PATCH 049/100] Revert "ASoC: Intel: Skylake: increase FW timeout"
+
+This reverts commit f0559a77990752805cb44aa4665106a959ef3982.
+
+Conflicts:
+	sound/soc/intel/skylake/bxt-sst.c
+---
+ sound/soc/intel/skylake/bxt-sst.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sound/soc/intel/skylake/bxt-sst.c b/sound/soc/intel/skylake/bxt-sst.c
+index 6335670..97a3210 100644
+--- a/sound/soc/intel/skylake/bxt-sst.c
++++ b/sound/soc/intel/skylake/bxt-sst.c
+@@ -24,7 +24,7 @@
+ #include "skl-fwlog.h"
+ #include "skl-sst-ipc.h"
+ 
+-#define BXT_BASEFW_TIMEOUT	6000
++#define BXT_BASEFW_TIMEOUT	3000
+ #define BXT_INIT_TIMEOUT	300
+ #define BXT_ROM_INIT_TIMEOUT	70
+ #define BXT_IPC_PURGE_FW	0x01004000
+-- 
+1.9.1
+

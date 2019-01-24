@@ -1,0 +1,36 @@
+From 4c5e2e8b22dd7a83861150bf048d996f55ef1568 Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Tue, 1 Dec 2015 13:22:32 -0800
+Subject: [PATCH 01/45] drm/i915/bxt: Allow PSR use
+
+From a quick skim of the spec, I don't see any indication that PSR needs
+to be programmed differently on BXT than it is on SKL/KBL, so it looks
+like it may be safe to add BXT to the HAS_PSR() platform list.  PSR will
+still be disabled by default, but can now be turned on by setting the
+'i915.enable_psr' kernel parameter.
+
+Manually tested with igt/kms_psr_sink_crc in non-CRC mode and most of
+the tests seem to work as expected.
+
+HSD: https://hsdes.intel.com/home/default.html#article?id=1504106801
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Reviewed-by: Bob Paauwe <bob.j.paauwe@intel.com>
+---
+ drivers/gpu/drm/i915/i915_pci.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/gpu/drm/i915/i915_pci.c b/drivers/gpu/drm/i915/i915_pci.c
+index 0348e42..2db0d45 100644
+--- a/drivers/gpu/drm/i915/i915_pci.c
++++ b/drivers/gpu/drm/i915/i915_pci.c
+@@ -490,6 +490,7 @@
+ static const struct intel_device_info intel_broxton_info __initconst = {
+ 	GEN9_LP_FEATURES,
+ 	.platform = INTEL_BROXTON,
++	.has_psr = 1,
+ 	.ddb_size = 512,
+ };
+ 
+-- 
+1.9.1
+

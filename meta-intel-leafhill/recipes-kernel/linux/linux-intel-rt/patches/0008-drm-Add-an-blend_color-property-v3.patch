@@ -1,0 +1,133 @@
+From 34cc2342d41f9210a835d87f15233eef9223fe8e Mon Sep 17 00:00:00 2001
+From: Damien Lespiau <damien.lespiau@intel.com>
+Date: Mon, 7 May 2018 13:32:09 -0700
+Subject: [PATCH 08/45] drm: Add an blend_color property (v3)
+
+Add blend color property and update the
+documentation for the same
+
+V2: Add blend color support in get property.
+
+v3 (by Matt):
+ - Switch to using drm_rgba property type and value
+
+Signed-off-by: Damien Lespiau <damien.lespiau@intel.com>
+Signed-off-by: vandita kulkarni <vandita.kulkarni@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
+Signed-off-by: Paauwe, Bob J <bob.j.paauwe@intel.com>
+---
+ drivers/gpu/drm/drm_atomic.c         | 4 ++++
+ drivers/gpu/drm/drm_mode_config.c    | 6 ++++++
+ drivers/gpu/drm/i915/intel_display.c | 2 +-
+ include/drm/drm_blend.h              | 4 ++++
+ include/drm/drm_mode_config.h        | 3 ++-
+ include/drm/drm_plane.h              | 2 ++
+ 6 files changed, 19 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_atomic.c b/drivers/gpu/drm/drm_atomic.c
+index a0637f2..568266a 100644
+--- a/drivers/gpu/drm/drm_atomic.c
++++ b/drivers/gpu/drm/drm_atomic.c
+@@ -785,6 +785,8 @@ static int drm_atomic_plane_set_property(struct drm_plane *plane,
+ 		state->zpos = val;
+ 	} else if (property == config->prop_blend_func) {
+ 		state->blend_mode.func = val;
++	} else if (property == config->prop_blend_color) {
++		state->blend_mode.color.v = val;
+ 	} else if (plane->funcs->atomic_set_property) {
+ 		return plane->funcs->atomic_set_property(plane, state,
+ 				property, val);
+@@ -846,6 +848,8 @@ static int drm_atomic_plane_set_property(struct drm_plane *plane,
+ 		*val = state->zpos;
+ 	} else if (property == config->prop_blend_func) {
+ 		*val = state->blend_mode.func;
++	} else if (property == config->prop_blend_color) {
++		*val = state->blend_mode.color.v;
+ 	} else if (plane->funcs->atomic_get_property) {
+ 		return plane->funcs->atomic_get_property(plane, state, property, val);
+ 	} else {
+diff --git a/drivers/gpu/drm/drm_mode_config.c b/drivers/gpu/drm/drm_mode_config.c
+index 18cdd46..dc16a14 100644
+--- a/drivers/gpu/drm/drm_mode_config.c
++++ b/drivers/gpu/drm/drm_mode_config.c
+@@ -357,6 +357,12 @@ static int drm_mode_create_standard_properties(struct drm_device *dev)
+ 		return -ENOMEM;
+ 	dev->mode_config.prop_blend_func = prop;
+ 
++	prop = drm_property_create_rgba(dev, DRM_MODE_PROP_ATOMIC,
++					"blend_color");
++	if (!prop)
++		return -ENOMEM;
++	dev->mode_config.prop_blend_color = prop;
++
+ 	return 0;
+ }
+ 
+diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
+index 510883d..906b63b 100644
+--- a/drivers/gpu/drm/i915/intel_display.c
++++ b/drivers/gpu/drm/i915/intel_display.c
+@@ -10720,7 +10720,7 @@ int intel_plane_atomic_calc_changes(struct drm_crtc_state *crtc_state,
+ 	    !needs_scaling(old_plane_state))
+ 		pipe_config->disable_lp_wm = true;
+ 
+-	if (plane->type != DRM_PLANE_TYPE_CURSOR) {
++	if (plane->id != PLANE_CURSOR) {
+ 		ret = intel_plane_state_check_blend(plane_state);
+ 		if (ret)
+ 			return ret;
+diff --git a/include/drm/drm_blend.h b/include/drm/drm_blend.h
+index 7482986..1c9e974 100644
+--- a/include/drm/drm_blend.h
++++ b/include/drm/drm_blend.h
+@@ -160,6 +160,10 @@ enum drm_blend_factor {
+ 	DRM_BLEND_FACTOR_ONE,
+ 	DRM_BLEND_FACTOR_SRC_ALPHA,
+ 	DRM_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
++	DRM_BLEND_FACTOR_CONSTANT_ALPHA,
++	DRM_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA,
++	DRM_BLEND_FACTOR_CONSTANT_ALPHA_TIMES_SRC_ALPHA,
++	DRM_BLEND_FACTOR_ONE_MINUS_CONSTANT_ALPHA_TIMES_SRC_ALPHA,
+ };
+ 
+ #define DRM_BLEND_FUNC(src_factor, dst_factor)         \
+diff --git a/include/drm/drm_mode_config.h b/include/drm/drm_mode_config.h
+index 219fcdb..8231209 100644
+--- a/include/drm/drm_mode_config.h
++++ b/include/drm/drm_mode_config.h
+@@ -741,9 +741,10 @@ struct drm_mode_config {
+ 	struct drm_property *gamma_lut_size_property;
+ 
+ 	/**
+-	 * @prop_blend_func: GL-style plane blending factors
++	 * @prop_blend_func: GL-style plane blending factors and color
+ 	 */
+ 	struct drm_property *prop_blend_func;
++	struct drm_property *prop_blend_color;
+ 
+ 	/**
+ 	 * @suggested_x_property: Optional connector property with a hint for
+diff --git a/include/drm/drm_plane.h b/include/drm/drm_plane.h
+index ad553c3..23153aa 100644
+--- a/include/drm/drm_plane.h
++++ b/include/drm/drm_plane.h
+@@ -25,6 +25,7 @@
+ 
+ #include <linux/list.h>
+ #include <linux/ctype.h>
++#include <drm/drm_blend.h>
+ #include <drm/drm_mode_object.h>
+ 
+ struct drm_crtc;
+@@ -32,6 +33,7 @@
+ struct drm_modeset_acquire_ctx;
+ 
+ struct drm_blend_mode {
++	struct drm_rgba color;
+ 	uint64_t func;
+ };
+ 
+-- 
+1.9.1
+

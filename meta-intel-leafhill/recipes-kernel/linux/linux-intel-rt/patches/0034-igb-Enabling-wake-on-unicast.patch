@@ -1,0 +1,59 @@
+From 76481ef146d5dd3a6462ea2a20d3a1293b05a4ad Mon Sep 17 00:00:00 2001
+From: Jayasankar <jayasankarx.nara@intel.com>
+Date: Wed, 16 Nov 2016 10:34:58 +0800
+Subject: [PATCH 34/42] igb: Enabling wake on unicast
+
+Enabling wake on unicast packet received by setting EX bit
+in i210 wufc register and enabling UPE(unicast promiscuous enable)
+bit in rctl register.
+
+Signed-off-by: Jayasankar <jayasankarx.nara@intel.com>
+Signed-off-by: Lai, Poey Seng <poey.seng.lai@intel.com>
+Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
+---
+ drivers/net/ethernet/intel/igb/igb_main.c | 15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
+index 20db78d..95b4681 100644
+--- a/drivers/net/ethernet/intel/igb/igb_main.c
++++ b/drivers/net/ethernet/intel/igb/igb_main.c
+@@ -8658,7 +8658,7 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
+ 	struct igb_adapter *adapter = netdev_priv(netdev);
+ 	struct e1000_hw *hw = &adapter->hw;
+ 	u32 ctrl, rctl, status;
+-	u32 wufc = runtime ? E1000_WUFC_LNKC : adapter->wol;
++	u32 wufc = runtime ? (E1000_WUFC_LNKC | E1000_WUFC_EX) : adapter->wol;
+ #ifdef CONFIG_PM
+ 	int retval = 0;
+ #endif
+@@ -8686,7 +8686,11 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
+ #endif
+ 
+ 	status = rd32(E1000_STATUS);
+-	if (status & E1000_STATUS_LU)
++
++	/* For runtime PM based on activity, we need
++	 * notification on Link Removal to indicate Link Down.
++	 */
++	if (!runtime && (status & E1000_STATUS_LU))
+ 		wufc &= ~E1000_WUFC_LNKC;
+ 
+ 	if (wufc) {
+@@ -8699,7 +8703,12 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
+ 			rctl |= E1000_RCTL_MPE;
+ 			wr32(E1000_RCTL, rctl);
+ 		}
+-
++		/* Enable wake on unicast for runtime pm based on activity */
++		if (wufc & E1000_WUFC_EX) {
++			rctl = rd32(E1000_RCTL);
++			rctl |= E1000_RCTL_UPE;
++			wr32(E1000_RCTL, rctl);
++		}
+ 		ctrl = rd32(E1000_CTRL);
+ 		/* advertise wake from D3Cold */
+ 		#define E1000_CTRL_ADVD3WUC 0x00100000
+-- 
+1.9.1
+

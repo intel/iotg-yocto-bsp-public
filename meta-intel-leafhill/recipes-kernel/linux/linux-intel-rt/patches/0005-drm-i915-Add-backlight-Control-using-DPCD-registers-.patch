@@ -1,0 +1,145 @@
+From 99dbea9f1172b90dd933466abd28972367c183ca Mon Sep 17 00:00:00 2001
+From: Yetunde Adebisi <yetundex.adebisi@intel.com>
+Date: Tue, 5 Apr 2016 13:56:01 +0100
+Subject: [PATCH 05/45] drm/i915: Add backlight Control using DPCD registers
+ for DP connectors
+
+This patch enables support for DPCD backlight control for DP connectors.
+The VESA spec defines DPCD backlight control only for eDP but some add-on
+cards like the Chrontel CH7511B DP-LVDS cards have the display control
+DPCD registers enabled.
+This patch registers a backlight device exposed via sysfs that controls the
+connected panel backlight by writing to DPCD registers on the CH7511B
+add-on card
+
+Signed-off-by: Yetunde Adebisi <yetundex.adebisi@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_dp.c               | 29 +++++++++++++++++++++++
+ drivers/gpu/drm/i915/intel_dp_aux_backlight.c |  7 ++++++
+ drivers/gpu/drm/i915/intel_drv.h              |  2 ++
+ drivers/gpu/drm/i915/intel_panel.c            | 33 +++++++++++++++++++--------
+ 4 files changed, 61 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_dp.c b/drivers/gpu/drm/i915/intel_dp.c
+index fdea3fa..5b32e96 100644
+--- a/drivers/gpu/drm/i915/intel_dp.c
++++ b/drivers/gpu/drm/i915/intel_dp.c
+@@ -6081,6 +6081,34 @@ void intel_edp_drrs_flush(struct drm_i915_private *dev_priv,
+ 	return downclock_mode;
+ }
+ 
++/*
++ * Called on DP connector initialization to check for aux backlight control
++ * capability on the sink device and if present, initialize it.
++ */
++static void intel_dp_init_aux_backlight(struct intel_dp *intel_dp,
++		struct drm_connector *connector)
++{
++	struct intel_connector *intel_connector = to_intel_connector(connector);
++
++	if (is_edp(intel_dp))
++		return;
++
++	memset(intel_dp->edp_dpcd, 0, sizeof(intel_dp->edp_dpcd));
++	if (drm_dp_dpcd_read(&intel_dp->aux, DP_EDP_DPCD_REV, intel_dp->edp_dpcd,
++			sizeof(intel_dp->edp_dpcd)) != sizeof(intel_dp->edp_dpcd)) {
++		DRM_DEBUG_KMS("Failed to read DPCD register 0x%x\n", DP_EDP_DPCD_REV);
++		return;
++	}
++	DRM_DEBUG_KMS("EDP DPCD : %*ph\n", (int) sizeof(intel_dp->edp_dpcd),
++			intel_dp->edp_dpcd);
++
++	if(intel_dp_aux_init_backlight_funcs(intel_connector) == 0) {
++		intel_panel_setup_backlight(connector, INVALID_PIPE);
++		intel_connector->panel.backlight.power = intel_dp_aux_backlight_power;
++		intel_connector->panel.backlight.enabled = true;
++	}
++}
++
+ static bool intel_edp_init_connector(struct intel_dp *intel_dp,
+ 				     struct intel_connector *intel_connector)
+ {
+@@ -6370,6 +6398,7 @@ static void intel_dp_modeset_retry_work_fn(struct work_struct *work)
+ 		goto fail;
+ 	}
+ 
++	intel_dp_init_aux_backlight(intel_dp, connector);
+ 	intel_dp_add_properties(intel_dp, connector);
+ 
+ 	if (is_hdcp_supported(dev_priv, port) && !intel_dp_is_edp(dev_priv, port)) {
+diff --git a/drivers/gpu/drm/i915/intel_dp_aux_backlight.c b/drivers/gpu/drm/i915/intel_dp_aux_backlight.c
+index 2bb2ceb..090b9cf 100644
+--- a/drivers/gpu/drm/i915/intel_dp_aux_backlight.c
++++ b/drivers/gpu/drm/i915/intel_dp_aux_backlight.c
+@@ -278,3 +278,10 @@ int intel_dp_aux_init_backlight_funcs(struct intel_connector *intel_connector)
+ 
+ 	return 0;
+ }
++
++void intel_dp_aux_backlight_power(struct intel_connector *connector,
++				      bool enable)
++{
++	set_aux_backlight_enable(enc_to_intel_dp(&connector->encoder->base),
++			enable);
++}
+diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
+index 392df36..17a2fb2 100644
+--- a/drivers/gpu/drm/i915/intel_drv.h
++++ b/drivers/gpu/drm/i915/intel_drv.h
+@@ -1650,6 +1650,8 @@ bool intel_digital_port_connected(struct drm_i915_private *dev_priv,
+ 
+ /* intel_dp_aux_backlight.c */
+ int intel_dp_aux_init_backlight_funcs(struct intel_connector *intel_connector);
++void intel_dp_aux_backlight_power(struct intel_connector *connector,
++				      bool enable);
+ 
+ /* intel_dp_mst.c */
+ int intel_dp_mst_encoder_init(struct intel_digital_port *intel_dig_port, int conn_id);
+diff --git a/drivers/gpu/drm/i915/intel_panel.c b/drivers/gpu/drm/i915/intel_panel.c
+index adc51e4..7c49c2d 100644
+--- a/drivers/gpu/drm/i915/intel_panel.c
++++ b/drivers/gpu/drm/i915/intel_panel.c
+@@ -1269,16 +1269,29 @@ int intel_backlight_device_register(struct intel_connector *connector)
+ 	else
+ 		props.power = FB_BLANK_POWERDOWN;
+ 
+-	/*
+-	 * Note: using the same name independent of the connector prevents
+-	 * registration of multiple backlight devices in the driver.
+-	 */
+-	panel->backlight.device =
+-		backlight_device_register("intel_backlight",
+-					  connector->base.kdev,
+-					  connector,
+-					  &intel_backlight_device_ops, &props);
+-
++	if (connector->base.connector_type == DRM_MODE_CONNECTOR_DisplayPort) {
++		char *name = kasprintf(GFP_KERNEL, "intel_aux_backlight-%s",
++				connector->base.name);
++		if (!name)
++			return -ENOMEM;
++
++		panel->backlight.device =
++			backlight_device_register(name,
++						  connector->base.kdev,
++						  connector,
++						  &intel_backlight_device_ops, &props);
++			kfree(name);
++	} else {
++		/*
++		 * Note: using the same name independent of the connector prevents
++		 * registration of multiple backlight devices in the driver.
++		 */
++		panel->backlight.device =
++			backlight_device_register("intel_backlight",
++						  connector->base.kdev,
++						  connector,
++						  &intel_backlight_device_ops, &props);
++	}
+ 	if (IS_ERR(panel->backlight.device)) {
+ 		DRM_ERROR("Failed to register backlight: %ld\n",
+ 			  PTR_ERR(panel->backlight.device));
+-- 
+1.9.1
+

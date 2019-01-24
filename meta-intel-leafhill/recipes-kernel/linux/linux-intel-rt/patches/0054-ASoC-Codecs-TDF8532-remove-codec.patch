@@ -1,0 +1,81 @@
+From 5f7b4ed4512f9de67168eac0e486f9dab56c05ac Mon Sep 17 00:00:00 2001
+From: Craig Kewley <craigx.kewley@intel.com>
+Date: Fri, 30 Jun 2017 08:14:02 +0100
+Subject: [PATCH 054/100] ASoC: Codecs: TDF8532: remove codec
+
+This commit removes the TDF8532 codec and the Kconfig / Makefile entries.
+
+Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
+
+Conflicts:
+	sound/soc/codecs/Kconfig
+	sound/soc/codecs/Makefile
+---
+ sound/soc/codecs/Kconfig   | 5 -----
+ sound/soc/codecs/Makefile  | 2 --
+ sound/soc/codecs/tdf8532.c | 6 ------
+ 3 files changed, 13 deletions(-)
+
+diff --git a/sound/soc/codecs/Kconfig b/sound/soc/codecs/Kconfig
+index a8e287c..a05a58d 100644
+--- a/sound/soc/codecs/Kconfig
++++ b/sound/soc/codecs/Kconfig
+@@ -146,7 +146,6 @@ config SND_SOC_ALL_CODECS
+ 	select SND_SOC_TAS5086 if I2C
+ 	select SND_SOC_TAS571X if I2C
+ 	select SND_SOC_TAS5720 if I2C
+-	select SND_SOC_TDF8532 if I2C
+ 	select SND_SOC_TFA9879 if I2C
+ 	select SND_SOC_TLV320AIC23_I2C if I2C
+ 	select SND_SOC_TLV320AIC23_SPI if SPI_MASTER
+@@ -902,10 +901,6 @@ config SND_SOC_TAS5720
+ 	  Enable support for Texas Instruments TAS5720L/M high-efficiency mono
+ 	  Class-D audio power amplifiers.
+ 
+-config SND_SOC_TDF8532
+-        tristate "NXP Semiconductors TDF8532 Codec"
+-        depends on I2C
+-
+ config SND_SOC_TFA9879
+ 	tristate "NXP Semiconductors TFA9879 amplifier"
+ 	depends on I2C
+diff --git a/sound/soc/codecs/Makefile b/sound/soc/codecs/Makefile
+index fedef12..8a6ee2c 100644
+--- a/sound/soc/codecs/Makefile
++++ b/sound/soc/codecs/Makefile
+@@ -71,7 +71,6 @@ snd-soc-da9055-objs := da9055.o
+ snd-soc-dmic-objs := dmic.o
+ snd-soc-es7134-objs := es7134.o
+ snd-soc-es8316-objs := es8316.o
+-snd-soc-tdf8532-objs := tdf8532.o
+ snd-soc-es8328-objs := es8328.o
+ snd-soc-es8328-i2c-objs := es8328-i2c.o
+ snd-soc-es8328-spi-objs := es8328-spi.o
+@@ -317,7 +316,6 @@ obj-$(CONFIG_SND_SOC_DA9055)	+= snd-soc-da9055.o
+ obj-$(CONFIG_SND_SOC_DMIC)	+= snd-soc-dmic.o
+ obj-$(CONFIG_SND_SOC_ES7134)	+= snd-soc-es7134.o
+ obj-$(CONFIG_SND_SOC_ES8316)    += snd-soc-es8316.o
+-obj-$(CONFIG_SND_SOC_TDF8532) += snd-soc-tdf8532.o
+ obj-$(CONFIG_SND_SOC_ES8328)	+= snd-soc-es8328.o
+ obj-$(CONFIG_SND_SOC_ES8328_I2C)+= snd-soc-es8328-i2c.o
+ obj-$(CONFIG_SND_SOC_ES8328_SPI)+= snd-soc-es8328-spi.o
+diff --git a/sound/soc/codecs/tdf8532.c b/sound/soc/codecs/tdf8532.c
+index 04ab478..c2bf5d8 100644
+--- a/sound/soc/codecs/tdf8532.c
++++ b/sound/soc/codecs/tdf8532.c
+@@ -91,12 +91,6 @@ static int tdf8532_dai_trigger(struct snd_pcm_substream *substream, int cmd,
+ 		/* WA on unexpected codec down during S3
+ 		 SNDRV_PCM_TRIGGER_STOP fails so skip set ret */
+ 		tdf8532_stop_play(tdf8532);
+-		data[4] = 0x27;
+-		ret = tdf8532_cmd_send(tdf8532, data, ARRAY_SIZE(data));
+-
+-		/*delay 300ms to allow state change to occur*/
+-		/*TODO: add state check to wait for state change*/
+-		mdelay(300);
+ 		break;
+ 	}
+ 
+-- 
+1.9.1
+

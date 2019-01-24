@@ -1,0 +1,252 @@
+From d06f3129b9f62e26fc2c39bbb78e0bc5f51da424 Mon Sep 17 00:00:00 2001
+From: Michel Thierry <michel.thierry@intel.com>
+Date: Fri, 21 Apr 2017 09:37:30 -0700
+Subject: [PATCH 33/45] drm/i915: Watchdog timeout: Ringbuffer command emission
+ for gen8+
+
+Emit the required commands into the ring buffer for starting and
+stopping the watchdog timer before/after batch buffer start during
+batch buffer submission.
+
+v2: Support watchdog threshold per context engine, merge lri commands,
+and move watchdog commands emission to emit_bb_start. Request space of
+combined start_watchdog, bb_start and stop_watchdog to avoid any error
+after emitting bb_start.
+
+Jeff: Modify to only support Gen9, which in this system assumes that
+GuC submission will always be enabled and will always handle the
+watchdog interrupts (no i915 support for handling these interrupts).
+Add some watchdog register and interrupt definition code that this
+patch expected to have been added by an earlier patch in Michel's series
+that we are not using. Fix MI_LOAD_REGISTER_IMM command in the
+stop_watchdog sequence to load 1 register and not 2.
+
+Signed-off-by: Tomas Elf <tomas.elf@intel.com>
+Signed-off-by: Ian Lister <ian.lister@intel.com>
+Signed-off-by: Arun Siluvery <arun.siluvery@linux.intel.com>
+Signed-off-by: Michel Thierry <michel.thierry@intel.com>
+Signed-off-by: Jeff McGee <jeff.mcgee@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/i915_gem_context.h |  4 ++
+ drivers/gpu/drm/i915/i915_reg.h         |  5 ++
+ drivers/gpu/drm/i915/intel_lrc.c        | 99 ++++++++++++++++++++++++++++++++-
+ drivers/gpu/drm/i915/intel_ringbuffer.h |  4 ++
+ 4 files changed, 110 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_gem_context.h b/drivers/gpu/drm/i915/i915_gem_context.h
+index 44688e2..c384644 100644
+--- a/drivers/gpu/drm/i915/i915_gem_context.h
++++ b/drivers/gpu/drm/i915/i915_gem_context.h
+@@ -157,6 +157,10 @@ struct i915_gem_context {
+ 		u32 *lrc_reg_state;
+ 		u64 lrc_desc;
+ 		int pin_count;
++		/** watchdog_threshold: hw watchdog threshold value,
++		 * in clock counts
++		 */
++		u32 watchdog_threshold;
+ 		bool initialised;
+ 	} engine[I915_NUM_ENGINES];
+ 
+diff --git a/drivers/gpu/drm/i915/i915_reg.h b/drivers/gpu/drm/i915/i915_reg.h
+index d424db5..0d0d357 100644
+--- a/drivers/gpu/drm/i915/i915_reg.h
++++ b/drivers/gpu/drm/i915/i915_reg.h
+@@ -2285,6 +2285,10 @@ enum i915_power_well_id {
+ #define RING_START(base)	_MMIO((base)+0x38)
+ #define RING_CTL(base)		_MMIO((base)+0x3c)
+ #define   RING_CTL_SIZE(size)	((size) - PAGE_SIZE) /* in bytes -> pages */
++#define RING_CNTR(base)		_MMIO((base) + 0x178)
++#define   GEN9_WATCHDOG_ENABLE		0
++#define   GEN9_WATCHDOG_DISABLE		1
++#define RING_THRESH(base)      _MMIO((base) + 0x17C)
+ #define RING_SYNC_0(base)	_MMIO((base)+0x40)
+ #define RING_SYNC_1(base)	_MMIO((base)+0x44)
+ #define RING_SYNC_2(base)	_MMIO((base)+0x48)
+@@ -2774,6 +2778,7 @@ enum i915_power_well_id {
+ #define GT_BSD_USER_INTERRUPT			(1 << 12)
+ #define GT_RENDER_L3_PARITY_ERROR_INTERRUPT_S1	(1 << 11) /* hsw+; rsvd on snb, ivb, vlv */
+ #define GT_CONTEXT_SWITCH_INTERRUPT		(1 <<  8)
++#define GT_GEN9_WATCHDOG_INTERRUPT		(1 <<  6) /* gen9+ */
+ #define GT_RENDER_L3_PARITY_ERROR_INTERRUPT	(1 <<  5) /* !snb */
+ #define GT_RENDER_PIPECTL_NOTIFY_INTERRUPT	(1 <<  4)
+ #define GT_RENDER_CS_MASTER_ERROR_INTERRUPT	(1 <<  3)
+diff --git a/drivers/gpu/drm/i915/intel_lrc.c b/drivers/gpu/drm/i915/intel_lrc.c
+index 6db84a7..0ee8a2a 100644
+--- a/drivers/gpu/drm/i915/intel_lrc.c
++++ b/drivers/gpu/drm/i915/intel_lrc.c
+@@ -1809,6 +1809,8 @@ static int gen8_emit_bb_start(struct drm_i915_gem_request *req,
+ 			      const unsigned int flags)
+ {
+ 	u32 *cs;
++	u32 num_dwords;
++	bool watchdog_running = false;
+ 	int ret;
+ 
+ 	/* Don't rely in hw updating PDPs, specially in lite-restore.
+@@ -1828,21 +1830,45 @@ static int gen8_emit_bb_start(struct drm_i915_gem_request *req,
+ 		req->ctx->ppgtt->pd_dirty_rings &= ~intel_engine_flag(req->engine);
+ 	}
+ 
+-	cs = intel_ring_begin(req, 4);
++	/* bb_start only */
++	num_dwords = 4;
++
++	/* check if watchdog will be required */
++	if (req->ctx->engine[req->engine->id].watchdog_threshold != 0) {
++		if (!req->engine->emit_start_watchdog ||
++		    !req->engine->emit_stop_watchdog)
++			return -EINVAL;
++
++		/* + start_watchdog (6) + stop_watchdog (4) */
++		num_dwords += 10;
++		watchdog_running = true;
++	}
++
++	cs = intel_ring_begin(req, num_dwords);
+ 	if (IS_ERR(cs))
+ 		return PTR_ERR(cs);
+ 
+ 	/* WaDisableCtxRestoreArbitration:bdw,chv */
+ 	*cs++ = MI_ARB_ON_OFF | MI_ARB_ENABLE;
+ 
++	if (watchdog_running) {
++		/* Start watchdog timer */
++		cs = req->engine->emit_start_watchdog(req, cs);
++	}
++
+ 	/* FIXME(BDW): Address space and security selectors. */
+ 	*cs++ = MI_BATCH_BUFFER_START_GEN8 |
+ 		(flags & I915_DISPATCH_SECURE ? 0 : BIT(8)) |
+ 		(flags & I915_DISPATCH_RS ? MI_BATCH_RESOURCE_STREAMER : 0);
+ 	*cs++ = lower_32_bits(offset);
+ 	*cs++ = upper_32_bits(offset);
+-	intel_ring_advance(req, cs);
+ 
++	if (watchdog_running) {
++		/* Cancel watchdog timer */
++		cs = req->engine->emit_stop_watchdog(req, cs);
++	}
++
++	intel_ring_advance(req, cs);
+ 	return 0;
+ }
+ 
+@@ -1962,6 +1988,51 @@ static int gen8_emit_flush_render(struct drm_i915_gem_request *request,
+ 	return 0;
+ }
+ 
++static u32 *gen9_emit_start_watchdog(struct drm_i915_gem_request *req,
++				     u32 *cs)
++{
++	struct intel_engine_cs *engine = req->engine;
++	struct i915_gem_context *ctx = req->ctx;
++	struct intel_context *ce = &ctx->engine[engine->id];
++
++	/* XXX: no watchdog support in BCS engine */
++	GEM_BUG_ON(engine->id == BCS);
++
++	/*
++	 * watchdog register must never be programmed to zero. This would
++	 * cause the watchdog counter to exceed and not allow the engine to
++	 * go into IDLE state
++	 */
++	GEM_BUG_ON(ce->watchdog_threshold == 0);
++
++	/* Set counter period */
++	*cs++ = MI_LOAD_REGISTER_IMM(2);
++	*cs++ = i915_mmio_reg_offset(RING_THRESH(engine->mmio_base));
++	*cs++ = ce->watchdog_threshold;
++	/* Start counter */
++	*cs++ = i915_mmio_reg_offset(RING_CNTR(engine->mmio_base));
++	*cs++ = GEN9_WATCHDOG_ENABLE;
++	*cs++ = MI_NOOP;
++
++	return cs;
++}
++
++static u32 *gen9_emit_stop_watchdog(struct drm_i915_gem_request *req,
++				    u32 *cs)
++{
++	struct intel_engine_cs *engine = req->engine;
++
++	/* XXX: no watchdog support in BCS engine */
++	GEM_BUG_ON(engine->id == BCS);
++
++	*cs++ = MI_LOAD_REGISTER_IMM(1);
++	*cs++ = i915_mmio_reg_offset(RING_CNTR(engine->mmio_base));
++	*cs++ = GEN9_WATCHDOG_DISABLE;
++	*cs++ = MI_NOOP;
++
++	return cs;
++}
++
+ /*
+  * Reserve space for 2 NOOPs at the end of each request to be
+  * used as a workaround for not being allowed to do lite
+@@ -2111,6 +2182,18 @@ static void execlists_set_default_submission(struct intel_engine_cs *engine)
+ 	unsigned shift = engine->irq_shift;
+ 	engine->irq_enable_mask = GT_RENDER_USER_INTERRUPT << shift;
+ 	engine->irq_keep_mask = GT_CONTEXT_SWITCH_INTERRUPT << shift;
++
++	switch (engine->id) {
++	default:
++		/* BCS engine does not support hw watchdog */
++		break;
++	case RCS:
++	case VCS:
++	case VCS2:
++	case VECS:
++		engine->irq_keep_mask |= (GT_GEN9_WATCHDOG_INTERRUPT << shift);
++		break;
++	}
+ }
+ 
+ static void i915_error_reset(struct work_struct *work) {
+@@ -2190,6 +2273,10 @@ int logical_render_ring_init(struct intel_engine_cs *engine)
+ 	engine->emit_flush = gen8_emit_flush_render;
+ 	engine->emit_breadcrumb = gen8_emit_breadcrumb_render;
+ 	engine->emit_breadcrumb_sz = gen8_emit_breadcrumb_render_sz;
++	if (INTEL_GEN(dev_priv) >= 9) {
++		engine->emit_start_watchdog = gen9_emit_start_watchdog;
++		engine->emit_stop_watchdog = gen9_emit_stop_watchdog;
++	}
+ 
+ 	ret = intel_engine_create_scratch(engine, PAGE_SIZE);
+ 	if (ret)
+@@ -2211,8 +2298,16 @@ int logical_render_ring_init(struct intel_engine_cs *engine)
+ 
+ int logical_xcs_ring_init(struct intel_engine_cs *engine)
+ {
++	struct drm_i915_private *dev_priv = engine->i915;
++
+ 	logical_ring_setup(engine);
+ 
++	/* BCS engine does not have a watchdog-expired irq */
++	if (engine->id != BCS && INTEL_GEN(dev_priv) >= 9) {
++		engine->emit_start_watchdog = gen9_emit_start_watchdog;
++		engine->emit_stop_watchdog = gen9_emit_stop_watchdog;
++	}
++
+ 	return logical_ring_init(engine);
+ }
+ 
+diff --git a/drivers/gpu/drm/i915/intel_ringbuffer.h b/drivers/gpu/drm/i915/intel_ringbuffer.h
+index d2db454..5bcce74 100644
+--- a/drivers/gpu/drm/i915/intel_ringbuffer.h
++++ b/drivers/gpu/drm/i915/intel_ringbuffer.h
+@@ -382,6 +382,10 @@ struct intel_engine_cs {
+ 
+ 	int		(*emit_flush)(struct drm_i915_gem_request *request,
+ 				      u32 mode);
++	u32 *		(*emit_start_watchdog)(struct drm_i915_gem_request *req,
++					       u32 *cs);
++	u32 *		(*emit_stop_watchdog)(struct drm_i915_gem_request *req,
++					      u32 *cs);
+ #define EMIT_INVALIDATE	BIT(0)
+ #define EMIT_FLUSH	BIT(1)
+ #define EMIT_BARRIER	(EMIT_INVALIDATE | EMIT_FLUSH)
+-- 
+1.9.1
+

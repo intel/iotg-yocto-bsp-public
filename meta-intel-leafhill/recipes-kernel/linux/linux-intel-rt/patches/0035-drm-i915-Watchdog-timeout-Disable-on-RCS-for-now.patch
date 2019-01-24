@@ -1,0 +1,36 @@
+From d9e8c56129833ceb09d3b592eda8cc0d417b4988 Mon Sep 17 00:00:00 2001
+From: Jeff McGee <jeff.mcgee@intel.com>
+Date: Wed, 26 Apr 2017 12:49:32 -0700
+Subject: [PATCH 35/45] drm/i915: Watchdog timeout: Disable on RCS for now
+
+We suspect that RCS reset by GuC following watchdog timeout is missing
+some important state restore. There is no known user at the moment who
+will be intentionally opting in for RCS watchdog but let's make sure
+that no one accidentally does.
+
+Signed-off-by: Jeff McGee <jeff.mcgee@intel.com>
+Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
+---
+ drivers/gpu/drm/i915/i915_gem_context.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/i915_gem_context.c b/drivers/gpu/drm/i915/i915_gem_context.c
+index 16cc39f..a7a0364 100644
+--- a/drivers/gpu/drm/i915/i915_gem_context.c
++++ b/drivers/gpu/drm/i915/i915_gem_context.c
+@@ -540,6 +540,12 @@ int i915_gem_context_set_watchdog(struct i915_gem_context *ctx,
+ 	if (threshold[BCS] != 0)
+ 		return -EINVAL;
+ 
++	/* Watchdog reset on RCS is not fully validated so quietly disable */
++	if (threshold[RCS] != 0) {
++		threshold[RCS] = 0;
++		DRM_WARN("Ignoring RCS watchdog enabling request\n");
++	}
++
+ 	for_each_engine(engine, dev_priv, id) {
+ 		threshold[id] = watchdog_to_clock_counts(dev_priv,
+ 							 threshold[id]);
+-- 
+1.9.1
+

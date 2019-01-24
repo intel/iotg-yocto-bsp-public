@@ -1,0 +1,31 @@
+From 88d01a7f216eacd343609890425a40f7b2140029 Mon Sep 17 00:00:00 2001
+From: Jayasankar <jayasankarx.nara@intel.com>
+Date: Tue, 20 Dec 2016 13:16:25 +0800
+Subject: [PATCH 36/42] igb: On rmmod prevent the device from being power
+ managed at run time
+
+By default, driver is loaded with runtime pm disabled, so we
+ensure that the driver does not suspend when it is unloaded.
+
+Signed-off-by: Jayasankar <jayasankarx.nara@intel.com>
+Signed-off-by: Lai, Poey Seng <poey.seng.lai@intel.com>
+Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
+---
+ drivers/net/ethernet/intel/igb/igb_main.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
+index 347338a..60ed8bf 100644
+--- a/drivers/net/ethernet/intel/igb/igb_main.c
++++ b/drivers/net/ethernet/intel/igb/igb_main.c
+@@ -3457,6 +3457,7 @@ static void igb_remove(struct pci_dev *pdev)
+ 	struct e1000_hw *hw = &adapter->hw;
+ 
+ 	pm_runtime_get_noresume(&pdev->dev);
++	pm_runtime_forbid(&pdev->dev);
+ #ifdef CONFIG_IGB_HWMON
+ 	igb_sysfs_exit(adapter);
+ #endif
+-- 
+1.9.1
+

@@ -1,0 +1,45 @@
+From 834878177f4f40015fa1337b5293628554ac798e Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Fri, 5 Oct 2018 14:26:20 -0700
+Subject: [PATCH 44/45] drm/i915: Don't use GuC submission by default
+
+Turning on GuC submission disables GPU preemption, which is an important
+feature for IOTG releases (future upstream kernels allow GuC+preemption,
+but 4.14 does not have the necessary support).  Turning on GuC also puts
+us in a configuration that doesn't receive nearly as much upstream
+validation and CI coverage, so it's not something we want to do in
+production kernels without a really good reason.
+
+This is a partial revert of 3d485f88 ("REVERTME [VPG]: drm/i915/guc:
+Turn guc submission on by default").
+
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/i915_params.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_params.c b/drivers/gpu/drm/i915/i915_params.c
+index d20cc90..d8d7be3 100644
+--- a/drivers/gpu/drm/i915/i915_params.c
++++ b/drivers/gpu/drm/i915/i915_params.c
+@@ -65,7 +65,7 @@ struct i915_params i915_modparams __read_mostly = {
+ 	.nuclear_pageflip = 0,
+ 	.edp_vswing = 0,
+ 	.enable_guc_loading = 1,
+-	.enable_guc_submission = 1,
++	.enable_guc_submission = 0,
+ 	.guc_log_level = -1,
+ 	.guc_firmware_path = NULL,
+ 	.huc_firmware_path = NULL,
+@@ -223,7 +223,7 @@ struct i915_params i915_modparams __read_mostly = {
+ 
+ i915_param_named_unsafe(enable_guc_submission, int, 0400,
+ 	"Enable GuC submission "
+-	"(-1=auto, 0=never, 1=if available [default], 2=required)");
++	"(-1=auto, 0=never [default], 1=if available, 2=required)");
+ 
+ i915_param_named(guc_log_level, int, 0400,
+ 	"GuC firmware logging level (-1:disabled (default), 0-3:enabled)");
+-- 
+1.9.1
+
