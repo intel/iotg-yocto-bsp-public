@@ -14,13 +14,11 @@
 #
 # Machine Selection
 #
-# This sets the default machine to be intel-corei7-64 if no other machine is selected:
 MACHINE = "intel-corei7-64"
 
-# This set the default kernel to linux-intel version 4.14 LTS
-PREFERRED_PROVIDER_virtual/kernel = "linux-intel"
-PREFERRED_VERSION_linux-intel = "4.14%"
-
+# Set preferred version for kernel
+PREFERRED_PROVIDER_virtual/kernel = "linux-intel-rt"
+PREFERRED_VERSION_linux-intel-rt = "4.14%"
 #
 # Leaf Hill BSP specific settings
 #
@@ -60,8 +58,23 @@ XSERVER_X86_ASPEED_AST = ""
 MACHINE_ESSENTIAL_EXTRA_RDEPENDS_remove = "intel-microcode"
 INITRD_LIVE_remove = "${DEPLOY_DIR_IMAGE}/microcode.cpio"
 
-# Make image boot to runlevel 3 by default
-APPEND = "3 snd_hda_intel.power_save=1 snd_hda_intel.power_save_controller=y scsi_mod.scan=async i915.enable_guc_loading=1 reboot=efi console=ttyS2,115200n8"
+# Add serial console and boot parameters for RT
+APPEND += "console=ttyS2,115200n8 \
+           rootwait \
+           snd_hda_intel.power_save=1 \
+           snd_hda_intel.power_save_controller=y \
+           scsi_mod.scan=async \
+           i915.enable_guc_loading=1 \
+           processor.max_cstate=0 \
+           intel_idle.max_cstate=0 \
+           clocksource=tsc \
+           tsc=reliable \
+           nmi_watchdog=0 \
+           nosoftlockup \
+           intel_pstate=disable \
+           idle=poll \
+           noht"
+
 
 WKS_FILE = "systemd-bootdisk-microcode-custom.wks"
 #
@@ -129,10 +142,32 @@ IMAGE_INSTALL_append = " kernel-modules"
 # We need the LICENSE_FLAGS below.
 LICENSE_FLAGS_WHITELIST += "commercial"
 
+# Take note that as we are building 3rd party ingredient.
+# We need the LICENSE_FLAGS below.
+LICENSE_FLAGS_WHITELIST += "commercial"
+
+# Enable the security flags as per SDL 4.0 requirement
+require conf/distro/include/security_flags.inc
+SECURITY_CFLAGS = "-fstack-protector-strong -pie -fpie -D_FORTIFY_SOURCE=2 -O2 -Wformat -Wformat-security"
+SECURITY_NO_PIE_CFLAGS = "-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -Wformat -Wformat-security"
+SECURITY_LDFLAGS = "-Wl,-z,relro,-z,now,-z,noexecstack"
+
+# GCC Sanitizers does not compiles with PIE
+SECURITY_CFLAGS_pn-gcc-sanitizers = "${SECURITY_NO_PIE_CFLAGS}"
+
+# Include rt test in image
+IMAGE_INSTALL_append = " rt-tests-ptest"
+
+# Add WKS file with updated boot parameters
+WKS_FILE = "systemd-bootdisk-microcode-custom-rt.wks"
+
 # Use systemd init instead of sysV init
 DISTRO_FEATURES_append = " systemd"
 VIRTUAL-RUNTIME_init_manager = "systemd"
 DISTRO_FEATURES_BACKFILL_CONSIDERED = "sysvinit"
+
+# Add "pam" to DISTRO_FEATURES
+DISTRO_FEATURES_append = " pam"
 
 #
 # Where to place downloads
@@ -180,12 +215,12 @@ DISTRO_FEATURES_BACKFILL_CONSIDERED = "sysvinit"
 #
 # The distribution setting controls which policy settings are used as defaults.
 # The default value is fine for general Yocto project use, at least initially.
-# Ultimately when creating custom policy, people will likely end up subclassing
+# Ultimately when creating custom policy, people will likely end up subclassing 
 # these defaults.
 #
 DISTRO ?= "poky"
 # As an example of a subclass there is a "bleeding" edge policy configuration
-# where many versions are set to the absolute latest code from the upstream
+# where many versions are set to the absolute latest code from the upstream 
 # source control systems. This is just mentioned here as an example, its not
 # useful to most new users.
 # DISTRO ?= "poky-bleeding"
@@ -205,9 +240,9 @@ DISTRO ?= "poky"
 PACKAGE_CLASSES ?= "package_rpm"
 
 #
-# SDK/ADT target architecture
+# SDK target architecture
 #
-# This variable specifies the architecture to build SDK/ADT items for and means
+# This variable specifies the architecture to build SDK items for and means
 # you can build the SDK packages for architectures other than the machine you are
 # running the build on (i.e. building i686 packages on an x86_64 host).
 # Supported values are i686 and x86_64
@@ -228,14 +263,14 @@ PACKAGE_CLASSES ?= "package_rpm"
 #  "tools-sdk"      - add development tools (gcc, make, pkgconfig etc.)
 #  "tools-debug"    - add debugging tools (gdb, strace)
 #  "eclipse-debug"  - add Eclipse remote debugging support
-#  "tools-profile"  - add profiling tools (oprofile, exmap, lttng, valgrind)
+#  "tools-profile"  - add profiling tools (oprofile, lttng, valgrind)
 #  "tools-testapps" - add useful testing tools (ts_print, aplay, arecord etc.)
 #  "debug-tweaks"   - make an image suitable for development
 #                     e.g. ssh root access has a blank password
 # There are other application targets that can be used here too, see
 # meta/classes/image.bbclass and meta/classes/core-image.bbclass for more details.
 # We default to enabling the debugging tweaks.
-EXTRA_IMAGE_FEATURES = "debug-tweaks tools-testapps"
+EXTRA_IMAGE_FEATURES ?= "debug-tweaks"
 
 #
 # Additional image features
@@ -246,7 +281,6 @@ EXTRA_IMAGE_FEATURES = "debug-tweaks tools-testapps"
 #   - 'buildstats' collect build statistics
 #   - 'image-mklibs' to reduce shared library files size for an image
 #   - 'image-prelink' in order to prelink the filesystem image
-#   - 'image-swab' to perform host system intrusion detection
 # NOTE: if listing mklibs & prelink both, then make sure mklibs is before prelink
 # NOTE: mklibs also needs to be explicitly enabled for a given image, see local.conf.extended
 USER_CLASSES ?= "buildstats image-mklibs image-prelink"
@@ -286,13 +320,17 @@ PATCHRESOLVE = "noop"
 # shutdown the build. If there is less that 100MB or 1K inodes, perform a hard abort
 # of the build. The reason for this is that running completely out of space can corrupt
 # files and damages the build in ways which may not be easily recoverable.
-BB_DISKMON_DIRS = "\
+# It's necesary to monitor /tmp, if there is no space left the build will fail
+# with very exotic errors.
+BB_DISKMON_DIRS ??= "\
     STOPTASKS,${TMPDIR},1G,100K \
     STOPTASKS,${DL_DIR},1G,100K \
     STOPTASKS,${SSTATE_DIR},1G,100K \
+    STOPTASKS,/tmp,100M,100K \
     ABORT,${TMPDIR},100M,1K \
     ABORT,${DL_DIR},100M,1K \
-    ABORT,${SSTATE_DIR},100M,1K"
+    ABORT,${SSTATE_DIR},100M,1K \
+    ABORT,/tmp,10M,1K"
 
 #
 # Shared-state files from other locations
@@ -313,23 +351,32 @@ BB_DISKMON_DIRS = "\
 #file://.* file:///some/local/dir/sstate/PATH"
 
 #
+# Yocto Project SState Mirror
+#
+# The Yocto Project has prebuilt artefacts available for its releases, you can enable
+# use of these by uncommenting the following line. This will mean the build uses
+# the network to check for artefacts at the start of builds, which does slow it down
+# equally, it will also speed up the builds by not having to build things if they are
+# present in the cache. It assumes you can download something faster than you can build it
+# which will depend on your network.
+#
+#SSTATE_MIRRORS ?= "file://.* http://sstate.yoctoproject.org/2.5/PATH;downloadfilename=PATH"
+
+#
 # Qemu configuration
 #
 # By default qemu will build with a builtin VNC server where graphical output can be
-# seen. The two lines below enable the SDL backend too. This assumes there is a
-# libsdl library available on your build system.
-#PACKAGECONFIG_append_pn-qemu-native = " sdl"
-#PACKAGECONFIG_append_pn-nativesdk-qemu = " sdl"
+# seen. The two lines below enable the SDL backend too. By default libsdl-native will
+# be built, if you want to use your host's libSDL instead of the minimal libsdl built
+# by libsdl-native then uncomment the ASSUME_PROVIDED line below.
+PACKAGECONFIG_append_pn-qemu-native = " sdl"
+PACKAGECONFIG_append_pn-nativesdk-qemu = " sdl"
 #ASSUME_PROVIDED += "libsdl-native"
-
 
 # CONF_VERSION is increased each time build/conf/ changes incompatibly and is used to
 # track the version of this file when it was generated. This can safely be ignored if
 # this doesn't mean anything to you.
 CONF_VERSION = "1"
 
-# Enable the security flags as per SDL 4.0 requirement
-require conf/distro/include/security_flags.inc
-SECURITY_CFLAGS = "-fstack-protector-strong -pie -fpie -D_FORTIFY_SOURCE=2 -O2 -Wformat -Wformat-security"
-SECURITY_NO_PIE_CFLAGS = "-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -Wformat -Wformat-security"
-SECURITY_LDFLAGS = "-Wl,-z,relro,-z,now,-z,noexecstack"
+# Set preferred version for linuxptp
+PREFERRED_VERSION_linuxptp = "2.0"

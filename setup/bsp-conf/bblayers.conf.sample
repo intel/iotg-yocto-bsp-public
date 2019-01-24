@@ -1,6 +1,6 @@
-# LAYER_CONF_VERSION is increased each time build/conf/bblayers.conf
+# POKY_BBLAYERS_CONF_VERSION is increased each time build/conf/bblayers.conf
 # changes incompatibly
-LCONF_VERSION = "6"
+POKY_BBLAYERS_CONF_VERSION = "2"
 
 BBPATH = "${TOPDIR}"
 BBFILES ?= ""
@@ -11,13 +11,15 @@ BBLAYERS ?= " \
   ##OEROOT##/meta-yocto-bsp \
   ##OEROOT##/meta-intel \
   ##OEROOT##/meta-tlk \
-  ##OEROOT##/meta-intel-middleware \
   ##OEROOT##/meta-openembedded/meta-filesystems \
+  ##OEROOT##/meta-openembedded/meta-gnome \
+  ##OEROOT##/meta-openembedded/meta-multimedia \
   ##OEROOT##/meta-openembedded/meta-networking \
   ##OEROOT##/meta-openembedded/meta-oe \
   ##OEROOT##/meta-openembedded/meta-python \
-  ##OEROOT##/meta-openembedded/meta-multimedia \
-  ##OEROOT##/meta-qt5 \
+  ##OEROOT##/meta-openembedded/meta-xfce \
   ##OEROOT##/meta-measured \
   ##OEROOT##/meta-intel-leafhill \
+  ##OEROOT##/meta-intel-middleware \
+  ##OEROOT##/meta-intel-tsn \
   "

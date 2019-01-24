@@ -5,6 +5,10 @@
 # proper build environment for Yocto BSP build.
 #
 
+# Configuration
+IMAGE=( rt rt-sdk kernel custom )
+IMG_BASE="core-image-rt-tsn"
+
 network_proxy_error() {
 cat << EOF
 ERROR: wget fail to fetch $HTTP_PATH/$TEST_FILE
@@ -48,7 +52,6 @@ test_git () {
 	if [ ! -f ${GIT_PATH} ]
 	then
 		echo "git is not installed on your system."
-		sleep 3
 		warn_and_exit "Please use software package manager like apt-get or yum to install it"
 	fi
 }
@@ -66,18 +69,20 @@ test_git_proxy () {
 check_distro () {
         distro=$(cat /etc/*-release | sed -e "1q;d" | cut -d"=" -f2)
         version=$(cat /etc/*-release | sed -e "2q;d" | cut -d"=" -f2)
-        ver_fail=0
+        ver_fail=1
 
         case $distro in
                 Ubuntu)
-                        if [ $version != "14.04" ]; then
-                                ver_fail=1
+                        if [ $version == "14.04" ]; then
+                                ver_fail=0
+                        elif [ $version == "16.04" ]; then
+                                ver_fail=0
                         fi
                         ;;
 
                 Fedora)
-                        if [ $version != "21" ]; then
-                                ver_fail=1
+                        if [ $version == "21" ]; then
+                                ver_fail=0
                         fi
                         ;;
                 *)
@@ -129,7 +134,6 @@ test_python () {
 	if [ ! -f $PYTHON_PATH ]
 	then
 		echo "python is not installed on your system."
-		sleep 3
 		warn_and_exit "Please use software package manager like apt-get or yum to install it"
 	fi
 }
@@ -145,11 +149,9 @@ test_network_fetching () {
 	if [ ! -f ${TEST_FILE} ]
 	then
 		network_proxy_error
-		sleep 5
 		exit 1
 	else
 		echo "SUCCESS: wget test is healthy."
-		sleep 3
 		rm ${TEST_FILE}
 	fi
 }
@@ -174,7 +176,6 @@ create_build_area () {
 	if [ ! -d "yocto_build" ]
 	then
 		echo "Creating new build directory ..."
-		sleep 3
 		mkdir yocto_build
 	else
 		echo "Build directory yocto_build already exists"
@@ -183,7 +184,6 @@ create_build_area () {
 		rm -rf d* L* m* o* s* V* build/cache build/conf build/tmp build/bitbake.lock bitbake build.sh
 		rm -rf .git*
 		rm -rf .templateconf
-		sleep 3
 	fi
 
 	cd ${cur_dir}
@@ -193,7 +193,6 @@ bsp_ingredient_update () {
 	cur_dir=$(pwd)
 
 	echo "Proceed to update ingredients ..."
-	sleep 3
 
 	cd ..
 
@@ -225,18 +224,17 @@ rebuild_message () {
 	echo "Then, run									"
 	echo "$ source oe-init-build-env 						"
 	echo -e "									"
-	echo "To build a common Sato image [without dev tools],				"
-	echo "$ bitbake core-image-sato							"
+	echo "To build a common RT image [without dev tools],				"
+	echo "$ bitbake ${IMG_BASE}							"
 	echo -e "									"
-	echo "To build a Full Sato image [with dev tools, build-essentials, etc],	"
-	echo "$ bitbake core-image-sato-sdk						"
+	echo "To build a Full RT image [with dev tools, build-essentials, etc],	"
+	echo "$ bitbake ${IMG_BASE}-sdk						"
 	echo -e "									"
 	echo "To compile kernel bzImage only,						"
-	echo "$ bitbake linux-intel							"
+	echo "$ bitbake linux-intel-rt							"
 	echo "=========================================================================="
 
 	cd ${cur_dir}
-	sleep 10
 }
 
 bsp_build () {
@@ -246,22 +244,25 @@ bsp_build () {
 
 	if [ "$image" = "custom" ]; then
 		echo "Building BSP with custom image ..."
-		./build.sh custom $machine
-	elif [ "$image" = "sato-sdk" ]; then
-		echo "Building BSP with core-image-sato-sdk image ..."
-		./build.sh sato-sdk $machine
+		./build.sh custom
+	elif [ "$image" = "rt" ]; then
+		echo "Building BSP with ${IMG_BASE} image ..."
+		./build.sh rt
+	elif [ "$image" = "rt-sdk" ]; then
+		echo "Building BSP with ${IMG_BASE}-sdk image ..."
+		./build.sh rt-sdk
 	elif [ "$image" = "kernel" ]; then
 		echo "Building kernel image only ..."
-		./build.sh kernel $machine
+		./build.sh kernel
 	else
-		echo "Building BSP with core-image-sato image ..."
-		./build.sh sato $machine
+		echo "Building BSP with ${IMG_BASE}-rt image ..."
+		./build.sh rt-sdk
 	fi
 
 	cd ${cur_dir}
 }
 
-build_bsp_sato () {
+build_bsp_rt () {
 	cur_dir=$(pwd)
 
 	prepare_env
@@ -270,29 +271,24 @@ build_bsp_sato () {
 	bsp_build
 
 	echo "Entering build status checker ..."
-	sleep 3
 
 	cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64/
 
-	if [ ! -f core-image-sato-*.hddimg ]
+	if [ ! -f ${IMG_BASE}*.hddimg ]
 	then
 		echo "BSP Build: FAILED!!!"
-		sleep 3
 		echo "HDDIMG was not generated!"
-		sleep 3
 		echo "Please check the build log for detailed failure."
-		sleep 3
 		exit 1
 	else
 		echo "BSP Build: PASSED!!!"
-		sleep 3
 		rebuild_message
 	fi
 
 	cd ${cur_dir}
 }
 
-build_bsp_sato_sdk () {
+build_bsp_rt_sdk () {
 	cur_dir=$(pwd)
 
 	prepare_env
@@ -301,22 +297,17 @@ build_bsp_sato_sdk () {
 	bsp_build
 
 	echo "Entering build status checker ..."
-	sleep 3
 
 	cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64/
 
-	if [ ! -f core-image-sato-sdk-*.hddimg ]
+	if [ ! -f ${IMG_BASE}-sdk-*.hddimg ]
 	then
 		echo "BSP Build: FAILED!!!"
-		sleep 3
 		echo "HDDIMG was not generated!"
-		sleep 3
 		echo "Please check the build log for detailed failure."
-		sleep 3
 		exit 1
 	else
 		echo "BSP Build: PASSED!!!"
-		sleep 3
 		rebuild_message
 	fi
 
@@ -362,59 +353,80 @@ build_kernel () {
 	bsp_build
 
 	echo "Entering build status checker ..."
-	sleep 3
 
 	cd ../yocto_build/build/tmp/deploy/images/intel-corei7-64/
 
 	if [ ! -f bzImage ]
 	then
 		echo "Kernel Build: FAILED!!!"
-		sleep 5
 		echo "bzImage was not generated."
-		sleep 5
 		echo "Please check the build log for detailed failure."
-		sleep 5
 		exit 1
 	else
 		echo "Kernel Build: PASSED!!!"
-		sleep 3
 		rebuild_message
 	fi
 
 	cd ${cur_dir}
 }
 
-echo -e "\nSelect an option: "
-echo -e "1. Build kernel image with CAVS HD Audio driver (Default)\n2. Build kernel image with CAVS SSP Audio driver"
-echo -e "Default option is build kernel image with CAVS HD Audio driver. If no input is received within 20 secs, default will be used."
-read -t 20 -p "" ans_to_patch
+show_help (){
+    echo "Usage		: ./setup.sh [option 1] [option 2] [option 3]...
+Valid Arguments	:
 
-case $ans_to_patch in
-	1)
-		# CAVS HD Audio
-		machine="CAVS-HDA"
-		;;
-	2)
-		# CAVS SSP Audio
-		machine="CAVS-SSP"
-		;;
-	*)
-		machine="CAVS-HDA"
-		;;
-esac
+    OPTIONAL
+    --------
+    -i <image name>	Image to be 'bitbake'
+                        Valid image: ${IMAGE[@]}
 
-echo -e "\nSelect an option: \n1. core-image-sato-sdk (Default)\n2. core-image-sato\n3. linux-kernel\n4. custom"
-echo -e "Default build target is core-image-sato-sdk. If no input is received within 20 secs, default target will be built."
-read -t 20 -p "" ans
+    -h			Display information.
+"
+}
 
+# Get arguments
+while getopts "i:h" OPTION
+do
+    case $OPTION in
+        i)
+            image_name=$OPTARG
+            ;;
+        h)
+            show_help
+            exit
+            ;;
+        \?)
+            echo -e "Unrecognized option(s)!!! Try 'setup.sh -h' for more options"
+            exit
+            ;;
+    esac
+done
+
+if [ -z "${image_name}" ]; then
+	echo -e "\nSelect an option: \n1. ${IMG_BASE}-sdk (Default)\n2. ${IMG_BASE}\n3. linux-kernel\n4. custom"
+	echo -e "Default build target is core-image-rt-sdk. If no input is received within 20 secs, default target will be built."
+	read -t 20 -p "" ans
+else
+	case ${image_name} in
+		rt-sdk)
+			ans="1";;
+		rt)
+			ans="2";;
+		kernel)
+			ans="3";;
+		custom)
+			ans="4";;
+		*)
+			ans="1";;
+	esac
+fi
 case $ans in
 	1)
-		image="sato-sdk"
-		build_bsp_sato_sdk
+		image="rt-sdk"
+		build_bsp_rt_sdk
 		;;
 	2)
-		image="sato"
-		build_bsp_sato
+		image="rt"
+		build_bsp_rt
 		;;
 	3)
 		image="kernel"
@@ -425,8 +437,8 @@ case $ans in
 		build_bsp_custom
 		;;
 	*)
-		image="sato-sdk"
-		build_bsp_sato_sdk
+		image="rt-sdk"
+		build_bsp_rt_sdk
 		;;
 esac
 

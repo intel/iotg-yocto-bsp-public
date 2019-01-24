@@ -3,23 +3,13 @@
 # Configuration
 ########################################################################
 
-# Yocto Project Poky based Linux
+# Production Kernel based Linux
 KVER="4.14"
+IMG_BASE="core-image-rt-tsn"
 
 ########################################################################
 # End of configuration
 ########################################################################
-
-apply_kernel_patch () {
-	cur_dir=$(pwd)
-
-	cd meta-intel-leafhill/recipes-kernel/linux/linux-intel
-
-	git add --all .
-	git commit -s -m "meta-intel: linux-intel_4.14: update kernel patch for Apollo Lake BSP"
-
-	cd ${cur_dir}
-}
 
 apply_combined_repo_commit () {
 	echo   "Initial Repo Population: Apollo Lake BSP for linux-yocto ver-${KVER}" > VERSION.txt
@@ -29,29 +19,16 @@ apply_combined_repo_commit () {
 	git commit -F VERSION.txt
 }
 
-apply_machine_local_conf () {
-	cur_dir=$(pwd)
-	cd ../..
-
-	case $machine in
-		CAVS-SSP)
-			# Need to turn on AUDIO_FEATURES = "ssp"
-			echo "AUDIO_FEATURES = \"ssp\"" >> yocto_build/build/conf/local.conf
-			;;
-		*)
-			# Default settings.
-			# Do nothing.
-			;;
-	esac
-
-	cd ${cur_dir}
-}
-
-build_sato_image () {
+build_rt_image () {
 	cur_dir=$(pwd)
 
 	source oe-init-build-env
-	apply_machine_local_conf
+
+	# If there's no change in kernel srcrev/patch name, devsrc/kernel modules fail to detect that
+	# linux-yocto build has changed that results in an old copy of kernel-devsrc from sstate. The
+	# modules may also not get compiled again.
+	# Make sure that we clean sstate before building any image.
+	bitbake -c cleansstate virtual/kernel
 
 	case $target in
 		custom)
@@ -64,16 +41,16 @@ build_sato_image () {
 			echo "$ bitbake <image_type>									"
 			echo "												"
 			echo "Supported image type:									"
-			echo "- core-image-sato										"
-			echo "- core-image-sato-sdk									"
+			echo "- ${IMG_BASE}										"
+			echo "- ${IMG_BASE}-sdk									"
 			echo "=========================================================================================="
 			exit 0
 			;;
-		sato-sdk)
-			bitbake core-image-sato-sdk
+		rt-sdk)
+			bitbake ${IMG_BASE}-sdk
 			;;
 		*)
-			bitbake core-image-sato
+			bitbake ${IMG_BASE}
 			;;
 	esac
 
@@ -84,10 +61,8 @@ build_bzImage () {
 	cur_dir=$(pwd)
 
 	source oe-init-build-env
-	apply_machine_local_conf
 
 	echo "Start baking ..."
-	sleep 3
 	bitbake virtual/kernel
 
 	cd ${cur_dir}
@@ -97,19 +72,16 @@ build_bsp () {
 	cur_dir=$(pwd)
 
 	echo "Fetching in Apollo Lake BSP ingredient now"
-	sleep 3
 	setup/combo-layer -c setup/combolayer.conf init
 	apply_combined_repo_commit
-	apply_kernel_patch
 
 	echo "========================================================================="
 	echo "By default, this setup script will create a brand new repo which combines"
 	echo "meta-intel BSP layer and Yocto Project poky distro.                      "
 	echo "If you don't need git tracking, please 'rm -rf .git' now                 "
 	echo "========================================================================="
-	sleep 3
 
-	build_sato_image
+	build_rt_image
 
 	cd ${cur_dir}
 }
@@ -118,17 +90,14 @@ build_kernel () {
 	cur_dir=$(pwd)
 
 	echo "Fetching in Apollo Lake BSP ingredient now"
-	sleep 3
 	setup/combo-layer -c setup/combolayer.conf init
 	apply_combined_repo_commit
-	apply_kernel_patch
 
 	echo "========================================================================="
 	echo "By default, this setup script will create a brand new repo which combines"
 	echo "meta-intel BSP layer and Yocto Project poky distro.                      "
 	echo "If you don't need git tracking, please 'rm -rf .git' now                 "
 	echo "========================================================================="
-	sleep 3
 
 	build_bzImage
 
@@ -136,11 +105,12 @@ build_kernel () {
 }
 
 target=$1
-machine=$2
 
 case $1 in
-	kernel)		build_kernel;;
-	*)		build_bsp;;
+	kernel)
+		build_kernel;;
+	*)
+		build_bsp;;
 esac
 
 exit 0
