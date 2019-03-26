@@ -13,6 +13,6 @@ RDEPENDS_packagegroup-core-audio-essential = "\
     faad2 \
     libsndfile1 \
     libpcap \
-    pulseaudio \
+    pulseaudio-server \
     wavpack \
     "
