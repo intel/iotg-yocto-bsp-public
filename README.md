@@ -11,7 +11,7 @@ This Intel Atom E3900 BSP contains the following essential components for buildi
 - One-Click setup script for setting up build environment from scratch
 - meta-intel-leafhill layer for Linux kernel configurations
 - meta-intel-middleware layer for user space packages and configurations
-- template of local.conf for building core-image-sato-sdk and core-image-sato image
+- template of local.conf for building core-image-rt-tsn-sdk and core-image-rt-tsn image
 
 Minimum host system configuration for Yocto BSP build:
 - Intel Core i7 multi-core (4 cores)
@@ -25,20 +25,17 @@ See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/S
 ## Getting Started with Yocto BSP for Intel Atom E3900 SoC
 - Make sure you have setup SSH connection to GitHub for recipe to pull Linux kernel.
 - Download this Yocto BSP from GitHub via SSH or HTTPS to your host machine.
-   <br> - HTTPS directly from https://github.com/01org/iotg-yocto-bsp-public.git by selecting the appropriate branch/release version, e.g. e3900/master, from the top left menu; or
-   <br> - SSH using following command (release_version, e.g. e3900/master)
+   <br> - HTTPS directly from https://github.com/01org/iotg-yocto-bsp-public.git by selecting the appropriate branch/release version, e.g. e3900/preempt-rt), from the top left menu; or
+   <br> - SSH using following command (release_version, e.g. e3900/preempt-rt)
 ```
-      git clone https://github.com/01org/iotg-yocto-bsp-public.git -b e3900/master
+      git clone https://github.com/01org/iotg-yocto-bsp-public.git -b e3900/preempt-rt)
 ```
 - This git tree will maintained as single product branch. In order to get code base from previous release, you need to checkout to the specific tag.
 
-   <br> - For Intel Atom E3900 Maintenance Release Version 3.1:
-```
-      git checkout E3900-MR3.1
 ```
    <br> - For Intel Atom E3900 Maintenance Release Version 4:
 ```
-      git checkout E3900-MR4
+      git checkout MR4rt-B-01
 ```
 - After checking out one of the release tags, you will noticed that you are in 'detached HEAD' state. You can now create a local git branch to host the code.
 ```
@@ -48,26 +45,16 @@ See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/S
 
 **NOTE: Do not interrupt the setup.sh execution especially during local repository initialization**
 
-#### Default configuration set for core-image-sato image in this BSP:
+#### Default configuration set for core-image-rt-tsn image in this BSP:
 - meta-intel-middleware contains i915 graphics driver. However, they are dependent on gstreamer plugins.
   <br> These plugins require license flags set to "commercial" in order to be included in the build.
   <br> You will find LICENSE_FLAGS_WHITELIST = "commercial" already set by the template in the local.conf for your build.
 
 - To enable full graphics video and display in the image, we have included a packagegroup tailored to showcase the graphics capability on this platform.
 You will find the packagegroup-graphics-essential in meta-intel-middleware.
-This packagegroup is set to build into core-image-sato-sdk by default in this BSP.
+This packagegroup is set to build into core-image-rt-tsn-sdk by default in this BSP.
 
-- To execute 64-bit standalone applications, you need to enable multilib environment in your image.
- The configurations below is not set by default, to enable multilib, please set the configuration below in your build/local.conf.
-```
- require conf/multilib.conf
- DEFAULTTUNE = "corei7-64"
- MULTILIBS = "multilib:lib32"
- DEFAULTTUNE_virtclass-multilib-lib32 = "corei7-32"
- PACKAGE_EXCLUDE_pn-<Image name> = "lib32-libgmp-dev lib32-xtrans-dev lib32-python3-core"
-```
-
-Image name can be core-image-sato or core-image-sato-sdk. The above libraries are known to cause issue on
+Image name can be core-image-rt-tsn or core-image-rt-tsn-sdk. The above libraries are known to cause issue on
 multilib image and should be excluded.
 
 At the end of a successful build, you should have a live image that you can boot from a USB flash drive.
@@ -80,8 +67,8 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
 ```
 
 - The setup.sh script will prompt you with a menu for choice of build.
-   By default, the core-image-sato-sdk will be build.
-   Otherwise, you may key in the numerical selection for building core-image-sato or Linux kernel for the bzImage
+   By default, the core-image-rt-tsn-sdk will be build.
+   Otherwise, you may key in the numerical selection for building core-image-rt-tsn or Linux kernel for the bzImage
    or setting up for a custom build.
 
 - Setup.sh will perform the following tasks prior to building Yocto BSP image:
@@ -90,7 +77,7 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
 	- check for required software dependencies (this is only performed for Linux Ubuntu 14.04)
 	- test python, network, gitconfig and git proxy
 	- Prepare sources
-	- download Linux kernel v4.14.92 from Intel Linux Kernel from github.
+	- download Linux kernel v4.14.93-rt53 from Intel Linux Kernel from github.
 	- combolayer downloads Poky Sumo v2.5.1 and other meta layers based on setup/combolayer.conf
 	- setup bblayers for bitbake build
 	- setup local.conf for bitbake build
@@ -104,8 +91,8 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
 
    Your bootable image location is:-
    <your_path>/yocto_build/build/tmp/deploy/images/intel-corei7-64/
-	- HDDIMG image file name: core-image-sato-sdk-intel-corei7-64-<build-date-time>.hddimg
-	- WIC image file name: core-image-sato-sdk-intel-corei7-64-<build-date-time>.rootfs.wic
+	- HDDIMG image file name: core-image-rt-tsn-sdk-intel-corei7-64-<build-date-time>.hddimg
+	- WIC image file name: core-image-rt-tsn-sdk-intel-corei7-64-<build-date-time>.rootfs.wic
 ### For Subsequent Build
 If you need to modify the recipes or configurations, make your customization in the yocto_build folder after running the ./setup script on your host machine.
 
@@ -116,18 +103,18 @@ If you need to modify the recipes or configurations, make your customization in 
 	# When you source in your yocto_build directory, you will be automatically be routed to the build/ directory
 	$ source oe-init-build-env
 
-	# For core-image-sato
-	$ bitbake core-image-sato
+	# For core-image-tsn
+	$ bitbake core-image-tsn
 
-	# For core-image-sato-sdk
-	$ bitbake core-image-sato-sdk
+	# For core-image-rt-tsn-sdk
+	$ bitbake core-image-rt-tsn-sdk
 
 	# For linux-kernel bzImage only
-	$ bitbake linux-intel
+	$ bitbake linux-intel-rt
 ```
 
 ### Kernel Source
-Intel Atom E3900 BSP utilize linux-intel kernel from Intel Github which is hosted in [Intel Github repositories](https://github.com/intel/linux-intel-lts). The branch for Intel Atom E3900 BSP kernel is 4.14/base.
+Intel Atom E3900 BSP utilize linux-intel kernel from Intel Github which is hosted in [Intel Github repositories](https://github.com/intel/linux-intel-lts). The branch for Intel Atom E3900 BSP kernel is 4.14/preempt-rt.
 
 ### Features supported
 To view the full list of supported features, please refer BSP release notes in [Technical Libary for Intel Atom E3900 Series](https://www.intel.com/content/www/us/en/embedded/products/apollo-lake/technical-library.html)
