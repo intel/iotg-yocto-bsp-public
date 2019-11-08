@@ -19,7 +19,7 @@ MACHINE = "intel-corei7-64"
 
 # This set the default kernel to linux-intel version 4.14 LTS
 PREFERRED_PROVIDER_virtual/kernel = "linux-intel"
-PREFERRED_VERSION_linux-intel = "4.14%"
+PREFERRED_VERSION_linux-intel = "4.19%"
 
 #
 # Leaf Hill BSP specific settings
@@ -61,9 +61,9 @@ MACHINE_ESSENTIAL_EXTRA_RDEPENDS_remove = "intel-microcode"
 INITRD_LIVE_remove = "${DEPLOY_DIR_IMAGE}/microcode.cpio"
 
 # Make image boot to runlevel 3 by default
-APPEND = "3 snd_hda_intel.power_save=1 snd_hda_intel.power_save_controller=y scsi_mod.scan=async i915.enable_guc_loading=1 reboot=efi console=ttyS2,115200n8"
+APPEND = "3 snd_hda_intel.power_save=1 snd_hda_intel.power_save_controller=y scsi_mod.scan=async i915.enable_guc=2 reboot=efi console=ttyS2,115200n8 intel_iommu=on,ipu_off"
 
-WKS_FILE = "systemd-bootdisk-microcode-custom.wks"
+WKS_FILE = "systemd-bootdisk-microcode-custom.wks.in"
 #
 # User Space Configuration Override for Apollo Lake Platform
 #
@@ -74,15 +74,18 @@ PREFERRED_PROVIDER_jpeg-native = "jpeg-native"
 # Enable xserver-xorg
 IMAGE_INSTALL_append = " xserver-xorg"
 
-# Enable vp8dec for gstreamer1.0-plugins-good
-PACKAGECONFIG_append_pn-gstreamer1.0-plugins-good = "vpx"
+# Enable vp8dec on gstreamer1.0-plugins-good
+PACKAGECONFIG_append_pn-gstreamer1.0-plugins-good = " vpx"
 
-# Multi-libraries support is by default "OFF"
+# Enable msdk on gstreamer1.0-plugins-bad
+PACKAGECONFIG_append_pn-gstreamer1.0-plugins-bad = " msdk"
+
+# Multi-libraries support is now "ON"
 # Please uncomment the 4 lines below to enable multilib support.
-#require conf/multilib.conf
-#DEFAULTTUNE = "corei7-64"
-#MULTILIBS = "multilib:lib32"
-#DEFAULTTUNE_virtclass-multilib-lib32 = "corei7-32"
+require conf/multilib.conf
+DEFAULTTUNE = "corei7-64"
+MULTILIBS = "multilib:lib32"
+DEFAULTTUNE_virtclass-multilib-lib32 = "corei7-32"
 
 # Install autoconf-archive
 IMAGE_INSTALL_append = " autoconf-archive"
@@ -97,9 +100,12 @@ CORE_IMAGE_EXTRA_INSTALL += "wayland weston weston-examples"
 # Install mesa glxinfo
 IMAGE_INSTALL_append = " mesa-glxinfo"
 
+# Set preferred version for tpm
+PREFERRED_VERSION_tpm2-tss = "2%"
+
 # Install TPM2.0-TSS in image
-IMAGE_INSTALL_append = " libtss2 libtss2-dev libtctidevice libtctidevice-dev libtctisocket libtctisocket-dev"
-IMAGE_INSTALL_append = " libtss2-staticdev libtctisocket-staticdev libtctidevice-staticdev"
+IMAGE_INSTALL_append = " libtss2-mu libtss2-mu-dev libtss2-mu-staticdev libtss2-tcti-device libtss2-tcti-device-dev libtss2-tcti-device-staticdev"
+IMAGE_INSTALL_append = " libtss2-tcti-mssim libtss2-tcti-mssim-dev libtss2-tcti-mssim-staticdev libtss2 libtss2-dev libtss2-staticdev"
 
 # Install tpm2-abrmd in image
 IMAGE_INSTALL_append = " tpm2-abrmd"
@@ -124,6 +130,16 @@ IMAGE_INSTALL_append = " xinit-env"
 
 # By default, we want our OS to includes all kernel modules.
 IMAGE_INSTALL_append = " kernel-modules"
+
+# Install HDCP
+IMAGE_INSTALL_append = " hdcp"
+
+# Install opencl-headers and opencl-clhpp
+IMAGE_INSTALL_append = " opencl-headers-dev opencl-clhpp-dev"
+ALLOW_EMPTY_opencl-headers_pn-opencl-headers = "1"
+
+# Install open source media driver
+IMAGE_INSTALL_append = " gmmlib intel-mediasdk intel-media-driver"
 
 # Take note that as we are building 3rd party ingredient.
 # We need the LICENSE_FLAGS below.
