@@ -10,7 +10,6 @@ BBLAYERS ?= " \
   ##OEROOT##/meta-poky \
   ##OEROOT##/meta-yocto-bsp \
   ##OEROOT##/meta-intel \
-  ##OEROOT##/meta-tlk \
   ##OEROOT##/meta-intel-middleware \
   ##OEROOT##/meta-openembedded/meta-filesystems \
   ##OEROOT##/meta-openembedded/meta-networking \
@@ -18,6 +17,6 @@ BBLAYERS ?= " \
   ##OEROOT##/meta-openembedded/meta-python \
   ##OEROOT##/meta-openembedded/meta-multimedia \
   ##OEROOT##/meta-qt5 \
-  ##OEROOT##/meta-measured \
   ##OEROOT##/meta-intel-leafhill \
+  ##OEROOT##/meta-secure-core/meta-tpm2 \
   "
