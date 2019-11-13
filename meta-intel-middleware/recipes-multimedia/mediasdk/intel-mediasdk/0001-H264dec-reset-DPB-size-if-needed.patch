@@ -1,0 +1,54 @@
+From a4ede56580cae0154e9a1f2f6871dd8582f15089 Mon Sep 17 00:00:00 2001
+From: Haihao Xiang <haihao.xiang@intel.com>
+Date: Fri, 16 Aug 2019 09:17:34 +0800
+Subject: [PATCH] H264dec: reset DPB size if needed.
+
+A stream may contain multiple (SPS, PPS) parameters at the beginning,
+use one (SPS, PPS) as active parameters then swith to another (SPS,
+PPS) at next IDR picture. Different (SPS, PPS) pairs may require different
+DPB sizes, so resetting DPB size in the view is needed when adding a
+IDR slice which requires a new DPB buffer to a view.
+
+Sample clip:
+https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/uploads/34603b58fd2e804308d6dc1441b88ec2/JTBC_E72.170422.720p-NEXT_short.mp4
+
+Test command:
+gst-launch-1.0 filesrc location=JTBC_E72.170422.720p-NEXT_short.mp4 ! qtdemux \
+! h264parse ! msdkh264dec ! glimagesink
+---
+ .../umc/codec/h264_dec/src/umc_h264_task_supplier.cpp  | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/_studio/shared/umc/codec/h264_dec/src/umc_h264_task_supplier.cpp b/_studio/shared/umc/codec/h264_dec/src/umc_h264_task_supplier.cpp
+index feb35dbc..593bb8c0 100644
+--- a/_studio/shared/umc/codec/h264_dec/src/umc_h264_task_supplier.cpp
++++ b/_studio/shared/umc/codec/h264_dec/src/umc_h264_task_supplier.cpp
+@@ -1090,7 +1090,25 @@ ViewItem & MVC_Extension::AllocateAndInitializeView(H264Slice * slice)
+     }
+     ViewItem * view = FindView(slice->GetSliceHeader()->nal_ext.mvc.view_id);
+     if (view)
++    {
++        const UMC_H264_DECODER::H264SliceHeader *slice_hdr = slice->GetSliceHeader();
++
++        if (!slice_hdr->IdrPicFlag)
++            return *view;
++
++        H264SeqParamSet *pSps = const_cast<H264SeqParamSet*>(slice->m_pSeqParamSet);
++        int32_t dpbsize = CalculateDPBSize(m_level_idc ? m_level_idc : pSps->level_idc,
++                                           pSps->frame_width_in_mbs * 16,
++                                           pSps->frame_height_in_mbs * 16,
++                                           pSps->num_ref_frames);
++
++        dpbsize = pSps->vui.max_dec_frame_buffering ? pSps->vui.max_dec_frame_buffering : dpbsize;
++
++        if (dpbsize != view->GetDPBList(0)->GetDPBSize())
++            view->SetDPBSize(const_cast<H264SeqParamSet*>(slice->m_pSeqParamSet), m_level_idc);
++
+         return *view;
++    }
+ 
+     Status umcRes = AllocateView(slice->GetSliceHeader()->nal_ext.mvc.view_id);
+     if (UMC_OK != umcRes)
+-- 
+2.13.6
+

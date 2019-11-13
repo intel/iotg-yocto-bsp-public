@@ -1,0 +1,74 @@
+From c071a05264531e0622df791e2d8e167eb00debee Mon Sep 17 00:00:00 2001
+From: "Xiang, Haihao" <haihao.xiang@intel.com>
+Date: Wed, 11 Sep 2019 21:13:47 +0800
+Subject: [PATCH] Allow a larger surface for mpeg2/jpeg encoding (#1562)
+
+Like other CODECs, we may allow a larger surface for mpeg2/jpeg
+encoding. If do so, we may use the same way to allocate surfaces for all
+CODECs in user application / library.
+---
+ _studio/mfx_lib/encode_hw/mjpeg/src/mfx_mjpeg_encode_hw.cpp       | 6 +++---
+ _studio/mfx_lib/encode_hw/mpeg2/src/mfx_mpeg2_encode_utils_hw.cpp | 3 ++-
+ _studio/mfx_lib/shared/include/mfx_enc_common.h                   | 6 +-----
+ 3 files changed, 6 insertions(+), 9 deletions(-)
+
+diff --git a/_studio/mfx_lib/encode_hw/mjpeg/src/mfx_mjpeg_encode_hw.cpp b/_studio/mfx_lib/encode_hw/mjpeg/src/mfx_mjpeg_encode_hw.cpp
+index 18f54e86..00060610 100644
+--- a/_studio/mfx_lib/encode_hw/mjpeg/src/mfx_mjpeg_encode_hw.cpp
++++ b/_studio/mfx_lib/encode_hw/mjpeg/src/mfx_mjpeg_encode_hw.cpp
+@@ -1,4 +1,4 @@
+-// Copyright (c) 2017-2018 Intel Corporation
++// Copyright (c) 2017-2019 Intel Corporation
+ //
+ // Permission is hereby granted, free of charge, to any person obtaining a copy
+ // of this software and associated documentation files (the "Software"), to deal
+@@ -1031,8 +1031,8 @@ mfxStatus MFXVideoENCODEMJPEG_HW::CheckEncodeFrameParam(
+             MFX_CHECK(surface->Data.Y != 0 || isExternalFrameAllocator, MFX_ERR_UNDEFINED_BEHAVIOR);
+         }
+ 
+-        if (surface->Info.Width != m_vParam.mfx.FrameInfo.Width || surface->Info.Height != m_vParam.mfx.FrameInfo.Height)
+-            sts = MFX_WRN_INCOMPATIBLE_VIDEO_PARAM;
++        MFX_CHECK(surface->Info.Width >= m_vParam.mfx.FrameInfo.Width, MFX_ERR_INVALID_VIDEO_PARAM);
++        MFX_CHECK(surface->Info.Height >= m_vParam.mfx.FrameInfo.Height, MFX_ERR_INVALID_VIDEO_PARAM);
+     }
+     else
+     {
+diff --git a/_studio/mfx_lib/encode_hw/mpeg2/src/mfx_mpeg2_encode_utils_hw.cpp b/_studio/mfx_lib/encode_hw/mpeg2/src/mfx_mpeg2_encode_utils_hw.cpp
+index 3047afc8..88da25eb 100644
+--- a/_studio/mfx_lib/encode_hw/mpeg2/src/mfx_mpeg2_encode_utils_hw.cpp
++++ b/_studio/mfx_lib/encode_hw/mpeg2/src/mfx_mpeg2_encode_utils_hw.cpp
+@@ -1675,8 +1675,9 @@ namespace MPEG2EncoderHW
+             {
+                 return MFX_ERR_UNDEFINED_BEHAVIOR;
+             }
+-            bWarning = bWarning || (!m_InputSurfaces.CheckInputFrame(&surface->Info));
+ 
++            MFX_CHECK(surface->Info.Width >= m_VideoParamsEx.mfxVideoParams.mfx.FrameInfo.Width, MFX_ERR_INVALID_VIDEO_PARAM);
++            MFX_CHECK(surface->Info.Height >= m_VideoParamsEx.mfxVideoParams.mfx.FrameInfo.Height, MFX_ERR_INVALID_VIDEO_PARAM);
+             MFX_CHECK(surface->Info.FourCC == MFX_FOURCC_NV12, MFX_ERR_UNDEFINED_BEHAVIOR);
+ 
+             if (surface->Data.Y)
+diff --git a/_studio/mfx_lib/shared/include/mfx_enc_common.h b/_studio/mfx_lib/shared/include/mfx_enc_common.h
+index 8e7fdec9..b45db4fa 100644
+--- a/_studio/mfx_lib/shared/include/mfx_enc_common.h
++++ b/_studio/mfx_lib/shared/include/mfx_enc_common.h
+@@ -1,4 +1,4 @@
+-// Copyright (c) 2017 Intel Corporation
++// Copyright (c) 2017-2019 Intel Corporation
+ // 
+ // Permission is hereby granted, free of charge, to any person obtaining a copy
+ // of this software and associated documentation files (the "Software"), to deal
+@@ -62,10 +62,6 @@ public:
+ 
+      inline bool isOpaq() {return  m_bOpaq;}
+      inline bool isSysMemFrames () {return m_bSysMemFrames;}
+-     inline bool CheckInputFrame(mfxFrameInfo* pFrameInfo)
+-     {
+-         return (m_Info.Width == pFrameInfo->Width && m_Info.Height == pFrameInfo->Height);     
+-     }
+ 
+      inline mfxFrameSurface1 *GetOriginalSurface(mfxFrameSurface1 *surface)
+      {
+-- 
+2.13.6
+
