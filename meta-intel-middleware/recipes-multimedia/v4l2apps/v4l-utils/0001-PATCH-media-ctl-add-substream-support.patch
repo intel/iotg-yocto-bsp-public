@@ -1,35 +1,36 @@
-From 3d2327fe89fe380a8988b4571302511c96313c12 Mon Sep 17 00:00:00 2001
-From: Huiping Zhong <huipingdx.zhong@intel.com>
-Date: Wed, 6 Dec 2017 14:41:17 +0800
-Subject: [PATCH] media-ctl add substream support
+From 0121e3f711f3ae1301415247dcbe98a276cb09f2 Mon Sep 17 00:00:00 2001
+From: "liangtaox.hu" <liangtaox.hu@intel.com>
+Date: Thu, 4 Jul 2019 15:34:27 +0800
+Subject: [PATCH 1/2] [PATCH] media-ctl add substream support
 
+Signed-off-by: liangtaox.hu <liangtaox.hu@intel.com>
 ---
  include/linux/media.h           |  1 +
- include/linux/v4l2-subdev.h     | 10 ++++---
- utils/media-ctl/libmediactl.c   | 60 +++++++++++++++++++++++++++++++++++++++++
- utils/media-ctl/libv4l2subdev.c | 33 ++++++++++++++---------
- utils/media-ctl/media-ctl.c     | 24 ++++++++++-------
- utils/media-ctl/mediactl.h      |  5 ++++
+ include/linux/v4l2-subdev.h     | 10 ++++--
+ utils/media-ctl/libmediactl.c   | 60 +++++++++++++++++++++++++++++++++
+ utils/media-ctl/libv4l2subdev.c | 33 +++++++++++-------
+ utils/media-ctl/media-ctl.c     | 22 +++++++-----
+ utils/media-ctl/mediactl.h      |  5 +++
  utils/media-ctl/v4l2subdev.h    |  4 +--
- 7 files changed, 109 insertions(+), 28 deletions(-)
+ 7 files changed, 108 insertions(+), 27 deletions(-)
 
 diff --git a/include/linux/media.h b/include/linux/media.h
-index a9e0b05..8382bd3 100644
+index c7566461..ba71221d 100644
 --- a/include/linux/media.h
 +++ b/include/linux/media.h
-@@ -241,6 +241,7 @@ struct media_entity_desc {
- #define MEDIA_PAD_FL_SINK		(1 << 0)
- #define MEDIA_PAD_FL_SOURCE		(1 << 1)
- #define MEDIA_PAD_FL_MUST_CONNECT	(1 << 2)
+@@ -206,6 +206,7 @@ struct media_entity_desc {
+ #define MEDIA_PAD_FL_SINK			(1 << 0)
+ #define MEDIA_PAD_FL_SOURCE			(1 << 1)
+ #define MEDIA_PAD_FL_MUST_CONNECT		(1 << 2)
 +#define MEDIA_PAD_FL_MULTIPLEX          (1 << 3)
  
  struct media_pad_desc {
  	__u32 entity;		/* entity ID */
 diff --git a/include/linux/v4l2-subdev.h b/include/linux/v4l2-subdev.h
-index dbce2b5..ded32f2 100644
+index 03970ce3..989d1560 100644
 --- a/include/linux/v4l2-subdev.h
 +++ b/include/linux/v4l2-subdev.h
-@@ -48,7 +48,8 @@ struct v4l2_subdev_format {
+@@ -49,7 +49,8 @@ struct v4l2_subdev_format {
  	__u32 which;
  	__u32 pad;
  	struct v4l2_mbus_framefmt format;
@@ -39,7 +40,7 @@ index dbce2b5..ded32f2 100644
  };
  
  /**
-@@ -71,12 +72,14 @@ struct v4l2_subdev_crop {
+@@ -72,12 +73,14 @@ struct v4l2_subdev_crop {
   * @code: format code (MEDIA_BUS_FMT_ definitions)
   * @which: format type (from enum v4l2_subdev_format_whence)
   */
@@ -55,7 +56,7 @@ index dbce2b5..ded32f2 100644
  };
  
  /**
-@@ -95,7 +98,8 @@ struct v4l2_subdev_frame_size_enum {
+@@ -96,7 +99,8 @@ struct v4l2_subdev_frame_size_enum {
  	__u32 min_height;
  	__u32 max_height;
  	__u32 which;
@@ -66,7 +67,7 @@ index dbce2b5..ded32f2 100644
  
  /**
 diff --git a/utils/media-ctl/libmediactl.c b/utils/media-ctl/libmediactl.c
-index 1fd6525..a319c8d 100644
+index 1fd6525b..a21de16b 100644
 --- a/utils/media-ctl/libmediactl.c
 +++ b/utils/media-ctl/libmediactl.c
 @@ -36,11 +36,13 @@
@@ -83,10 +84,11 @@ index 1fd6525..a319c8d 100644
  
  /* -----------------------------------------------------------------------------
   * Graph access
-@@ -126,6 +128,36 @@ unsigned int media_entity_get_links_count(struct media_entity *entity)
+@@ -125,6 +127,36 @@ unsigned int media_entity_get_links_count(struct media_entity *entity)
+ {
  	return entity->num_links;
  }
- 
++ 
 +unsigned int media_entity_pad_get_max_stream(struct media_entity *entity, unsigned int pad)
 +{
 +	struct v4l2_subdev_mbus_code_enum code;
@@ -116,10 +118,9 @@ index 1fd6525..a319c8d 100644
 +
 +	return code.stream;
 +}
-+
+ 
  const struct media_link *media_entity_get_link(struct media_entity *entity, unsigned int index)
  {
- 	if (index >= entity->num_links)
 @@ -837,6 +869,34 @@ struct media_entity *media_parse_entity(struct media_device *media,
  	return entity;
  }
@@ -156,7 +157,7 @@ index 1fd6525..a319c8d 100644
  				  const char *p, char **endp)
  {
 diff --git a/utils/media-ctl/libv4l2subdev.c b/utils/media-ctl/libv4l2subdev.c
-index 3dcf943..70f30e5 100644
+index a989efb3..6d4c5dd0 100644
 --- a/utils/media-ctl/libv4l2subdev.c
 +++ b/utils/media-ctl/libv4l2subdev.c
 @@ -64,7 +64,7 @@ void v4l2_subdev_close(struct media_entity *entity)
@@ -193,7 +194,7 @@ index 3dcf943..70f30e5 100644
  	fmt.which = which;
  	fmt.format = *format;
  
-@@ -437,7 +439,8 @@ static bool strhazit(const char *str, const char **p)
+@@ -441,7 +443,8 @@ static bool strhazit(const char *str, const char **p)
  }
  
  static struct media_pad *v4l2_subdev_parse_pad_format(
@@ -203,18 +204,18 @@ index 3dcf943..70f30e5 100644
  	struct v4l2_rect *crop, struct v4l2_rect *compose,
  	struct v4l2_fract *interval, const char *p, char **endp)
  {
-@@ -455,6 +458,10 @@ static struct media_pad *v4l2_subdev_parse_pad_format(
+@@ -458,6 +461,10 @@ static struct media_pad *v4l2_subdev_parse_pad_format(
+ 		return NULL;
  	}
  
- 	for (p = end; isspace(*p); ++p);
++	for (p = end; isspace(*p); ++p);
 +
 +	*stream = media_parse_stream(media, p, &end);
 +
-+	for (p = end; isspace(*p); ++p);
+ 	for (p = end; isspace(*p); ++p);
  	if (*p++ != '[') {
  		media_dbg(media, "Expected '['\n");
- 		*endp = (char *)p - 1;
-@@ -557,7 +564,7 @@ static struct media_pad *v4l2_subdev_parse_pad_format(
+@@ -673,7 +680,7 @@ static struct media_pad *v4l2_subdev_parse_pad_format(
  	return pad;
  }
  
@@ -223,7 +224,7 @@ index 3dcf943..70f30e5 100644
  		      struct v4l2_mbus_framefmt *format)
  {
  	int ret;
-@@ -566,12 +573,12 @@ static int set_format(struct media_pad *pad,
+@@ -682,12 +689,12 @@ static int set_format(struct media_pad *pad,
  		return 0;
  
  	media_dbg(pad->entity->media,
@@ -239,7 +240,7 @@ index 3dcf943..70f30e5 100644
  				     V4L2_SUBDEV_FORMAT_ACTIVE);
  	if (ret < 0) {
  		media_dbg(pad->entity->media,
-@@ -653,12 +660,12 @@ static int v4l2_subdev_parse_setup_format(struct media_device *media,
+@@ -769,12 +776,12 @@ static int v4l2_subdev_parse_setup_format(struct media_device *media,
  	struct v4l2_rect crop = { -1, -1, -1, -1 };
  	struct v4l2_rect compose = crop;
  	struct v4l2_fract interval = { 0, 0 };
@@ -255,7 +256,7 @@ index 3dcf943..70f30e5 100644
  	if (pad == NULL) {
  		media_print_streampos(media, p, end);
  		media_dbg(media, "Unable to parse format\n");
-@@ -666,7 +673,7 @@ static int v4l2_subdev_parse_setup_format(struct media_device *media,
+@@ -782,7 +789,7 @@ static int v4l2_subdev_parse_setup_format(struct media_device *media,
  	}
  
  	if (pad->flags & MEDIA_PAD_FL_SINK) {
@@ -264,7 +265,7 @@ index 3dcf943..70f30e5 100644
  		if (ret < 0)
  			return ret;
  	}
-@@ -680,7 +687,7 @@ static int v4l2_subdev_parse_setup_format(struct media_device *media,
+@@ -796,7 +803,7 @@ static int v4l2_subdev_parse_setup_format(struct media_device *media,
  		return ret;
  
  	if (pad->flags & MEDIA_PAD_FL_SOURCE) {
@@ -273,33 +274,28 @@ index 3dcf943..70f30e5 100644
  		if (ret < 0)
  			return ret;
  	}
-@@ -704,7 +711,7 @@ static int v4l2_subdev_parse_setup_format(struct media_device *media,
+@@ -820,7 +827,7 @@ static int v4l2_subdev_parse_setup_format(struct media_device *media,
  			if (link->source == pad &&
  			    link->sink->entity->info.type == MEDIA_ENT_T_V4L2_SUBDEV) {
  				remote_format = format;
 -				set_format(link->sink, &remote_format);
 +				set_format(link->sink, stream, &remote_format);
- 			}
- 		}
- 	}
+ 
+ 				ret = set_frame_interval(link->sink, &interval);
+ 				if (ret < 0 && ret != -EINVAL && ret != -ENOTTY)
 diff --git a/utils/media-ctl/media-ctl.c b/utils/media-ctl/media-ctl.c
-index 50adbe9..fe8cd0f 100644
+index 6661b487..cde26226 100644
 --- a/utils/media-ctl/media-ctl.c
 +++ b/utils/media-ctl/media-ctl.c
-@@ -80,16 +80,20 @@ static void v4l2_subdev_print_format(struct media_entity *entity,
- {
+@@ -81,20 +81,24 @@ static void v4l2_subdev_print_format(struct media_entity *entity,
  	struct v4l2_mbus_framefmt format;
+ 	struct v4l2_fract interval = { 0, 0 };
  	struct v4l2_rect rect;
 -	int ret;
 -
 -	ret = v4l2_subdev_get_format(entity, &format, pad, which);
 -	if (ret != 0)
 -		return;
--
--	printf("\t\t[fmt:%s/%ux%u",
--	       v4l2_subdev_pixelcode_to_string(format.code),
--	       format.width, format.height);
--
 +	unsigned int stream = media_entity_pad_get_max_stream(entity, pad);
 +	int ret, i;
 +
@@ -313,12 +309,20 @@ index 50adbe9..fe8cd0f 100644
 +		       i, v4l2_subdev_pixelcode_to_string(format.code),
 +		       format.width, format.height);
 +	}
-+
- 	if (format.field)
- 		printf(" field:%s", v4l2_subdev_field_to_string(format.field));
+ 
+ 	ret = v4l2_subdev_get_frame_interval(entity, &interval, pad);
+ 	if (ret != 0 && ret != -ENOTTY && ret != -EINVAL)
+ 		return;
+ 
+-	printf("\t\t[fmt:%s/%ux%u",
+-	       v4l2_subdev_pixelcode_to_string(format.code),
+-	       format.width, format.height);
+-
+ 	if (interval.numerator || interval.denominator)
+ 		printf("@%u/%u", interval.numerator, interval.denominator);
  
 diff --git a/utils/media-ctl/mediactl.h b/utils/media-ctl/mediactl.h
-index af36051..82b9360 100644
+index af360518..82b9360c 100644
 --- a/utils/media-ctl/mediactl.h
 +++ b/utils/media-ctl/mediactl.h
 @@ -194,6 +194,9 @@ const struct media_entity_desc *media_entity_get_info(struct media_entity *entit
@@ -341,7 +345,7 @@ index af36051..82b9360 100644
   * @brief Parse string to a link on the media device.
   * @param media - media device.
 diff --git a/utils/media-ctl/v4l2subdev.h b/utils/media-ctl/v4l2subdev.h
-index 9c8fee8..c8f56fe 100644
+index a1813911..b29d9123 100644
 --- a/utils/media-ctl/v4l2subdev.h
 +++ b/utils/media-ctl/v4l2subdev.h
 @@ -65,7 +65,7 @@ void v4l2_subdev_close(struct media_entity *entity);
@@ -363,5 +367,5 @@ index 9c8fee8..c8f56fe 100644
  /**
   * @brief Retrieve a selection rectangle on a pad.
 -- 
-1.9.1
+2.17.1
 

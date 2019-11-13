@@ -1,24 +1,25 @@
-From 28ea59f8b177b564827254a2c24a4ce56ceffd56 Mon Sep 17 00:00:00 2001
-From: Huiping Zhong <huipingdx.zhong@intel.com>
-Date: Wed, 6 Dec 2017 15:00:36 +0800
-Subject: [PATCH 2/2] media ctl add routing information control
+From 3aadaaccde833a4497faf47e92e6f82fdd92326d Mon Sep 17 00:00:00 2001
+From: "liangtaox.hu" <liangtaox.hu@intel.com>
+Date: Thu, 4 Jul 2019 15:56:17 +0800
+Subject: [PATCH 2/2] [PATCH 2/2] media ctl add routing information control
 
+Signed-off-by: liangtaox.hu <liangtaox.hu@intel.com>
 ---
- include/linux/v4l2-subdev.h     |  44 +++++++++
- utils/media-ctl/libmediactl.c   | 204 ++++++++++++++++++++++++++++++++++++++++
- utils/media-ctl/libv4l2subdev.c |  51 ++++++++++
- utils/media-ctl/media-ctl.c     |  62 +++++++++++-
- utils/media-ctl/mediactl.h      |  12 +++
- utils/media-ctl/options.c       |  12 ++-
+ include/linux/v4l2-subdev.h     |  44 +++++++
+ utils/media-ctl/libmediactl.c   | 204 ++++++++++++++++++++++++++++++++
+ utils/media-ctl/libv4l2subdev.c |  51 ++++++++
+ utils/media-ctl/media-ctl.c     |  63 +++++++++-
+ utils/media-ctl/mediactl.h      |  12 ++
+ utils/media-ctl/options.c       |  12 +-
  utils/media-ctl/options.h       |   1 +
- utils/media-ctl/v4l2subdev.h    |   6 ++
- 8 files changed, 389 insertions(+), 3 deletions(-)
+ utils/media-ctl/v4l2subdev.h    |   6 +
+ 8 files changed, 390 insertions(+), 3 deletions(-)
 
 diff --git a/include/linux/v4l2-subdev.h b/include/linux/v4l2-subdev.h
-index ded32f2..ac33c45 100644
+index 989d1560..5ac6d9b5 100644
 --- a/include/linux/v4l2-subdev.h
 +++ b/include/linux/v4l2-subdev.h
-@@ -158,6 +158,48 @@ struct v4l2_subdev_selection {
+@@ -159,6 +159,48 @@ struct v4l2_subdev_selection {
  	__u32 reserved[8];
  };
  
@@ -67,7 +68,7 @@ index ded32f2..ac33c45 100644
  /* Backwards compatibility define --- to be removed */
  #define v4l2_subdev_edid v4l2_edid
  
-@@ -180,5 +222,7 @@ struct v4l2_subdev_selection {
+@@ -185,5 +227,7 @@ struct v4l2_subdev_selection {
  #define VIDIOC_SUBDEV_ENUM_DV_TIMINGS		_IOWR('V', 98, struct v4l2_enum_dv_timings)
  #define VIDIOC_SUBDEV_QUERY_DV_TIMINGS		_IOR('V', 99, struct v4l2_dv_timings)
  #define VIDIOC_SUBDEV_DV_TIMINGS_CAP		_IOWR('V', 100, struct v4l2_dv_timings_cap)
@@ -76,7 +77,7 @@ index ded32f2..ac33c45 100644
  
  #endif
 diff --git a/utils/media-ctl/libmediactl.c b/utils/media-ctl/libmediactl.c
-index a319c8d..70ff3d5 100644
+index a21de16b..5abab328 100644
 --- a/utils/media-ctl/libmediactl.c
 +++ b/utils/media-ctl/libmediactl.c
 @@ -324,6 +324,33 @@ int media_reset_links(struct media_device *media)
@@ -150,11 +151,10 @@ index a319c8d..70ff3d5 100644
  struct media_pad *media_parse_pad(struct media_device *media,
  				  const char *p, char **endp)
  {
-@@ -979,6 +1036,75 @@ struct media_link *media_parse_link(struct media_device *media,
- 			sink->entity->info.name, sink->index);
+@@ -980,6 +1037,75 @@ struct media_link *media_parse_link(struct media_device *media,
  	return NULL;
  }
-+
+ 
 +int media_parse_route(struct media_device *media, const char *p, char **endp,
 +		       struct media_route *route)
 +{
@@ -223,9 +223,10 @@ index a319c8d..70ff3d5 100644
 +
 +	return 0;
 +}
- 
++
  int media_parse_setup_link(struct media_device *media,
  			   const char *p, char **endp)
+ {
 @@ -1022,6 +1148,48 @@ int media_parse_setup_link(struct media_device *media,
  	return media_setup_link(media, link->source, link->sink, flags);
  }
@@ -315,8 +316,9 @@ index a319c8d..70ff3d5 100644
 +	return ret;
 +
 +}
+\ No newline at end of file
 diff --git a/utils/media-ctl/libv4l2subdev.c b/utils/media-ctl/libv4l2subdev.c
-index fa0d754..a0bc5c4 100644
+index 6d4c5dd0..f1f91f1e 100644
 --- a/utils/media-ctl/libv4l2subdev.c
 +++ b/utils/media-ctl/libv4l2subdev.c
 @@ -150,6 +150,57 @@ int v4l2_subdev_get_selection(struct media_entity *entity,
@@ -378,18 +380,19 @@ index fa0d754..a0bc5c4 100644
  	struct v4l2_rect *rect, unsigned int pad, unsigned int target,
  	enum v4l2_subdev_format_whence which)
 diff --git a/utils/media-ctl/media-ctl.c b/utils/media-ctl/media-ctl.c
-index fe8cd0f..25c064a 100644
+index cde26226..5006bf54 100644
 --- a/utils/media-ctl/media-ctl.c
 +++ b/utils/media-ctl/media-ctl.c
-@@ -442,6 +442,7 @@ static void media_print_pad_text(struct media_entity *entity,
+@@ -471,6 +471,8 @@ static void media_print_pad_text(struct media_entity *entity,
  		v4l2_subdev_print_subdev_dv(entity);
  }
  
 +#define ROUTE_NUM	20
++
  static void media_print_topology_text_entity(struct media_device *media,
  					     struct media_entity *entity)
  {
-@@ -450,11 +451,18 @@ static void media_print_topology_text_entity(struct media_device *media,
+@@ -479,11 +481,18 @@ static void media_print_topology_text_entity(struct media_device *media,
  		{ MEDIA_LNK_FL_IMMUTABLE, "IMMUTABLE" },
  		{ MEDIA_LNK_FL_DYNAMIC, "DYNAMIC" },
  	};
@@ -409,7 +412,7 @@ index fe8cd0f..25c064a 100644
  
  	padding = printf("- entity %u: ", info->id);
  	printf("%s (%u pad%s, %u link%s)\n", info->name,
-@@ -469,11 +477,52 @@ static void media_print_topology_text_entity(struct media_device *media,
+@@ -498,11 +507,52 @@ static void media_print_topology_text_entity(struct media_device *media,
  
  	for (j = 0; j < info->pads; j++) {
  		const struct media_pad *pad = media_entity_get_pad(entity, j);
@@ -456,13 +459,13 @@ index fe8cd0f..25c064a 100644
 +
 +			}
 +		}
-+
  
++ 
 +		printf("\t\tlink: \n");
  		for (k = 0; k < num_links; k++) {
  			const struct media_link *link = media_entity_get_link(entity, k);
  			const struct media_pad *source = link->source;
-@@ -627,6 +676,8 @@ int main(int argc, char **argv)
+@@ -668,6 +718,8 @@ int main(int argc, char **argv)
  			       strerror(-ret), -ret);
  			goto out;
  		}
@@ -471,7 +474,7 @@ index fe8cd0f..25c064a 100644
  	}
  
  	if (media_opts.links) {
-@@ -638,6 +689,15 @@ int main(int argc, char **argv)
+@@ -679,6 +731,15 @@ int main(int argc, char **argv)
  		}
  	}
  
@@ -488,7 +491,7 @@ index fe8cd0f..25c064a 100644
  		ret = v4l2_subdev_parse_setup_formats(media,
  						      media_opts.formats);
 diff --git a/utils/media-ctl/mediactl.h b/utils/media-ctl/mediactl.h
-index 82b9360..25dcaf4 100644
+index 82b9360c..5b999aab 100644
 --- a/utils/media-ctl/mediactl.h
 +++ b/utils/media-ctl/mediactl.h
 @@ -32,6 +32,16 @@ struct media_link {
@@ -508,7 +511,15 @@ index 82b9360..25dcaf4 100644
  struct media_pad {
  	struct media_entity *entity;
  	__u32 index;
-@@ -368,6 +378,7 @@ int media_setup_link(struct media_device *media,
+@@ -358,6 +368,7 @@ int media_setup_link(struct media_device *media,
+ 	struct media_pad *source, struct media_pad *sink,
+ 	__u32 flags);
+ 
++int media_parse_setup_routes(struct media_device *media, const char *p);
+ /**
+  * @brief Reset all links to the disabled state.
+  * @param media - media device.
+@@ -368,6 +379,7 @@ int media_setup_link(struct media_device *media,
   * @return 0 on success, or a negative error code on failure.
   */
  int media_reset_links(struct media_device *media);
@@ -516,16 +527,8 @@ index 82b9360..25dcaf4 100644
  
  /**
   * @brief Parse string to an entity on the media device.
-@@ -426,6 +437,7 @@ struct media_link *media_parse_link(struct media_device *media,
- int media_parse_setup_link(struct media_device *media,
- 			   const char *p, char **endp);
- 
-+int media_parse_setup_routes(struct media_device *media, const char *p);
- /**
-  * @brief Parse string to link(s) on the media device and set it up.
-  * @param media - media device.
 diff --git a/utils/media-ctl/options.c b/utils/media-ctl/options.c
-index 59841bb..eaa8d61 100644
+index 16367857..a5ad22a7 100644
 --- a/utils/media-ctl/options.c
 +++ b/utils/media-ctl/options.c
 @@ -45,6 +45,7 @@ static void usage(const char *argv0)
@@ -534,9 +537,9 @@ index 59841bb..eaa8d61 100644
  	printf("-V, --set-v4l2 v4l2	Comma-separated list of formats to setup\n");
 +	printf("-t, --routes routes	Comma-separated list of route descriptors to setup\n");
  	printf("    --get-v4l2 pad	Print the active format on a given pad\n");
+ 	printf("    --get-dv pad        Print detected and current DV timings on a given pad\n");
  	printf("    --set-dv pad	Configure DV timings on a given pad\n");
- 	printf("-h, --help		Show verbose help and exit\n");
-@@ -58,7 +59,9 @@ static void usage(const char *argv0)
+@@ -59,7 +60,9 @@ static void usage(const char *argv0)
  	printf("-r, --reset		Reset all links to inactive\n");
  	printf("-v, --verbose		Be verbose\n");
  	printf("\n");
@@ -547,7 +550,7 @@ index 59841bb..eaa8d61 100644
  	printf("\tlinks           = link { ',' link } ;\n");
  	printf("\tlink            = pad '->' pad '[' flags ']' ;\n");
  	printf("\tpad             = entity ':' pad-number ;\n");
-@@ -109,6 +112,7 @@ static struct option opts[] = {
+@@ -132,6 +135,7 @@ static struct option opts[] = {
  	{"help", 0, 0, 'h'},
  	{"interactive", 0, 0, 'i'},
  	{"links", 1, 0, 'l'},
@@ -555,7 +558,7 @@ index 59841bb..eaa8d61 100644
  	{"known-mbus-fmts", 0, 0, OPT_LIST_KNOWN_MBUS_FMTS},
  	{"print-dot", 0, 0, OPT_PRINT_DOT},
  	{"print-topology", 0, 0, 'p'},
-@@ -148,7 +152,7 @@ int parse_cmdline(int argc, char **argv)
+@@ -171,7 +175,7 @@ int parse_cmdline(int argc, char **argv)
  	}
  
  	/* parse options */
@@ -564,7 +567,7 @@ index 59841bb..eaa8d61 100644
  				  opts, NULL)) != -1) {
  		switch (opt) {
  		case 'd':
-@@ -182,6 +186,10 @@ int parse_cmdline(int argc, char **argv)
+@@ -205,6 +209,10 @@ int parse_cmdline(int argc, char **argv)
  			media_opts.links = optarg;
  			break;
  
@@ -576,7 +579,7 @@ index 59841bb..eaa8d61 100644
  			media_opts.print = 1;
  			break;
 diff --git a/utils/media-ctl/options.h b/utils/media-ctl/options.h
-index 9b5f314..140b962 100644
+index 7e0556fc..853c4c6c 100644
 --- a/utils/media-ctl/options.h
 +++ b/utils/media-ctl/options.h
 @@ -33,6 +33,7 @@ struct media_options
@@ -585,10 +588,10 @@ index 9b5f314..140b962 100644
  	const char *links;
 +	const char *routes;
  	const char *fmt_pad;
+ 	const char *get_dv_pad;
  	const char *dv_pad;
- };
 diff --git a/utils/media-ctl/v4l2subdev.h b/utils/media-ctl/v4l2subdev.h
-index c8f56fe..c76edd0 100644
+index b29d9123..b452bab4 100644
 --- a/utils/media-ctl/v4l2subdev.h
 +++ b/utils/media-ctl/v4l2subdev.h
 @@ -88,6 +88,12 @@ int v4l2_subdev_set_format(struct media_entity *entity,
@@ -605,5 +608,5 @@ index c8f56fe..c76edd0 100644
   * @brief Retrieve a selection rectangle on a pad.
   * @param entity - subdev-device media entity.
 -- 
-1.9.1
+2.17.1
 
