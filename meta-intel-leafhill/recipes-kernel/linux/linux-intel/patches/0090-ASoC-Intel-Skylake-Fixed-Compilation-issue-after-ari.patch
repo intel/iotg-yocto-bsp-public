@@ -1,7 +1,7 @@
-From 429a5ea2a32c3226ac92423c4a5471342b5f065a Mon Sep 17 00:00:00 2001
+From 9895bab28cf9d61ba42ee597815ef88e4907de9d Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra.gaurav.vohra@intel.com>
 Date: Wed, 5 Sep 2018 17:13:13 +0800
-Subject: [PATCH 090/100] ASoC: Intel: Skylake: Fixed Compilation issue after
+Subject: [PATCH 090/120] ASoC: Intel: Skylake: Fixed Compilation issue after
  arised resolving manual conflicts
 
 ---

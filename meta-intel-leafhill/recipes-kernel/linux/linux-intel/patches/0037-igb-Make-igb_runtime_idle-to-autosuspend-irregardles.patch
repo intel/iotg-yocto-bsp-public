@@ -1,7 +1,7 @@
-From d6c50522c45785f5f007ef4022e433783946845e Mon Sep 17 00:00:00 2001
+From 6538a40430eeb4720fac19b057334c0e01249fb5 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 6 Dec 2016 11:18:21 +0800
-Subject: [PATCH 37/42] igb: Make igb_runtime_idle to autosuspend irregardless
+Subject: [PATCH 37/44] igb: Make igb_runtime_idle to autosuspend irregardless
  of link status for RTD3
 
 igb_runtime_idle change is meant for RTD3, that is why we are
@@ -15,10 +15,10 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 4 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 60ed8bf..1cfc948 100644
+index cd9e5e7..c945d04 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -8952,13 +8952,10 @@ static int __maybe_unused igb_resume(struct device *dev)
+@@ -8929,13 +8929,10 @@ static int __maybe_unused igb_resume(struct device *dev)
  
  static int __maybe_unused igb_runtime_idle(struct device *dev)
  {

@@ -1,7 +1,7 @@
-From 16544188ef1dbad6875764defa2e54d3508149cc Mon Sep 17 00:00:00 2001
+From 953dd20226cd8f1b2d6f33759c32ecb28890e832 Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Wed, 17 Feb 2016 13:58:51 +0100
-Subject: [PATCH 023/100] ASoC: Intel: Skylake: increase FW timeout
+Subject: [PATCH 023/120] ASoC: Intel: Skylake: increase FW timeout
 
 * BXT_FW_ROM_BASEFW_ENTERED_TIMEOUT icnreased to 6sec in order to
   enable FW download with ABL.

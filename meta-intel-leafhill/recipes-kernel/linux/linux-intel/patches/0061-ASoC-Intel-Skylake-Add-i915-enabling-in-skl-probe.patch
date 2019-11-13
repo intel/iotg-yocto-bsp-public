@@ -1,7 +1,7 @@
-From 9bc1f3eb3ba21ca97b478e92dad319637602ce8b Mon Sep 17 00:00:00 2001
+From 33254c00d6f145fc9f36975d034c579d8818217c Mon Sep 17 00:00:00 2001
 From: Vinod Koul <vinod.koul@intel.com>
 Date: Wed, 17 Feb 2016 21:34:06 +0530
-Subject: [PATCH 061/100] ASoC: Intel: Skylake: Add i915 enabling in skl probe
+Subject: [PATCH 061/120] ASoC: Intel: Skylake: Add i915 enabling in skl probe
 
 The SKL also supports HDMI output so in probe we need to enable
 the HDMI using common i915 APIs to ensure it gets probed on the
@@ -26,7 +26,7 @@ Conflicts:
  2 files changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/sound/soc/intel/Kconfig b/sound/soc/intel/Kconfig
-index 545ec59..803d924 100644
+index 6a3e3f8..08eb934 100644
 --- a/sound/soc/intel/Kconfig
 +++ b/sound/soc/intel/Kconfig
 @@ -107,6 +107,7 @@ config SND_SOC_INTEL_SKYLAKE
@@ -38,7 +38,7 @@ index 545ec59..803d924 100644
  	select SND_SOC_COMPRESS
  	select SDW
 diff --git a/sound/soc/intel/skylake/skl.c b/sound/soc/intel/skylake/skl.c
-index 7508de4..bdf36be 100644
+index b7784a0..66eff92 100644
 --- a/sound/soc/intel/skylake/skl.c
 +++ b/sound/soc/intel/skylake/skl.c
 @@ -28,12 +28,13 @@
@@ -56,7 +56,7 @@ index 7508de4..bdf36be 100644
  #include "skl.h"
  #include "skl-sst-dsp.h"
  #include "skl-sst-ipc.h"
-@@ -851,6 +852,14 @@ static int skl_first_init(struct hdac_ext_bus *ebus)
+@@ -853,6 +854,14 @@ static int skl_first_init(struct hdac_ext_bus *ebus)
  
  	skl_dum_set(ebus);
  
@@ -71,7 +71,7 @@ index 7508de4..bdf36be 100644
  	return skl_init_chip(bus, true);
  }
  
-@@ -981,6 +990,9 @@ static void skl_remove(struct pci_dev *pci)
+@@ -983,6 +992,9 @@ static void skl_remove(struct pci_dev *pci)
  	struct hdac_ext_bus *ebus = pci_get_drvdata(pci);
  	struct skl *skl = ebus_to_skl(ebus);
  

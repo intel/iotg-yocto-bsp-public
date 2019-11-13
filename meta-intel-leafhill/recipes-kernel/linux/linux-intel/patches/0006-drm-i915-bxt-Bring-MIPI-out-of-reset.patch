@@ -1,0 +1,57 @@
+From d8e582849bfc0c7b482246259c275a5ccc321fa2 Mon Sep 17 00:00:00 2001
+From: Bob Paauwe <bob.j.paauwe@intel.com>
+Date: Tue, 20 Dec 2016 10:24:21 -0800
+Subject: [PATCH] drm/i915/bxt: Bring MIPI out of reset
+
+and power up the DSI regulator when initializing a MIPI display.
+
+Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
+Reviewed-by: James Xiong <james.xiong@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/i915_reg.h |  7 +++++++
+ drivers/gpu/drm/i915/vlv_dsi.c  | 10 ++++++++++
+ 2 files changed, 17 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/i915_reg.h b/drivers/gpu/drm/i915/i915_reg.h
+index bee1a50..b1a5479 100644
+--- a/drivers/gpu/drm/i915/i915_reg.h
++++ b/drivers/gpu/drm/i915/i915_reg.h
+@@ -1600,6 +1600,13 @@ enum i915_power_well_id {
+ #define CHV_TX_DW14(ch, lane) _TXLANE(ch, lane, 0xb8)
+ #define   DPIO_UPAR_SHIFT		30
+ 
++/* BXT DSI Regulator registers */
++#define BXT_DSI_CFG                    _MMIO(0x160020)
++#define   STRAP_SELECT                 (1 << 0)
++
++#define BXT_DSI_TXCNTRL                _MMIO(0x160054)
++#define   HS_IO_CONTROL_SELECT         0x0
++
+ /* BXT PHY registers */
+ #define _BXT_PHY0_BASE			0x6C000
+ #define _BXT_PHY1_BASE			0x162000
+diff --git a/drivers/gpu/drm/i915/vlv_dsi.c b/drivers/gpu/drm/i915/vlv_dsi.c
+index 435a2c3..369452e 100644
+--- a/drivers/gpu/drm/i915/vlv_dsi.c
++++ b/drivers/gpu/drm/i915/vlv_dsi.c
+@@ -840,6 +840,16 @@ static void intel_dsi_pre_enable(struct intel_encoder *encoder,
+ 		val = I915_READ(DSPCLK_GATE_D);
+ 		val |= DPOUNIT_CLOCK_GATE_DISABLE;
+ 		I915_WRITE(DSPCLK_GATE_D, val);
++	} else if (IS_BROXTON(dev_priv)) {
++		u32 val;
++
++		/* Power up the DSI regulator */
++		val = I915_READ(BXT_P_CR_GT_DISP_PWRON);
++		val |= MIPIO_RST_CTRL;
++		I915_WRITE(BXT_P_CR_GT_DISP_PWRON, val);
++
++		I915_WRITE(BXT_DSI_CFG, STRAP_SELECT);
++		I915_WRITE(BXT_DSI_TXCNTRL, HS_IO_CONTROL_SELECT);
+ 	}
+ 
+ 	if (!IS_GEMINILAKE(dev_priv))
+-- 
+1.9.1
+

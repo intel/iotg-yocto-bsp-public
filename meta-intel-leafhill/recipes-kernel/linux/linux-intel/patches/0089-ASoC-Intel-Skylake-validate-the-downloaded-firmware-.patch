@@ -1,7 +1,7 @@
-From 556e53aeee984765598886e2fcee05bef401348f Mon Sep 17 00:00:00 2001
+From f032d3175ee738361750c29af0a0bc8b4433a3f4 Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra.gaurav.vohra@intel.com>
 Date: Wed, 5 Sep 2018 17:11:18 +0800
-Subject: [PATCH 089/100] ASoC: Intel: Skylake: validate the downloaded
+Subject: [PATCH 089/120] ASoC: Intel: Skylake: validate the downloaded
  firmware for driver compatability
 
 ---

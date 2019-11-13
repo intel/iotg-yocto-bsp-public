@@ -1,0 +1,114 @@
+From 28de8447aad4038ff127acbe7adaa847206ae25b Mon Sep 17 00:00:00 2001
+From: Gaurav Vohra <gauravx.vohra@intel.com>
+Date: Sun, 7 Jul 2019 15:06:48 +0800
+Subject: [PATCH] ASoC: Intel: Skylake: Add platform DAIs required for IVI
+ topologies
+
+This patch is a adds BE DAIs required for RSE, HU, M3 and generic topologies for Leafhill
+
+Signed-off-by: Gaurav Vohra <gauravx.vohra@intel.com>
+---
+ sound/soc/intel/skylake/skl-pcm.c | 87 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 87 insertions(+)
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index 7d1d8cf..8263511 100644
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -1845,6 +1845,93 @@ struct skl_dsp_notify_ops cb_ops = {
+ 			.rate_max = 48000,
+ 	},
+ },
++#if IS_ENABLED(CONFIG_SND_SOC_INTEL_BXTP_IVI_RSE_MACH) || \
++	IS_ENABLED(CONFIG_SND_SOC_INTEL_BXTP_IVI_HU_MACH) || \
++	IS_ENABLED(CONFIG_SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH) || \
++	IS_ENABLED(CONFIG_SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH) || \
++	IS_ENABLED(CONFIG_SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH) || \
++	IS_ENABLED(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH)
++{
++	.name = "SSP0 Pin",
++	.ops = &skl_be_ssp_dai_ops,
++	.playback = {
++		.stream_name = "ssp0 Tx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE  | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++	.capture = {
++		.stream_name = "ssp0 Rx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE  | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++},
++{
++	.name = "SSP2 Pin",
++	.ops = &skl_be_ssp_dai_ops,
++	.playback = {
++		.stream_name = "ssp2 Tx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE  | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++	.capture = {
++		.stream_name = "ssp2 Rx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++},
++{
++	.name = "SSP4 Pin",
++	.ops = &skl_be_ssp_dai_ops,
++	.playback = {
++		.stream_name = "ssp4 Tx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE  | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++	.capture = {
++		.stream_name = "ssp4 Rx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++},
++{
++	.name = "SSP5 Pin",
++	.ops = &skl_be_ssp_dai_ops,
++	.playback = {
++		.stream_name = "ssp5 Tx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE  | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++	.capture = {
++		.stream_name = "ssp5 Rx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++},
++#endif
+ };
+ 
+ int skl_dai_load(struct snd_soc_component *cmp, int index,
+-- 
+1.9.1
+

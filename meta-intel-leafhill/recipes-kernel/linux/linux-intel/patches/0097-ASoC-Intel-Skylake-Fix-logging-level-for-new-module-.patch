@@ -1,7 +1,7 @@
-From 326ede26d1164c9860e30f01f74f38c8521c6b83 Mon Sep 17 00:00:00 2001
+From f902a7bd2a9cd8dd7c15b35ddc98f827f9be81cb Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Tue, 23 Oct 2018 18:26:45 +0800
-Subject: [PATCH 097/100] ASoC: Intel: Skylake: Fix logging level for new
+Subject: [PATCH 097/120] ASoC: Intel: Skylake: Fix logging level for new
  module resource event notifications
 
 FW sends module resource event notifications to driver

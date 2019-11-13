@@ -1,7 +1,7 @@
-From b6557a93ad145e9ecd6a1041a63e2b97c84b3be5 Mon Sep 17 00:00:00 2001
+From 0c46fbef4bd5a008c31ac29a829d8d88c802b34b Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:11:48 +0100
-Subject: [PATCH 07/42] intel_pstate: Add forced CPU pstate change notification
+Subject: [PATCH] intel_pstate: Add forced CPU pstate change notification
 
 In case of no CPU frequency changes during 10 periods of a timer,
 send a force notification with a current value of CPU frequency.
@@ -13,10 +13,10 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 3e81156..e460af2 100644
+index 265362f..fd4b25e9 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
-@@ -57,6 +57,9 @@
+@@ -56,6 +56,9 @@
  #define fp_ext_toint(X) ((X) >> EXT_FRAC_BITS)
  #define int_ext_tofp(X) ((int64_t)(X) << EXT_FRAC_BITS)
  
@@ -26,7 +26,7 @@ index 3e81156..e460af2 100644
  static ATOMIC_NOTIFIER_HEAD(pstate_freq_notifier_list);
  
  static int notification_registered_flag;
-@@ -232,6 +235,7 @@ struct global_params {
+@@ -236,6 +239,7 @@ struct global_params {
   */
  struct cpudata {
  	int cpu;
@@ -34,7 +34,7 @@ index 3e81156..e460af2 100644
  
  	unsigned int policy;
  	struct update_util_data update_util;
-@@ -1407,6 +1411,7 @@ int pstate_unregister_freq_notify(struct notifier_block *nb)
+@@ -1460,6 +1464,7 @@ int pstate_unregister_freq_notify(struct notifier_block *nb)
  
  static int pstate_notifier_call_chain(struct cpudata *cpu)
  {
@@ -42,7 +42,7 @@ index 3e81156..e460af2 100644
  	return atomic_notifier_call_chain(&pstate_freq_notifier_list,
  		(unsigned long) cpu->pstate.current_pstate,
  		(void *) (long) (cpu->cpu));
-@@ -1414,6 +1419,12 @@ static int pstate_notifier_call_chain(struct cpudata *cpu)
+@@ -1467,6 +1472,12 @@ static int pstate_notifier_call_chain(struct cpudata *cpu)
  
  static void intel_pstate_set_pstate(struct cpudata *cpu, int pstate)
  {
@@ -55,7 +55,7 @@ index 3e81156..e460af2 100644
  	trace_cpu_frequency(pstate * cpu->pstate.scaling, cpu->cpu);
  	cpu->pstate.current_pstate = pstate;
  	/*
-@@ -1579,11 +1590,16 @@ static int intel_pstate_prepare_request(struct cpudata *cpu, int pstate)
+@@ -1742,11 +1753,16 @@ static int intel_pstate_prepare_request(struct cpudata *cpu, int pstate)
  
  static void intel_pstate_update_pstate(struct cpudata *cpu, int pstate)
  {

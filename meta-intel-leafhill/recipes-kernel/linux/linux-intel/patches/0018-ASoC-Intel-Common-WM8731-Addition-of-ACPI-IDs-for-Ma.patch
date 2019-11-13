@@ -1,0 +1,33 @@
+From bcb74c3b60b31f2f213ac8ffd48196b4e16dbd9e Mon Sep 17 00:00:00 2001
+From: Gaurav Vohra <gauravx.vohra@intel.com>
+Date: Sun, 21 Jul 2019 23:19:30 +0800
+Subject: [PATCH] ASoC: Intel: Common: WM8731 Addition of ACPI IDs for Machine
+ Driver loading
+
+Adding ACPI IDs for BroadMarket WM8731 machine driver dynamic
+loading. Additions were made to soc-acpi-intel-bxt-match.c
+
+Signed-off-by: Gaurav Vohra <gauravx.vohra@intel.com>
+---
+ sound/soc/intel/common/soc-acpi-intel-bxt-match.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/sound/soc/intel/common/soc-acpi-intel-bxt-match.c b/sound/soc/intel/common/soc-acpi-intel-bxt-match.c
+index 267f7ee..c7d6057 100644
+--- a/sound/soc/intel/common/soc-acpi-intel-bxt-match.c
++++ b/sound/soc/intel/common/soc-acpi-intel-bxt-match.c
+@@ -39,6 +39,11 @@ struct snd_soc_acpi_mach snd_soc_acpi_intel_bxt_machines[] = {
+ #endif
+ 	},
+ 	{
++		.id = "INT345A",
++		.drv_name = "lhcrb_wm8731_i2s",
++		.fw_filename = "dsp_fw_release.bin",
++	},
++	{
+ 		.id = "INT345B",
+ 		.drv_name = "lhcrb_aic3107M_i2s",
+ 		.fw_filename = "dsp_fw_release.bin",
+-- 
+1.9.1
+

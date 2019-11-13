@@ -1,0 +1,31 @@
+From 94e8f078c8e627b830d043c3d8cef44ef87fd63a Mon Sep 17 00:00:00 2001
+From: Szymon Mielczarek <szymonx.mielczarek@linux.intel.com>
+Date: Mon, 23 Sep 2019 13:59:52 +0200
+Subject: [PATCH] ASoC: Intel: boards: Add pm ops for bxtp_ivi_rse machine
+
+The PM ops are required to properly suspend and resume PCM streams.
+
+Squash into:
+ASoC: Intel: Boards: Add machine driver for RSE topology
+
+Change-Id: I8173225c38b099cfd1be352e2cbe4f3c7e18ddfc
+Signed-off-by: Szymon Mielczarek <szymonx.mielczarek@linux.intel.com>
+---
+ sound/soc/intel/boards/bxtp_ivi_rse_rt298.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/sound/soc/intel/boards/bxtp_ivi_rse_rt298.c b/sound/soc/intel/boards/bxtp_ivi_rse_rt298.c
+index 25917c4..82edcb3 100644
+--- a/sound/soc/intel/boards/bxtp_ivi_rse_rt298.c
++++ b/sound/soc/intel/boards/bxtp_ivi_rse_rt298.c
+@@ -346,6 +346,7 @@ static int broxton_audio_remove(struct platform_device *pdev)
+ 	.remove = broxton_audio_remove,
+ 	.driver = {
+ 		.name = "bxt_ivi_rse_i2s",
++		.pm = &snd_soc_pm_ops,
+ 	},
+ };
+ 
+-- 
+1.9.1
+

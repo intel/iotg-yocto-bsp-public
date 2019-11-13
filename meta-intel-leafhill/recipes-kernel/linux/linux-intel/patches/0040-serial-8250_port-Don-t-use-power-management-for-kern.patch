@@ -1,0 +1,129 @@
+From 6d26e86fb10c7b18b72b61e92dac8f5970ad7e80 Mon Sep 17 00:00:00 2001
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Date: Thu, 17 Nov 2016 13:12:45 +0200
+Subject: [PATCH] serial: 8250_port: Don't use power management for kernel
+ console
+
+Doing any kind of power management for kernel console is really bad idea.
+
+First of all, it runs in poll and atomic mode. This fact attaches a limitation
+on the functions that might be called. For example, pm_runtime_get_sync() might
+sleep and thus can't be used. On the other hand pm_runtime_get() doesn't
+guarantee that device becames powered on (fast enough). On ACPI enabled
+platforms it might even call firmware for a job.
+
+Besides that, imagine the case when console is about to print a kernel oops and
+it's powered off. In such an emergency case calling the complex functions is
+not the best what we can do, taking into consideration that user wants to see
+at least something of the last kernel word before it passes away.
+
+Here we modify the 8250 console code to prevent runtime power management.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/tty/serial/8250/8250_core.c |  9 +++++++++
+ drivers/tty/serial/8250/8250_port.c | 20 ++++++++++++++++----
+ include/linux/serial_8250.h         |  1 +
+ 3 files changed, 26 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/tty/serial/8250/8250_core.c b/drivers/tty/serial/8250/8250_core.c
+index 8fe3d0e..b1b8bbc 100644
+--- a/drivers/tty/serial/8250/8250_core.c
++++ b/drivers/tty/serial/8250/8250_core.c
+@@ -612,6 +612,14 @@ static int univ8250_console_setup(struct console *co, char *options)
+ 	return retval;
+ }
+ 
++static void univ8250_console_exit(struct console *co)
++{
++	struct uart_port *port;
++
++	port = &serial8250_ports[co->index].port;
++	serial8250_console_exit(port);
++}
++
+ /**
+  *	univ8250_console_match - non-standard console matching
+  *	@co:	  registering console
+@@ -670,6 +678,7 @@ static int univ8250_console_match(struct console *co, char *name, int idx,
+ 	.write		= univ8250_console_write,
+ 	.device		= uart_console_device,
+ 	.setup		= univ8250_console_setup,
++	.exit		= univ8250_console_exit,
+ 	.match		= univ8250_console_match,
+ 	.flags		= CON_PRINTBUFFER | CON_ANYTIME,
+ 	.index		= -1,
+diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
+index 2470adc..0f8f0ca 100644
+--- a/drivers/tty/serial/8250/8250_port.c
++++ b/drivers/tty/serial/8250/8250_port.c
+@@ -3225,6 +3225,9 @@ static void serial8250_console_restore(struct uart_8250_port *up)
+  *	any possible real use of the port...
+  *
+  *	The console_lock must be held when we get here.
++ *
++ *	Doing runtime PM is a really bad idea for the kernel console.
++ *	Thus we assume that the function called when device is powered on.
+  */
+ void serial8250_console_write(struct uart_8250_port *up, const char *s,
+ 			      unsigned int count)
+@@ -3236,8 +3239,6 @@ void serial8250_console_write(struct uart_8250_port *up, const char *s,
+ 
+ 	touch_nmi_watchdog();
+ 
+-	serial8250_rpm_get(up);
+-
+ 	if (port->sysrq)
+ 		locked = 0;
+ 	else if (oops_in_progress)
+@@ -3282,7 +3283,6 @@ void serial8250_console_write(struct uart_8250_port *up, const char *s,
+ 
+ 	if (locked)
+ 		spin_unlock_irqrestore(&port->lock, flags);
+-	serial8250_rpm_put(up);
+ }
+ 
+ static unsigned int probe_baud(struct uart_port *port)
+@@ -3306,6 +3306,7 @@ int serial8250_console_setup(struct uart_port *port, char *options, bool probe)
+ 	int bits = 8;
+ 	int parity = 'n';
+ 	int flow = 'n';
++	int ret;
+ 
+ 	if (!port->iobase && !port->membase)
+ 		return -ENODEV;
+@@ -3315,7 +3316,18 @@ int serial8250_console_setup(struct uart_port *port, char *options, bool probe)
+ 	else if (probe)
+ 		baud = probe_baud(port);
+ 
+-	return uart_set_options(port, port->cons, baud, parity, bits, flow);
++	ret = uart_set_options(port, port->cons, baud, parity, bits, flow);
++
++	if (port->dev)
++		pm_runtime_get_noresume(port->dev);
++
++	return ret;
++}
++
++void serial8250_console_exit(struct uart_port *port)
++{
++	if (port->dev)
++		pm_runtime_put_noidle(port->dev);
+ }
+ 
+ #endif /* CONFIG_SERIAL_8250_CONSOLE */
+diff --git a/include/linux/serial_8250.h b/include/linux/serial_8250.h
+index 18e2142..bf8d72e 100644
+--- a/include/linux/serial_8250.h
++++ b/include/linux/serial_8250.h
+@@ -174,6 +174,7 @@ extern void serial8250_do_set_divisor(struct uart_port *port, unsigned int baud,
+ void serial8250_console_write(struct uart_8250_port *up, const char *s,
+ 			      unsigned int count);
+ int serial8250_console_setup(struct uart_port *port, char *options, bool probe);
++void serial8250_console_exit(struct uart_port *port);
+ 
+ extern void serial8250_set_isa_configurator(void (*v)
+ 					(int port, struct uart_port *up,
+-- 
+1.9.1
+

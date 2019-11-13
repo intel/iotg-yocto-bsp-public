@@ -1,0 +1,144 @@
+From dcebf2a4e134506afc784026c6f361a1e489b307 Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Mon, 30 Sep 2019 15:47:06 -0700
+Subject: [PATCH] drm/i915/gen9+: Add support for pipe background color
+
+Gen9+ platforms allow CRTC's to be programmed with a background/canvas
+color below the programmable planes.  Let's expose this for use by
+compositors.
+
+This patch is based on earlier work by Chandra Konduru; unfortunately
+the driver has evolved so much since his patches were written (in the
+pre-atomic era) that the functionality had to be pretty much completely
+rewritten for the new i915 atomic internals.
+
+v2:
+ - Set initial background color (black) via proper helper function (Bob)
+ - Fix debugfs output
+ - General rebasing
+
+v3:
+ - Ensure color updates take effect on modesets as well (Bob)
+
+Cc: Chandra Konduru <chandra.konduru@intel.com>
+Cc: Bob Paauwe <bob.j.paauwe@intel.com>
+Cc: dri-devel@lists.freedesktop.org
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Reviewed-by: Bob Paauwe <bob.j.paauwe@intel.com>
+---
+ drivers/gpu/drm/i915/i915_debugfs.c  |  8 ++++++++
+ drivers/gpu/drm/i915/i915_reg.h      |  6 ++++++
+ drivers/gpu/drm/i915/intel_display.c | 40 ++++++++++++++++++++++++++++++++++++
+ 3 files changed, 54 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/i915_debugfs.c b/drivers/gpu/drm/i915/i915_debugfs.c
+index 7258798..05ba731 100644
+--- a/drivers/gpu/drm/i915/i915_debugfs.c
++++ b/drivers/gpu/drm/i915/i915_debugfs.c
+@@ -3273,6 +3273,14 @@ static int i915_display_info(struct seq_file *m, void *unused)
+ 			intel_scaler_info(m, crtc);
+ 			intel_plane_info(m, crtc);
+ 		}
++		if (INTEL_GEN(dev_priv) >= 9 && pipe_config->base.active) {
++			u64 background = pipe_config->base.bgcolor;
++
++			seq_printf(m, "\tbackground color (10bpc): r=%x g=%x b=%x\n",
++				   DRM_ARGB_RED(background, 10),
++				   DRM_ARGB_GREEN(background, 10),
++				   DRM_ARGB_BLUE(background, 10));
++		}
+ 
+ 		seq_printf(m, "\tunderrun reporting: cpu=%s pch=%s \n",
+ 			   yesno(!crtc->cpu_fifo_underrun_disabled),
+diff --git a/drivers/gpu/drm/i915/i915_reg.h b/drivers/gpu/drm/i915/i915_reg.h
+index b1a5479..1cc9677 100644
+--- a/drivers/gpu/drm/i915/i915_reg.h
++++ b/drivers/gpu/drm/i915/i915_reg.h
+@@ -5685,6 +5685,12 @@ enum {
+ #define   PIPEMISC_DITHER_TYPE_SP	(0 << 2)
+ #define PIPEMISC(pipe)			_MMIO_PIPE2(pipe, _PIPE_MISC_A)
+ 
++/* Skylake pipe bottom color */
++#define _SKL_BOTTOM_COLOR_A             0x70034
++#define   SKL_BOTTOM_COLOR_GAMMA_ENABLE (1 << 31)
++#define   SKL_BOTTOM_COLOR_CSC_ENABLE   (1 << 30)
++#define SKL_BOTTOM_COLOR(pipe)          _MMIO_PIPE2(pipe, _SKL_BOTTOM_COLOR_A)
++
+ #define VLV_DPFLIPSTAT				_MMIO(VLV_DISPLAY_BASE + 0x70028)
+ #define   PIPEB_LINE_COMPARE_INT_EN		(1 << 29)
+ #define   PIPEB_HLINE_INT_EN			(1 << 28)
+diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
+index 0d834f0..ec17e0e 100644
+--- a/drivers/gpu/drm/i915/intel_display.c
++++ b/drivers/gpu/drm/i915/intel_display.c
+@@ -3907,6 +3907,37 @@ static void intel_update_pipe_config(const struct intel_crtc_state *old_crtc_sta
+ 	}
+ }
+ 
++static void intel_update_background_color(struct intel_crtc *crtc)
++{
++	struct drm_device *dev = crtc->base.dev;
++	struct drm_i915_private *dev_priv = dev->dev_private;
++	struct intel_crtc_state *pipe_config =
++		to_intel_crtc_state(crtc->base.state);
++	u64 background = pipe_config->base.bgcolor;
++	uint32_t val;
++
++	if (INTEL_GEN(dev_priv) >= 9) {
++		/* BGR 16bpc ==> RGB 10bpc */
++		val = DRM_ARGB_RED(background, 10) << 20
++		    | DRM_ARGB_GREEN(background, 10) << 10
++		    | DRM_ARGB_BLUE(background, 10);
++
++		/*
++		 * Set CSC and gamma for bottom color.
++		 *
++		 * FIXME:  We turn these on unconditionally for now to match
++		 * how we've setup the various planes.  Once the color
++		 * management framework lands, it may or may not choose to
++		 * set these bits.
++		 */
++		val |= SKL_BOTTOM_COLOR_CSC_ENABLE;
++		val |= SKL_BOTTOM_COLOR_GAMMA_ENABLE;
++
++		I915_WRITE(SKL_BOTTOM_COLOR(crtc->pipe), val);
++	}
++}
++
++
+ static void intel_fdi_normal_train(struct intel_crtc *crtc)
+ {
+ 	struct drm_device *dev = crtc->base.dev;
+@@ -10789,6 +10820,9 @@ static int intel_crtc_atomic_check(struct drm_crtc *crtc,
+ 							 pipe_config);
+ 	}
+ 
++	if (crtc->state->bgcolor != crtc_state->bgcolor)
++		pipe_config->update_pipe = true;
++
+ 	if (HAS_IPS(dev_priv))
+ 		pipe_config->ips_enabled = hsw_compute_ips_config(pipe_config);
+ 
+@@ -13370,6 +13404,9 @@ static void intel_begin_crtc_commit(struct drm_crtc *crtc,
+ 	/* Perform vblank evasion around commit operation */
+ 	intel_pipe_update_start(intel_cstate);
+ 
++	if (to_intel_crtc_state(crtc->state)->update_pipe)
++		intel_update_background_color(intel_crtc);
++
+ 	if (modeset)
+ 		goto out;
+ 
+@@ -14307,6 +14344,9 @@ static int intel_crtc_init(struct drm_i915_private *dev_priv, enum pipe pipe)
+ 
+ 	WARN_ON(drm_crtc_index(&intel_crtc->base) != intel_crtc->pipe);
+ 
++	if (INTEL_GEN(dev_priv) >= 9)
++		drm_crtc_add_bgcolor_property(&intel_crtc->base);
++
+ 	return 0;
+ 
+ fail:
+-- 
+1.9.1
+

@@ -1,7 +1,7 @@
-From a934d42f6eb0933e5e68f5f08198ccbdb866fdf5 Mon Sep 17 00:00:00 2001
+From 2c62f2094e999e99fa9f230fab396a5a2c64639b Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Thu, 23 Jun 2016 12:38:27 +0100
-Subject: [PATCH 027/100] ASoC: Codecs: TDF8532 ACPI enumeration and i2c mute
+Subject: [PATCH 027/120] ASoC: Codecs: TDF8532 ACPI enumeration and i2c mute
 
 Added codec ACPI ID to allow enumeration via ACPI.
 Digital mute function using i2c command.

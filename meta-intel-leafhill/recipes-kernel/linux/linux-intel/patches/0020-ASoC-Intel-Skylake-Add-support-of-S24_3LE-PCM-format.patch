@@ -1,0 +1,44 @@
+From bc5dc1f497517020e6fe0e9b25607481e4a34ab0 Mon Sep 17 00:00:00 2001
+From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
+Date: Thu, 21 Sep 2017 09:52:34 +0800
+Subject: [PATCH 20/25] ASoC: Intel: Skylake: Add support of S24_3LE PCM
+ formats for FE
+
+Add support of missing S24_3LE PCM formats for System Pin 6,
+Deepbuffer and Reference Pin of FE CPU DAI.
+
+Signed-off-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl-pcm.c
+---
+ sound/soc/intel/skylake/skl-pcm.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index 739e231..04f1133 100644
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -1312,7 +1312,8 @@ struct skl_dsp_notify_ops cb_ops = {
+ 		.channels_min = HDA_MONO,
+ 		.channels_max = HDA_QUAD,
+ 		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+-		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE |
++			SNDRV_PCM_FMTBIT_S32_LE | SNDRV_PCM_FMTBIT_S24_3LE,
+ 		.sig_bits = 32,
+ 	},
+ },
+@@ -1324,7 +1325,8 @@ struct skl_dsp_notify_ops cb_ops = {
+ 		.channels_min = HDA_STEREO,
+ 		.channels_max = HDA_STEREO,
+ 		.rates = SNDRV_PCM_RATE_48000,
+-		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE |
++			SNDRV_PCM_FMTBIT_S32_LE | SNDRV_PCM_FMTBIT_S24_3LE,
+ 		.sig_bits = 32,
+ 	},
+ 	.capture = {
+-- 
+1.9.1
+

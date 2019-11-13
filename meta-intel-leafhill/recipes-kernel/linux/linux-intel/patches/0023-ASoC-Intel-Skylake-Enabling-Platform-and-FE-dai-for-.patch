@@ -1,0 +1,61 @@
+From 287634239738968fd835be9cf90b848358ef3635 Mon Sep 17 00:00:00 2001
+From: Gaurav Vohra <gauravx.vohra@intel.com>
+Date: Sun, 7 Jul 2019 23:12:48 +0800
+Subject: [PATCH 23/25] ASoC: Intel: Skylake: Enabling Platform and FE dai for
+ GPMRB
+
+GPMRB Machine requires static FE dais and Platform dai, enabling the same
+
+Signed-off-by: Gaurav Vohra <gauravx.vohra@intel.com>
+---
+ sound/soc/intel/skylake/skl-pcm.c | 27 +++++++++++++++++++++++++--
+ 1 file changed, 25 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index 082ac8d..0bd85b6 100644
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -1205,7 +1205,29 @@ struct skl_dsp_notify_ops cb_ops = {
+ 			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+ 	},
+ },
+-#if IS_ENABLED(CONFIG_SND_SOC_INTEL_BXT_ULL_MACH)
++#if IS_ENABLED(CONFIG_SND_SOC_INTEL_BXT_ULL_MACH) || \
++	IS_ENABLED(CONFIG_SND_SOC_INTEL_BXT_GPMRB_MACH)
++{
++	.name = "System Pin 2",
++	.ops = &skl_pcm_dai_ops,
++	.capture = {
++		.stream_name = "System Capture 2",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++	.playback = {
++		.stream_name = "System Playback 2",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE |
++			SNDRV_PCM_FMTBIT_S24_3LE | SNDRV_PCM_FMTBIT_S32_LE |
++			SNDRV_PCM_FMTBIT_FLOAT_LE,
++	},
++},
+ {
+ 	.name = "System Pin 3",
+ 	.ops = &skl_pcm_dai_ops,
+@@ -1511,7 +1533,8 @@ struct skl_dsp_notify_ops cb_ops = {
+ 	},
+ },
+ #endif
+-#if IS_ENABLED(CONFIG_SND_SOC_INTEL_BXT_ULL_MACH)
++#if IS_ENABLED(CONFIG_SND_SOC_INTEL_BXT_ULL_MACH) || \
++	IS_ENABLED(CONFIG_SND_SOC_INTEL_BXT_GPMRB_MACH)
+ {
+ 	.name = "SSP0-B Pin",
+ 	.ops = &skl_be_ssp_dai_ops,
+-- 
+1.9.1
+

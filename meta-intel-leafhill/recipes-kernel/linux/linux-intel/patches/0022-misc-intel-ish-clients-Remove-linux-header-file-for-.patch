@@ -1,0 +1,43 @@
+From 6938ccaa4dce8ed9845e7a48dd1560907163f6d4 Mon Sep 17 00:00:00 2001
+From: "Ruslan, Rusaimi Amira" <rusaimi.amira.ruslan@intel.com>
+Date: Fri, 13 Apr 2018 17:49:19 +0800
+Subject: [PATCH] misc: intel-ish-clients: Remove linux header file for uapi
+
+Remove linux mutex and miscdevice header file, should not expose to userspace.
+Get compile error when CONFIG_HEADERS_CHECK is enable.
+
+Signed-off-by: Ruslan, Rusaimi Amira <rusaimi.amira.ruslan@intel.com>
+Signed-off-by: Lay, Kuan Loon <kuan.loon.lay@intel.com>
+---
+ drivers/misc/intel-ish-client/intel-ishtp-clients.c | 1 +
+ include/uapi/linux/intel-ishtp-clients.h            | 2 --
+ 2 files changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/misc/intel-ish-client/intel-ishtp-clients.c b/drivers/misc/intel-ish-client/intel-ishtp-clients.c
+index 6407fe4..5f13070 100644
+--- a/drivers/misc/intel-ish-client/intel-ishtp-clients.c
++++ b/drivers/misc/intel-ish-client/intel-ishtp-clients.c
+@@ -29,6 +29,7 @@
+ #include <linux/types.h>
+ #include <linux/uuid.h>
+ #include <linux/uaccess.h>
++#include <linux/mutex.h>
+ 
+ #include "ishtp-dev.h"
+ #include "client.h"
+diff --git a/include/uapi/linux/intel-ishtp-clients.h b/include/uapi/linux/intel-ishtp-clients.h
+index d228f19..ac47a55 100644
+--- a/include/uapi/linux/intel-ishtp-clients.h
++++ b/include/uapi/linux/intel-ishtp-clients.h
+@@ -18,8 +18,6 @@
+ #define _INTEL_ISHTP_CLIENTS_H
+ 
+ #include <linux/uuid.h>
+-#include <linux/mutex.h>
+-#include <linux/miscdevice.h>
+ 
+ /*
+  * This IOCTL is used to associate the current file descriptor with a
+-- 
+1.9.1
+

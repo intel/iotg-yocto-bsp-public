@@ -1,7 +1,7 @@
-From ee878ca263ea4c3d7c770c3102df62e0a82e8640 Mon Sep 17 00:00:00 2001
+From d235e79d299bfc0691dba63cbbbe090c7a5565ba Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Wed, 1 Mar 2017 13:45:04 +0000
-Subject: [PATCH 045/100] ASoC: Intel: Boards: use designated initialisers for
+Subject: [PATCH 045/120] ASoC: Intel: Boards: use designated initialisers for
  FE DAIs
 
 May need to access the individual DAI entries in the DAI array. Use
@@ -13,7 +13,7 @@ Signed-off-by: CraigX Kewley <craigx.kewley@intel.com>
  1 file changed, 27 insertions(+), 12 deletions(-)
 
 diff --git a/sound/soc/intel/boards/bxt_gpmrb.c b/sound/soc/intel/boards/bxt_gpmrb.c
-index 544bd41..9d260f8 100644
+index 544bd413..9d260f8 100644
 --- a/sound/soc/intel/boards/bxt_gpmrb.c
 +++ b/sound/soc/intel/boards/bxt_gpmrb.c
 @@ -27,6 +27,21 @@

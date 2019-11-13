@@ -1,7 +1,7 @@
-From 4081ac671d86695189977713e6a65dafe8ad2c4c Mon Sep 17 00:00:00 2001
+From f7f22149469aaec8daa505077d47dca80fd1cb1d Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Fri, 8 Sep 2017 13:51:45 +0100
-Subject: [PATCH 068/100] ASoC: TDF8532: Read error status
+Subject: [PATCH 068/120] ASoC: TDF8532: Read error status
 
 Verify the execution of each state change command (start / stop) by
 reading the last message error status after each call.

@@ -1,7 +1,7 @@
-From a3ced2f16e03c88109f2aaf1280a206621d10826 Mon Sep 17 00:00:00 2001
+From f5af01d3b4a7fe466fb3e3abfb35dd0eaed395f2 Mon Sep 17 00:00:00 2001
 From: Vidya Srinivas <vidya.srinivas@intel.com>
 Date: Sat, 12 May 2018 03:03:13 +0530
-Subject: [PATCH 24/45] drm/i915: Enable Display WA 0528
+Subject: [PATCH 24/46] drm/i915: Enable Display WA 0528
 
 Possible hang with NV12 plane surface formats.
 WA: When the plane source pixel format is NV12,

@@ -1,0 +1,403 @@
+From 7e11e46bec587d3570296463e6baf6fbf32d60c8 Mon Sep 17 00:00:00 2001
+From: "SengKai,Tan" <seng.kai.tan@intel.com>
+Date: Mon, 4 Jul 2016 17:25:12 +0800
+Subject: [PATCH] ASoC: Intel: Skylake: Add wm8731 machine driver
+
+This commit is to add new wm8731 codec machine drivers for
+Apollo Lake-I LeafHill CRB.
+
+LeafHill CRB Machine driver enable SSP2 as a dummy codec
+and SSP4 port connect with wm8731 codec with settings:
+- Master Mode
+- I2S protocol
+- 48000Hz
+- S16_LE, S24_LE and S32_LE format
+
+Signed-off-by: Tan, Seng Kai <seng.kai.tan@intel.com>
+Signed-off-by: Joshua Wong Weng Onn <joshua.weng.onn.wong@intel.com>
+Signed-off-by: Ho, Yu Xin <yu.xin.ho@intel.com>
+
+Conflicts:
+	sound/soc/intel/Kconfig
+
+Conflicts:
+	MAINTAINERS
+	sound/soc/intel/boards/Makefile
+---
+ MAINTAINERS                                |   5 +
+ sound/soc/codecs/wm8731.c                  |   9 +
+ sound/soc/intel/boards/Kconfig             |  11 ++
+ sound/soc/intel/boards/Makefile            |   2 +
+ sound/soc/intel/boards/apli_lhcrb_wm8731.c | 271 +++++++++++++++++++++++++++++
+ 5 files changed, 298 insertions(+)
+ create mode 100644 sound/soc/intel/boards/apli_lhcrb_wm8731.c
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index a6be3c4..d04f776 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13652,6 +13652,11 @@ F:	Documentation/sound/soc/
+ F:	sound/soc/
+ F:	include/sound/soc*
+ 
++APOLLO_LAKE_I WM8731 MACHINE DRIVER
++M:	Tan, Seng Kai <seng.kai.tan@intel.com>
++S:	Maintained
++F:	sound/soc/intel/boards/apli_lhcrb_wm8731.c
++
+ SOUNDWIRE SUBSYSTEM
+ M:	Vinod Koul <vinod.koul@intel.com>
+ M:	Sanyog Kale <sanyog.r.kale@intel.com>
+diff --git a/sound/soc/codecs/wm8731.c b/sound/soc/codecs/wm8731.c
+index 7c8fad8..4a79e30 100644
+--- a/sound/soc/codecs/wm8731.c
++++ b/sound/soc/codecs/wm8731.c
+@@ -19,6 +19,7 @@
+ #include <linux/delay.h>
+ #include <linux/pm.h>
+ #include <linux/i2c.h>
++#include <linux/acpi.h>
+ #include <linux/slab.h>
+ #include <linux/regmap.h>
+ #include <linux/regulator/consumer.h>
+@@ -730,6 +731,13 @@ static int wm8731_spi_remove(struct spi_device *spi)
+ };
+ #endif /* CONFIG_SPI_MASTER */
+ 
++const struct acpi_device_id wm8731_acpi_match[] = {
++	{"INT345A", 0},
++	{},
++};
++MODULE_DEVICE_TABLE(acpi, wm8731_acpi_match);
++EXPORT_SYMBOL_GPL(wm8731_acpi_match);
++
+ #if IS_ENABLED(CONFIG_I2C)
+ static int wm8731_i2c_probe(struct i2c_client *i2c,
+ 			    const struct i2c_device_id *id)
+@@ -800,6 +808,7 @@ static int wm8731_i2c_remove(struct i2c_client *client)
+ 	.driver = {
+ 		.name = "wm8731",
+ 		.of_match_table = wm8731_of_match,
++		.acpi_match_table = ACPI_PTR(wm8731_acpi_match),
+ 	},
+ 	.probe =    wm8731_i2c_probe,
+ 	.remove =   wm8731_i2c_remove,
+diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
+index 347628e..888c299 100644
+--- a/sound/soc/intel/boards/Kconfig
++++ b/sound/soc/intel/boards/Kconfig
+@@ -435,6 +435,17 @@ config SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH
+ 	   Say Y or m if you have such a device. This is a recommended option.
+ 	   If unsure select "N".
+ 
++config SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH
++	tristate "ASoC Audio driver for APLI LHCRB WM8731 Codec"
++	depends on X86_INTEL_LPSS && I2C
++	select SND_SOC_WM8731
++	default n
++	help
++	  This adds support for ASoC machine driver for  Intel(R)
++	  Apollo Lake-I Leaf Hill Customer reference board platform.
++	  Say Y if you have such a device
++	  If unsure select "N".
++
+ endif ## SND_SOC_INTEL_SKYLAKE
+ 
+ endif ## SND_SOC_INTEL_MACH
+diff --git a/sound/soc/intel/boards/Makefile b/sound/soc/intel/boards/Makefile
+index a3c2878..8285bce 100644
+--- a/sound/soc/intel/boards/Makefile
++++ b/sound/soc/intel/boards/Makefile
+@@ -35,6 +35,7 @@ snd-soc-bxtp_ivi_rse_rt298-objs := bxtp_ivi_rse_rt298.o
+ snd-soc-bxtp_ivi_hu_rt298-objs := bxtp_ivi_hu_rt298.o
+ snd-soc-bxtp_ivi_m3-objs := bxtp_ivi_m3.o
+ snd-soc-bxtp_ivi_generic-objs := bxtp_ivi_generic.o
++snd-soc-apli_lhcrb_wm8731-objs := apli_lhcrb_wm8731.o
+ 
+ obj-$(CONFIG_SND_SOC_INTEL_HASWELL_MACH) += snd-soc-sst-haswell.o
+ obj-$(CONFIG_SND_SOC_INTEL_BYT_RT5640_MACH) += snd-soc-sst-byt-rt5640-mach.o
+@@ -72,3 +73,4 @@ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_RSE_MACH) += snd-soc-bxtp_ivi_rse_rt298.o
+ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_HU_MACH) += snd-soc-bxtp_ivi_hu_rt298.o
+ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_M3_MACH) += snd-soc-bxtp_ivi_m3.o
+ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH) += snd-soc-bxtp_ivi_generic.o
++obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH) += snd-soc-apli_lhcrb_wm8731.o
+diff --git a/sound/soc/intel/boards/apli_lhcrb_wm8731.c b/sound/soc/intel/boards/apli_lhcrb_wm8731.c
+new file mode 100644
+index 00000000..30b801c
+--- /dev/null
++++ b/sound/soc/intel/boards/apli_lhcrb_wm8731.c
+@@ -0,0 +1,271 @@
++/*
++ * Intel Apli(Apollo Lake) I2S Machine Driver for
++ * LF (Leaf Hill) reference platform
++ *
++ * Copyright (C) 2014-2015, Intel Corporation. All rights reserved.
++ *
++ * Modified from:
++ *   Intel APLI I2S Machine driver
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License version
++ * 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <sound/core.h>
++#include <sound/pcm.h>
++#include <sound/soc.h>
++#include <linux/gpio.h>
++#include <linux/acpi.h>
++#include <sound/pcm_params.h>
++#include "../../codecs/wm8731.h"
++
++static int apli_lhcrb_wm8731_startup(struct snd_pcm_substream *substream)
++{
++	int ret;
++	static unsigned int rates[] = { 48000 };
++	static unsigned int channels[] = {2};
++	static u64 formats = SNDRV_PCM_FMTBIT_S16_LE |
++						SNDRV_PCM_FMTBIT_S24_LE |
++						SNDRV_PCM_FMTBIT_S32_LE;
++
++	static struct snd_pcm_hw_constraint_list hw_constraints_rates = {
++		.count = ARRAY_SIZE(rates),
++		.list = rates,
++		.mask = 0,
++	};
++
++	static struct snd_pcm_hw_constraint_list hw_constraints_channels = {
++		.count = ARRAY_SIZE(channels),
++		.list = channels,
++		.mask = 0,
++	};
++
++	ret = snd_pcm_hw_constraint_list(substream->runtime, 0,
++			SNDRV_PCM_HW_PARAM_RATE,
++			&hw_constraints_rates);
++
++	ret = snd_pcm_hw_constraint_list(substream->runtime, 0,
++				SNDRV_PCM_HW_PARAM_CHANNELS,
++				&hw_constraints_channels);
++
++	ret = snd_pcm_hw_constraint_mask64(substream->runtime,
++				SNDRV_PCM_HW_PARAM_FORMAT,
++				formats);
++
++	return ret;
++}
++
++static struct snd_soc_ops apli_lhcrb_wm8731_ops = {
++	.startup = apli_lhcrb_wm8731_startup,
++};
++
++static const struct snd_kcontrol_new apli_controls[] = {
++	SOC_DAPM_PIN_SWITCH("Headphone Jack"),
++	SOC_DAPM_PIN_SWITCH("Mic Jack"),
++};
++
++static const struct snd_soc_dapm_widget apli_widgets[] = {
++	SND_SOC_DAPM_SPK("SSP2 PbTestPin", NULL),
++	SND_SOC_DAPM_MIC("SSP2 CpTestPin", NULL),
++	SND_SOC_DAPM_SPK("SSP4 Speaker", NULL),
++	SND_SOC_DAPM_MIC("SSP4 Mic", NULL),
++	SND_SOC_DAPM_HP("Headphone Jack", NULL),
++	SND_SOC_DAPM_MIC("Mic Jack", NULL),
++};
++
++static const struct snd_soc_dapm_route apli_lhcrb_wm8731_map[] = {
++	/* HP Jack */
++	{"Headphone Jack", NULL, "LHPOUT"},
++	{"Headphone Jack", NULL, "RHPOUT"},
++
++	{"RHPOUT", NULL, "Playback"},
++	{"LHPOUT", NULL, "Playback"},
++
++	/* Mic Jack */
++	{"Capture", NULL, "MICIN"},
++	{"MICIN", NULL, "Mic Jack"},
++
++	/* Codec BE connections */
++	/* SSP2 follows Hardware pin naming */
++	{"SSP2 PbTestPin", NULL, "ssp2 Tx"},
++	{"ssp2 Tx", NULL, "codec0_out"},
++
++	{"codec0_in", NULL, "ssp2 Rx"},
++	{"ssp2 Rx", NULL, "SSP2 CpTestPin"},
++
++	/* SSP4 follows Hardware pin naming */
++	{"SSP4 Speaker", NULL, "ssp4 Tx"},
++	{"ssp4 Tx", NULL, "codec1_out"},
++
++	{"codec1_in", NULL, "ssp4 Rx"},
++	{"ssp4 Rx", NULL, "SSP4 Mic"},
++};
++
++
++static int apli_wm8731_hw_params(struct snd_pcm_substream *substream,
++	struct snd_pcm_hw_params *params)
++{
++	struct snd_soc_pcm_runtime *rtd = substream->private_data;
++	struct snd_soc_dai *codec_dai = rtd->codec_dai;
++	int ret;
++
++	/* set the codec system clock for DAC and ADC */
++	ret = snd_soc_dai_set_sysclk(codec_dai, WM8731_SYSCLK_XTAL
++		, 12288000, SND_SOC_CLOCK_IN);
++	if (ret < 0)
++		dev_err(rtd->dev, "snd_soc_dai_set_sysclk err = %d\n", ret);
++
++	return ret;
++}
++
++static struct snd_soc_ops apli_wm8731_ops = {
++	.hw_params = apli_wm8731_hw_params,
++};
++
++static const char pname[] = "0000:00:0e.0";
++
++/* apli digital audio interface glue - connects codec <--> CPU */
++static struct snd_soc_dai_link apli_lhcrb_wm8731_dais[] = {
++	/* Front End DAI links */
++	{
++		.name = "SSP2 Playback Port",
++		.stream_name = "SSP2 PbTestPin",
++		.cpu_dai_name = "System Pin",
++		.platform_name = pname,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
++				SND_SOC_DPCM_TRIGGER_POST},
++		.dpcm_playback = 1,
++		.ops = &apli_lhcrb_wm8731_ops,
++	},
++	{
++		.name = "SSP2 Capture Port",
++		.stream_name = "SSP2 CpTestPin",
++		.cpu_dai_name = "System Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = pname,
++		.init = NULL,
++		.dpcm_capture = 1,
++		.ignore_suspend = 1,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.ops = &apli_lhcrb_wm8731_ops,
++	},
++	{
++		.name = "SSP4 Playback Port",
++		.stream_name = "wm8731 Headphone",
++		.cpu_dai_name = "Deepbuffer Pin",
++		.platform_name = pname,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.trigger = {SND_SOC_DPCM_TRIGGER_POST
++			, SND_SOC_DPCM_TRIGGER_POST},
++		.dpcm_playback = 1,
++		.ops = &apli_lhcrb_wm8731_ops,
++	},
++	{
++		.name = "SSP4 Capture Port",
++		.stream_name = "wm8731 Mic",
++		.cpu_dai_name = "Reference Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = pname,
++		.init = NULL,
++		.dpcm_capture = 1,
++		.ignore_suspend = 1,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.ops = &apli_lhcrb_wm8731_ops,
++	},
++	/* Back End DAI links */
++	{
++		/* SSP2 - Codec */
++		.name = "SSP2-Codec",
++		.id = 0,
++		.cpu_dai_name = "SSP2 Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = pname,
++		.ignore_suspend = 1,
++		.dpcm_playback = 1,
++		.dpcm_capture = 1,
++		.no_pcm = 1,
++		.init = NULL,
++	},
++	{
++		/* SSP4 - Codec */
++		.name = "SSP4-Codec",
++		.id = 1,
++		.cpu_dai_name = "SSP4 Pin",
++		.codec_name = "i2c-INT345A:00",
++		.codec_dai_name = "wm8731-hifi",
++		.ignore_suspend = 1,
++		.ignore_pmdown_time = 1,
++		.ops = &apli_wm8731_ops,
++		.dai_fmt = SND_SOC_DAIFMT_I2S |
++					SND_SOC_DAIFMT_NB_NF |
++					SND_SOC_DAIFMT_CBS_CFS,
++		.platform_name = pname,
++		.ignore_suspend = 1,
++		.dpcm_playback = 1,
++		.dpcm_capture = 1,
++		.no_pcm = 1,
++		.init = NULL,
++	},
++};
++
++/* apli audio machine driver for WM8731 Proto Board*/
++static struct snd_soc_card apli_lhcrb_wm8731 = {
++	.name = "apli-lhcrb-wm8731_i2s",
++	.owner = THIS_MODULE,
++	.dai_link = apli_lhcrb_wm8731_dais,
++	.num_links = ARRAY_SIZE(apli_lhcrb_wm8731_dais),
++	.controls = apli_controls,
++	.num_controls = ARRAY_SIZE(apli_controls),
++	.dapm_widgets = apli_widgets,
++	.num_dapm_widgets = ARRAY_SIZE(apli_widgets),
++	.dapm_routes = apli_lhcrb_wm8731_map,
++	.num_dapm_routes = ARRAY_SIZE(apli_lhcrb_wm8731_map),
++	.fully_routed = true,
++};
++
++static int apli_audio_probe(struct platform_device *pdev)
++{
++	apli_lhcrb_wm8731.dev = &pdev->dev;
++	return snd_soc_register_card(&apli_lhcrb_wm8731);
++}
++
++static int apli_audio_remove(struct platform_device *pdev)
++{
++	snd_soc_unregister_card(&apli_lhcrb_wm8731);
++	return 0;
++}
++
++static struct platform_driver apli_audio = {
++	.probe = apli_audio_probe,
++	.remove = apli_audio_remove,
++	.driver = {
++		.name = "lhcrb_wm8731_i2s",
++	},
++};
++
++module_platform_driver(apli_audio)
++
++/* Module information */
++MODULE_DESCRIPTION("Intel Audio WM8731 Machine driver for APL-I LH CRB");
++MODULE_LICENSE("GPL v2");
++MODULE_ALIAS("platform:lhcrb_wm8731_i2s");
+-- 
+1.9.1
+

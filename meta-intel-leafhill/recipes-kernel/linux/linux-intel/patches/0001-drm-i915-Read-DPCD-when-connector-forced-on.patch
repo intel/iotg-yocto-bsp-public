@@ -1,0 +1,37 @@
+From 2f242e5d9625d26e9b8d48afe5b6d5a1f4023313 Mon Sep 17 00:00:00 2001
+From: Bob Paauwe <bob.j.paauwe@intel.com>
+Date: Fri, 1 Apr 2016 09:20:46 -0700
+Subject: [PATCH] drm/i915: Read DPCD when connector forced on.
+
+When a DP connector is forced on using using the video=<connector>:e
+kernel command line, we bypass the calls to check if the port is
+connected and also bypass the call to intel_dp_detect_dpcd();  The
+result is that we don't query for the sink capabilities like the
+max link bandwidth.  The sink capabilities are needed to set a
+mode.
+
+The solution is to add a call to intel_dp_detect_dpcd() in the code
+path for forced on DP connectors.
+
+Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_dp.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/intel_dp.c b/drivers/gpu/drm/i915/intel_dp.c
+index 735592a..215f0fa 100644
+--- a/drivers/gpu/drm/i915/intel_dp.c
++++ b/drivers/gpu/drm/i915/intel_dp.c
+@@ -4855,6 +4855,8 @@ bool intel_digital_port_connected(struct intel_encoder *encoder)
+ 
+ 	intel_display_power_get(dev_priv, intel_dp->aux_power_domain);
+ 
++	intel_dp_detect_dpcd(intel_dp);
++
+ 	intel_dp_set_edid(intel_dp);
+ 
+ 	intel_display_power_put(dev_priv, intel_dp->aux_power_domain);
+-- 
+1.9.1
+

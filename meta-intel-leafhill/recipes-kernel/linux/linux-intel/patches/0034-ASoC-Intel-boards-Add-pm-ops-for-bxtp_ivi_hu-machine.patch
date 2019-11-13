@@ -1,0 +1,31 @@
+From 52201bcc69f25300620ebc359d6194fbe2e245b7 Mon Sep 17 00:00:00 2001
+From: Szymon Mielczarek <szymonx.mielczarek@linux.intel.com>
+Date: Mon, 23 Sep 2019 14:03:02 +0200
+Subject: [PATCH] ASoC: Intel: boards: Add pm ops for bxtp_ivi_hu machine
+
+The PM ops are required to properly suspend and resume PCM streams.
+
+Squash into:
+ASoC: Intel: Boards: Add machine driver for HU topology
+
+Change-Id: If9f076f5c6e0e4a3877d0d8a9bd428d07a09c4aa
+Signed-off-by: Szymon Mielczarek <szymonx.mielczarek@linux.intel.com>
+---
+ sound/soc/intel/boards/bxtp_ivi_hu_rt298.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/sound/soc/intel/boards/bxtp_ivi_hu_rt298.c b/sound/soc/intel/boards/bxtp_ivi_hu_rt298.c
+index ce46772..84e67c91 100644
+--- a/sound/soc/intel/boards/bxtp_ivi_hu_rt298.c
++++ b/sound/soc/intel/boards/bxtp_ivi_hu_rt298.c
+@@ -236,6 +236,7 @@ static int broxton_audio_remove(struct platform_device *pdev)
+ 	.remove = broxton_audio_remove,
+ 	.driver = {
+ 		.name = "bxt_ivi_hu_i2s",
++		.pm = &snd_soc_pm_ops,
+ 	},
+ };
+ 
+-- 
+1.9.1
+

@@ -1,7 +1,7 @@
-From 84b0c369c34190b1449b22e1a9d0bc6ab128bb6b Mon Sep 17 00:00:00 2001
+From 82e0ea912b9a6dadc4d2267482a770c56bd12c6b Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Mon, 6 Feb 2017 12:06:52 +0000
-Subject: [PATCH 066/100] ASoC: TDF8532: Add wait_for_state function
+Subject: [PATCH 066/120] ASoC: TDF8532: Add wait_for_state function
 
 Add wait_for_state function that loops until a given state is reached or a
 timeout occurs. This allows the removal of the overly long mdelay as we can

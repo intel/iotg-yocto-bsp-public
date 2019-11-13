@@ -1,0 +1,54 @@
+From 2488a00d712b0639aadab693fd19ad18549a23fa Mon Sep 17 00:00:00 2001
+From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+Date: Tue, 12 Feb 2019 09:49:51 +0800
+Subject: [PATCH 43/44] intel_pstate: fix hang issue after failed write
+ no_turbo if TFM governor loaded
+
+The following is observed,
+root@mgu:~# echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo
+sh: write error: Resource temporarily unavailable
+root@mgu:~# echo powersave >  /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+[...hanging...]
+
+When TFM Governor driver is loaded, it will prevent others from changing
+no_turbo value via sysfs. In store_no_turbo(), there is a condition check
+that will cause exit from store_no_turbo() if TFM Governor driver is loaded.
+This condition check is located after mutex_lock(&intel_pstate_driver_lock).
+Thus exiting store_no_turbo() without releasing the lock will cause hang when
+another call into intel_pstate driver is made.
+
+This patch will move the condition check statement to the beginning of
+store_no_turbo(), before locking intel_pstate_driver_lock.
+
+Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+---
+ drivers/cpufreq/intel_pstate.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
+index 17397de..15d8bf0 100644
+--- a/drivers/cpufreq/intel_pstate.c
++++ b/drivers/cpufreq/intel_pstate.c
+@@ -1021,6 +1021,9 @@ static ssize_t store_no_turbo(struct kobject *a, struct kobj_attribute *b,
+ 	if (ret != 1)
+ 		return -EINVAL;
+ 
++	if (notification_registered_flag)
++		return -EAGAIN;
++
+ 	mutex_lock(&intel_pstate_driver_lock);
+ 
+ 	if (!intel_pstate_driver) {
+@@ -1038,9 +1041,6 @@ static ssize_t store_no_turbo(struct kobject *a, struct kobj_attribute *b,
+ 		return -EPERM;
+ 	}
+ 
+-	if (notification_registered_flag)
+-		return -EAGAIN;
+-
+ 	global.no_turbo = clamp_t(int, input, 0, 1);
+ 
+ 	if (global.no_turbo) {
+-- 
+1.9.1
+

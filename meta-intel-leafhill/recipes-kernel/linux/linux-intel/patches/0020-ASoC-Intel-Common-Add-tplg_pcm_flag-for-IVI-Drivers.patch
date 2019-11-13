@@ -1,0 +1,50 @@
+From ac9e6f24dfd4d24b8997a853cd621ac2d25b7990 Mon Sep 17 00:00:00 2001
+From: Gaurav Vohra <gauravx.vohra@intel.com>
+Date: Fri, 5 Jul 2019 16:27:29 +0800
+Subject: [PATCH] ASoC: Intel: Common : Add tplg_pcm_flag for IVI Drivers
+
+IVI Machine Drivers uses dynamic FE dais. Setting flag to true
+to load FE dais from topology in case of IVI(RSE,HU, GENERIC) topology
+
+Signed-off-by: Gaurav Vohra <gauravx.vohra@intel.com>
+---
+ sound/soc/intel/common/soc-acpi-intel-bxt-match.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/sound/soc/intel/common/soc-acpi-intel-bxt-match.c b/sound/soc/intel/common/soc-acpi-intel-bxt-match.c
+index 8445754..ce78e0d 100644
+--- a/sound/soc/intel/common/soc-acpi-intel-bxt-match.c
++++ b/sound/soc/intel/common/soc-acpi-intel-bxt-match.c
+@@ -15,11 +15,15 @@
+ 	.codecs = {"MX98357A"}
+ };
+ 
++static struct skl_machine_pdata bxt_pdata = {
++	.use_tplg_pcm = true,
++};
+ struct snd_soc_acpi_mach snd_soc_acpi_intel_bxt_machines[] = {
+ 	{
+ 		.id = "INT343A",
+ #if IS_ENABLED(CONFIG_SND_SOC_INTEL_BXTP_IVI_RSE_MACH)
+ 		.drv_name = "bxt_ivi_rse_i2s",
++		.pdata = &bxt_pdata,
+ #elif IS_ENABLED(CONFIG_SND_SOC_INTEL_BXTP_IVI_M3_MACH)
+ 		.drv_name = "bxt_ivi_m3_i2s",
+ #else
+@@ -36,11 +40,13 @@ struct snd_soc_acpi_mach snd_soc_acpi_intel_bxt_machines[] = {
+ 		.id = "INT344A",
+ 		.drv_name = "bxt_ivi_hu_i2s",
+ 		.fw_filename = "dsp_fw_release.bin",
++		.pdata = &bxt_pdata,
+ 	},
+ 	{
+ 		.id = "INT344B",
+ 		.drv_name = "bxt_ivi_generic_i2s",
+ 		.fw_filename = "dsp_fw_release.bin",
++		.pdata = &bxt_pdata,
+ 	},
+ 	{
+ 		.id = "INT345A",
+-- 
+1.9.1
+

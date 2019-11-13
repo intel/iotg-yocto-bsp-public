@@ -1,0 +1,80 @@
+From 6bc2ae3a45bc0ded74521112f96f46678926dd6b Mon Sep 17 00:00:00 2001
+From: Uma Shankar <uma.shankar@intel.com>
+Date: Tue, 20 Dec 2016 10:24:28 -0800
+Subject: [PATCH] drm/i915/bxt: Fix BXT DSI disable sequence (v2)
+
+Fix BXT DSI disable sequence as per latest updates in bspec.
+
+v2: rebased on IOTG release (Bob)
+
+Signed-off-by: Uma Shankar <uma.shankar@intel.com>
+Signed-off-by: Deepak M <m.deepak@intel.com>
+Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/vlv_dsi.c | 28 +++++++++++++++++++++++++---
+ 1 file changed, 25 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/vlv_dsi.c b/drivers/gpu/drm/i915/vlv_dsi.c
+index 425c19d..6cbae42 100644
+--- a/drivers/gpu/drm/i915/vlv_dsi.c
++++ b/drivers/gpu/drm/i915/vlv_dsi.c
+@@ -406,6 +406,23 @@ static bool glk_dsi_enable_io(struct intel_encoder *encoder)
+ 	return cold_boot;
+ }
+ 
++static void bxt_dsi_clear_device_ready(struct intel_encoder *encoder)
++{
++	struct drm_i915_private *dev_priv = to_i915(encoder->base.dev);
++	struct intel_dsi *intel_dsi = enc_to_intel_dsi(&encoder->base);
++	enum port port;
++
++	/*
++	 * Reset the DSI Device ready first for both ports
++	 * and then port control registers for both ports
++	 */
++	for_each_dsi_port(port, intel_dsi->ports)
++		I915_WRITE(MIPI_DEVICE_READY(port), 0);
++
++	for_each_dsi_port(port, intel_dsi->ports)
++		I915_WRITE(BXT_MIPI_PORT_CTRL(port), 0);
++}
++
+ static void glk_dsi_device_ready(struct intel_encoder *encoder)
+ {
+ 	struct drm_i915_private *dev_priv = to_i915(encoder->base.dev);
+@@ -950,6 +967,8 @@ static void intel_dsi_clear_device_ready(struct intel_encoder *encoder)
+ 
+ 	if (IS_GEMINILAKE(dev_priv))
+ 		glk_dsi_clear_device_ready(encoder);
++	else if (IS_GEN9_LP(dev_priv))
++		bxt_dsi_clear_device_ready(encoder);
+ 	else
+ 		vlv_dsi_clear_device_ready(encoder);
+ }
+@@ -969,8 +988,10 @@ static void intel_dsi_post_disable(struct intel_encoder *encoder,
+ 		for_each_dsi_port(port, intel_dsi->ports)
+ 			vlv_dsi_wait_for_fifo_empty(intel_dsi, port);
+ 
+-		intel_dsi_port_disable(encoder);
+-		usleep_range(2000, 5000);
++		if (!IS_BROXTON(dev_priv)) {
++			intel_dsi_port_disable(encoder);
++			usleep_range(2000, 5000);
++		}
+ 	}
+ 
+ 	intel_dsi_unprepare(encoder);
+@@ -1627,7 +1648,8 @@ static void intel_dsi_unprepare(struct intel_encoder *encoder)
+ 			bxt_dsi_reset_clocks(encoder, port);
+ 		else
+ 			vlv_dsi_reset_clocks(encoder, port);
+-		I915_WRITE(MIPI_EOT_DISABLE(port), CLOCKSTOP);
++		if (intel_dsi->clock_stop)
++			I915_WRITE(MIPI_EOT_DISABLE(port), CLOCKSTOP);
+ 
+ 		val = I915_READ(MIPI_DSI_FUNC_PRG(port));
+ 		val &= ~VID_MODE_FORMAT_MASK;
+-- 
+1.9.1
+

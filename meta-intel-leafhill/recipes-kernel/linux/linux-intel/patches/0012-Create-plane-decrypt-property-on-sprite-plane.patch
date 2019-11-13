@@ -1,0 +1,29 @@
+From d95d1746efb2c95db8e1af0945555d746b335201 Mon Sep 17 00:00:00 2001
+From: Marvin Dares <marvin.dares@intel.com>
+Date: Tue, 27 Nov 2018 04:52:12 +0800
+Subject: [PATCH] Create plane decrypt property on sprite plane
+
+Change-Id: Ibd5fe5056970763ea36f4be3d5bac14e3b4aec41
+Signed-off-by: marvin.dares@intel.com
+Tracked-On: OAM-72396
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_sprite.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/gpu/drm/i915/intel_sprite.c b/drivers/gpu/drm/i915/intel_sprite.c
+index b388a6b..bea90f9 100644
+--- a/drivers/gpu/drm/i915/intel_sprite.c
++++ b/drivers/gpu/drm/i915/intel_sprite.c
+@@ -1747,6 +1747,8 @@ struct intel_plane *
+ 					   DRM_MODE_ROTATE_0,
+ 					   supported_rotations);
+ 
++	drm_plane_create_decryption_property(&intel_plane->base);
++
+ 	drm_plane_create_color_properties(&intel_plane->base,
+ 					  BIT(DRM_COLOR_YCBCR_BT601) |
+ 					  BIT(DRM_COLOR_YCBCR_BT709),
+-- 
+1.9.1
+

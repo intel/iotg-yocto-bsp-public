@@ -1,0 +1,118 @@
+From 0096bdf7572e44828db7a1e0527e94a229f15d9a Mon Sep 17 00:00:00 2001
+From: Gaurav Vohra <gauravx.vohra@intel.com>
+Date: Wed, 25 Sep 2019 13:20:08 +0800
+Subject: [PATCH] Revert "ASoC: Intel: Skylake: Add platform DAIs required for
+ IVI topologies"
+
+In LH platform, only SSP1 and SSP3 are dynamically registered
+from NHLT. So, remaining 4 SSPs- SSP0, SSP2, SSP4 and SSP5 required for IVI topologies are to be added
+as part of skl_platform_dai but should be kept as workaround to add the dais not registered fron NHLT
+
+This patch reverts the addition of statically added SSP0,SSP2 and SSP4 and SSP5 for LH platfrom.
+
+This reverts commit 3a338549b48d3c0c23631371500b1b8043b24354.
+---
+ sound/soc/intel/skylake/skl-pcm.c | 87 ---------------------------------------
+ 1 file changed, 87 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index 79468a4..3414861 100644
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -1945,93 +1945,6 @@ struct skl_dsp_notify_ops cb_ops = {
+ 			.rate_max = 48000,
+ 	},
+ },
+-#if IS_ENABLED(CONFIG_SND_SOC_INTEL_BXTP_IVI_RSE_MACH) || \
+-	IS_ENABLED(CONFIG_SND_SOC_INTEL_BXTP_IVI_HU_MACH) || \
+-	IS_ENABLED(CONFIG_SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH) || \
+-	IS_ENABLED(CONFIG_SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH) || \
+-	IS_ENABLED(CONFIG_SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH) || \
+-	IS_ENABLED(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH)
+-{
+-	.name = "SSP0 Pin",
+-	.ops = &skl_be_ssp_dai_ops,
+-	.playback = {
+-		.stream_name = "ssp0 Tx",
+-		.channels_min = HDA_MONO,
+-		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+-		.formats = SNDRV_PCM_FMTBIT_S16_LE  | SNDRV_PCM_FMTBIT_S20_3LE |
+-			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+-	},
+-	.capture = {
+-		.stream_name = "ssp0 Rx",
+-		.channels_min = HDA_MONO,
+-		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+-		.formats = SNDRV_PCM_FMTBIT_S16_LE  | SNDRV_PCM_FMTBIT_S20_3LE |
+-			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+-	},
+-},
+-{
+-	.name = "SSP2 Pin",
+-	.ops = &skl_be_ssp_dai_ops,
+-	.playback = {
+-		.stream_name = "ssp2 Tx",
+-		.channels_min = HDA_MONO,
+-		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+-		.formats = SNDRV_PCM_FMTBIT_S16_LE  | SNDRV_PCM_FMTBIT_S20_3LE |
+-			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+-	},
+-	.capture = {
+-		.stream_name = "ssp2 Rx",
+-		.channels_min = HDA_MONO,
+-		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+-		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
+-			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+-	},
+-},
+-{
+-	.name = "SSP4 Pin",
+-	.ops = &skl_be_ssp_dai_ops,
+-	.playback = {
+-		.stream_name = "ssp4 Tx",
+-		.channels_min = HDA_MONO,
+-		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+-		.formats = SNDRV_PCM_FMTBIT_S16_LE  | SNDRV_PCM_FMTBIT_S20_3LE |
+-			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+-	},
+-	.capture = {
+-		.stream_name = "ssp4 Rx",
+-		.channels_min = HDA_MONO,
+-		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+-		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
+-			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+-	},
+-},
+-{
+-	.name = "SSP5 Pin",
+-	.ops = &skl_be_ssp_dai_ops,
+-	.playback = {
+-		.stream_name = "ssp5 Tx",
+-		.channels_min = HDA_MONO,
+-		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+-		.formats = SNDRV_PCM_FMTBIT_S16_LE  | SNDRV_PCM_FMTBIT_S20_3LE |
+-			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+-	},
+-	.capture = {
+-		.stream_name = "ssp5 Rx",
+-		.channels_min = HDA_MONO,
+-		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+-		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
+-			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+-	},
+-},
+-#endif
+ };
+ 
+ int skl_dai_load(struct snd_soc_component *cmp, int index,
+-- 
+1.9.1
+

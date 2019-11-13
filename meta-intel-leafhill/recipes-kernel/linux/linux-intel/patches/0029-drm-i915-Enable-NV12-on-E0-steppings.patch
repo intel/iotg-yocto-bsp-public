@@ -1,7 +1,7 @@
-From 54d5e06a14dfd1eeb4537c8aac7e281026c2c88d Mon Sep 17 00:00:00 2001
+From 35793a0421ec418f9d5799b1a511f3386c021a1c Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Wed, 16 May 2018 14:46:40 -0700
-Subject: [PATCH 29/45] drm/i915: Enable NV12 on E0+ steppings
+Subject: [PATCH 29/46] drm/i915: Enable NV12 on E0+ steppings
 
 Broxton E0 SoC steppings (which contain a D0 GT/display stepping) have
 incorporated the NV12 display fix, so it should be safe to expose NV12

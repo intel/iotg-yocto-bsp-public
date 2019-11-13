@@ -1,0 +1,31 @@
+From 81bcaa110a71d15e0a38010b2d69a11aa69bf39e Mon Sep 17 00:00:00 2001
+From: Szymon Mielczarek <szymonx.mielczarek@linux.intel.com>
+Date: Fri, 20 Sep 2019 13:17:42 +0200
+Subject: [PATCH] ASoC: Intel: boards: Add pm ops for bxtp_ivi_generic machine
+
+The PM ops are required to properly suspend and resume PCM streams.
+
+Squash into:
+ASoC: Intel: Boards: Add machine driver for generic topology
+
+Change-Id: Ib0354bb6e073b02cd51b3782c9c0afb3fc6d58eb
+Signed-off-by: Szymon Mielczarek <szymonx.mielczarek@linux.intel.com>
+---
+ sound/soc/intel/boards/bxtp_ivi_generic.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/sound/soc/intel/boards/bxtp_ivi_generic.c b/sound/soc/intel/boards/bxtp_ivi_generic.c
+index f08dc81..e838b68 100755
+--- a/sound/soc/intel/boards/bxtp_ivi_generic.c
++++ b/sound/soc/intel/boards/bxtp_ivi_generic.c
+@@ -373,6 +373,7 @@ static int broxton_audio_remove(struct platform_device *pdev)
+ 	.remove = broxton_audio_remove,
+ 	.driver = {
+ 		.name = "bxt_ivi_generic_i2s",
++		.pm = &snd_soc_pm_ops,
+ 	},
+ };
+ 
+-- 
+1.9.1
+

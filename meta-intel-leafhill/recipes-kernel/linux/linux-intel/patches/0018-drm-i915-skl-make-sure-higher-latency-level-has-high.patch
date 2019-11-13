@@ -1,7 +1,7 @@
-From 5fcd85d8ae507b4ccaf677573c8d27ac37e72ea8 Mon Sep 17 00:00:00 2001
+From 1ca563f73a464f1fa28a5e1b0758c77cf83a7391 Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:06 +0530
-Subject: [PATCH 18/45] drm/i915/skl+: make sure higher latency level has
+Subject: [PATCH 18/46] drm/i915/skl+: make sure higher latency level has
  higher wm value
 
 DDB allocation optimization algorithm requires/assumes ddb allocation for
@@ -34,10 +34,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 18 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 7134df1..d8d7c77 100644
+index 7b1a2f4..00603fa 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
-@@ -4511,6 +4511,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4550,6 +4550,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  				uint16_t ddb_allocation,
  				int level,
  				const struct skl_wm_params *wp,
@@ -45,7 +45,7 @@ index 7134df1..d8d7c77 100644
  				struct skl_wm_level *result /* out */)
  {
  	const struct drm_plane_state *pstate = &intel_pstate->base;
-@@ -4575,6 +4576,15 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4614,6 +4615,15 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  		} else {
  			res_blocks++;
  		}
@@ -61,7 +61,7 @@ index 7134df1..d8d7c77 100644
  	}
  
  	if (res_blocks >= ddb_allocation || res_lines > 31) {
-@@ -4637,6 +4647,13 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4676,6 +4686,13 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  	for (level = 0; level <= max_level; level++) {
  		struct skl_wm_level *result = plane_id ? &wm->uv_wm[level] :
  							  &wm->wm[level];
@@ -75,7 +75,7 @@ index 7134df1..d8d7c77 100644
  
  		ret = skl_compute_plane_wm(dev_priv,
  					   cstate,
-@@ -4644,6 +4661,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4683,6 +4700,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  					   ddb_blocks,
  					   level,
  					   wm_params,

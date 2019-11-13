@@ -1,7 +1,7 @@
-From 80c85f5a70200be0ba866bde6f7c25201e2abe38 Mon Sep 17 00:00:00 2001
+From fc2a14b64208f9879825b110d2e791850cee6af1 Mon Sep 17 00:00:00 2001
 From: "Nahulanthran, Sanjeev" <sanjeev.nahulanthran@intel.com>
 Date: Fri, 14 Sep 2018 11:28:58 +0800
-Subject: [PATCH 013/100] Addition of ACPI IDs for Machine Driver loading
+Subject: [PATCH 013/120] Addition of ACPI IDs for Machine Driver loading
 
 Adding ACPI IDs for BroadMarket and IVI machine driver dynamic
 loading. Additions were made to soc-acpi-intel-bxt-match.c and

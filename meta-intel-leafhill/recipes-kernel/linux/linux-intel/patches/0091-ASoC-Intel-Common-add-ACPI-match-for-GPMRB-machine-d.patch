@@ -1,7 +1,7 @@
-From 8a8be35a070a2466effc5ea0ad5e8058b3ba0dca Mon Sep 17 00:00:00 2001
+From e260ab21c124c71fe783bfdabe0182e8eeaffeaf Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Tue, 18 Sep 2018 18:05:28 +0800
-Subject: [PATCH 091/100] ASoC: Intel: Common: add ACPI match for GPMRB machine
+Subject: [PATCH 091/120] ASoC: Intel: Common: add ACPI match for GPMRB machine
  driver
 
 Load GPMRB machine driver and ADSPFW.bin when ACPI ID INT34C3

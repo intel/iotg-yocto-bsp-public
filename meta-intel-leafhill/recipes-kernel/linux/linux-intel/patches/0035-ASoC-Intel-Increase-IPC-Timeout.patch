@@ -1,0 +1,31 @@
+From 4ef613445e3f6212742d5ab9a8e964b543fa5fd4 Mon Sep 17 00:00:00 2001
+From: Pawel Dogiel <pawelx.dogiel@intel.com>
+Date: Mon, 28 Jan 2019 14:18:35 +0100
+Subject: [PATCH] ASoC: Intel: Increase IPC Timeout
+
+This patch incrases timeout value of IPC messages.
+
+Change-Id: Ic0049a676e7f4f864b37b004f6bf427a0b5045de
+Reviewed-on: https://git-gar-1.devtools.intel.com/gerrit/35612
+Tested-by: Slawinski, AmadeuszX <amadeuszx.slawinski@intel.com>
+Reviewed-by: Slawinski, AmadeuszX <amadeuszx.slawinski@intel.com>
+---
+ sound/soc/intel/common/sst-ipc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sound/soc/intel/common/sst-ipc.c b/sound/soc/intel/common/sst-ipc.c
+index 07dabab..24dd75f 100644
+--- a/sound/soc/intel/common/sst-ipc.c
++++ b/sound/soc/intel/common/sst-ipc.c
+@@ -33,7 +33,7 @@
+ #include "sst-ipc.h"
+ 
+ /* IPC message timeout (msecs) */
+-#define IPC_TIMEOUT_MSECS	300
++#define IPC_TIMEOUT_MSECS	1000
+ 
+ #define IPC_EMPTY_LIST_SIZE	8
+ 
+-- 
+1.9.1
+

@@ -1,0 +1,68 @@
+From f7270bb86368cd55c4dc9c65e112f08c424a5de4 Mon Sep 17 00:00:00 2001
+From: Even Xu <even.xu@intel.com>
+Date: Fri, 23 Dec 2016 09:22:27 +0800
+Subject: [PATCH] hid: intel-ish-hid: ishtp: add helper function for client
+ search
+
+Add helper function ishtp_fw_cl_get_client() for client driver searching
+client information to hide internal details from callers.
+
+Signed-off-by: Even Xu <even.xu@intel.com>
+Reviewed-by: Andriy Shevchenko <andriy.shevchenko@intel.com>
+Acked-by: Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>
+---
+ drivers/hid/intel-ish-hid/ishtp/bus.c | 25 +++++++++++++++++++++++++
+ drivers/hid/intel-ish-hid/ishtp/bus.h |  2 ++
+ 2 files changed, 27 insertions(+)
+
+diff --git a/drivers/hid/intel-ish-hid/ishtp/bus.c b/drivers/hid/intel-ish-hid/ishtp/bus.c
+index 50251ae..a271d6d 100644
+--- a/drivers/hid/intel-ish-hid/ishtp/bus.c
++++ b/drivers/hid/intel-ish-hid/ishtp/bus.c
+@@ -149,6 +149,31 @@ int ishtp_fw_cl_by_uuid(struct ishtp_device *dev, const uuid_le *uuid)
+ EXPORT_SYMBOL(ishtp_fw_cl_by_uuid);
+ 
+ /**
++ * ishtp_fw_cl_get_client() - return client information to client
++ * @dev: the ishtp device structure
++ * @uuid: uuid of the client to search
++ *
++ * Search firmware client using UUID and reture related client information.
++ *
++ * Return: pointer of client information on success, NULL on failure.
++ */
++struct ishtp_fw_client *ishtp_fw_cl_get_client(struct ishtp_device *dev,
++						const uuid_le *uuid)
++{
++	int i;
++	unsigned long flags;
++
++	spin_lock_irqsave(&dev->fw_clients_lock, flags);
++	i = ishtp_fw_cl_by_uuid(dev, uuid);
++	spin_unlock_irqrestore(&dev->fw_clients_lock, flags);
++	if (i < 0 || dev->fw_clients[i].props.fixed_address)
++		return NULL;
++
++	return &dev->fw_clients[i];
++}
++EXPORT_SYMBOL(ishtp_fw_cl_get_client);
++
++/**
+  * ishtp_fw_cl_by_id() - return index to fw_clients for client_id
+  * @dev: the ishtp device structure
+  * @client_id: fw client id to search
+diff --git a/drivers/hid/intel-ish-hid/ishtp/bus.h b/drivers/hid/intel-ish-hid/ishtp/bus.h
+index 8888331..b8a5bcc 100644
+--- a/drivers/hid/intel-ish-hid/ishtp/bus.h
++++ b/drivers/hid/intel-ish-hid/ishtp/bus.h
+@@ -113,5 +113,7 @@ int	__ishtp_cl_driver_register(struct ishtp_cl_driver *driver,
+ int	ishtp_register_event_cb(struct ishtp_cl_device *device,
+ 				void (*read_cb)(struct ishtp_cl_device *));
+ int	ishtp_fw_cl_by_uuid(struct ishtp_device *dev, const uuid_le *cuuid);
++struct	ishtp_fw_client *ishtp_fw_cl_get_client(struct ishtp_device *dev,
++						const uuid_le *uuid);
+ 
+ #endif /* _LINUX_ISHTP_CL_BUS_H */
+-- 
+1.9.1
+

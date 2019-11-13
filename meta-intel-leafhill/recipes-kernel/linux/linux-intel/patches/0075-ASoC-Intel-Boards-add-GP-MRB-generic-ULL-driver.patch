@@ -1,7 +1,7 @@
-From 40a6c268924ed51350a1c730a12e122ae670f170 Mon Sep 17 00:00:00 2001
+From 5af7a33845e6fbe49c460120657db63f1cfe025b Mon Sep 17 00:00:00 2001
 From: Jakub Dorzak <jakubx.dorzak@intel.com>
 Date: Tue, 20 Feb 2018 10:59:30 +0100
-Subject: [PATCH 075/100] ASoC: Intel: Boards: add GP MRB generic ULL driver
+Subject: [PATCH 075/120] ASoC: Intel: Boards: add GP MRB generic ULL driver
 
 This is a generic ULL (Ultra Low Latency) machine
 driver with a DSP loop, capture and playback pipes.

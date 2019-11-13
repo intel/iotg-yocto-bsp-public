@@ -1,7 +1,7 @@
-From 9877260a4cbcf50ddbb3b41739d8838ad7bd24dd Mon Sep 17 00:00:00 2001
+From 821390df555d02c258449c0bc551f7ab156552fa Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 16 Nov 2016 09:38:05 +0800
-Subject: [PATCH 32/42] igb: Scheduling suspend in transmit side based on
+Subject: [PATCH 32/44] igb: Scheduling suspend in transmit side based on
  activity monitoring
 
 Invoking resume if transmit handler is called in suspended
@@ -12,8 +12,8 @@ Signed-off-by: Lai, Poey Seng <poey.seng.lai@intel.com>
 Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 ---
  drivers/net/ethernet/intel/igb/igb.h      |  5 +++
- drivers/net/ethernet/intel/igb/igb_main.c | 72 ++++++++++++++++++++++++++++---
- 2 files changed, 72 insertions(+), 5 deletions(-)
+ drivers/net/ethernet/intel/igb/igb_main.c | 75 ++++++++++++++++++++++++++++---
+ 2 files changed, 75 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb.h b/drivers/net/ethernet/intel/igb/igb.h
 index 4ad6ac1..88de3f1 100644
@@ -44,7 +44,7 @@ index 4ad6ac1..88de3f1 100644
  
  	/* structs defined in e1000_hw.h */
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index ffc45ca..588f040 100644
+index 51ea9a5..dffd234 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
 @@ -148,6 +148,7 @@ enum tx_queue_prio {
@@ -87,7 +87,7 @@ index ffc45ca..588f040 100644
  	tx_ring->next_to_use = (i < tx_ring->count) ? i : 0;
  
  	/* set bits to identify this as an advanced context descriptor */
-@@ -5761,12 +5765,13 @@ static int igb_tx_map(struct igb_ring *tx_ring,
+@@ -5762,12 +5766,13 @@ static int igb_tx_map(struct igb_ring *tx_ring,
  	struct igb_tx_buffer *tx_buffer;
  	union e1000_adv_tx_desc *tx_desc;
  	struct skb_frag_struct *frag;
@@ -102,7 +102,7 @@ index ffc45ca..588f040 100644
  	tx_desc = IGB_TX_DESC(tx_ring, i);
  
  	igb_tx_olinfo_status(tx_ring, tx_desc, tx_flags, skb->len - hdr_len);
-@@ -5794,6 +5799,7 @@ static int igb_tx_map(struct igb_ring *tx_ring,
+@@ -5795,6 +5800,7 @@ static int igb_tx_map(struct igb_ring *tx_ring,
  
  			i++;
  			tx_desc++;
@@ -110,7 +110,7 @@ index ffc45ca..588f040 100644
  			if (i == tx_ring->count) {
  				tx_desc = IGB_TX_DESC(tx_ring, 0);
  				i = 0;
-@@ -5813,6 +5819,7 @@ static int igb_tx_map(struct igb_ring *tx_ring,
+@@ -5814,6 +5820,7 @@ static int igb_tx_map(struct igb_ring *tx_ring,
  
  		i++;
  		tx_desc++;
@@ -118,7 +118,7 @@ index ffc45ca..588f040 100644
  		if (i == tx_ring->count) {
  			tx_desc = IGB_TX_DESC(tx_ring, 0);
  			i = 0;
-@@ -5855,6 +5862,7 @@ static int igb_tx_map(struct igb_ring *tx_ring,
+@@ -5856,6 +5863,7 @@ static int igb_tx_map(struct igb_ring *tx_ring,
  
  	tx_ring->next_to_use = i;
  
@@ -126,7 +126,7 @@ index ffc45ca..588f040 100644
  	/* Make sure there is space in the ring for the next send. */
  	igb_maybe_stop_tx(tx_ring, DESC_NEEDED);
  
-@@ -6000,10 +6008,32 @@ static inline struct igb_ring *igb_tx_queue_mapping(struct igb_adapter *adapter,
+@@ -6001,10 +6009,32 @@ static inline struct igb_ring *igb_tx_queue_mapping(struct igb_adapter *adapter,
  	return adapter->tx_ring[r_idx];
  }
  
@@ -159,7 +159,7 @@ index ffc45ca..588f040 100644
  
  	/* The minimum packet size with TCTL.PSP set is 17 so pad the skb
  	 * in order to meet this minimum size requirement.
-@@ -6011,7 +6041,19 @@ static netdev_tx_t igb_xmit_frame(struct sk_buff *skb,
+@@ -6012,7 +6042,19 @@ static netdev_tx_t igb_xmit_frame(struct sk_buff *skb,
  	if (skb_put_padto(skb, 17))
  		return NETDEV_TX_OK;
  
@@ -180,7 +180,7 @@ index ffc45ca..588f040 100644
  }
  
  /**
-@@ -7602,11 +7644,15 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
+@@ -7603,11 +7645,15 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
  	unsigned int total_bytes = 0, total_packets = 0;
  	unsigned int budget = q_vector->tx.work_limit;
  	unsigned int i = tx_ring->next_to_clean;
@@ -196,7 +196,7 @@ index ffc45ca..588f040 100644
  	tx_desc = IGB_TX_DESC(tx_ring, i);
  	i -= tx_ring->count;
  
-@@ -7648,6 +7694,7 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
+@@ -7649,6 +7695,7 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
  			tx_buffer++;
  			tx_desc++;
  			i++;
@@ -204,7 +204,7 @@ index ffc45ca..588f040 100644
  			if (unlikely(!i)) {
  				i -= tx_ring->count;
  				tx_buffer = tx_ring->tx_buffer_info;
-@@ -7753,7 +7800,18 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
+@@ -7754,7 +7801,18 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
  			u64_stats_update_end(&tx_ring->tx_syncp);
  		}
  	}
@@ -224,18 +224,20 @@ index ffc45ca..588f040 100644
  	return !!budget;
  }
  
-@@ -8787,7 +8845,11 @@ static int __maybe_unused igb_runtime_suspend(struct device *dev)
- 	struct pci_dev *pdev = to_pci_dev(dev);
- 	int retval;
- 	bool wake;
+@@ -8761,6 +8819,13 @@ static int __maybe_unused igb_runtime_idle(struct device *dev)
+ 
+ static int __maybe_unused igb_runtime_suspend(struct device *dev)
+ {
++	struct pci_dev *pdev = to_pci_dev(dev);
 +	struct net_device *netdev = pci_get_drvdata(pdev);
 +	struct igb_adapter *adapter = netdev_priv(netdev);
- 
++
 +	if (adapter->igb_tx_pending)
 +		return -EBUSY;
- 	retval = __igb_shutdown(pdev, &wake, 1);
- 	if (retval)
- 		return retval;
++
+ 	return __igb_shutdown(to_pci_dev(dev), NULL, 1);
+ }
+ 
 -- 
 1.9.1
 

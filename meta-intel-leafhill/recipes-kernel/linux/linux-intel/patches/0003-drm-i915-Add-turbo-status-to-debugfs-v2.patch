@@ -1,7 +1,7 @@
-From 16e181e92f8f2ac3befb7f1143bc36614f30a14a Mon Sep 17 00:00:00 2001
+From 332091ae5588f8a656dd9e72545c071fbcdff3ae Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Tue, 24 Jan 2017 15:40:35 -0800
-Subject: [PATCH 03/42] drm/i915: Add turbo status to debugfs (v2)
+Subject: [PATCH 03/44] drm/i915: Add turbo status to debugfs (v2)
 
 v2: Limit status read to Broxton only. (Matt)
 

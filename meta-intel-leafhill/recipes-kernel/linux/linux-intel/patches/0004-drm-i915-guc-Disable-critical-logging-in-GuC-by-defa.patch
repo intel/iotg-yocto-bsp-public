@@ -1,7 +1,7 @@
-From e563bb7693a8914ac29f0ebe74601ca7a8579028 Mon Sep 17 00:00:00 2001
+From 5a63a7dd795b141a32cfd7e40fbe1c5fd5ccad7c Mon Sep 17 00:00:00 2001
 From: Sagar Arun Kamble <sagar.a.kamble@intel.com>
 Date: Thu, 23 Mar 2017 13:50:56 -0700
-Subject: [PATCH 04/45] drm/i915/guc: Disable critical logging in GuC by
+Subject: [PATCH 04/46] drm/i915/guc: Disable critical logging in GuC by
  default from GuC v9
 
 From GuC v9 firmware (for KBL v9.39+), separate control is added to enable

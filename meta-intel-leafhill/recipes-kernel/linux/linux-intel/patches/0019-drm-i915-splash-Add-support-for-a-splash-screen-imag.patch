@@ -1,0 +1,575 @@
+From 4f81dc1589da85360dcaf8d38ce514f9019f935b Mon Sep 17 00:00:00 2001
+From: James Xiong <james.xiong@intel.com>
+Date: Fri, 16 Dec 2016 14:37:12 -0800
+Subject: [PATCH] drm/i915/splash: Add support for a splash screen image. (v10)
+
+This feature loads a raw ARGB888 image from a firmware, maps it via the
+GTT(copyless) and displays it in the given area of the specified connector,
+the image is scaled if the source dimension is differnt than destination
+rectangle.
+
+V2: allocate 1 framebuffer and share between displays. [Bob]
+V3: Specify the splash data, dimentions and crtc rectangle in a formatted
+    module parameter with the syntax:
+
+ splash=<connector>:<image_data>:width,height,pitch,crtc_x,crtc_y,crtc_w,crtc_h
+
+    With this change, only one image on one connector is supported. [Bob]
+V4: disable planes and commit the state before shutting down [Bob]
+V5: Dont' unreference existing fb until we commit new state (James/Bob)
+V6: Remove conditions around various free's (Matt)
+    Remove connection mutex lock in destroy (Matt)
+    Remove pin_and_fence_fb_obj() call (Matt)
+    Add comments around empty gem_[put/get]_pages (Matt)
+V7: Page align firmware size (James)
+    For built-in image firmware, don't add 1 page (James)
+V8: Remove duplicate conversion from page size to number of pages (James)
+V9: Fix module paramter syntax to match code (Matt)
+    Change uint8_t * to const u8 * in i915_gem_object_create_splash (Matt)
+    Remove "encoder->crtc->state->enable = true;"  (Matt)
+    Add warning if splash pointer from firwmware isn't page aligned (Matt)
+    Use DIV_ROUND_UP_ULL to convert size to pages (Matt)
+V10: Rebase on 4.19
+
+Signed-off-by: James Xiong <james.xiong@intel.com>
+Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
+Reviewed-by: James Xiong <james.xiong@intel.com>
+Reviewed-by: Bob Paauwe <bob.j.paauwe@intel.com>
+Reviewed-by: Matt Roper <matthew.d.roper@intel.com>
+[mattrope: Removed extra newline at end of i915_gem_splash.c]
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/Makefile                |   1 +
+ drivers/gpu/drm/i915/i915_drv.h              |  21 +++
+ drivers/gpu/drm/i915/i915_gem_splash.c       | 136 ++++++++++++++++++
+ drivers/gpu/drm/i915/i915_params.c           |   4 +
+ drivers/gpu/drm/i915/i915_params.h           |   1 +
+ drivers/gpu/drm/i915/intel_initial_modeset.c | 202 ++++++++++++++++++++++++++-
+ 6 files changed, 358 insertions(+), 7 deletions(-)
+ create mode 100644 drivers/gpu/drm/i915/i915_gem_splash.c
+
+diff --git a/drivers/gpu/drm/i915/Makefile b/drivers/gpu/drm/i915/Makefile
+index 9e145c9..1e8877b 100644
+--- a/drivers/gpu/drm/i915/Makefile
++++ b/drivers/gpu/drm/i915/Makefile
+@@ -70,6 +70,7 @@ i915-y += i915_cmd_parser.o \
+ 	  i915_gem_render_state.o \
+ 	  i915_gem_shrinker.o \
+ 	  i915_gem_stolen.o \
++	  i915_gem_splash.o \
+ 	  i915_gem_tiling.o \
+ 	  i915_gem_userptr.o \
+ 	  i915_gemfs.o \
+diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
+index a9b8734..ac4dfe7 100644
+--- a/drivers/gpu/drm/i915/i915_drv.h
++++ b/drivers/gpu/drm/i915/i915_drv.h
+@@ -624,6 +624,19 @@ struct i915_drrs {
+ 	enum drrs_support_type type;
+ };
+ 
++struct splash_screen_info {
++	const struct firmware *fw;
++	struct drm_i915_gem_object *obj;
++	char *connector_name;
++	int width;
++	int height;
++	int pitch;
++	int crtc_x;
++	int crtc_y;
++	int crtc_w;
++	int crtc_h;
++};
++
+ struct i915_psr {
+ 	struct mutex lock;
+ 	bool sink_support;
+@@ -1839,6 +1852,8 @@ struct drm_i915_private {
+ 	struct intel_fbdev *fbdev;
+ 	struct work_struct fbdev_suspend_work;
+ 
++	struct splash_screen_info *splash_screen_info;
++
+ 	struct drm_property *broadcast_rgb_property;
+ 	struct drm_property *force_audio_property;
+ 
+@@ -2946,6 +2961,12 @@ struct drm_i915_gem_object *
+ #endif
+ 
+ void i915_gem_close_object(struct drm_gem_object *gem, struct drm_file *file);
++struct drm_i915_gem_object *i915_gem_object_create_splash_pages(
++					struct drm_device *dev,
++					struct page **pages, u32 n_pages);
++struct drm_i915_gem_object *i915_gem_object_create_splash(
++					struct drm_device *dev,
++					const u8 *ptr, u32 n_pages);
+ void i915_gem_free_object(struct drm_gem_object *obj);
+ 
+ static inline void i915_gem_drain_freed_objects(struct drm_i915_private *i915)
+diff --git a/drivers/gpu/drm/i915/i915_gem_splash.c b/drivers/gpu/drm/i915/i915_gem_splash.c
+new file mode 100644
+index 00000000..4e6add7
+--- /dev/null
++++ b/drivers/gpu/drm/i915/i915_gem_splash.c
+@@ -0,0 +1,136 @@
++/*
++ * Copyright © 2016 Intel Corporation
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice (including the next
++ * paragraph) shall be included in all copies or substantial portions of the
++ * Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
++ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
++ * IN THE SOFTWARE.
++ *
++ */
++
++#include <drm/drmP.h>
++#include <drm/i915_drm.h>
++#include "i915_drv.h"
++
++
++/*
++ * The memory was allocated outside of the i915 driver and is non-pagable,
++ * it can not be migrated by either the i915 driver or the OS.
++ *
++ * The scatter/gather table has already been initialized when the gem obj
++ * was created, nothing more needs to be done here, return 0 to
++ * indicate sg is ready.
++ */
++static int i915_gem_object_get_pages_splash(struct drm_i915_gem_object *obj)
++{
++	return 0;
++}
++
++/* The sg is going to be freed when the gem obj itself is released. */
++static void i915_gem_object_put_pages_splash(struct drm_i915_gem_object *obj,
++					     struct sg_table *sgt)
++{
++}
++
++
++static void
++i915_gem_object_release_splash(struct drm_i915_gem_object *obj)
++{
++	i915_gem_object_unpin_pages(obj);
++}
++
++static const struct drm_i915_gem_object_ops i915_gem_object_splash_ops = {
++	.get_pages = i915_gem_object_get_pages_splash,
++	.put_pages = i915_gem_object_put_pages_splash,
++	.release = i915_gem_object_release_splash,
++};
++
++/* create a gem obj from a list of pages */
++struct drm_i915_gem_object *
++i915_gem_object_create_splash_pages(struct drm_device *dev,
++				    struct page **pages, u32 n_pages)
++{
++	struct drm_i915_gem_object *obj;
++	struct sg_table *st;
++	unsigned long size = n_pages << PAGE_SHIFT;
++
++	if (n_pages == 0)
++		return NULL;
++
++	obj = i915_gem_object_alloc(to_i915(dev));
++	if (obj == NULL)
++		return NULL;
++
++	st = kmalloc(sizeof(*st), GFP_KERNEL);
++	if (st == NULL)
++		goto cleanup;
++
++	drm_gem_private_object_init(dev, &obj->base, size);
++	i915_gem_object_init(obj, &i915_gem_object_splash_ops);
++
++	if (sg_alloc_table_from_pages(st, pages, n_pages,
++				     0, size, GFP_KERNEL))
++		goto cleanup_st;
++
++	obj->mm.pages = st;
++	obj->read_domains = I915_GEM_DOMAIN_GTT;
++	obj->cache_level = HAS_LLC(to_i915(dev)) ? I915_CACHE_LLC : I915_CACHE_NONE;
++
++	if (!dma_map_sg(&obj->base.dev->pdev->dev,
++		       obj->mm.pages->sgl, obj->mm.pages->nents,
++		       DMA_TO_DEVICE)) {
++		sg_free_table(obj->mm.pages);
++		obj->mm.pages = NULL;
++		goto cleanup_st;
++	}
++	return obj;
++
++cleanup_st:
++	kfree(st);
++cleanup:
++	i915_gem_object_free(obj);
++	return NULL;
++}
++
++/* create a gem obj from a virtual address */
++struct drm_i915_gem_object *
++i915_gem_object_create_splash(struct drm_device *dev,
++			      const u8 *ptr, u32 n_pages)
++{
++	struct page **pvec;
++	u32 i;
++	struct drm_i915_gem_object *obj = NULL;
++
++	if (ptr == NULL || n_pages == 0)
++		return NULL;
++
++	WARN_ON (!PAGE_ALIGNED(ptr));
++
++	pvec = kmalloc(n_pages * sizeof(struct page *),
++		       GFP_KERNEL | __GFP_NOWARN | __GFP_NORETRY);
++	if (pvec == NULL)
++		return NULL;
++
++	for (i = 0; i < n_pages; i++) {
++		*(pvec+i) = vmalloc_to_page(ptr);
++		ptr += PAGE_SIZE;
++	}
++
++	obj = i915_gem_object_create_splash_pages(dev, pvec, n_pages);
++	kfree(pvec);
++	return obj;
++}
+diff --git a/drivers/gpu/drm/i915/i915_params.c b/drivers/gpu/drm/i915/i915_params.c
+index c588edb..f435279 100644
+--- a/drivers/gpu/drm/i915/i915_params.c
++++ b/drivers/gpu/drm/i915/i915_params.c
+@@ -261,6 +261,10 @@ struct i915_params i915_modparams __read_mostly = {
+ i915_param_named(enable_conformance_check, bool, 0400,
+ 	"To toggle the GVT guest conformance feature(default:true)");
+ 
++i915_param_named(splash, charp, 0400,
++		 "Load a splash screen binary image for a specific display."
++		 "splash=<connector>:<image>:w,h,pitch,crtc_x,crtc_y,crtc_w,crtc_h");
++
+ static __always_inline void _print_param(struct drm_printer *p,
+ 					 const char *name,
+ 					 const char *type,
+diff --git a/drivers/gpu/drm/i915/i915_params.h b/drivers/gpu/drm/i915/i915_params.h
+index 9df42e8..147540a 100644
+--- a/drivers/gpu/drm/i915/i915_params.h
++++ b/drivers/gpu/drm/i915/i915_params.h
+@@ -51,6 +51,7 @@
+ 	param(char *, guc_firmware_path, NULL) \
+ 	param(char *, huc_firmware_path, NULL) \
+ 	param(char *, dmc_firmware_path, NULL) \
++	param(char *, splash, NULL) \
+ 	param(int, mmio_debug, 0) \
+ 	param(int, edp_vswing, 0) \
+ 	param(int, reset, 2) \
+diff --git a/drivers/gpu/drm/i915/intel_initial_modeset.c b/drivers/gpu/drm/i915/intel_initial_modeset.c
+index 222c6b6..60ffdb6 100644
+--- a/drivers/gpu/drm/i915/intel_initial_modeset.c
++++ b/drivers/gpu/drm/i915/intel_initial_modeset.c
+@@ -38,6 +38,7 @@
+  * elapshed time before user space starts.
+  */
+ 
++#include <linux/firmware.h>
+ #include "intel_drv.h"
+ #include "i915_drv.h"
+ 
+@@ -114,6 +115,123 @@ static bool attach_crtc(struct drm_device *dev, struct drm_encoder *encoder,
+ 	return false;
+ }
+ 
++static struct drm_framebuffer *
++intel_splash_screen_fb(struct drm_device *dev,
++		       struct splash_screen_info *splash_info)
++{
++	struct drm_framebuffer *fb;
++	struct drm_mode_fb_cmd2 mode_cmd = {0};
++
++	if (splash_info->obj == NULL)
++		return NULL;
++
++	mode_cmd.width = splash_info->width;
++	mode_cmd.height = splash_info->height;
++
++	mode_cmd.pitches[0] = splash_info->pitch * 4;
++	mode_cmd.pixel_format = DRM_FORMAT_ARGB8888;
++
++	mutex_lock(&dev->struct_mutex);
++	fb = intel_framebuffer_create(splash_info->obj, &mode_cmd);
++	mutex_unlock(&dev->struct_mutex);
++
++	return fb;
++}
++
++static char *get_splash_val(char *splash_str, int *val)
++{
++	char *sep;
++
++	if ((sep = strchr(splash_str, ','))) {
++		*val = simple_strtol(splash_str, NULL, 10);
++		splash_str = sep + 1;
++	} else {
++		*val = simple_strtol(splash_str, NULL, 10);
++	}
++
++	return splash_str;
++}
++
++static struct splash_screen_info *
++intel_splash_screen_init(struct drm_device *dev)
++{
++	struct drm_i915_private *dev_priv = to_i915(dev);
++	struct splash_screen_info *splash_info;
++	char *splash_dup;
++	char *splash_str;
++	char *sep;
++	u32 fw_npages;
++
++	if (i915_modparams.splash[0] == '\0')
++		return NULL;
++
++	splash_info = kzalloc(sizeof(struct splash_screen_info), GFP_KERNEL);
++	if (splash_info == NULL)
++		return NULL;
++
++	dev_priv->splash_screen_info = splash_info;
++
++	splash_dup = kstrdup(i915_modparams.splash, GFP_KERNEL);
++	splash_str = splash_dup;
++
++	/* Pull connector name from string */
++	sep = strchr(splash_str, ':');
++	if (sep == NULL)
++		goto fail;
++
++	*sep = '\0';
++	splash_info->connector_name = kstrdup(splash_str, GFP_KERNEL);
++	splash_str = sep + 1;
++
++	/* Pull firmware file name from string */
++	sep = strchr(splash_str, ':');
++	if (sep == NULL)
++		goto fail;
++
++	*sep = '\0';
++	request_firmware(&splash_info->fw, splash_str,
++			 &dev_priv->drm.pdev->dev);
++	if (splash_info->fw == NULL)
++		goto fail;
++	splash_str = sep + 1;
++
++	/* Pull splash screen width, height, crtc */
++	splash_str = get_splash_val(splash_str, &splash_info->width);
++	splash_str = get_splash_val(splash_str, &splash_info->height);
++	splash_str = get_splash_val(splash_str, &splash_info->pitch);
++	splash_str = get_splash_val(splash_str, &splash_info->crtc_x);
++	splash_str = get_splash_val(splash_str, &splash_info->crtc_y);
++	splash_str = get_splash_val(splash_str, &splash_info->crtc_w);
++	splash_str = get_splash_val(splash_str, &splash_info->crtc_h);
++
++	/*
++	 * If splash image is baked into the kernel, we just get
++	 * a pointer.  Otherwise we'll get a list of pages.
++	 */
++	fw_npages = DIV_ROUND_UP_ULL(splash_info->fw->size, PAGE_SIZE);
++	if (splash_info->fw->pages == NULL)
++		splash_info->obj = i915_gem_object_create_splash(dev,
++				   splash_info->fw->data, fw_npages);
++	else
++		splash_info->obj = i915_gem_object_create_splash_pages(dev,
++				   splash_info->fw->pages, fw_npages);
++
++	kfree(splash_dup);
++
++	return splash_info;
++
++fail:
++	/* Clean up failed entry data */
++	if (splash_info) {
++		release_firmware(splash_info->fw);
++		kfree(splash_info->connector_name);
++	}
++	kfree(splash_info);
++	kfree(splash_dup);
++	return NULL;
++}
++
++
+ static struct drm_display_mode *get_modeline(struct drm_i915_private *dev_priv,
+ 					     struct drm_connector *connector,
+ 					     int width, int height)
+@@ -208,11 +326,44 @@ static int update_connector_state(struct drm_atomic_state *state,
+ 	return 0;
+ }
+ 
++static int update_primary_plane_state(struct drm_atomic_state *state,
++				      struct splash_screen_info *splash_info,
++				      struct drm_crtc *crtc,
++				      struct drm_display_mode *mode,
++				      struct drm_framebuffer *fb)
++{
++	int hdisplay, vdisplay;
++	struct drm_plane_state *primary_state;
++	int ret;
++
++	primary_state = drm_atomic_get_plane_state(state, crtc->primary);
++	ret = drm_atomic_set_crtc_for_plane(primary_state, crtc);
++	if (ret)
++		return ret;
++	drm_mode_get_hv_timing(mode, &hdisplay, &vdisplay);
++	drm_atomic_set_fb_for_plane(primary_state, fb);
++
++	primary_state->crtc_x = splash_info->crtc_x;
++	primary_state->crtc_y = splash_info->crtc_y;
++	primary_state->crtc_w = (splash_info->crtc_w) ?
++		splash_info->crtc_w : hdisplay;
++	primary_state->crtc_h = (splash_info->crtc_h) ?
++		splash_info->crtc_h : vdisplay;
++
++	primary_state->src_x = 0 << 16;
++	primary_state->src_y = 0 << 16;
++	primary_state->src_w = splash_info->width << 16;
++	primary_state->src_h = splash_info->height << 16;
++
++	return 0;
++}
+ 
+ static int update_atomic_state(struct drm_device *dev,
+ 			       struct drm_atomic_state *state,
+-			       struct drm_connector *connector,
+-			       struct drm_display_mode *mode)
++			       struct splash_screen_info *splash_info,
++			       struct drm_framebuffer *fb,
++			       struct drm_display_mode *mode,
++			       struct drm_connector *connector)
+ {
+ 	struct drm_crtc *crtc;
+ 	int ret;
+@@ -231,6 +382,13 @@ static int update_atomic_state(struct drm_device *dev,
+ 	if (ret)
+ 		return ret;
+ 
++	/* set up primary plane if a splash screen is requested */
++	if (fb && splash_info) {
++		ret = update_primary_plane_state(state, splash_info,
++						 crtc, mode, fb);
++		if (ret)
++			return ret;
++	}
+ 	return 0;
+ }
+ 
+@@ -277,16 +435,30 @@ static void modeset_config_fn(struct work_struct *work)
+ 	struct drm_modeset_acquire_ctx ctx;
+ 	struct drm_plane *plane;
+ 	int ret;
++	struct splash_screen_info *splash_info, *info;
++	struct drm_framebuffer *fb = NULL;
+ 	bool found = false;
+ 	uint32_t used_crtcs = 0;
+ 	struct drm_display_mode *connector_mode[20];
+ 	struct drm_encoder *encoder;
+ 	struct drm_display_mode *mode;
+ 
++	state = drm_atomic_state_alloc(dev);
++	if (!state)
++		return;
++
++	splash_info = intel_splash_screen_init(dev);
++	if (splash_info) {
++		fb = intel_splash_screen_fb(dev, splash_info);
++		if (IS_ERR(fb))
++			fb = NULL;
++	}
++
+ 	memset(connector_mode, 0, sizeof(connector_mode));
+ 	mutex_lock(&dev->mode_config.mutex);
+ 	drm_connector_list_iter_begin(dev, &conn_iter);
+ 	drm_for_each_connector_iter(connector, &conn_iter) {
++		info = NULL;
+ 		if (use_connector(connector)) {
+ 			encoder = get_encoder(connector);
+ 			if (!encoder)
+@@ -301,6 +473,10 @@ static void modeset_config_fn(struct work_struct *work)
+ 				WARN_ON(connector->index >= 20);
+ 				connector_mode[connector->index] = mode;
+ 			}
++
++			if (splash_info &&
++			    strcmp(splash_info->connector_name, connector->name) == 0)
++					info = splash_info;
+ 		}
+ 	}
+ 	drm_connector_list_iter_end(&conn_iter);
+@@ -309,14 +485,13 @@ static void modeset_config_fn(struct work_struct *work)
+ 		/* Try to detect attached connectors */
+ 		drm_connector_list_iter_begin(dev, &conn_iter);
+ 		drm_for_each_connector_iter(connector, &conn_iter) {
+-			drm_modeset_lock(&dev->mode_config.connection_mutex, NULL);
++			info = NULL;
+ 			if (connector->funcs && connector->funcs->detect)
+ 				connector->status = connector->funcs->detect(connector,
+-									    true);
++									     true);
+ 			else if (connector->helper_private && connector->helper_private->detect_ctx)
+ 				connector->status = connector->helper_private->detect_ctx(connector,
+ 									    NULL, true);
+-			drm_modeset_unlock(&dev->mode_config.connection_mutex);
+ 
+ 			if (connector->status == connector_status_connected) {
+ 				encoder = get_encoder(connector);
+@@ -332,6 +507,10 @@ static void modeset_config_fn(struct work_struct *work)
+ 					WARN_ON(connector->index >= 20);
+ 					connector_mode[connector->index] = mode;
+ 				}
++
++				if (splash_info &&
++				    strcmp(splash_info->connector_name, connector->name) == 0)
++					info = splash_info;
+ 			}
+ 		}
+ 		drm_connector_list_iter_end(&conn_iter);
+@@ -369,8 +548,9 @@ static void modeset_config_fn(struct work_struct *work)
+ 	drm_connector_list_iter_begin(dev, &conn_iter);
+ 	drm_for_each_connector_iter(connector, &conn_iter) {
+ 		if (connector_mode[connector->index]) {
+-			ret = update_atomic_state(dev, state, connector,
+-						  connector_mode[connector->index]);
++			ret = update_atomic_state(dev, state, info, fb,
++						  connector_mode[connector->index],
++						  connector);
+ 			if (ret)
+ 				goto fail;
+ 		}
+@@ -448,7 +628,15 @@ static void initial_mode_destroy(struct drm_device *dev)
+ void intel_initial_mode_config_fini(struct drm_device *dev)
+ {
+ 	struct drm_i915_private *dev_priv = to_i915(dev);
++	struct splash_screen_info *splash_info = dev_priv->splash_screen_info;
+ 
+ 	flush_work(&dev_priv->initial_modeset_work);
++
+ 	initial_mode_destroy(dev);
++
++	if (splash_info) {
++		release_firmware(splash_info->fw);
++		kfree(splash_info->connector_name);
++		kfree(splash_info);
++	}
+ }
+-- 
+1.9.1
+

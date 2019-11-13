@@ -1,7 +1,7 @@
-From f9c07d45eb14252afeaf399ec8fa790fcea26994 Mon Sep 17 00:00:00 2001
+From 6a7cc17bac07c772de30b261f743ef07c80eba0b Mon Sep 17 00:00:00 2001
 From: Jakub Dorzak <jdorzakx@intel.com>
 Date: Tue, 26 Jul 2016 14:59:58 +0100
-Subject: [PATCH 036/100] ASoC: Intel: Boards: Added option to enable TDF8532
+Subject: [PATCH 036/120] ASoC: Intel: Boards: Added option to enable TDF8532
  DAI link
 
 Added Kconfig option that allows user to switch between TDF8532

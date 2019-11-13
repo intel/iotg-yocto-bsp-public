@@ -1,7 +1,7 @@
-From 322fd35048d3dcb0d7bc821efe2e2237f3e63a81 Mon Sep 17 00:00:00 2001
+From 7fadb3fc06f3540dbb03d7b63fda892c18799471 Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Thu, 19 Nov 2015 07:49:43 +0100
-Subject: [PATCH 015/100] ASoC: Intel: Skylake: [WORKAROUND] Disable the ACPI
+Subject: [PATCH 015/120] ASoC: Intel: Skylake: [WORKAROUND] Disable the ACPI
  dependencies
 
  ACPI function calls to retrieve the NHLT table disabled.

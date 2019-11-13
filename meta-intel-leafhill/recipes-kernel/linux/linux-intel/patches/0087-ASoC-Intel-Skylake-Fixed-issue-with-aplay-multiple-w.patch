@@ -1,7 +1,7 @@
-From 2cfe508a7fc813346845d2af054417249a7e0f6d Mon Sep 17 00:00:00 2001
+From 467b5c291699d1415cf53b69176a19f63dfbfa6b Mon Sep 17 00:00:00 2001
 From: "Vohra, GauravX" <gauravx.vohra@intel.com>
 Date: Tue, 28 Aug 2018 17:11:04 +0800
-Subject: [PATCH 087/100] ASoC: Intel: Skylake: Fixed issue with aplay multiple
+Subject: [PATCH 087/120] ASoC: Intel: Skylake: Fixed issue with aplay multiple
  wav files
 
 ---

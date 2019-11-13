@@ -1,0 +1,35 @@
+From d7b58dadd1dbad62a4dce8bd162296e194b6fe49 Mon Sep 17 00:00:00 2001
+From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
+Date: Thu, 25 Oct 2018 17:56:20 +0800
+Subject: [PATCH] ASoC: Intel: Skylake: Implement FW recovery mechanism when
+ encountering FW boot timeout error
+
+When FW boots with timeout error, reinitialize, transfer
+and boot firmware to recover audio.
+
+For BXT platform bxt_sst_init_fw is used as fw initialization routine
+
+Signed-off-by: Ho, Yu Xin <yu.xin.ho@intel.com>
+---
+ sound/soc/intel/skylake/bxt-sst.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+ mode change 100644 => 100755 sound/soc/intel/skylake/bxt-sst.c
+
+diff --git a/sound/soc/intel/skylake/bxt-sst.c b/sound/soc/intel/skylake/bxt-sst.c
+old mode 100644
+new mode 100755
+index 99663de..328b203
+--- a/sound/soc/intel/skylake/bxt-sst.c
++++ b/sound/soc/intel/skylake/bxt-sst.c
+@@ -594,7 +594,7 @@ static int bxt_set_dsp_D0(struct sst_dsp *ctx, unsigned int core_id)
+ 				sst_dsp_shim_read(ctx, BXT_ADSP_ERROR_CODE),
+ 				sst_dsp_shim_read(ctx, BXT_ADSP_FW_STATUS));
+ 
+-			ret = skl_sst_init_fw(ctx->dev, skl);
++			ret = bxt_sst_init_fw(ctx->dev, skl);
+ 			dev_warn(ctx->dev, "Reload fw status: %d\n", ret);
+ 			if (ret < 0) {
+ 				dev_err(ctx->dev, "Failed to set core0 to D0 state\n");
+-- 
+1.9.1
+

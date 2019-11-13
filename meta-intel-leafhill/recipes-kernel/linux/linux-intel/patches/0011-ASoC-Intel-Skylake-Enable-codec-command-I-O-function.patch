@@ -1,0 +1,30 @@
+From 56b76a6f514e31293b73acb8a285e6674b5520cb Mon Sep 17 00:00:00 2001
+From: "Bozek, DominikX" <dominikx.bozek@intel.com>
+Date: Tue, 12 Mar 2019 15:15:27 +0100
+Subject: [PATCH] ASoC: Intel: Skylake: Enable codec command I/O functionality
+
+Normal operation of the HDA require codec command I/O functionality
+to be enabled. This patch make a simple aproach to re-enable it.
+
+Change-Id: I0f53fe17fba1be6b5ceb0d666eb0d2a555998754
+Signed-off-by: Dominik Bozek <dominikx.bozek@intel.com>
+---
+ sound/soc/intel/skylake/skl.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/sound/soc/intel/skylake/skl.c b/sound/soc/intel/skylake/skl.c
+index e12b253..be64796 100644
+--- a/sound/soc/intel/skylake/skl.c
++++ b/sound/soc/intel/skylake/skl.c
+@@ -902,6 +902,8 @@ static void skl_probe_work(struct work_struct *work)
+ 	}
+ 
+ 	/* configure PM */
++	snd_hdac_bus_init_cmd_io(bus);
++
+ 	pm_runtime_put_noidle(bus->dev);
+ 	pm_runtime_allow(bus->dev);
+ 	skl->init_done = 1;
+-- 
+1.9.1
+

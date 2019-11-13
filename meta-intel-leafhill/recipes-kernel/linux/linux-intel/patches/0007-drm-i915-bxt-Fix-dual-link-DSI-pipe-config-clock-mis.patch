@@ -1,0 +1,50 @@
+From 718138c480ead94c452805a90ec4a06a108c12e2 Mon Sep 17 00:00:00 2001
+From: Bob Paauwe <bob.j.paauwe@intel.com>
+Date: Tue, 20 Dec 2016 10:24:23 -0800
+Subject: [PATCH] drm/i915/bxt: Fix dual-link DSI pipe config clock mismatch.
+
+When using a dual link DSI panel, the port clock is programed to
+approximately half of crtc clock specified by the mode. When we
+read back the hardware value and compare it to the state we need
+to account for this.
+
+[drm:intel_pipe_config_compare [i915]] *ERROR* mismatch in base.adjusted_mode.crtc_clock (expected 268630, found 134400)
+[drm:intel_pipe_config_compare [i915]] *ERROR* mismatch in port_clock (expected 268630, found 134400)
+
+Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/vlv_dsi.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/vlv_dsi.c b/drivers/gpu/drm/i915/vlv_dsi.c
+index 369452e..425c19d 100644
+--- a/drivers/gpu/drm/i915/vlv_dsi.c
++++ b/drivers/gpu/drm/i915/vlv_dsi.c
+@@ -1262,6 +1262,7 @@ static void intel_dsi_get_config(struct intel_encoder *encoder,
+ 				 struct intel_crtc_state *pipe_config)
+ {
+ 	struct drm_i915_private *dev_priv = to_i915(encoder->base.dev);
++	struct intel_dsi *intel_dsi = enc_to_intel_dsi(&encoder->base);
+ 	u32 pclk;
+ 	DRM_DEBUG_KMS("\n");
+ 
+@@ -1276,7 +1277,14 @@ static void intel_dsi_get_config(struct intel_encoder *encoder,
+ 					pipe_config);
+ 	}
+ 
+-	if (pclk) {
++	if (!pclk)
++		return;
++
++	/* dual link pclk is about 1/2 of crtc clock */
++	if (IS_BROXTON(dev_priv) && (intel_dsi->dual_link)) {
++		pipe_config->base.adjusted_mode.crtc_clock = pclk * 2;
++		pipe_config->port_clock = pclk * 2;
++	} else {
+ 		pipe_config->base.adjusted_mode.crtc_clock = pclk;
+ 		pipe_config->port_clock = pclk;
+ 	}
+-- 
+1.9.1
+

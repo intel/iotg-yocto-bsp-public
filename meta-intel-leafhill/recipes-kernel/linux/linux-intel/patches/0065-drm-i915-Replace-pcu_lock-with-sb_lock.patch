@@ -1,0 +1,1068 @@
+From 26bbafd19976c78cee14384bacd3a8474502efd8 Mon Sep 17 00:00:00 2001
+From: Chris Wilson <chris@chris-wilson.co.uk>
+Date: Fri, 26 Apr 2019 09:17:21 +0100
+Subject: [PATCH] drm/i915: Replace pcu_lock with sb_lock
+
+We now have two locks for sideband access. The general one covering
+sideband access across all generation, sb_lock, and a specific one
+covering sideband access via the punit on vlv/chv. After lifting the
+sb_lock around the punit into the callers, the pcu_lock is now redudant
+and can be separated from its other use to regulate RPS (essentially
+giving RPS a lock all of its own).
+
+v2: Extract a couple of minor bug fixes.
+
+Backporting this to 4.19 to resolve an issue with the IGT i915_pm_rps
+min-max-config-loaded subtest.
+
+Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+Reviewed-by: Sagar Arun Kamble <sagar.a.kamble@intel.com>
+Link: https://patchwork.freedesktop.org/patch/msgid/20190426081725.31217-4-chris@chris-wilson.co.uk
+(cherry picked from commit 5575ec0a6a793612550343596c1201341c82cf33)
+Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+---
+ drivers/gpu/drm/i915/gvt/scheduler.c    |   5 +-
+ drivers/gpu/drm/i915/i915_debugfs.c     |  21 +----
+ drivers/gpu/drm/i915/i915_drv.h         |  10 +--
+ drivers/gpu/drm/i915/i915_irq.c         |   4 +-
+ drivers/gpu/drm/i915/i915_sysfs.c       |  30 +++----
+ drivers/gpu/drm/i915/intel_cdclk.c      |  28 -------
+ drivers/gpu/drm/i915/intel_display.c    |   6 --
+ drivers/gpu/drm/i915/intel_hdcp.c       |   2 -
+ drivers/gpu/drm/i915/intel_pm.c         | 134 +++++++++++++++-----------------
+ drivers/gpu/drm/i915/intel_runtime_pm.c |  19 +----
+ drivers/gpu/drm/i915/intel_sideband.c   |  15 +---
+ 11 files changed, 89 insertions(+), 185 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/gvt/scheduler.c b/drivers/gpu/drm/i915/gvt/scheduler.c
+index b5aa2cb..546cafb 100644
+--- a/drivers/gpu/drm/i915/gvt/scheduler.c
++++ b/drivers/gpu/drm/i915/gvt/scheduler.c
+@@ -270,15 +270,16 @@ static void active_hp_work(struct work_struct *work)
+ 	struct intel_gvt *gvt =
+ 		container_of(work, struct intel_gvt, active_hp_work);
+ 	struct drm_i915_private *dev_priv = gvt->dev_priv;
++	struct intel_rps *rps = &dev_priv->gt_pm.rps;
+ 	u8 freq = dev_priv->gt_pm.rps.rp0_freq;
+ 
+ 	if (IS_BROXTON(dev_priv))
+ 		freq = intel_freq_opcode(dev_priv, 600);
+ 
+ 	if (READ_ONCE(dev_priv->gt_pm.rps.cur_freq) < freq) {
+-		mutex_lock(&dev_priv->pcu_lock);
++		mutex_lock(&rps->lock);
+ 		intel_set_rps(dev_priv, freq);
+-		mutex_unlock(&dev_priv->pcu_lock);
++		mutex_unlock(&rps->lock);
+ 	}
+ }
+ 
+diff --git a/drivers/gpu/drm/i915/i915_debugfs.c b/drivers/gpu/drm/i915/i915_debugfs.c
+index b1a588b..be13637 100644
+--- a/drivers/gpu/drm/i915/i915_debugfs.c
++++ b/drivers/gpu/drm/i915/i915_debugfs.c
+@@ -1077,8 +1077,6 @@ static int i915_frequency_info(struct seq_file *m, void *unused)
+ 	} else if (IS_VALLEYVIEW(dev_priv) || IS_CHERRYVIEW(dev_priv)) {
+ 		u32 rpmodectl, freq_sts;
+ 
+-		mutex_lock(&dev_priv->pcu_lock);
+-
+ 		rpmodectl = I915_READ(GEN6_RP_CONTROL);
+ 		seq_printf(m, "Video Turbo Mode: %s\n",
+ 			   yesno(rpmodectl & GEN6_RP_MEDIA_TURBO));
+@@ -1110,7 +1108,6 @@ static int i915_frequency_info(struct seq_file *m, void *unused)
+ 		seq_printf(m,
+ 			   "efficient (RPe) frequency: %d MHz\n",
+ 			   intel_gpu_freq(dev_priv, rps->efficient_freq));
+-		mutex_unlock(&dev_priv->pcu_lock);
+ 	} else if (INTEL_GEN(dev_priv) >= 6) {
+ 		u32 rp_state_limits;
+ 		u32 gt_perf_status;
+@@ -1540,12 +1537,9 @@ static int gen6_drpc_info(struct seq_file *m)
+ 		gen9_powergate_status = I915_READ(GEN9_PWRGT_DOMAIN_STATUS);
+ 	}
+ 
+-	if (INTEL_GEN(dev_priv) <= 7) {
+-		mutex_lock(&dev_priv->pcu_lock);
++	if (INTEL_GEN(dev_priv) <= 7)
+ 		sandybridge_pcode_read(dev_priv, GEN6_PCODE_READ_RC6VIDS,
+ 				       &rc6vids);
+-		mutex_unlock(&dev_priv->pcu_lock);
+-	}
+ 
+ 	seq_printf(m, "RC1e Enabled: %s\n",
+ 		   yesno(rcctl1 & GEN6_RC_CTL_RC1e_ENABLE));
+@@ -1815,17 +1809,10 @@ static int i915_ring_freq_table(struct seq_file *m, void *unused)
+ 	struct intel_rps *rps = &dev_priv->gt_pm.rps;
+ 	unsigned int max_gpu_freq, min_gpu_freq;
+ 	int gpu_freq, ia_freq;
+-	int ret;
+ 
+ 	if (!HAS_LLC(dev_priv))
+ 		return -ENODEV;
+ 
+-	intel_runtime_pm_get(dev_priv);
+-
+-	ret = mutex_lock_interruptible(&dev_priv->pcu_lock);
+-	if (ret)
+-		goto out;
+-
+ 	min_gpu_freq = rps->min_freq;
+ 	max_gpu_freq = rps->max_freq;
+ 	if (IS_GEN9_BC(dev_priv) || INTEL_GEN(dev_priv) >= 10) {
+@@ -1836,6 +1823,7 @@ static int i915_ring_freq_table(struct seq_file *m, void *unused)
+ 
+ 	seq_puts(m, "GPU freq (MHz)\tEffective CPU freq (MHz)\tEffective Ring freq (MHz)\n");
+ 
++	intel_runtime_pm_get(dev_priv);
+ 	for (gpu_freq = min_gpu_freq; gpu_freq <= max_gpu_freq; gpu_freq++) {
+ 		ia_freq = gpu_freq;
+ 		sandybridge_pcode_read(dev_priv,
+@@ -1850,11 +1838,8 @@ static int i915_ring_freq_table(struct seq_file *m, void *unused)
+ 			   ((ia_freq >> 8) & 0xff) * 100);
+ 	}
+ 
+-	mutex_unlock(&dev_priv->pcu_lock);
+-
+-out:
+ 	intel_runtime_pm_put(dev_priv);
+-	return ret;
++	return 0;
+ }
+ 
+ static int i915_opregion(struct seq_file *m, void *unused)
+diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
+index b71609e..52d5b63 100644
+--- a/drivers/gpu/drm/i915/i915_drv.h
++++ b/drivers/gpu/drm/i915/i915_drv.h
+@@ -761,6 +761,8 @@ struct intel_rps_ei {
+ };
+ 
+ struct intel_rps {
++	struct mutex lock; /* protects enabling and the worker */
++
+ 	/*
+ 	 * work, interrupts_enabled and pm_iir are protected by
+ 	 * dev_priv->irq_lock
+@@ -1818,14 +1820,6 @@ struct drm_i915_private {
+ 	/* Cannot be determined by PCIID. You must always read a register. */
+ 	u32 edram_cap;
+ 
+-	/*
+-	 * Protects RPS/RC6 register access and PCU communication.
+-	 * Must be taken after struct_mutex if nested. Note that
+-	 * this lock may be held for long periods of time when
+-	 * talking to hw - so only take it when talking to hw!
+-	 */
+-	struct mutex pcu_lock;
+-
+ 	/* gen6+ GT PM state */
+ 	struct intel_gen6_power_mgmt gt_pm;
+ 
+diff --git a/drivers/gpu/drm/i915/i915_irq.c b/drivers/gpu/drm/i915/i915_irq.c
+index 5e0e9f1..0cf6740 100644
+--- a/drivers/gpu/drm/i915/i915_irq.c
++++ b/drivers/gpu/drm/i915/i915_irq.c
+@@ -1323,7 +1323,7 @@ static void gen6_pm_rps_work(struct work_struct *work)
+ 	if ((pm_iir & dev_priv->pm_rps_events) == 0 && !client_boost)
+ 		goto out;
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
++	mutex_lock(&rps->lock);
+ 
+ 	pm_iir |= vlv_wa_c0_ei(dev_priv, pm_iir);
+ 
+@@ -1377,7 +1377,7 @@ static void gen6_pm_rps_work(struct work_struct *work)
+ 		rps->last_adj = 0;
+ 	}
+ 
+-	mutex_unlock(&dev_priv->pcu_lock);
++	mutex_unlock(&rps->lock);
+ 
+ out:
+ 	/* Make sure not to corrupt PMIMR state used by ringbuffer on GEN6 */
+diff --git a/drivers/gpu/drm/i915/i915_sysfs.c b/drivers/gpu/drm/i915/i915_sysfs.c
+index 4ff6442..f29c700 100644
+--- a/drivers/gpu/drm/i915/i915_sysfs.c
++++ b/drivers/gpu/drm/i915/i915_sysfs.c
+@@ -266,7 +266,6 @@ static ssize_t gt_act_freq_mhz_show(struct device *kdev,
+ 
+ 	intel_runtime_pm_get(dev_priv);
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	if (IS_VALLEYVIEW(dev_priv) || IS_CHERRYVIEW(dev_priv)) {
+ 		u32 freq;
+ 		freq = vlv_punit_read(dev_priv, PUNIT_REG_GPU_FREQ_STS);
+@@ -276,7 +275,6 @@ static ssize_t gt_act_freq_mhz_show(struct device *kdev,
+ 				     intel_get_cagf(dev_priv,
+ 						    I915_READ(GEN6_RPSTAT1)));
+ 	}
+-	mutex_unlock(&dev_priv->pcu_lock);
+ 
+ 	intel_runtime_pm_put(dev_priv);
+ 
+@@ -321,12 +319,12 @@ static ssize_t gt_boost_freq_mhz_store(struct device *kdev,
+ 	if (val < rps->min_freq || val > rps->max_freq)
+ 		return -EINVAL;
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
++	mutex_lock(&rps->lock);
+ 	if (val != rps->boost_freq) {
+ 		rps->boost_freq = val;
+ 		boost = atomic_read(&rps->num_waiters);
+ 	}
+-	mutex_unlock(&dev_priv->pcu_lock);
++	mutex_unlock(&rps->lock);
+ 	if (boost)
+ 		schedule_work(&rps->work);
+ 
+@@ -367,16 +365,14 @@ static ssize_t gt_max_freq_mhz_store(struct device *kdev,
+ 
+ 	intel_runtime_pm_get(dev_priv);
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
++	mutex_lock(&rps->lock);
+ 
+ 	val = intel_freq_opcode(dev_priv, val);
+-
+ 	if (val < rps->min_freq ||
+ 	    val > rps->max_freq ||
+ 	    val < rps->min_freq_softlimit) {
+-		mutex_unlock(&dev_priv->pcu_lock);
+-		intel_runtime_pm_put(dev_priv);
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto unlock;
+ 	}
+ 
+ 	if (val > rps->rp0_freq)
+@@ -394,8 +390,8 @@ static ssize_t gt_max_freq_mhz_store(struct device *kdev,
+ 	 * frequency request may be unchanged. */
+ 	ret = intel_set_rps(dev_priv, val);
+ 
+-	mutex_unlock(&dev_priv->pcu_lock);
+-
++unlock:
++	mutex_unlock(&rps->lock);
+ 	intel_runtime_pm_put(dev_priv);
+ 
+ 	return ret ?: count;
+@@ -425,16 +421,14 @@ static ssize_t gt_min_freq_mhz_store(struct device *kdev,
+ 
+ 	intel_runtime_pm_get(dev_priv);
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
++	mutex_lock(&rps->lock);
+ 
+ 	val = intel_freq_opcode(dev_priv, val);
+-
+ 	if (val < rps->min_freq ||
+ 	    val > rps->max_freq ||
+ 	    val > rps->max_freq_softlimit) {
+-		mutex_unlock(&dev_priv->pcu_lock);
+-		intel_runtime_pm_put(dev_priv);
+-		return -EINVAL;
++		ret = -EINVAL;
++		goto unlock;
+ 	}
+ 
+ 	rps->min_freq_softlimit = val;
+@@ -448,8 +442,8 @@ static ssize_t gt_min_freq_mhz_store(struct device *kdev,
+ 	 * frequency request may be unchanged. */
+ 	ret = intel_set_rps(dev_priv, val);
+ 
+-	mutex_unlock(&dev_priv->pcu_lock);
+-
++unlock:
++	mutex_unlock(&rps->lock);
+ 	intel_runtime_pm_put(dev_priv);
+ 
+ 	return ret ?: count;
+diff --git a/drivers/gpu/drm/i915/intel_cdclk.c b/drivers/gpu/drm/i915/intel_cdclk.c
+index 7b4906e..8170a0e 100644
+--- a/drivers/gpu/drm/i915/intel_cdclk.c
++++ b/drivers/gpu/drm/i915/intel_cdclk.c
+@@ -467,9 +467,7 @@ static void vlv_get_cdclk(struct drm_i915_private *dev_priv,
+ 					       CCK_DISPLAY_CLOCK_CONTROL,
+ 					       cdclk_state->vco);
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	val = vlv_punit_read(dev_priv, PUNIT_REG_DSPFREQ);
+-	mutex_unlock(&dev_priv->pcu_lock);
+ 
+ 	if (IS_VALLEYVIEW(dev_priv))
+ 		cdclk_state->voltage_level = (val & DSPFREQGUAR_MASK) >>
+@@ -541,7 +539,6 @@ static void vlv_set_cdclk(struct drm_i915_private *dev_priv,
+ 	 */
+ 	intel_display_power_get(dev_priv, POWER_DOMAIN_PIPE_A);
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	val = vlv_punit_read(dev_priv, PUNIT_REG_DSPFREQ);
+ 	val &= ~DSPFREQGUAR_MASK;
+ 	val |= (cmd << DSPFREQGUAR_SHIFT);
+@@ -551,7 +548,6 @@ static void vlv_set_cdclk(struct drm_i915_private *dev_priv,
+ 		     50)) {
+ 		DRM_ERROR("timed out waiting for CDclk change\n");
+ 	}
+-	mutex_unlock(&dev_priv->pcu_lock);
+ 
+ 	mutex_lock(&dev_priv->sb_lock);
+ 
+@@ -621,7 +617,6 @@ static void chv_set_cdclk(struct drm_i915_private *dev_priv,
+ 	 */
+ 	intel_display_power_get(dev_priv, POWER_DOMAIN_PIPE_A);
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	val = vlv_punit_read(dev_priv, PUNIT_REG_DSPFREQ);
+ 	val &= ~DSPFREQGUAR_MASK_CHV;
+ 	val |= (cmd << DSPFREQGUAR_SHIFT_CHV);
+@@ -631,7 +626,6 @@ static void chv_set_cdclk(struct drm_i915_private *dev_priv,
+ 		     50)) {
+ 		DRM_ERROR("timed out waiting for CDclk change\n");
+ 	}
+-	mutex_unlock(&dev_priv->pcu_lock);
+ 
+ 	intel_update_cdclk(dev_priv);
+ 
+@@ -709,10 +703,8 @@ static void bdw_set_cdclk(struct drm_i915_private *dev_priv,
+ 		 "trying to change cdclk frequency with cdclk not enabled\n"))
+ 		return;
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	ret = sandybridge_pcode_write(dev_priv,
+ 				      BDW_PCODE_DISPLAY_FREQ_CHANGE_REQ, 0x0);
+-	mutex_unlock(&dev_priv->pcu_lock);
+ 	if (ret) {
+ 		DRM_ERROR("failed to inform pcode about cdclk change\n");
+ 		return;
+@@ -761,10 +753,8 @@ static void bdw_set_cdclk(struct drm_i915_private *dev_priv,
+ 			LCPLL_CD_SOURCE_FCLK_DONE) == 0, 1))
+ 		DRM_ERROR("Switching back to LCPLL failed\n");
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	sandybridge_pcode_write(dev_priv, HSW_PCODE_DE_WRITE_FREQ_REQ,
+ 				cdclk_state->voltage_level);
+-	mutex_unlock(&dev_priv->pcu_lock);
+ 
+ 	I915_WRITE(CDCLK_FREQ, DIV_ROUND_CLOSEST(cdclk, 1000) - 1);
+ 
+@@ -1002,12 +992,10 @@ static void skl_set_cdclk(struct drm_i915_private *dev_priv,
+ 	 */
+ 	WARN_ON_ONCE(IS_SKYLAKE(dev_priv) && vco == 8640000);
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	ret = skl_pcode_request(dev_priv, SKL_PCODE_CDCLK_CONTROL,
+ 				SKL_CDCLK_PREPARE_FOR_CHANGE,
+ 				SKL_CDCLK_READY_FOR_CHANGE,
+ 				SKL_CDCLK_READY_FOR_CHANGE, 3);
+-	mutex_unlock(&dev_priv->pcu_lock);
+ 	if (ret) {
+ 		DRM_ERROR("Failed to inform PCU about cdclk change (%d)\n",
+ 			  ret);
+@@ -1071,10 +1059,8 @@ static void skl_set_cdclk(struct drm_i915_private *dev_priv,
+ 	POSTING_READ(CDCLK_CTL);
+ 
+ 	/* inform PCU of the change */
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	sandybridge_pcode_write(dev_priv, SKL_PCODE_CDCLK_CONTROL,
+ 				cdclk_state->voltage_level);
+-	mutex_unlock(&dev_priv->pcu_lock);
+ 
+ 	intel_update_cdclk(dev_priv);
+ }
+@@ -1386,12 +1372,9 @@ static void bxt_set_cdclk(struct drm_i915_private *dev_priv,
+ 	 * requires us to wait up to 150usec, but that leads to timeouts;
+ 	 * the 2ms used here is based on experiment.
+ 	 */
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	ret = sandybridge_pcode_write_timeout(dev_priv,
+ 					      HSW_PCODE_DE_WRITE_FREQ_REQ,
+ 					      0x80000000, 150, 2);
+-	mutex_unlock(&dev_priv->pcu_lock);
+-
+ 	if (ret) {
+ 		DRM_ERROR("PCode CDCLK freq change notify failed (err %d, freq %d)\n",
+ 			  ret, cdclk);
+@@ -1419,7 +1402,6 @@ static void bxt_set_cdclk(struct drm_i915_private *dev_priv,
+ 		val |= BXT_CDCLK_SSA_PRECHARGE_ENABLE;
+ 	I915_WRITE(CDCLK_CTL, val);
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	/*
+ 	 * The timeout isn't specified, the 2ms used here is based on
+ 	 * experiment.
+@@ -1429,8 +1411,6 @@ static void bxt_set_cdclk(struct drm_i915_private *dev_priv,
+ 	ret = sandybridge_pcode_write_timeout(dev_priv,
+ 					      HSW_PCODE_DE_WRITE_FREQ_REQ,
+ 					      cdclk_state->voltage_level, 150, 2);
+-	mutex_unlock(&dev_priv->pcu_lock);
+-
+ 	if (ret) {
+ 		DRM_ERROR("PCode CDCLK freq set failed, (err %d, freq %d)\n",
+ 			  ret, cdclk);
+@@ -1668,12 +1648,10 @@ static void cnl_set_cdclk(struct drm_i915_private *dev_priv,
+ 	u32 val, divider;
+ 	int ret;
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	ret = skl_pcode_request(dev_priv, SKL_PCODE_CDCLK_CONTROL,
+ 				SKL_CDCLK_PREPARE_FOR_CHANGE,
+ 				SKL_CDCLK_READY_FOR_CHANGE,
+ 				SKL_CDCLK_READY_FOR_CHANGE, 3);
+-	mutex_unlock(&dev_priv->pcu_lock);
+ 	if (ret) {
+ 		DRM_ERROR("Failed to inform PCU about cdclk change (%d)\n",
+ 			  ret);
+@@ -1710,10 +1688,8 @@ static void cnl_set_cdclk(struct drm_i915_private *dev_priv,
+ 	I915_WRITE(CDCLK_CTL, val);
+ 
+ 	/* inform PCU of the change */
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	sandybridge_pcode_write(dev_priv, SKL_PCODE_CDCLK_CONTROL,
+ 				cdclk_state->voltage_level);
+-	mutex_unlock(&dev_priv->pcu_lock);
+ 
+ 	intel_update_cdclk(dev_priv);
+ 
+@@ -1851,12 +1827,10 @@ static void icl_set_cdclk(struct drm_i915_private *dev_priv,
+ 	unsigned int vco = cdclk_state->vco;
+ 	int ret;
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	ret = skl_pcode_request(dev_priv, SKL_PCODE_CDCLK_CONTROL,
+ 				SKL_CDCLK_PREPARE_FOR_CHANGE,
+ 				SKL_CDCLK_READY_FOR_CHANGE,
+ 				SKL_CDCLK_READY_FOR_CHANGE, 3);
+-	mutex_unlock(&dev_priv->pcu_lock);
+ 	if (ret) {
+ 		DRM_ERROR("Failed to inform PCU about cdclk change (%d)\n",
+ 			  ret);
+@@ -1873,10 +1847,8 @@ static void icl_set_cdclk(struct drm_i915_private *dev_priv,
+ 	I915_WRITE(CDCLK_CTL, ICL_CDCLK_CD2X_PIPE_NONE |
+ 			      skl_cdclk_decimal(cdclk));
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+ 	sandybridge_pcode_write(dev_priv, SKL_PCODE_CDCLK_CONTROL,
+ 				cdclk_state->voltage_level);
+-	mutex_unlock(&dev_priv->pcu_lock);
+ 
+ 	intel_update_cdclk(dev_priv);
+ 
+diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
+index b62645c..3c384a1 100644
+--- a/drivers/gpu/drm/i915/intel_display.c
++++ b/drivers/gpu/drm/i915/intel_display.c
+@@ -5092,10 +5092,8 @@ void hsw_enable_ips(const struct intel_crtc_state *crtc_state)
+ 	WARN_ON(!(crtc_state->active_planes & ~BIT(PLANE_CURSOR)));
+ 
+ 	if (IS_BROADWELL(dev_priv)) {
+-		mutex_lock(&dev_priv->pcu_lock);
+ 		WARN_ON(sandybridge_pcode_write(dev_priv, DISPLAY_IPS_CONTROL,
+ 						IPS_ENABLE | IPS_PCODE_CONTROL));
+-		mutex_unlock(&dev_priv->pcu_lock);
+ 		/* Quoting Art Runyan: "its not safe to expect any particular
+ 		 * value in IPS_CTL bit 31 after enabling IPS through the
+ 		 * mailbox." Moreover, the mailbox may return a bogus state,
+@@ -5125,9 +5123,7 @@ void hsw_disable_ips(const struct intel_crtc_state *crtc_state)
+ 		return;
+ 
+ 	if (IS_BROADWELL(dev_priv)) {
+-		mutex_lock(&dev_priv->pcu_lock);
+ 		WARN_ON(sandybridge_pcode_write(dev_priv, DISPLAY_IPS_CONTROL, 0));
+-		mutex_unlock(&dev_priv->pcu_lock);
+ 		/*
+ 		 * Wait for PCODE to finish disabling IPS. The BSpec specified
+ 		 * 42ms timeout value leads to occasional timeouts so use 100ms
+@@ -9088,11 +9084,9 @@ static uint32_t hsw_read_dcomp(struct drm_i915_private *dev_priv)
+ static void hsw_write_dcomp(struct drm_i915_private *dev_priv, uint32_t val)
+ {
+ 	if (IS_HASWELL(dev_priv)) {
+-		mutex_lock(&dev_priv->pcu_lock);
+ 		if (sandybridge_pcode_write(dev_priv, GEN6_PCODE_WRITE_D_COMP,
+ 					    val))
+ 			DRM_DEBUG_KMS("Failed to write to D_COMP\n");
+-		mutex_unlock(&dev_priv->pcu_lock);
+ 	} else {
+ 		I915_WRITE(D_COMP_BDW, val);
+ 		POSTING_READ(D_COMP_BDW);
+diff --git a/drivers/gpu/drm/i915/intel_hdcp.c b/drivers/gpu/drm/i915/intel_hdcp.c
+index d9869b6..9d641bb 100644
+--- a/drivers/gpu/drm/i915/intel_hdcp.c
++++ b/drivers/gpu/drm/i915/intel_hdcp.c
+@@ -106,10 +106,8 @@ static int intel_hdcp_load_keys(struct drm_i915_private *dev_priv)
+ 	 * differ in the key load trigger process from other platforms.
+ 	 */
+ 	if (IS_SKYLAKE(dev_priv) || IS_KABYLAKE(dev_priv)) {
+-		mutex_lock(&dev_priv->pcu_lock);
+ 		ret = sandybridge_pcode_write(dev_priv,
+ 					      SKL_PCODE_LOAD_HDCP_KEYS, 1);
+-		mutex_unlock(&dev_priv->pcu_lock);
+ 		if (ret) {
+ 			DRM_ERROR("Failed to initiate HDCP key load (%d)\n",
+ 			          ret);
+diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
+index d7827b4..ed95efb 100644
+--- a/drivers/gpu/drm/i915/intel_pm.c
++++ b/drivers/gpu/drm/i915/intel_pm.c
+@@ -320,8 +320,6 @@ static void chv_set_memory_dvfs(struct drm_i915_private *dev_priv, bool enable)
+ {
+ 	u32 val;
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+-
+ 	val = vlv_punit_read(dev_priv, PUNIT_REG_DDR_SETUP2);
+ 	if (enable)
+ 		val &= ~FORCE_DDR_HIGH_FREQ;
+@@ -334,24 +332,18 @@ static void chv_set_memory_dvfs(struct drm_i915_private *dev_priv, bool enable)
+ 	if (wait_for((vlv_punit_read(dev_priv, PUNIT_REG_DDR_SETUP2) &
+ 		      FORCE_DDR_FREQ_REQ_ACK) == 0, 3))
+ 		DRM_ERROR("timed out waiting for Punit DDR DVFS request\n");
+-
+-	mutex_unlock(&dev_priv->pcu_lock);
+ }
+ 
+ static void chv_set_memory_pm5(struct drm_i915_private *dev_priv, bool enable)
+ {
+ 	u32 val;
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+-
+ 	val = vlv_punit_read(dev_priv, PUNIT_REG_DSPFREQ);
+ 	if (enable)
+ 		val |= DSP_MAXFIFO_PM5_ENABLE;
+ 	else
+ 		val &= ~DSP_MAXFIFO_PM5_ENABLE;
+ 	vlv_punit_write(dev_priv, PUNIT_REG_DSPFREQ, val);
+-
+-	mutex_unlock(&dev_priv->pcu_lock);
+ }
+ 
+ #define FW_WM(value, plane) \
+@@ -2833,11 +2825,9 @@ static void intel_read_wm_latency(struct drm_i915_private *dev_priv,
+ 
+ 		/* read the first set of memory latencies[0:3] */
+ 		val = 0; /* data0 to be programmed to 0 for first set */
+-		mutex_lock(&dev_priv->pcu_lock);
+ 		ret = sandybridge_pcode_read(dev_priv,
+ 					     GEN9_PCODE_READ_MEM_LATENCY,
+ 					     &val);
+-		mutex_unlock(&dev_priv->pcu_lock);
+ 
+ 		if (ret) {
+ 			DRM_ERROR("SKL Mailbox read error = %d\n", ret);
+@@ -2854,11 +2844,9 @@ static void intel_read_wm_latency(struct drm_i915_private *dev_priv,
+ 
+ 		/* read the second set of memory latencies[4:7] */
+ 		val = 1; /* data0 to be programmed to 1 for second set */
+-		mutex_lock(&dev_priv->pcu_lock);
+ 		ret = sandybridge_pcode_read(dev_priv,
+ 					     GEN9_PCODE_READ_MEM_LATENCY,
+ 					     &val);
+-		mutex_unlock(&dev_priv->pcu_lock);
+ 		if (ret) {
+ 			DRM_ERROR("SKL Mailbox read error = %d\n", ret);
+ 			return;
+@@ -3692,13 +3680,11 @@ static bool skl_needs_memory_bw_wa(struct intel_atomic_state *state)
+ 		return 0;
+ 
+ 	DRM_DEBUG_KMS("Enabling the SAGV\n");
+-	mutex_lock(&dev_priv->pcu_lock);
+ 
+ 	ret = sandybridge_pcode_write(dev_priv, GEN9_PCODE_SAGV_CONTROL,
+ 				      GEN9_SAGV_ENABLE);
+ 
+ 	/* We don't need to wait for the SAGV when enabling */
+-	mutex_unlock(&dev_priv->pcu_lock);
+ 
+ 	/*
+ 	 * Some skl systems, pre-release machines in particular,
+@@ -3729,15 +3715,12 @@ static bool skl_needs_memory_bw_wa(struct intel_atomic_state *state)
+ 		return 0;
+ 
+ 	DRM_DEBUG_KMS("Disabling the SAGV\n");
+-	mutex_lock(&dev_priv->pcu_lock);
+ 
+ 	/* bspec says to keep retrying for at least 1 ms */
+ 	ret = skl_pcode_request(dev_priv, GEN9_PCODE_SAGV_CONTROL,
+ 				GEN9_SAGV_DISABLE,
+ 				GEN9_SAGV_IS_DISABLED, GEN9_SAGV_IS_DISABLED,
+ 				1);
+-	mutex_unlock(&dev_priv->pcu_lock);
+-
+ 	/*
+ 	 * Some skl systems, pre-release machines in particular,
+ 	 * don't actually have an SAGV.
+@@ -6159,8 +6142,6 @@ void vlv_wm_get_hw_state(struct drm_device *dev)
+ 	wm->level = VLV_WM_LEVEL_PM2;
+ 
+ 	if (IS_CHERRYVIEW(dev_priv)) {
+-		mutex_lock(&dev_priv->pcu_lock);
+-
+ 		val = vlv_punit_read(dev_priv, PUNIT_REG_DSPFREQ);
+ 		if (val & DSP_MAXFIFO_PM5_ENABLE)
+ 			wm->level = VLV_WM_LEVEL_PM5;
+@@ -6188,8 +6169,6 @@ void vlv_wm_get_hw_state(struct drm_device *dev)
+ 			if ((val & FORCE_DDR_HIGH_FREQ) == 0)
+ 				wm->level = VLV_WM_LEVEL_DDR_DVFS;
+ 		}
+-
+-		mutex_unlock(&dev_priv->pcu_lock);
+ 	}
+ 
+ 	for_each_intel_crtc(dev, crtc) {
+@@ -6828,7 +6807,7 @@ void gen6_rps_busy(struct drm_i915_private *dev_priv)
+ {
+ 	struct intel_rps *rps = &dev_priv->gt_pm.rps;
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
++	mutex_lock(&rps->lock);
+ 	if (rps->enabled) {
+ 		u8 freq;
+ 
+@@ -6851,7 +6830,7 @@ void gen6_rps_busy(struct drm_i915_private *dev_priv)
+ 					rps->max_freq_softlimit)))
+ 			DRM_DEBUG_DRIVER("Failed to set idle frequency\n");
+ 	}
+-	mutex_unlock(&dev_priv->pcu_lock);
++	mutex_unlock(&rps->lock);
+ }
+ 
+ void gen6_rps_idle(struct drm_i915_private *dev_priv)
+@@ -6865,7 +6844,7 @@ void gen6_rps_idle(struct drm_i915_private *dev_priv)
+ 	 */
+ 	gen6_disable_rps_interrupts(dev_priv);
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
++	mutex_lock(&rps->lock);
+ 	if (rps->enabled) {
+ 		if (IS_VALLEYVIEW(dev_priv) || IS_CHERRYVIEW(dev_priv))
+ 			vlv_set_rps_idle(dev_priv);
+@@ -6875,7 +6854,7 @@ void gen6_rps_idle(struct drm_i915_private *dev_priv)
+ 		I915_WRITE(GEN6_PMINTRMSK,
+ 			   gen6_sanitize_rps_pm_mask(dev_priv, ~0));
+ 	}
+-	mutex_unlock(&dev_priv->pcu_lock);
++	mutex_unlock(&rps->lock);
+ }
+ 
+ void gen6_rps_boost(struct i915_request *rq,
+@@ -6916,7 +6895,7 @@ int intel_set_rps(struct drm_i915_private *dev_priv, u8 val)
+ 	struct intel_rps *rps = &dev_priv->gt_pm.rps;
+ 	int err;
+ 
+-	lockdep_assert_held(&dev_priv->pcu_lock);
++	lockdep_assert_held(&rps->lock);
+ 	GEM_BUG_ON(val > rps->max_freq);
+ 	GEM_BUG_ON(val < rps->min_freq);
+ 
+@@ -7415,7 +7394,7 @@ static void gen6_update_ring_freq(struct drm_i915_private *dev_priv)
+ 	unsigned int max_gpu_freq, min_gpu_freq;
+ 	struct cpufreq_policy *policy;
+ 
+-	WARN_ON(!mutex_is_locked(&dev_priv->pcu_lock));
++	lockdep_assert_held(&rps->lock);
+ 
+ 	if (rps->max_freq <= rps->min_freq)
+ 		return;
+@@ -8623,8 +8602,6 @@ void intel_init_gt_powersave(struct drm_i915_private *dev_priv)
+ 		intel_runtime_pm_get(dev_priv);
+ 	}
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+-
+ 	/* Initialize RPS limits (for userspace) */
+ 	if (IS_CHERRYVIEW(dev_priv))
+ 		cherryview_init_gt_powersave(dev_priv);
+@@ -8662,8 +8639,8 @@ void intel_init_gt_powersave(struct drm_i915_private *dev_priv)
+ 
+ 	/* Finally allow us to boost to max by default */
+ 	rps->boost_freq = rps->max_freq;
+-
+-	mutex_unlock(&dev_priv->pcu_lock);
++	rps->idle_freq = rps->min_freq;
++	rps->cur_freq = rps->idle_freq;
+ }
+ 
+ void intel_cleanup_gt_powersave(struct drm_i915_private *dev_priv)
+@@ -8705,7 +8682,7 @@ void intel_sanitize_gt_powersave(struct drm_i915_private *dev_priv)
+ 
+ static inline void intel_disable_llc_pstate(struct drm_i915_private *i915)
+ {
+-	lockdep_assert_held(&i915->pcu_lock);
++	lockdep_assert_held(&i915->gt_pm.rps.lock);
+ 
+ 	if (!i915->gt_pm.llc_pstate.enabled)
+ 		return;
+@@ -8717,7 +8694,7 @@ static inline void intel_disable_llc_pstate(struct drm_i915_private *i915)
+ 
+ static void intel_disable_rc6(struct drm_i915_private *dev_priv)
+ {
+-	lockdep_assert_held(&dev_priv->pcu_lock);
++	lockdep_assert_held(&dev_priv->gt_pm.rps.lock);
+ 
+ 	if (!dev_priv->gt_pm.rc6.enabled)
+ 		return;
+@@ -8736,7 +8713,7 @@ static void intel_disable_rc6(struct drm_i915_private *dev_priv)
+ 
+ static void intel_disable_rps(struct drm_i915_private *dev_priv)
+ {
+-	lockdep_assert_held(&dev_priv->pcu_lock);
++	lockdep_assert_held(&dev_priv->gt_pm.rps.lock);
+ 
+ 	if (!dev_priv->gt_pm.rps.enabled)
+ 		return;
+@@ -8757,19 +8734,19 @@ static void intel_disable_rps(struct drm_i915_private *dev_priv)
+ 
+ void intel_disable_gt_powersave(struct drm_i915_private *dev_priv)
+ {
+-	mutex_lock(&dev_priv->pcu_lock);
++	mutex_lock(&dev_priv->gt_pm.rps.lock);
+ 
+ 	intel_disable_rc6(dev_priv);
+ 	intel_disable_rps(dev_priv);
+ 	if (HAS_LLC(dev_priv))
+ 		intel_disable_llc_pstate(dev_priv);
+ 
+-	mutex_unlock(&dev_priv->pcu_lock);
++	mutex_unlock(&dev_priv->gt_pm.rps.lock);
+ }
+ 
+ static inline void intel_enable_llc_pstate(struct drm_i915_private *i915)
+ {
+-	lockdep_assert_held(&i915->pcu_lock);
++	lockdep_assert_held(&i915->gt_pm.rps.lock);
+ 
+ 	if (i915->gt_pm.llc_pstate.enabled)
+ 		return;
+@@ -8781,7 +8758,7 @@ static inline void intel_enable_llc_pstate(struct drm_i915_private *i915)
+ 
+ static void intel_enable_rc6(struct drm_i915_private *dev_priv)
+ {
+-	lockdep_assert_held(&dev_priv->pcu_lock);
++	lockdep_assert_held(&dev_priv->gt_pm.rps.lock);
+ 
+ 	if (dev_priv->gt_pm.rc6.enabled)
+ 		return;
+@@ -8804,7 +8781,7 @@ static void intel_enable_rps(struct drm_i915_private *dev_priv)
+ {
+ 	struct intel_rps *rps = &dev_priv->gt_pm.rps;
+ 
+-	lockdep_assert_held(&dev_priv->pcu_lock);
++	lockdep_assert_held(&rps->lock);
+ 
+ 	if (rps->enabled)
+ 		return;
+@@ -8839,7 +8816,7 @@ void intel_enable_gt_powersave(struct drm_i915_private *dev_priv)
+ 	if (intel_vgpu_active(dev_priv))
+ 		return;
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
++	mutex_lock(&dev_priv->gt_pm.rps.lock);
+ 
+ 	if (HAS_RC6(dev_priv))
+ 		intel_enable_rc6(dev_priv);
+@@ -8847,7 +8824,7 @@ void intel_enable_gt_powersave(struct drm_i915_private *dev_priv)
+ 	if (HAS_LLC(dev_priv))
+ 		intel_enable_llc_pstate(dev_priv);
+ 
+-	mutex_unlock(&dev_priv->pcu_lock);
++	mutex_unlock(&dev_priv->gt_pm.rps.lock);
+ }
+ 
+ static void ibx_init_clock_gating(struct drm_i915_private *dev_priv)
+@@ -9861,22 +9838,20 @@ static inline int gen7_check_mailbox_status(struct drm_i915_private *dev_priv)
+ 	}
+ }
+ 
+-int sandybridge_pcode_read(struct drm_i915_private *dev_priv, u32 mbox, u32 *val)
++static int
++__sandybridge_pcode_read(struct drm_i915_private *dev_priv, u32 mbox, u32 *val)
+ {
+ 	int status;
+ 
+-	WARN_ON(!mutex_is_locked(&dev_priv->pcu_lock));
++	lockdep_assert_held(&dev_priv->sb_lock);
+ 
+ 	/* GEN6_PCODE_* are outside of the forcewake domain, we can
+ 	 * use te fw I915_READ variants to reduce the amount of work
+ 	 * required when reading/writing.
+ 	 */
+ 
+-	if (I915_READ_FW(GEN6_PCODE_MAILBOX) & GEN6_PCODE_READY) {
+-		DRM_DEBUG_DRIVER("warning: pcode (read from mbox %x) mailbox access failed for %ps\n",
+-				 mbox, __builtin_return_address(0));
++	if (I915_READ_FW(GEN6_PCODE_MAILBOX) & GEN6_PCODE_READY)
+ 		return -EAGAIN;
+-	}
+ 
+ 	I915_WRITE_FW(GEN6_PCODE_DATA, *val);
+ 	I915_WRITE_FW(GEN6_PCODE_DATA1, 0);
+@@ -9884,11 +9859,8 @@ int sandybridge_pcode_read(struct drm_i915_private *dev_priv, u32 mbox, u32 *val
+ 
+ 	if (__intel_wait_for_register_fw(dev_priv,
+ 					 GEN6_PCODE_MAILBOX, GEN6_PCODE_READY, 0,
+-					 500, 0, NULL)) {
+-		DRM_ERROR("timeout waiting for pcode read (from mbox %x) to finish for %ps\n",
+-			  mbox, __builtin_return_address(0));
++					 500, 0, NULL))
+ 		return -ETIMEDOUT;
+-	}
+ 
+ 	*val = I915_READ_FW(GEN6_PCODE_DATA);
+ 	I915_WRITE_FW(GEN6_PCODE_DATA, 0);
+@@ -9898,33 +9870,40 @@ int sandybridge_pcode_read(struct drm_i915_private *dev_priv, u32 mbox, u32 *val
+ 	else
+ 		status = gen6_check_mailbox_status(dev_priv);
+ 
++	return status;
++}
++
++int
++sandybridge_pcode_read(struct drm_i915_private *dev_priv, u32 mbox, u32 *val)
++{
++	int status;
++
++	mutex_lock(&dev_priv->sb_lock);
++	status = __sandybridge_pcode_read(dev_priv, mbox, val);
++	mutex_unlock(&dev_priv->sb_lock);
++
+ 	if (status) {
+ 		DRM_DEBUG_DRIVER("warning: pcode (read from mbox %x) mailbox access failed for %ps: %d\n",
+ 				 mbox, __builtin_return_address(0), status);
+-		return status;
+ 	}
+ 
+-	return 0;
++	return status;
+ }
+ 
+-int sandybridge_pcode_write_timeout(struct drm_i915_private *dev_priv,
+-				    u32 mbox, u32 val,
+-				    int fast_timeout_us, int slow_timeout_ms)
++static int __sandybridge_pcode_write_timeout(struct drm_i915_private *dev_priv,
++					     u32 mbox, u32 val,
++					     int fast_timeout_us,
++					     int slow_timeout_ms)
+ {
+ 	int status;
+ 
+-	WARN_ON(!mutex_is_locked(&dev_priv->pcu_lock));
+-
+ 	/* GEN6_PCODE_* are outside of the forcewake domain, we can
+ 	 * use te fw I915_READ variants to reduce the amount of work
+ 	 * required when reading/writing.
+ 	 */
+ 
+-	if (I915_READ_FW(GEN6_PCODE_MAILBOX) & GEN6_PCODE_READY) {
+-		DRM_DEBUG_DRIVER("warning: pcode (write of 0x%08x to mbox %x) mailbox access failed for %ps\n",
+-				 val, mbox, __builtin_return_address(0));
++	if (I915_READ_FW(GEN6_PCODE_MAILBOX) & GEN6_PCODE_READY)
+ 		return -EAGAIN;
+-	}
+ 
+ 	I915_WRITE_FW(GEN6_PCODE_DATA, val);
+ 	I915_WRITE_FW(GEN6_PCODE_DATA1, 0);
+@@ -9933,11 +9912,8 @@ int sandybridge_pcode_write_timeout(struct drm_i915_private *dev_priv,
+ 	if (__intel_wait_for_register_fw(dev_priv,
+ 					 GEN6_PCODE_MAILBOX, GEN6_PCODE_READY, 0,
+ 					 fast_timeout_us, slow_timeout_ms,
+-					 NULL)) {
+-		DRM_ERROR("timeout waiting for pcode write of 0x%08x to mbox %x to finish for %ps\n",
+-			  val, mbox, __builtin_return_address(0));
++					 NULL))
+ 		return -ETIMEDOUT;
+-	}
+ 
+ 	I915_WRITE_FW(GEN6_PCODE_DATA, 0);
+ 
+@@ -9946,13 +9922,28 @@ int sandybridge_pcode_write_timeout(struct drm_i915_private *dev_priv,
+ 	else
+ 		status = gen6_check_mailbox_status(dev_priv);
+ 
++	return status;
++}
++
++int sandybridge_pcode_write_timeout(struct drm_i915_private *dev_priv,
++				    u32 mbox, u32 val,
++				    int fast_timeout_us,
++				    int slow_timeout_ms)
++{
++	int status;
++
++	mutex_lock(&dev_priv->sb_lock);
++	status = __sandybridge_pcode_write_timeout(dev_priv, mbox, val,
++						   fast_timeout_us,
++						   slow_timeout_ms);
++	mutex_unlock(&dev_priv->sb_lock);
++
+ 	if (status) {
+ 		DRM_DEBUG_DRIVER("warning: pcode (write of 0x%08x to mbox %x) mailbox access failed for %ps: %d\n",
+ 				 val, mbox, __builtin_return_address(0), status);
+-		return status;
+ 	}
+ 
+-	return 0;
++	return status;
+ }
+ 
+ static bool skl_pcode_try_request(struct drm_i915_private *dev_priv, u32 mbox,
+@@ -9961,7 +9952,7 @@ static bool skl_pcode_try_request(struct drm_i915_private *dev_priv, u32 mbox,
+ {
+ 	u32 val = request;
+ 
+-	*status = sandybridge_pcode_read(dev_priv, mbox, &val);
++	*status = __sandybridge_pcode_read(dev_priv, mbox, &val);
+ 
+ 	return *status || ((val & reply_mask) == reply);
+ }
+@@ -9991,7 +9982,7 @@ int skl_pcode_request(struct drm_i915_private *dev_priv, u32 mbox, u32 request,
+ 	u32 status;
+ 	int ret;
+ 
+-	WARN_ON(!mutex_is_locked(&dev_priv->pcu_lock));
++	mutex_lock(&dev_priv->sb_lock);
+ 
+ #define COND skl_pcode_try_request(dev_priv, mbox, request, reply_mask, reply, \
+ 				   &status)
+@@ -10027,6 +10018,7 @@ int skl_pcode_request(struct drm_i915_private *dev_priv, u32 mbox, u32 request,
+ 	preempt_enable();
+ 
+ out:
++	mutex_unlock(&dev_priv->sb_lock);
+ 	return ret ? ret : status;
+ #undef COND
+ }
+@@ -10096,7 +10088,7 @@ int intel_freq_opcode(struct drm_i915_private *dev_priv, int val)
+ 
+ void intel_pm_setup(struct drm_i915_private *dev_priv)
+ {
+-	mutex_init(&dev_priv->pcu_lock);
++	mutex_init(&dev_priv->gt_pm.rps.lock);
+ 	mutex_init(&dev_priv->gt_pm.rps.power.mutex);
+ 
+ 	atomic_set(&dev_priv->gt_pm.rps.num_waiters, 0);
+diff --git a/drivers/gpu/drm/i915/intel_runtime_pm.c b/drivers/gpu/drm/i915/intel_runtime_pm.c
+index c7cea89..d60e3d4 100644
+--- a/drivers/gpu/drm/i915/intel_runtime_pm.c
++++ b/drivers/gpu/drm/i915/intel_runtime_pm.c
+@@ -879,8 +879,6 @@ static void vlv_set_power_well(struct drm_i915_private *dev_priv,
+ 	state = enable ? PUNIT_PWRGT_PWR_ON(power_well_id) :
+ 			 PUNIT_PWRGT_PWR_GATE(power_well_id);
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+-
+ #define COND \
+ 	((vlv_punit_read(dev_priv, PUNIT_REG_PWRGT_STATUS) & mask) == state)
+ 
+@@ -898,9 +896,8 @@ static void vlv_set_power_well(struct drm_i915_private *dev_priv,
+ 			  vlv_punit_read(dev_priv, PUNIT_REG_PWRGT_CTRL));
+ 
+ #undef COND
+-
+ out:
+-	mutex_unlock(&dev_priv->pcu_lock);
++	return;
+ }
+ 
+ static void vlv_power_well_enable(struct drm_i915_private *dev_priv,
+@@ -927,8 +924,6 @@ static bool vlv_power_well_enabled(struct drm_i915_private *dev_priv,
+ 	mask = PUNIT_PWRGT_MASK(power_well_id);
+ 	ctrl = PUNIT_PWRGT_PWR_ON(power_well_id);
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+-
+ 	state = vlv_punit_read(dev_priv, PUNIT_REG_PWRGT_STATUS) & mask;
+ 	/*
+ 	 * We only ever set the power-on and power-gate states, anything
+@@ -946,8 +941,6 @@ static bool vlv_power_well_enabled(struct drm_i915_private *dev_priv,
+ 	ctrl = vlv_punit_read(dev_priv, PUNIT_REG_PWRGT_CTRL) & mask;
+ 	WARN_ON(ctrl != state);
+ 
+-	mutex_unlock(&dev_priv->pcu_lock);
+-
+ 	return enabled;
+ }
+ 
+@@ -1458,8 +1451,6 @@ static bool chv_pipe_power_well_enabled(struct drm_i915_private *dev_priv,
+ 	bool enabled;
+ 	u32 state, ctrl;
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+-
+ 	state = vlv_punit_read(dev_priv, PUNIT_REG_DSPFREQ) & DP_SSS_MASK(pipe);
+ 	/*
+ 	 * We only ever set the power-on and power-gate states, anything
+@@ -1475,8 +1466,6 @@ static bool chv_pipe_power_well_enabled(struct drm_i915_private *dev_priv,
+ 	ctrl = vlv_punit_read(dev_priv, PUNIT_REG_DSPFREQ) & DP_SSC_MASK(pipe);
+ 	WARN_ON(ctrl << 16 != state);
+ 
+-	mutex_unlock(&dev_priv->pcu_lock);
+-
+ 	return enabled;
+ }
+ 
+@@ -1490,8 +1479,6 @@ static void chv_set_pipe_power_well(struct drm_i915_private *dev_priv,
+ 
+ 	state = enable ? DP_SSS_PWR_ON(pipe) : DP_SSS_PWR_GATE(pipe);
+ 
+-	mutex_lock(&dev_priv->pcu_lock);
+-
+ #define COND \
+ 	((vlv_punit_read(dev_priv, PUNIT_REG_DSPFREQ) & DP_SSS_MASK(pipe)) == state)
+ 
+@@ -1509,9 +1496,9 @@ static void chv_set_pipe_power_well(struct drm_i915_private *dev_priv,
+ 			  vlv_punit_read(dev_priv, PUNIT_REG_DSPFREQ));
+ 
+ #undef COND
+-
+ out:
+-	mutex_unlock(&dev_priv->pcu_lock);
++	return;
++
+ }
+ 
+ static void chv_pipe_power_well_enable(struct drm_i915_private *dev_priv,
+diff --git a/drivers/gpu/drm/i915/intel_sideband.c b/drivers/gpu/drm/i915/intel_sideband.c
+index 75c872b..143776e 100644
+--- a/drivers/gpu/drm/i915/intel_sideband.c
++++ b/drivers/gpu/drm/i915/intel_sideband.c
+@@ -81,9 +81,6 @@ u32 vlv_punit_read(struct drm_i915_private *dev_priv, u32 addr)
+ {
+ 	u32 val = 0;
+ 
+-	WARN_ON(!mutex_is_locked(&dev_priv->pcu_lock));
+-
+-	mutex_lock(&dev_priv->sb_lock);
+ 	vlv_sideband_rw(dev_priv, PCI_DEVFN(0, 0), IOSF_PORT_PUNIT,
+ 			SB_CRRDDA_NP, addr, &val);
+ 	mutex_unlock(&dev_priv->sb_lock);
+@@ -93,16 +90,8 @@ u32 vlv_punit_read(struct drm_i915_private *dev_priv, u32 addr)
+ 
+ int vlv_punit_write(struct drm_i915_private *dev_priv, u32 addr, u32 val)
+ {
+-	int err;
+-
+-	WARN_ON(!mutex_is_locked(&dev_priv->pcu_lock));
+-
+-	mutex_lock(&dev_priv->sb_lock);
+-	err = vlv_sideband_rw(dev_priv, PCI_DEVFN(0, 0), IOSF_PORT_PUNIT,
++	return vlv_sideband_rw(dev_priv, PCI_DEVFN(0, 0), IOSF_PORT_PUNIT,
+ 			      SB_CRWRDA_NP, addr, &val);
+-	mutex_unlock(&dev_priv->sb_lock);
+-
+-	return err;
+ }
+ 
+ u32 vlv_bunit_read(struct drm_i915_private *dev_priv, u32 reg)
+@@ -125,8 +114,6 @@ u32 vlv_nc_read(struct drm_i915_private *dev_priv, u8 addr)
+ {
+ 	u32 val = 0;
+ 
+-	WARN_ON(!mutex_is_locked(&dev_priv->pcu_lock));
+-
+ 	mutex_lock(&dev_priv->sb_lock);
+ 	vlv_sideband_rw(dev_priv, PCI_DEVFN(0, 0), IOSF_PORT_NC,
+ 			SB_CRRDDA_NP, addr, &val);
+-- 
+1.9.1
+

@@ -1,7 +1,7 @@
-From c93f87b800997f0a3143ae2c7b6cac636c3af460 Mon Sep 17 00:00:00 2001
+From 13e6db2cf9e2618aa87fc1424d16caa88327f56a Mon Sep 17 00:00:00 2001
 From: Daniele Ceraolo Spurio <daniele.ceraolospurio@intel.com>
 Date: Fri, 21 Apr 2017 09:37:27 -0700
-Subject: [PATCH 30/45] drm/i915/guc: fix mmio whitelist mmio_start offset and
+Subject: [PATCH 30/46] drm/i915/guc: fix mmio whitelist mmio_start offset and
  add reminder
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8

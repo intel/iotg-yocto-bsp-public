@@ -1,7 +1,7 @@
-From 6f522a776ee7b40b6c307b996565ddb1d02bb912 Mon Sep 17 00:00:00 2001
+From 43555e09fb9f81eb1d9820204851f7d8cd955d0c Mon Sep 17 00:00:00 2001
 From: Vitaly Wool <vwool@dev.rtsoft.ru>
 Date: Thu, 30 Jun 2016 07:06:52 +0000
-Subject: [PATCH 16/42] libata: enable atapi_an by default
+Subject: [PATCH 16/44] libata: enable atapi_an by default
 
 Change the default value for atapi_an parameter within libata-core
 to enable asynchronous notifications (AN) by default for all
@@ -15,7 +15,7 @@ Signed-off-by: Lim Key Seong <key.seong.lim@intel.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6938bd8..0f70713 100644
+index cbb162b..f3cbd6c 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
 @@ -167,7 +167,7 @@ struct ata_force_ent {

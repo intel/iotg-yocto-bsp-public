@@ -1,7 +1,7 @@
-From 236bced021bec1268f206c7634935c784d6f074f Mon Sep 17 00:00:00 2001
+From aefda0b1cc955dfb8fff00925dfe5e2e81f0ca64 Mon Sep 17 00:00:00 2001
 From: Vidya Srinivas <vidya.srinivas@intel.com>
 Date: Mon, 9 Apr 2018 09:11:09 +0530
-Subject: [PATCH 22/45] drm/i915: Display WA 827
+Subject: [PATCH 22/46] drm/i915: Display WA 827
 
 Display WA 827 applies to GEN9 (excluede GLK) and CNL.
 Switching the plane format from NV12 to RGB and leaving system idle

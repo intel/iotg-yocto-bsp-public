@@ -1,7 +1,7 @@
-From 122b34e049f6f7c2ba70cb5fc3d9510fffd61f41 Mon Sep 17 00:00:00 2001
+From a32c96740a7a924e9f104b30190d27b38f825372 Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:08 +0530
-Subject: [PATCH 20/45] drm/i915/skl: split skl_compute_ddb function
+Subject: [PATCH 20/46] drm/i915/skl: split skl_compute_ddb function
 
 This patch splits skl_compute_wm/ddb functions into two parts.
 One adds all affected pipes after the commit to atomic_state structure
@@ -50,10 +50,10 @@ index 215b082..13d3e9a 100644
  struct i915_mm_struct;
  struct i915_mmu_object;
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 96da357..60b9abb 100644
+index fa3399e..b0093e9 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
-@@ -5110,60 +5110,13 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
+@@ -5149,60 +5149,13 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
  static int
  skl_compute_ddb(struct drm_atomic_state *state)
  {
@@ -118,7 +118,7 @@ index 96da357..60b9abb 100644
  	memcpy(ddb, &dev_priv->wm.skl_hw.ddb, sizeof(*ddb));
  
  #if IS_ENABLED(CONFIG_DRM_I915_GVT)
-@@ -5183,13 +5136,7 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
+@@ -5222,13 +5175,7 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
  	}
  #endif
  
@@ -133,7 +133,7 @@ index 96da357..60b9abb 100644
  		ret = skl_allocate_pipe_ddb(cstate, ddb);
  		if (ret)
  			return ret;
-@@ -5251,16 +5198,15 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
+@@ -5290,16 +5237,15 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
  }
  
  static int
@@ -157,7 +157,7 @@ index 96da357..60b9abb 100644
  	int ret, i;
  
  	if (intel_vgpu_active(dev_priv) && i915_modparams.avail_planes_per_pipe)
-@@ -5270,8 +5216,8 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
+@@ -5309,8 +5255,8 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
  	 * When we distrust bios wm we always need to recompute to set the
  	 * expected DDB allocations for each CRTC.
  	 */
@@ -168,7 +168,7 @@ index 96da357..60b9abb 100644
  
  	/*
  	 * If this transaction isn't actually touching any CRTC's, don't
-@@ -5282,14 +5228,86 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
+@@ -5321,14 +5267,86 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
  	 * hold _all_ CRTC state mutexes.
  	 */
  	for_each_new_crtc_in_state(state, crtc, cstate, i)

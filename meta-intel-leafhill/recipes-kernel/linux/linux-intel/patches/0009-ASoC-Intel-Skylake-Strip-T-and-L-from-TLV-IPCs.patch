@@ -1,0 +1,56 @@
+From aefff8f00b062f1bb72da4f77c77d098a27ac619 Mon Sep 17 00:00:00 2001
+From: KamilX Lulko <kamilx.lulko@intel.com>
+Date: Mon, 21 Jan 2019 18:47:41 +0100
+Subject: [PATCH] ASoC: Intel: Skylake: Strip T and L from TLV IPCs
+
+cAVS modules do not require Type and Length header within the
+set_module_params IPC. This is also true for Vendor modules. The
+userspace (like tinymix) always appends this header to TLV controls
+which are used for set_module_params. Simply assume this header is
+always present in the payload and omit it from the IPC.
+
+Change-Id: Ie9b2cb35a8d9d597dd63b0b72fc6df7a7adc1550
+Signed-off-by: KamilX Lulko <kamilx.lulko@intel.com>
+Signed-off-by: Cezary Rojewski <cezary.rojewski@intel.com>
+---
+ sound/soc/intel/skylake/skl-topology.c | 21 ++++++++-------------
+ 1 file changed, 8 insertions(+), 13 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-topology.c b/sound/soc/intel/skylake/skl-topology.c
+index a36fdee..5f62a04 100644
+--- a/sound/soc/intel/skylake/skl-topology.c
++++ b/sound/soc/intel/skylake/skl-topology.c
+@@ -2245,22 +2245,17 @@ static int skl_tplg_tlv_control_set(struct snd_kcontrol *kcontrol,
+ 	struct skl *skl = get_skl_ctx(w->dapm->dev);
+ 
+ 	if (ac->params) {
++		/*
++		* Widget data is expected to be stripped of T and L
++		*/
++		size -= 2 * sizeof(unsigned int);
++		data += 2;
++
+ 		if (size > ac->max)
+ 			return -EINVAL;
+ 
+-		ac->size = size;
+-		/*
+-		 * if the param_is is of type Vendor, firmware expects actual
+-		 * parameter id and size from the control.
+-		 */
+-		if (ac->param_id == SKL_PARAM_VENDOR_ID) {
+-			if (copy_from_user(ac->params, data, size))
+-				return -EFAULT;
+-		} else {
+-			if (copy_from_user(ac->params,
+-					   data + 2, size))
+-				return -EFAULT;
+-		}
++		if (copy_from_user(ac->params, data, size))
++			return -EFAULT;
+ 
+ 		if (w->power)
+ 			return skl_set_module_params(skl->skl_sst,
+-- 
+1.9.1
+

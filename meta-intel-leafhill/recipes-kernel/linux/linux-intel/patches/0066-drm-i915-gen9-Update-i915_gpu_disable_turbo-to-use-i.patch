@@ -1,0 +1,34 @@
+From 3316f0dc43bd38193208584e154d9df368f4235a Mon Sep 17 00:00:00 2001
+From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+Date: Tue, 8 Oct 2019 15:00:32 +0800
+Subject: [PATCH] drm/i915/gen9: Update i915_gpu_disable_turbo() to use
+ intel_rps mutex lock
+
+Make changes due to removal of pcu_lock.
+
+Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+---
+ drivers/gpu/drm/i915/intel_pm.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
+index ed95efb..750c7134 100644
+--- a/drivers/gpu/drm/i915/intel_pm.c
++++ b/drivers/gpu/drm/i915/intel_pm.c
+@@ -8432,11 +8432,11 @@ bool i915_gpu_disable_turbo(void)
+ 	/* If the current freq > rp1, clamp it down */
+ 	if (rps->cur_freq > rps->rp1_freq) {
+ 		intel_runtime_pm_get(i915_tfm_dev);
+-		mutex_lock(&i915_tfm_dev->pcu_lock);
++		mutex_lock(&rps->lock);
+ 
+ 		gen6_set_rps(i915_tfm_dev, rps->rp1_freq);
+ 
+-		mutex_unlock(&i915_tfm_dev->pcu_lock);
++		mutex_unlock(&rps->lock);
+ 		intel_runtime_pm_put(i915_tfm_dev);
+ 	}
+ 
+-- 
+1.9.1
+

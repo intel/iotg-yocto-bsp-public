@@ -1,0 +1,67 @@
+From c73d41d3526d34ed3ce87b0ef4d8f1fd7b751bfd Mon Sep 17 00:00:00 2001
+From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
+Date: Thu, 6 Sep 2018 11:02:25 +0800
+Subject: [PATCH] ASoC: Intel: Boards: Add pin muxing for SSP3
+
+Add SSP3 pin muxing information for IVI generic machine
+driver.
+
+Signed-off-by: Ho, Yu Xin <yu.xin.ho@intel.com>
+---
+ sound/soc/intel/boards/bxtp_ivi_generic.c | 23 ++++++++++++++++++++++-
+ 1 file changed, 22 insertions(+), 1 deletion(-)
+ mode change 100644 => 100755 sound/soc/intel/boards/bxtp_ivi_generic.c
+
+diff --git a/sound/soc/intel/boards/bxtp_ivi_generic.c b/sound/soc/intel/boards/bxtp_ivi_generic.c
+old mode 100644
+new mode 100755
+index e256a4b..f08dc81
+--- a/sound/soc/intel/boards/bxtp_ivi_generic.c
++++ b/sound/soc/intel/boards/bxtp_ivi_generic.c
+@@ -17,6 +17,8 @@
+ #define SSP0_GPIO_VALUE2 0x44000600
+ #define SSP1_GPIO_BASE 0xd0c40660
+ #define SSP1_GPIO_VALUE1 0x44000400
++#define SSP2_GPIO_BASE 0xd0c40688
++#define SSP2_GPIO_VALUE1 0x44000400
+ #define SSP4_GPIO_BASE 0xd0c705A0
+ #define SSP4_GPIO_VALUE1 0x44000A00
+ #define SSP4_GPIO_VALUE2 0x44000800
+@@ -101,6 +103,25 @@ static int bxtp_ssp1_gpio_init(struct snd_soc_pcm_runtime *rtd)
+ 	return 0;
+ }
+ 
++static int bxtp_ssp2_gpio_init(struct snd_soc_pcm_runtime *rtd)
++{
++
++	char *gpio_addr;
++	u32 gpio_value1 = SSP2_GPIO_VALUE1;
++
++	gpio_addr = (void *)ioremap_nocache(SSP2_GPIO_BASE, 0x30);
++	if (gpio_addr == NULL)
++		return(-EIO);
++
++	memcpy_toio(gpio_addr + 0x8, &gpio_value1, sizeof(gpio_value1));
++	memcpy_toio(gpio_addr + 0x10, &gpio_value1, sizeof(gpio_value1));
++	memcpy_toio(gpio_addr + 0x18, &gpio_value1, sizeof(gpio_value1));
++	memcpy_toio(gpio_addr + 0x20, &gpio_value1, sizeof(gpio_value1));
++
++	iounmap(gpio_addr);
++	return 0;
++}
++
+ static int bxtp_ssp4_gpio_init(struct snd_soc_pcm_runtime *rtd)
+ {
+ 
+@@ -250,7 +271,7 @@ static int bxtp_ssp3_gpio_init(struct snd_soc_pcm_runtime *rtd)
+ 		.no_pcm = 1,
+ 		.codec_name = "snd-soc-dummy",
+ 		.codec_dai_name = "snd-soc-dummy-dai",
+-		.init = NULL,
++		.init = bxtp_ssp2_gpio_init,
+ 		.dai_fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
+ 			SND_SOC_DAIFMT_CBS_CFS,
+ 		.ignore_suspend = 1,
+-- 
+1.9.1
+

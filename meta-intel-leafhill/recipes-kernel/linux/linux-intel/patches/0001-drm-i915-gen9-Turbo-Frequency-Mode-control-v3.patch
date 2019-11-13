@@ -1,7 +1,7 @@
-From d6ebc862d1d62c02bf0ab36e4a621774b99b6528 Mon Sep 17 00:00:00 2001
+From cbd139e3e9a5f2fd9f34d808eba25d58d0d31d97 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Wed, 18 Jan 2017 14:02:16 -0800
-Subject: [PATCH 01/42] drm/i915/gen9: Turbo Frequency Mode control (v3).
+Subject: [PATCH 01/44] drm/i915/gen9: Turbo Frequency Mode control (v3).
 
 Provide a kernel API for query and control of the GPU TFM. This allows
 a TFM kernel module to interact with the i915 driver as follows.
@@ -42,10 +42,10 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  4 files changed, 149 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
-index ad94d7a..d56781e 100644
+index e6a07bb..b01bf49 100644
 --- a/drivers/gpu/drm/i915/i915_drv.c
 +++ b/drivers/gpu/drm/i915/i915_drv.c
-@@ -1278,6 +1278,9 @@ static void i915_driver_register(struct drm_i915_private *dev_priv)
+@@ -1277,6 +1277,9 @@ static void i915_driver_register(struct drm_i915_private *dev_priv)
  	if (IS_GEN5(dev_priv))
  		intel_gpu_ips_init(dev_priv);
  
@@ -55,7 +55,7 @@ index ad94d7a..d56781e 100644
  	intel_audio_init(dev_priv);
  
  	/*
-@@ -1303,6 +1306,8 @@ static void i915_driver_unregister(struct drm_i915_private *dev_priv)
+@@ -1302,6 +1305,8 @@ static void i915_driver_unregister(struct drm_i915_private *dev_priv)
  	intel_audio_deinit(dev_priv);
  
  	intel_gpu_ips_teardown();
@@ -65,10 +65,10 @@ index ad94d7a..d56781e 100644
  	intel_opregion_unregister(dev_priv);
  
 diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
-index 4f90933..0df5247 100644
+index b0d36c5..86d8536 100644
 --- a/drivers/gpu/drm/i915/i915_drv.h
 +++ b/drivers/gpu/drm/i915/i915_drv.h
-@@ -2392,6 +2392,12 @@ struct drm_i915_private {
+@@ -2385,6 +2385,12 @@ struct drm_i915_private {
  	 * mchdev_lock in intel_pm.c */
  	struct intel_ilk_power_mgmt ips;
  
@@ -82,10 +82,10 @@ index 4f90933..0df5247 100644
  
  	struct i915_psr psr;
 diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
-index 2e6e18d..ffa9e6c 100644
+index 392df36..c3282ac 100644
 --- a/drivers/gpu/drm/i915/intel_drv.h
 +++ b/drivers/gpu/drm/i915/intel_drv.h
-@@ -1943,6 +1943,8 @@ bool chv_phy_powergate_ch(struct drm_i915_private *dev_priv, enum dpio_phy phy,
+@@ -1942,6 +1942,8 @@ bool chv_phy_powergate_ch(struct drm_i915_private *dev_priv, enum dpio_phy phy,
  void intel_pm_setup(struct drm_i915_private *dev_priv);
  void intel_gpu_ips_init(struct drm_i915_private *dev_priv);
  void intel_gpu_ips_teardown(void);
@@ -95,7 +95,7 @@ index 2e6e18d..ffa9e6c 100644
  void intel_cleanup_gt_powersave(struct drm_i915_private *dev_priv);
  void intel_sanitize_gt_powersave(struct drm_i915_private *dev_priv);
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index b380c5d..ec558ed 100644
+index 9f9436b..2e5a140 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
 @@ -37,6 +37,9 @@
@@ -108,7 +108,7 @@ index b380c5d..ec558ed 100644
  /**
   * DOC: RC6
   *
-@@ -6248,6 +6251,10 @@ static u32 gen6_rps_pm_mask(struct drm_i915_private *dev_priv, u8 val)
+@@ -6296,6 +6299,10 @@ static u32 gen6_rps_pm_mask(struct drm_i915_private *dev_priv, u8 val)
   * update the GEN6_RP_INTERRUPT_LIMITS register accordingly. */
  static int gen6_set_rps(struct drm_i915_private *dev_priv, u8 val)
  {
@@ -119,7 +119,7 @@ index b380c5d..ec558ed 100644
  	/* min/max delay may still have been modified so be sure to
  	 * write the limits value.
  	 */
-@@ -7872,6 +7879,135 @@ void intel_gpu_ips_teardown(void)
+@@ -7920,6 +7927,135 @@ void intel_gpu_ips_teardown(void)
  	spin_unlock_irq(&mchdev_lock);
  }
  

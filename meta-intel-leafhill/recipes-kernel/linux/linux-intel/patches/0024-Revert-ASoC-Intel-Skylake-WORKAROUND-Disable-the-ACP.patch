@@ -1,7 +1,7 @@
-From 82e66f7f6e71260ff7cc9ad47e74bb741f118de2 Mon Sep 17 00:00:00 2001
+From 8d247a7c4c4ea6ceb3746829859af9e14ad7e153 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Wed, 1 Jun 2016 11:38:13 +0100
-Subject: [PATCH 024/100] Revert "ASoC: Intel: Skylake: [WORKAROUND] Disable
+Subject: [PATCH 024/120] Revert "ASoC: Intel: Skylake: [WORKAROUND] Disable
  the ACPI dependencies"
 
 This reverts commit fed7185dcf0babb26cf3eca1771e5263efb05f60.

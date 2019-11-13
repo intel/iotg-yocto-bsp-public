@@ -1,0 +1,67 @@
+From ed05d2d90f3a03cd5805cea6f46ee732f2db597a Mon Sep 17 00:00:00 2001
+From: Gaurav Vohra <gauravx.vohra@intel.com>
+Date: Sun, 28 Jul 2019 16:23:42 +0800
+Subject: [PATCH] Revert "ASoC: Intel: Skylake: BXT: read FwStatus and
+ ErrorCode before power down"
+
+This reverts commit e903106b60ec35e9f23a6b64a9728fadda9c7cd1.
+
+This patch is only Android Specific reverting the same
+
+Signed-off-by: Gaurav Vohra <gauravx.vohra@intel.com>
+---
+ sound/soc/intel/skylake/bxt-sst.c | 16 ++++++----------
+ 1 file changed, 6 insertions(+), 10 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/bxt-sst.c b/sound/soc/intel/skylake/bxt-sst.c
+index 328b203..0561af1 100755
+--- a/sound/soc/intel/skylake/bxt-sst.c
++++ b/sound/soc/intel/skylake/bxt-sst.c
+@@ -213,7 +213,7 @@ int sst_fw_status_poll(struct sst_dsp *ctx, u32 module, u32 state,
+  * reset/stall and then turn it off
+  */
+ static int sst_bxt_prepare_fw(struct sst_dsp *ctx,
+-			const void *fwdata, u32 fwsize, u32 *fwerr, u32 *fwsts)
++			const void *fwdata, u32 fwsize)
+ {
+ 	int stream_tag, ret;
+ 
+@@ -283,11 +283,6 @@ static int sst_bxt_prepare_fw(struct sst_dsp *ctx,
+ 	return ret;
+ 
+ base_fw_load_failed:
+-	if (fwerr)
+-		*fwerr = sst_dsp_shim_read(ctx, BXT_ADSP_ERROR_CODE);
+-	if (fwsts)
+-		*fwsts = sst_dsp_shim_read(ctx, BXT_ADSP_FW_STATUS);
+-
+ 	ctx->dsp_ops.cleanup(ctx->dev, &ctx->dmab, stream_tag,
+ 						SNDRV_PCM_STREAM_PLAYBACK);
+ 
+@@ -318,7 +313,6 @@ static int bxt_load_base_firmware(struct sst_dsp *ctx)
+ 	struct firmware stripped_fw;
+ 	struct skl_sst *skl = ctx->thread_context;
+ 	int ret, i;
+-	u32 fwerr = 0, fwsts = 0;
+ 
+ 	if (ctx->fw == NULL) {
+ 		ret = request_firmware(&ctx->fw, ctx->fw_name, ctx->dev);
+@@ -340,10 +334,12 @@ static int bxt_load_base_firmware(struct sst_dsp *ctx)
+ 	skl_dsp_strip_extended_manifest(&stripped_fw);
+ 
+ 	for (i = 0; i < BXT_FW_INIT_RETRY; i++) {
+-		ret = sst_bxt_prepare_fw(ctx, stripped_fw.data,
+-					stripped_fw.size, &fwerr, &fwsts);
++		ret = sst_bxt_prepare_fw(ctx, stripped_fw.data, stripped_fw.size);
+ 		if (ret < 0) {
+-			dev_err(ctx->dev, "Error code=0x%x: FW status=0x%x\n", fwerr, fwsts);
++			dev_err(ctx->dev, "Error code=0x%x: FW status=0x%x\n",
++				sst_dsp_shim_read(ctx, BXT_ADSP_ERROR_CODE),
++				sst_dsp_shim_read(ctx, BXT_ADSP_FW_STATUS));
++
+ 			dev_err(ctx->dev, "Iteration %d Core En/ROM load fail:%d\n", i, ret);
+ 			continue;
+ 		}
+-- 
+1.9.1
+

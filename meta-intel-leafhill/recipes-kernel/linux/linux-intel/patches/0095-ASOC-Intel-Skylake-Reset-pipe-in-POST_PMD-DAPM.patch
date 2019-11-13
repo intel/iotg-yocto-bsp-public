@@ -1,7 +1,7 @@
-From 827f7ec5d86cf5752ca54c0a686389c6383f818a Mon Sep 17 00:00:00 2001
+From 11dfcf4a2527d2d2e6c5c227c8fc5cbb2cb2b2d7 Mon Sep 17 00:00:00 2001
 From: "Prakash, Divya1" <divya1.prakash@intel.com>
 Date: Wed, 30 May 2018 00:38:39 +0530
-Subject: [PATCH 095/100] ASOC: Intel: Skylake: Reset pipe in POST_PMD DAPM
+Subject: [PATCH 095/120] ASOC: Intel: Skylake: Reset pipe in POST_PMD DAPM
 
 Reset pipe in POST_PMD DAPM  event as skl_pcm_hw_free()
 is not called in suspend-resume scenario.

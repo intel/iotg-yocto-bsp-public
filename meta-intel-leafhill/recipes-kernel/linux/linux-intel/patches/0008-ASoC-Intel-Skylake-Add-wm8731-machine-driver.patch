@@ -1,7 +1,7 @@
-From 2261de9b3569e1d55bde71d3e28eb500cdfc77dc Mon Sep 17 00:00:00 2001
+From faa3a2a17f729021f7e2e8a693f901c5b4c1218e Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Mon, 4 Jul 2016 17:25:12 +0800
-Subject: [PATCH 008/100] ASoC: Intel: Skylake: Add wm8731 machine driver
+Subject: [PATCH 008/120] ASoC: Intel: Skylake: Add wm8731 machine driver
 
 This commit is to add new wm8731 codec machine drivers for
 Apollo Lake-I LeafHill CRB.

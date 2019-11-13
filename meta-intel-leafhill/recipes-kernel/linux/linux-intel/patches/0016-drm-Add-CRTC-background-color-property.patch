@@ -1,0 +1,278 @@
+From 8c509c7a566b97395f59484d5320650d6890d19b Mon Sep 17 00:00:00 2001
+From: Matt Roper <matthew.d.roper@intel.com>
+Date: Mon, 30 Sep 2019 15:47:05 -0700
+Subject: [PATCH] drm: Add CRTC background color property
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Some display controllers can be programmed to present non-black colors
+for pixels not covered by any plane (or pixels covered by the
+transparent regions of higher planes).  Compositors that want a UI with
+a solid color background can potentially save memory bandwidth by
+setting the CRTC background property and using smaller planes to display
+the rest of the content.
+
+To avoid confusion between different ways of encoding RGB data, we
+define a standard 64-bit format that should be used for this property's
+value.  Helper functions and macros are provided to generate and dissect
+values in this standard format with varying component precision values.
+
+v2:
+ - Swap internal representation's blue and red bits to make it easier
+   to read if printed out.  (Ville)
+ - Document bgcolor property in drm_blend.c.  (Sean Paul)
+ - s/background_color/bgcolor/ for consistency between property name and
+   value storage field.  (Sean Paul)
+ - Add a convenience function to attach property to a given crtc.
+
+v3:
+ - Restructure ARGB component extraction macros to be easier to
+   understand and enclose the parameters in () to avoid calculations
+   if expressions are passed.  (Sean Paul)
+ - s/rgba/argb/ in helper function/macro names.  Even though the idea is
+   to not worry about the internal representation of the u64, it can
+   still be confusing to look at code that uses 'rgba' terminology, but
+   stores values with argb ordering.  (Ville)
+
+v4:
+ - Drop the bgcolor_changed flag.  (Ville, Brian Starkey)
+ - Clarify in kerneldoc that background color is expected to undergo the
+   same pipe-level degamma/csc/gamma transformations that planes do.
+   (Brian Starkey)
+ - Update kerneldoc to indicate non-opaque colors are allowed, but are
+   generally only useful in special cases such as when writeback
+   connectors are used (Brian Starkey / Eric Anholt)
+
+v5:
+ - Set crtc->state->bgcolor to solid black inside
+   drm_crtc_add_bgcolor_property() in case drivers don't do this
+   themselves.  (Ville)
+ - Add kerneldoc to drm_crtc_add_bgcolor_property() function.
+
+v7:
+ - Don't update CRTC state at attach time; instead set the default value
+   in __drm_atomic_helper_crtc_reset.  (Maarten)
+
+Cc: dri-devel@lists.freedesktop.org
+Cc: wei.c.li@intel.com
+Cc: harish.krupo.kps@intel.com
+Cc: Ville Syrjälä <ville.syrjala@linux.intel.com>
+Cc: Sean Paul <sean@poorly.run>
+Cc: Brian Starkey <Brian.Starkey@arm.com>
+Cc: Eric Anholt <eric@anholt.net>
+Cc: Stéphane Marchesin <marcheu@chromium.org>
+Cc: Daniel Vetter <daniel.vetter@ffwll.ch>
+Cc: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
+Cc: Jean-Jacques Hiblot <jjhiblot@ti.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+Reviewed-by: Sean Paul <sean@poorly.run>            # v2
+Reviewed-by: Brian Starkey <brian.starkey@arm.com>  # v4
+---
+ drivers/gpu/drm/drm_atomic.c        |  4 ++++
+ drivers/gpu/drm/drm_atomic_helper.c |  4 +++-
+ drivers/gpu/drm/drm_blend.c         | 35 ++++++++++++++++++++++++++++++++---
+ drivers/gpu/drm/drm_mode_config.c   |  6 ++++++
+ include/drm/drm_blend.h             |  2 ++
+ include/drm/drm_crtc.h              | 12 ++++++++++++
+ include/drm/drm_mode_config.h       |  5 +++++
+ include/uapi/drm/drm_mode.h         | 28 ++++++++++++++++++++++++++++
+ 8 files changed, 92 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/gpu/drm/drm_atomic.c b/drivers/gpu/drm/drm_atomic.c
+index 7c45d74..6084524 100644
+--- a/drivers/gpu/drm/drm_atomic.c
++++ b/drivers/gpu/drm/drm_atomic.c
+@@ -600,6 +600,8 @@ int drm_atomic_crtc_set_property(struct drm_crtc *crtc,
+ 			return -EFAULT;
+ 
+ 		set_out_fence_for_crtc(state->state, crtc, fence_ptr);
++	} else if (property == config->bgcolor_property) {
++		state->bgcolor = val;
+ 	} else if (crtc->funcs->atomic_set_property) {
+ 		return crtc->funcs->atomic_set_property(crtc, state, property, val);
+ 	} else {
+@@ -650,6 +652,8 @@ int drm_atomic_crtc_set_property(struct drm_crtc *crtc,
+ 		*val = (state->gamma_lut) ? state->gamma_lut->base.id : 0;
+ 	else if (property == config->prop_out_fence_ptr)
+ 		*val = 0;
++	else if (property == config->bgcolor_property)
++		*val = state->bgcolor;
+ 	else if (crtc->funcs->atomic_get_property)
+ 		return crtc->funcs->atomic_get_property(crtc, state, property, val);
+ 	else
+diff --git a/drivers/gpu/drm/drm_atomic_helper.c b/drivers/gpu/drm/drm_atomic_helper.c
+index 9a6763a..db77f89 100644
+--- a/drivers/gpu/drm/drm_atomic_helper.c
++++ b/drivers/gpu/drm/drm_atomic_helper.c
+@@ -3475,8 +3475,10 @@ void drm_atomic_helper_crtc_reset(struct drm_crtc *crtc)
+ 	kfree(crtc->state);
+ 	crtc->state = kzalloc(sizeof(*crtc->state), GFP_KERNEL);
+ 
+-	if (crtc->state)
++	if (crtc->state) {
+ 		crtc->state->crtc = crtc;
++		crtc->state->bgcolor = drm_argb(16, 0xffff, 0, 0, 0);
++	}
+ }
+ EXPORT_SYMBOL(drm_atomic_helper_crtc_reset);
+ 
+diff --git a/drivers/gpu/drm/drm_blend.c b/drivers/gpu/drm/drm_blend.c
+index e0bbd1b..d18499d 100644
+--- a/drivers/gpu/drm/drm_blend.c
++++ b/drivers/gpu/drm/drm_blend.c
+@@ -153,9 +153,22 @@
+  *		 plane does not expose the "alpha" property, then this is
+  *		 assumed to be 1.0
+  *
+- * Note that all the property extensions described here apply either to the
+- * plane or the CRTC (e.g. for the background color, which currently is not
+- * exposed and assumed to be black).
++ * The property extension described above all apply to the plane. Drivers
++ * may also expose the following crtc property extension:
++ *
++ * BACKGROUND_COLOR:
++ *	Background color is setup with drm_crtc_add_bgcolor_property().  It
++ *	controls the ARGB color of a full-screen layer that exists below all
++ *	planes.  This color will be used for pixels not covered by any plane
++ *	and may also be blended with plane contents as allowed by a plane's
++ *	alpha values.  The background color defaults to black, and is assumed
++ *	to be black for drivers that do not expose this property.  Although
++ *	background color isn't a plane, it is assumed that the color provided
++ *	here undergoes the same pipe-level degamma/CSC/gamma transformations
++ *	that planes undergo.  Note that the color value provided here includes
++ *	an alpha channel...non-opaque background color values are allowed,
++ *	but are generally only honored in special cases (e.g., when a memory
++ *	writeback connector is in use).
+  */
+ 
+ /**
+@@ -603,3 +616,19 @@ int drm_plane_create_blend_mode_property(struct drm_plane *plane,
+ 	return 0;
+ }
+ EXPORT_SYMBOL(drm_plane_create_blend_mode_property);
++
++/**
++ * drm_crtc_add_bgcolor_property - add background color property
++ * @crtc: drm crtc
++ *
++ * Adds the background color property to @crtc.  The property defaults to
++ * solid black and will accept 64-bit ARGB values in the format generated by
++ * drm_argb().
++ */
++void drm_crtc_add_bgcolor_property(struct drm_crtc *crtc)
++{
++	drm_object_attach_property(&crtc->base,
++				   crtc->dev->mode_config.bgcolor_property,
++				   drm_argb(16, 0xffff, 0, 0, 0));
++}
++EXPORT_SYMBOL(drm_crtc_add_bgcolor_property);
+diff --git a/drivers/gpu/drm/drm_mode_config.c b/drivers/gpu/drm/drm_mode_config.c
+index 1d6ea4b..cb52092 100644
+--- a/drivers/gpu/drm/drm_mode_config.c
++++ b/drivers/gpu/drm/drm_mode_config.c
+@@ -360,6 +360,12 @@ static int drm_mode_create_standard_properties(struct drm_device *dev)
+ 		return -ENOMEM;
+ 	dev->mode_config.modifiers_property = prop;
+ 
++	prop = drm_property_create_range(dev, 0, "BACKGROUND_COLOR",
++					 0, GENMASK_ULL(63, 0));
++	if (!prop)
++		return -ENOMEM;
++	dev->mode_config.bgcolor_property = prop;
++
+ 	return 0;
+ }
+ 
+diff --git a/include/drm/drm_blend.h b/include/drm/drm_blend.h
+index 1291265..e101260 100644
+--- a/include/drm/drm_blend.h
++++ b/include/drm/drm_blend.h
+@@ -59,4 +59,6 @@ int drm_atomic_normalize_zpos(struct drm_device *dev,
+ 			      struct drm_atomic_state *state);
+ int drm_plane_create_blend_mode_property(struct drm_plane *plane,
+ 					 unsigned int supported_modes);
++void drm_crtc_add_bgcolor_property(struct drm_crtc *crtc);
++
+ #endif
+diff --git a/include/drm/drm_crtc.h b/include/drm/drm_crtc.h
+index 5e4f8d8..7f69046 100644
+--- a/include/drm/drm_crtc.h
++++ b/include/drm/drm_crtc.h
+@@ -284,6 +284,18 @@ struct drm_crtc_state {
+ 	struct drm_property_blob *gamma_lut;
+ 
+ 	/**
++	 * @bgcolor:
++	 *
++	 * RGB value representing the pipe's background color.  The background
++	 * color (aka "canvas color") of a pipe is the color that will be used
++	 * for pixels not covered by a plane, or covered by transparent pixels
++	 * of a plane.  The value here should be built via drm_argb();
++	 * individual color components can be extracted with desired precision
++	 * via the DRM_ARGB_*() macros.
++	 */
++	u64 bgcolor;
++
++	/**
+ 	 * @target_vblank:
+ 	 *
+ 	 * Target vertical blank period when a page flip
+diff --git a/include/drm/drm_mode_config.h b/include/drm/drm_mode_config.h
+index f606d2d..0547c17 100644
+--- a/include/drm/drm_mode_config.h
++++ b/include/drm/drm_mode_config.h
+@@ -812,6 +812,11 @@ struct drm_mode_config {
+ 	 */
+ 	struct drm_property *writeback_out_fence_ptr_property;
+ 
++	/**
++	 * @bgcolor_property: RGB background color for CRTC.
++	 */
++	struct drm_property *bgcolor_property;
++
+ 	/* dumb ioctl parameters */
+ 	uint32_t preferred_depth, prefer_shadow;
+ 
+diff --git a/include/uapi/drm/drm_mode.h b/include/uapi/drm/drm_mode.h
+index 6e9e2d6..3b584a1 100644
+--- a/include/uapi/drm/drm_mode.h
++++ b/include/uapi/drm/drm_mode.h
+@@ -922,6 +922,34 @@ struct drm_mode_revoke_lease {
+ 	__u32 lessee_id;
+ };
+ 
++/*
++ * Put ARGB values into a standard 64-bit representation that can be used
++ * for ioctl parameters, inter-driver commmunication, etc.  If the component
++ * values being provided contain less than 16 bits of precision, they'll
++ * be shifted into the most significant bits.
++ */
++static inline __u64
++drm_argb(__u8 bpc, __u16 alpha, __u16 red, __u16 green, __u16 blue)
++{
++	int msb_shift = 16 - bpc;
++
++	return (__u64)alpha << msb_shift << 48 |
++	       (__u64)red   << msb_shift << 32 |
++	       (__u64)green << msb_shift << 16 |
++	       (__u64)blue  << msb_shift;
++}
++
++/*
++ * Extract the specified number of bits of a specific color component from a
++ * standard 64-bit ARGB value.
++ */
++#define DRM_ARGB_COMP(c, shift, numbits) \
++	(__u16)(((c) & 0xFFFFull << (shift)) >> ((shift) + 16 - (numbits)))
++#define DRM_ARGB_BLUE(c, numbits)  DRM_ARGB_COMP(c, 0, numbits)
++#define DRM_ARGB_GREEN(c, numbits) DRM_ARGB_COMP(c, 16, numbits)
++#define DRM_ARGB_RED(c, numbits)   DRM_ARGB_COMP(c, 32, numbits)
++#define DRM_ARGB_ALPHA(c, numbits) DRM_ARGB_COMP(c, 48, numbits)
++
+ #if defined(__cplusplus)
+ }
+ #endif
+-- 
+1.9.1
+

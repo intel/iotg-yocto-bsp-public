@@ -1,7 +1,7 @@
-From b63d6413fe10217ca650fd5df6c7880b8e768368 Mon Sep 17 00:00:00 2001
+From 3a7b9391e8201eaec3f5b8e17f681f683bb15633 Mon Sep 17 00:00:00 2001
 From: "Kumar, Mahesh" <mahesh1.kumar@intel.com>
 Date: Thu, 17 Aug 2017 19:15:23 +0530
-Subject: [PATCH 11/45] drm/i915/skl+: Optimize WM calculation
+Subject: [PATCH 11/46] drm/i915/skl+: Optimize WM calculation
 
 Plane configuration parameters doesn't change for each WM-level
 calculation. Currently we compute same parameters 8 times for each
@@ -50,10 +50,10 @@ index b0d36c5..fa8c93d 100644
   * This struct helps tracking the state needed for runtime PM, which puts the
   * device in PCI D3 state. Notice that when this happens, nothing on the
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 697dd1c..f49e448 100644
+index bacb6e9..6bde709 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
-@@ -4373,146 +4373,156 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
+@@ -4412,146 +4412,156 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
  					    downscale_amount);
  }
  
@@ -293,7 +293,7 @@ index 697dd1c..f49e448 100644
  			selected_result = min_fixed16(method1, method2);
  		else
  			selected_result = method1;
-@@ -4520,19 +4530,18 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4559,19 +4569,18 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  
  	res_blocks = fixed16_to_u32_round_up(selected_result) + 1;
  	res_lines = div_round_up_fixed16(selected_result,
@@ -320,7 +320,7 @@ index 697dd1c..f49e448 100644
  		} else {
  			res_blocks++;
  		}
-@@ -4575,6 +4584,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4614,6 +4623,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  		      struct intel_crtc_state *cstate,
  		      const struct intel_plane_state *intel_pstate,
  		      enum plane_id plane_id,
@@ -328,7 +328,7 @@ index 697dd1c..f49e448 100644
  		      struct skl_plane_wm *wm)
  {
  	struct intel_crtc *intel_crtc = to_intel_crtc(cstate->base.crtc);
-@@ -4596,6 +4606,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4635,6 +4645,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  					   intel_pstate,
  					   ddb_blocks,
  					   level,
@@ -336,7 +336,7 @@ index 697dd1c..f49e448 100644
  					   &result->plane_res_b,
  					   &result->plane_res_l,
  					   &result->plane_en);
-@@ -4650,6 +4661,7 @@ static int skl_build_pipe_all_plane_wm(struct intel_crtc_state *cstate,
+@@ -4689,6 +4700,7 @@ static int skl_build_pipe_all_plane_wm(struct intel_crtc_state *cstate,
  	struct drm_plane *plane;
  	const struct drm_plane_state *pstate;
  	struct intel_plane_state *intel_pstate;
@@ -344,7 +344,7 @@ index 697dd1c..f49e448 100644
  	int pipe = crtc->pipe;
  	int plane_id;
  	int ret;
-@@ -4675,8 +4687,15 @@ static int skl_build_pipe_all_plane_wm(struct intel_crtc_state *cstate,
+@@ -4714,8 +4726,15 @@ static int skl_build_pipe_all_plane_wm(struct intel_crtc_state *cstate,
  		}
  
  		wm = &pipe_wm->planes[plane_id];
@@ -361,7 +361,7 @@ index 697dd1c..f49e448 100644
  		if (ret)
  			return ret;
  
-@@ -4709,11 +4728,18 @@ static int skl_build_pipe_wm(struct intel_crtc_state *cstate,
+@@ -4748,11 +4767,18 @@ static int skl_build_pipe_wm(struct intel_crtc_state *cstate,
  		const struct intel_plane_state *intel_pstate =
  						to_intel_plane_state(pstate);
  		enum plane_id plane_id = to_intel_plane(plane)->id;

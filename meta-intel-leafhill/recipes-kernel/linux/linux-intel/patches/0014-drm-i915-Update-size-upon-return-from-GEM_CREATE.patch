@@ -1,0 +1,78 @@
+From d6b4de98d786f319b58888c72f1bb8de743daa42 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Micha=C5=82=20Winiarski?= <michal.winiarski@intel.com>
+Date: Tue, 26 Mar 2019 18:02:18 +0100
+Subject: [PATCH] drm/i915: Update size upon return from GEM_CREATE
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Since GEM_CREATE is trying to outsmart the user by rounding up unaligned
+objects, we used to update the size returned to userspace.
+This update seems to have been lost throughout the history.
+
+v2: Use round_up(), reorder locals (Chris)
+
+References: ff72145badb8 ("drm: dumb scanout create/mmap for intel/radeon (v3)")
+Signed-off-by: Michał Winiarski <michal.winiarski@intel.com>
+Cc: Chris Wilson <chris@chris-wilson.co.uk>
+Cc: Janusz Krzysztofik <janusz.krzysztofik@intel.com>
+Cc: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
+Reviewed-by: Chris Wilson <chris@chris-wilson.co.uk>
+Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+Link: https://patchwork.freedesktop.org/patch/msgid/20190326170218.13255-1-michal.winiarski@intel.com
+---
+ drivers/gpu/drm/i915/i915_gem.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_gem.c
+index 4404b71..4f7fbc0 100644
+--- a/drivers/gpu/drm/i915/i915_gem.c
++++ b/drivers/gpu/drm/i915/i915_gem.c
+@@ -1558,14 +1558,15 @@ void i915_gem_object_free(struct drm_i915_gem_object *obj)
+ static int
+ i915_gem_create(struct drm_file *file,
+ 		struct drm_i915_private *dev_priv,
+-		uint64_t size,
++		uint64_t *size_p,
+ 		uint32_t *handle_p)
+ {
+ 	struct drm_i915_gem_object *obj;
+-	int ret;
+ 	u32 handle;
++	u64 size;
++	int ret;
+ 
+-	size = roundup(size, PAGE_SIZE);
++	size = round_up(*size_p, PAGE_SIZE);
+ 	if (size == 0)
+ 		return -EINVAL;
+ 
+@@ -1581,6 +1582,7 @@ void i915_gem_object_free(struct drm_i915_gem_object *obj)
+ 		return ret;
+ 
+ 	*handle_p = handle;
++	*size_p = obj->base.size;
+ 	return 0;
+ }
+ 
+@@ -1593,7 +1595,7 @@ void i915_gem_object_free(struct drm_i915_gem_object *obj)
+ 	args->pitch = ALIGN(args->width * DIV_ROUND_UP(args->bpp, 8), 64);
+ 	args->size = args->pitch * args->height;
+ 	return i915_gem_create(file, to_i915(dev),
+-			       args->size, &args->handle);
++			       &args->size, &args->handle);
+ }
+ 
+ static bool gpu_write_needs_clflush(struct drm_i915_gem_object *obj)
+@@ -1618,7 +1620,7 @@ static bool gpu_write_needs_clflush(struct drm_i915_gem_object *obj)
+ 	i915_gem_flush_free_objects(dev_priv);
+ 
+ 	return i915_gem_create(file, dev_priv,
+-			       args->size, &args->handle);
++			       &args->size, &args->handle);
+ }
+ 
+ static inline enum fb_op_origin
+-- 
+1.9.1
+

@@ -1,7 +1,7 @@
-From 4e9fc5cdb34ddc520522e1c903ed5e18b9f56df4 Mon Sep 17 00:00:00 2001
+From c84f4839d5e63675f67cc96dd23e59b8433c953d Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 17:24:10 +0800
-Subject: [PATCH 27/42] igb: Do not disconnect netdevice from system during
+Subject: [PATCH 27/44] igb: Do not disconnect netdevice from system during
  runtime suspend
 
 During runtime suspend in __igb_shutdown() function do not
@@ -17,7 +17,7 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 25 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 7dd6105..43dc25b 100644
+index b941c68..5e49753 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
 @@ -2187,11 +2187,15 @@ void igb_down(struct igb_adapter *adapter)
@@ -68,8 +68,8 @@ index 7dd6105..43dc25b 100644
  
  	for (i = 0; i < adapter->num_q_vectors; i++) {
  		if (adapter->q_vector[i]) {
-@@ -8528,7 +8542,12 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
- #endif
+@@ -8527,7 +8541,12 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
+ 	bool wake;
  
  	rtnl_lock();
 -	netif_device_detach(netdev);

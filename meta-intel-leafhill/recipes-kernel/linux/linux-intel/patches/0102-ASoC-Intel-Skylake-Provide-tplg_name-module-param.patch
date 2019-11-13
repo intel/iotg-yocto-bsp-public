@@ -1,0 +1,58 @@
+From 2317029b68921452779a017fca1f7ee8e4b079b2 Mon Sep 17 00:00:00 2001
+From: Cezary Rojewski <cezary.rojewski@intel.com>
+Date: Thu, 20 Sep 2018 11:23:31 +0200
+Subject: [PATCH 102/120] ASoC: Intel: Skylake: Provide tplg_name module param.
+
+Allow user to specify name of topology binary file to load during
+topology initialization procedure.
+
+Change-Id: I8022dbf3f61da42a7192cd781cc91ef4c44c9f4d
+Signed-off-by: Cezary Rojewski <cezary.rojewski@intel.com>
+Reviewed-on: https://git-gar-1.devtools.intel.com/gerrit/31481
+---
+ sound/soc/intel/skylake/skl-topology.c | 2 +-
+ sound/soc/intel/skylake/skl.c          | 8 +++++++-
+ 2 files changed, 8 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-topology.c b/sound/soc/intel/skylake/skl-topology.c
+index f7106a0..2283648 100644
+--- a/sound/soc/intel/skylake/skl-topology.c
++++ b/sound/soc/intel/skylake/skl-topology.c
+@@ -5042,7 +5042,7 @@ int skl_tplg_init(struct snd_soc_platform *platform, struct hdac_ext_bus *ebus)
+ 
+ 	ret = request_firmware(&fw, skl->tplg_name, bus->dev);
+ 	if (ret < 0) {
+-		dev_err(bus->dev, "tplg fw %s load failed with %d\n",
++			dev_warn(bus->dev, "tplg fw %s load failed with %d, falling back to dfw_sst.bin",
+ 				skl->tplg_name, ret);
+ 		ret = request_firmware(&fw, "dfw_sst.bin", bus->dev);
+ 		if (ret < 0) {
+diff --git a/sound/soc/intel/skylake/skl.c b/sound/soc/intel/skylake/skl.c
+index 66eff92..f43438a 100644
+--- a/sound/soc/intel/skylake/skl.c
++++ b/sound/soc/intel/skylake/skl.c
+@@ -39,6 +39,9 @@
+ #include "skl-sst-dsp.h"
+ #include "skl-sst-ipc.h"
+ #include "skl-topology.h"
++static char *tplg_name = NULL;
++module_param(tplg_name, charp, 0444);
++MODULE_PARM_DESC(tplg_name, "Name of topology binary file");
+ 
+ /*
+  * initialize the PCI registers
+@@ -903,7 +906,10 @@ static int skl_probe(struct pci_dev *pci,
+ 	if (err < 0)
+ 		goto out_nhlt_free;
+ 
+-	skl_nhlt_update_topology_bin(skl);
++		if (!tplg_name || strlen(tplg_name) >= sizeof(skl->tplg_name))
++			skl_nhlt_update_topology_bin(skl);
++		else
++			snprintf(skl->tplg_name, sizeof(skl->tplg_name), "%s", tplg_name);
+ 
+ #else
+ 	if (request_firmware(&nhlt_fw, "intel/nhlt_blob.bin", bus->dev)) {
+-- 
+1.9.1
+

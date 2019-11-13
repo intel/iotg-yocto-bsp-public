@@ -1,0 +1,33 @@
+From 0090735f455aee3fec241530c8d34414c6cf7eb6 Mon Sep 17 00:00:00 2001
+From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
+Date: Tue, 23 Oct 2018 19:08:14 +0800
+Subject: [PATCH] ASoC: Intel: Skylake: Improve SKL_I2S_CLK_STATE_CHANGED
+ logging message
+
+Translate additional details on I2S clock state and port index
+based on IPC payloads.
+
+Signed-off-by: Ho, Yu Xin <yu.xin.ho@intel.com>
+---
+ sound/soc/intel/skylake/skl-sst-ipc.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-sst-ipc.c b/sound/soc/intel/skylake/skl-sst-ipc.c
+index 69b842f..9050455 100644
+--- a/sound/soc/intel/skylake/skl-sst-ipc.c
++++ b/sound/soc/intel/skylake/skl-sst-ipc.c
+@@ -583,8 +583,9 @@ static int skl_process_module_notification(struct skl_sst *skl)
+ 					header.primary);
+ 		break;
+ 	case SKL_I2S_CLK_STATE_CHANGED:
+-		dev_err(sst->dev, "Clock detected/loss on I2S port: %x\n",
+-					header.primary);
++		dev_dbg(sst->dev, "Clock %s on I2S port %d: %x\n",
++			notify.event_data[1] ? "detected" : "loss",
++			notify.resource_id, header.primary);
+ 		break;
+ 	case SKL_I2S_SINK_MODE_CHANGED:
+ 		dev_err(sst->dev, "I2S Sink started/stopped dropping \
+-- 
+1.9.1
+

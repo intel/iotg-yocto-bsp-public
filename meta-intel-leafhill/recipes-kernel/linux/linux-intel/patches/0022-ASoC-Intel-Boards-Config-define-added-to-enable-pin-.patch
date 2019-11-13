@@ -1,7 +1,7 @@
-From c7d1f6ef0356d7ec51787fb726099e2cca5e2943 Mon Sep 17 00:00:00 2001
+From 6199133c88097de770866c1cbaf374d08ca437a9 Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Tue, 16 Feb 2016 16:05:47 +0100
-Subject: [PATCH 022/100] ASoC: Intel: Boards: Config define added to enable
+Subject: [PATCH 022/120] ASoC: Intel: Boards: Config define added to enable
  pin ownership with BIOS
 
  * CONFIG_SND_SOC_BXT_GPMRB_MACH_BIOS added to enable Pin ownership

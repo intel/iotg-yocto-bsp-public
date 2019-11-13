@@ -1,7 +1,7 @@
-From 7871742251a961a29fce22071aa648936f69dcec Mon Sep 17 00:00:00 2001
+From ce5d5409b0aa58ec1d8fc185faec2d2609c65358 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 16 Nov 2016 10:34:58 +0800
-Subject: [PATCH 34/42] igb: Enabling wake on unicast
+Subject: [PATCH 34/44] igb: Enabling wake on unicast
 
 Enabling wake on unicast packet received by setting EX bit
 in i210 wufc register and enabling UPE(unicast promiscuous enable)
@@ -15,20 +15,20 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 12 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 20db78d..95b4681 100644
+index 121d111..331b0ee 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -8658,7 +8658,7 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
+@@ -8659,7 +8659,7 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
  	struct igb_adapter *adapter = netdev_priv(netdev);
  	struct e1000_hw *hw = &adapter->hw;
  	u32 ctrl, rctl, status;
 -	u32 wufc = runtime ? E1000_WUFC_LNKC : adapter->wol;
 +	u32 wufc = runtime ? (E1000_WUFC_LNKC | E1000_WUFC_EX) : adapter->wol;
- #ifdef CONFIG_PM
- 	int retval = 0;
- #endif
-@@ -8686,7 +8686,11 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
- #endif
+ 	bool wake;
+ 
+ 	rtnl_lock();
+@@ -8679,7 +8679,11 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
+ 	rtnl_unlock();
  
  	status = rd32(E1000_STATUS);
 -	if (status & E1000_STATUS_LU)
@@ -40,7 +40,7 @@ index 20db78d..95b4681 100644
  		wufc &= ~E1000_WUFC_LNKC;
  
  	if (wufc) {
-@@ -8699,7 +8703,12 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
+@@ -8692,7 +8696,12 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
  			rctl |= E1000_RCTL_MPE;
  			wr32(E1000_RCTL, rctl);
  		}
@@ -52,8 +52,8 @@ index 20db78d..95b4681 100644
 +			wr32(E1000_RCTL, rctl);
 +		}
  		ctrl = rd32(E1000_CTRL);
- 		/* advertise wake from D3Cold */
- 		#define E1000_CTRL_ADVD3WUC 0x00100000
+ 		ctrl |= E1000_CTRL_ADVD3WUC;
+ 		wr32(E1000_CTRL, ctrl);
 -- 
 1.9.1
 

@@ -1,7 +1,7 @@
-From 1c9e19ba1a6dc8babba4d35632d7b0038e44ddbd Mon Sep 17 00:00:00 2001
+From ade89f73aeeab5766e7eb386b9bf6f26f333be34 Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Mon, 4 Jul 2016 17:34:05 +0800
-Subject: [PATCH 010/100] ASoC: Intel: Skylake: Add machine drivers for
+Subject: [PATCH 010/120] ASoC: Intel: Skylake: Add machine drivers for
  TLV320AIC3107
 
 This commit is to add new machine drivers for TI codec,

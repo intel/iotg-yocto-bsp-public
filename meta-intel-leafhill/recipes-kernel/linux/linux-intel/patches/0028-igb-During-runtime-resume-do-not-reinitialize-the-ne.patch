@@ -1,7 +1,7 @@
-From 022e07718980d9fa61c25bd2c05575475513dec7 Mon Sep 17 00:00:00 2001
+From 961e6330760227ea44bd683b440e510579b54152 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 17:39:41 +0800
-Subject: [PATCH 28/42] igb: During runtime resume do not reinitialize the net
+Subject: [PATCH 28/44] igb: During runtime resume do not reinitialize the net
  device tx queues
 
 Updating power.last_busy field of device at the end of
@@ -18,7 +18,7 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 27 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 43dc25b..7c638b4 100644
+index 5e49753..60039ee 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
 @@ -3716,7 +3716,8 @@ static int __igb_open(struct net_device *netdev, bool resuming)
@@ -76,7 +76,7 @@ index 43dc25b..7c638b4 100644
  
  	/* schedule runtime suspend from open */
  	if (!resuming) {
-@@ -8750,7 +8761,11 @@ static int __maybe_unused igb_runtime_suspend(struct device *dev)
+@@ -8712,7 +8723,11 @@ static int __maybe_unused igb_runtime_suspend(struct device *dev)
  
  static int __maybe_unused igb_runtime_resume(struct device *dev)
  {

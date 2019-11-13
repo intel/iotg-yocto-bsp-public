@@ -1,7 +1,7 @@
-From 0a051c7c2d4302d1531060b02b8614a2e4341207 Mon Sep 17 00:00:00 2001
+From 87c22cb2cf10cce084f6c3d2a80109d1248ad733 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Mon, 6 Feb 2017 10:06:48 +0000
-Subject: [PATCH 064/100] ASoC: TDF8532: Add generic read function
+Subject: [PATCH 064/120] ASoC: TDF8532: Add generic read function
 
 Allow future expansion of the codec driver by adding generic read function
 and define read commands.

@@ -1,7 +1,7 @@
-From 990b07c66d9920b360ef8d095750305a9738895d Mon Sep 17 00:00:00 2001
+From 5db7e59ae98e2fcd0f60af408816f5747005c363 Mon Sep 17 00:00:00 2001
 From: "Vohra, GauravX" <gauravx.vohra@intel.com>
 Date: Tue, 28 Aug 2018 17:09:12 +0800
-Subject: [PATCH 086/100] ASoC: Intel: Skylake: Fixed issue with compilation
+Subject: [PATCH 086/120] ASoC: Intel: Skylake: Fixed issue with compilation
  DEBUG_FS=n
 
 ---

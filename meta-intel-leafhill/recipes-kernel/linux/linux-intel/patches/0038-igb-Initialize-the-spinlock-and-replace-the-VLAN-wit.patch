@@ -1,0 +1,47 @@
+From 78132a86493c812f8e5c1f1b840837a0f77cfe6a Mon Sep 17 00:00:00 2001
+From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
+Date: Tue, 7 Nov 2017 10:37:57 +0800
+Subject: [PATCH] igb: Initialize the spinlock and replace the VLAN with custom
+ function
+
+Initialize the spinlock. Replace igb_vlan_rx_add_vid with
+__igb_vlan_rx_add_vid API for igb rtd3.
+
+Signed-off-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
+---
+ drivers/net/ethernet/intel/igb/igb_main.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
+index d719b5e..c41a3ad 100644
+--- a/drivers/net/ethernet/intel/igb/igb_main.c
++++ b/drivers/net/ethernet/intel/igb/igb_main.c
+@@ -3879,6 +3879,7 @@ static int igb_sw_init(struct igb_adapter *adapter)
+ 	adapter->min_frame_size = ETH_ZLEN + ETH_FCS_LEN;
+ 
+ 	adapter->igb_tx_pending = 0;
++	spin_lock_init(&adapter->nfc_lock);
+ 	spin_lock_init(&adapter->rpm_txlock);
+ 	spin_lock_init(&adapter->stats64_lock);
+ #ifdef CONFIG_PCI_IOV
+@@ -8982,7 +8983,7 @@ static void igb_restore_vlan(struct igb_adapter *adapter)
+ 	u16 vid = 1;
+ 
+ 	igb_vlan_mode(adapter->netdev, adapter->netdev->features);
+-	igb_vlan_rx_add_vid(adapter->netdev, htons(ETH_P_8021Q), 0);
++	__igb_vlan_rx_add_vid(adapter->netdev, htons(ETH_P_8021Q), 0);
+ 
+ 	for_each_set_bit_from(vid, adapter->active_vlans, VLAN_N_VID)
+ 		__igb_vlan_rx_add_vid(adapter->netdev, htons(ETH_P_8021Q), vid);
+@@ -9270,7 +9271,7 @@ static int __maybe_unused igb_runtime_idle(struct device *dev)
+ #ifdef CONFIG_PM
+ 	if (dev->power.runtime_auto)
+ #endif
+-		pm_request_autosuspend(dev);
++		pm_runtime_put_sync_autosuspend(dev);
+ 	return -EBUSY;
+ }
+ 
+-- 
+1.9.1
+

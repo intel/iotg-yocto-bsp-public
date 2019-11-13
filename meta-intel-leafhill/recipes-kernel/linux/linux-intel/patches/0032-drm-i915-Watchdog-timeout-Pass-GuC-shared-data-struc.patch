@@ -1,7 +1,7 @@
-From b0426f625948ac9b4cf7c4090bc44cdd8ee18f41 Mon Sep 17 00:00:00 2001
+From 6cd484d91a220f8fd87238bc5a072a72b28b1f88 Mon Sep 17 00:00:00 2001
 From: Michel Thierry <michel.thierry@intel.com>
 Date: Fri, 21 Apr 2017 09:37:29 -0700
-Subject: [PATCH 32/45] drm/i915: Watchdog timeout: Pass GuC shared data
+Subject: [PATCH 32/46] drm/i915: Watchdog timeout: Pass GuC shared data
  structure during param load
 
 For watchdog / media reset, the firmware must know the address of the shared

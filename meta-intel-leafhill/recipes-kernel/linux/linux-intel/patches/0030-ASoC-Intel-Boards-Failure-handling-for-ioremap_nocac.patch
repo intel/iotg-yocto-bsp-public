@@ -1,0 +1,44 @@
+From 65f4d18a9e3fd2869ef43d12694977b755b7009b Mon Sep 17 00:00:00 2001
+From: Gaurav Vohra <gauravx.vohra@intel.com>
+Date: Mon, 5 Aug 2019 14:06:26 +0800
+Subject: [PATCH] ASoC: Intel: Boards: Failure handling for ioremap_nocache
+
+Added handling for failure of ioremap_nocache as reported by KW Scan
+
+Signed-off-by: Gaurav Vohra <gauravx.vohra@intel.com>
+---
+ sound/soc/intel/boards/apli_lhcrb_aic3107M.c | 3 +++
+ sound/soc/intel/boards/apli_lhcrb_aic3107S.c | 2 ++
+ 2 files changed, 5 insertions(+)
+
+diff --git a/sound/soc/intel/boards/apli_lhcrb_aic3107M.c b/sound/soc/intel/boards/apli_lhcrb_aic3107M.c
+index d0c0192..f1f6e1d 100644
+--- a/sound/soc/intel/boards/apli_lhcrb_aic3107M.c
++++ b/sound/soc/intel/boards/apli_lhcrb_aic3107M.c
+@@ -342,7 +342,10 @@ static int aic3107M_resume(struct snd_soc_card *card){
+ 	u32 gpio_value;
+ 
+ 	gpio_addr = (void *)ioremap_nocache(I2S_1_BASE + I2S_1, 0x30);
++
+ 	gpio_value = I2S_1_VALUE;
++	if (gpio_addr == NULL)
++		return(-EIO);
+ 
+ 	pr_err("%p has %#x\n", gpio_addr, *(u32 *)gpio_addr);
+ 
+diff --git a/sound/soc/intel/boards/apli_lhcrb_aic3107S.c b/sound/soc/intel/boards/apli_lhcrb_aic3107S.c
+index 3b17f9d..424a404 100644
+--- a/sound/soc/intel/boards/apli_lhcrb_aic3107S.c
++++ b/sound/soc/intel/boards/apli_lhcrb_aic3107S.c
+@@ -347,6 +347,8 @@ static int aic3107S_resume(struct snd_soc_card *card){
+ 
+ 	gpio_addr = (void *)ioremap_nocache(I2S_1_BASE + I2S_1, 0x30);
+ 	gpio_value = I2S_1_VALUE;
++	if (gpio_addr == NULL)
++		return -EIO;
+ 
+ 	pr_err("%p has %#x\n", gpio_addr, *(u32 *)gpio_addr);
+ 
+-- 
+1.9.1
+

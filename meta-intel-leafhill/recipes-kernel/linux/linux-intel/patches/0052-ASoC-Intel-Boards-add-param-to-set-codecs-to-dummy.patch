@@ -1,7 +1,7 @@
-From 187decdbf124cc712299b177f854ef4472a056ef Mon Sep 17 00:00:00 2001
+From 4e40b9e051600a2e64d3bb4207057bf720071be0 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Wed, 7 Jun 2017 14:31:55 +0100
-Subject: [PATCH 052/100] ASoC: Intel: Boards: add param to set codecs to dummy
+Subject: [PATCH 052/120] ASoC: Intel: Boards: add param to set codecs to dummy
 
 For boards that don't have the TDF8532 codec you would previously have
 to recompile the kernel and set the DAI link codec to snd-soc-dummy.

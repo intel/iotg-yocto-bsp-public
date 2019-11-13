@@ -1,7 +1,7 @@
-From 34181d13981dab740789209236c00691ac04ba40 Mon Sep 17 00:00:00 2001
+From 3dac42b94e8eb3b02095b03273e3e563a7ff4244 Mon Sep 17 00:00:00 2001
 From: "Nahulanthran, Sanjeev" <sanjeev.nahulanthran@intel.com>
 Date: Wed, 12 Sep 2018 13:34:00 +0800
-Subject: [PATCH 012/100] Add ACPI ID Matching for wm8731 and TLV320AIC3107
+Subject: [PATCH 012/120] Add ACPI ID Matching for wm8731 and TLV320AIC3107
 
 This method replaces the need for the platform board files required
 for the wolfram codec, wm8731, and the TI codecs, AIC3107M and

@@ -1,7 +1,7 @@
-From beeb8c9b164997747bbae5ad2845b15d028b7914 Mon Sep 17 00:00:00 2001
+From 1c0118a08494744589a451dcb082f1c09814a446 Mon Sep 17 00:00:00 2001
 From: lmcneilx <lornax.mcneil@intel.com>
 Date: Tue, 27 Mar 2018 11:31:26 +0100
-Subject: [PATCH 082/100] ASoC: TDF8532: add macro to reduce code size
+Subject: [PATCH 082/120] ASoC: TDF8532: add macro to reduce code size
 
 Repeated code has been replaced by a macro call, reducing the code size
 and making code less complex

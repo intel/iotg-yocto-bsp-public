@@ -1,7 +1,7 @@
-From dd2158edd7c3604c11f56fbf6bdb88c379dbf5c2 Mon Sep 17 00:00:00 2001
+From da07e97a8efbc84cd6f581f594d3f6779f6d5c6d Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:04 +0530
-Subject: [PATCH 16/45] drm/i915/skl+: NV12 related changes for WM
+Subject: [PATCH 16/46] drm/i915/skl+: NV12 related changes for WM
 
 NV12 requires WM calculation for UV plane as well.
 UV plane WM should also fulfill all the WM related restrictions.
@@ -57,10 +57,10 @@ index 4d4f44d..a5cde52 100644
  	bool is_planar;
  };
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 5979af8..abd42b9 100644
+index b727439..e17d417 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
-@@ -4398,7 +4398,7 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
+@@ -4437,7 +4437,7 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
  skl_compute_plane_wm_params(const struct drm_i915_private *dev_priv,
  			    struct intel_crtc_state *cstate,
  			    const struct intel_plane_state *intel_pstate,
@@ -69,7 +69,7 @@ index 5979af8..abd42b9 100644
  {
  	struct intel_plane *plane = intel_pstate ? to_intel_plane(intel_pstate->base.plane) : NULL;
  	const struct drm_plane_state *pstate = intel_pstate ? &intel_pstate->base : NULL;
-@@ -4411,6 +4411,12 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
+@@ -4450,6 +4450,12 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
  	if (!intel_wm_plane_visible(cstate, intel_pstate))
  		return 0;
  
@@ -82,7 +82,7 @@ index 5979af8..abd42b9 100644
  	if (!intel_pstate && i915_modparams.avail_planes_per_pipe) {
  		wp->y_tiled = false;
  		wp->x_tiled = true;
-@@ -4428,6 +4434,7 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
+@@ -4467,6 +4473,7 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
  	wp->x_tiled = fb->modifier == I915_FORMAT_MOD_X_TILED;
  	wp->rc_surface = fb->modifier == I915_FORMAT_MOD_Y_TILED_CCS ||
  			 fb->modifier == I915_FORMAT_MOD_Yf_TILED_CCS;
@@ -90,7 +90,7 @@ index 5979af8..abd42b9 100644
  
  	if (plane->id == PLANE_CURSOR) {
  		wp->width = intel_pstate->base.crtc_w;
-@@ -4440,7 +4447,13 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
+@@ -4479,7 +4486,13 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
  		wp->width = drm_rect_width(&intel_pstate->base.src) >> 16;
  	}
  
@@ -105,7 +105,7 @@ index 5979af8..abd42b9 100644
  	if (drm_rotation_90_or_270(pstate->rotation)) {
  
  		switch (wp->cpp) {
-@@ -4602,23 +4615,29 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4641,23 +4654,29 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  		      struct skl_ddb_allocation *ddb,
  		      struct intel_crtc_state *cstate,
  		      const struct intel_plane_state *intel_pstate,
@@ -139,7 +139,7 @@ index 5979af8..abd42b9 100644
  
  		ret = skl_compute_plane_wm(dev_priv,
  					   cstate,
-@@ -4711,13 +4730,12 @@ static int skl_build_pipe_all_plane_wm(struct intel_crtc_state *cstate,
+@@ -4750,13 +4769,12 @@ static int skl_build_pipe_all_plane_wm(struct intel_crtc_state *cstate,
  		wm = &pipe_wm->planes[plane_id];
  
  		ret = skl_compute_plane_wm_params(dev_priv, cstate,
@@ -155,7 +155,7 @@ index 5979af8..abd42b9 100644
  		if (ret)
  			return ret;
  
-@@ -4751,21 +4769,43 @@ static int skl_build_pipe_wm(struct intel_crtc_state *cstate,
+@@ -4790,21 +4808,43 @@ static int skl_build_pipe_wm(struct intel_crtc_state *cstate,
  						to_intel_plane_state(pstate);
  		enum plane_id plane_id = to_intel_plane(plane)->id;
  		struct skl_wm_params wm_params;

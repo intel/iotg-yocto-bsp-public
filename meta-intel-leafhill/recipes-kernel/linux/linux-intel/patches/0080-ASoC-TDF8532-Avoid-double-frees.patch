@@ -1,7 +1,7 @@
-From 4f001aa6d0af3abc957fcb5c7f4570a856d70503 Mon Sep 17 00:00:00 2001
+From 2e4efa3e5ed1d9a9976ffd527c8419340ba25336 Mon Sep 17 00:00:00 2001
 From: lmcneilx <lornax.mcneil@intel.com>
 Date: Mon, 26 Mar 2018 15:42:29 +0100
-Subject: [PATCH 080/100] ASoC: TDF8532: Avoid double frees
+Subject: [PATCH 080/120] ASoC: TDF8532: Avoid double frees
 
 Avoid double freeing of memory in error cases, thus avoiding potential
 crash. Deal properly with i2c_master_recv receiving fewer than expected

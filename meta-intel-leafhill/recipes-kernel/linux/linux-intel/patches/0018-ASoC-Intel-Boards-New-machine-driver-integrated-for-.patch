@@ -1,7 +1,7 @@
-From 00a3ae2c6e945f3f5c70071cb77add31e4de00a6 Mon Sep 17 00:00:00 2001
+From 5f707d93cb23822f0c840deb25944db5d29ee4b7 Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Thu, 5 Nov 2015 15:44:33 +0100
-Subject: [PATCH 018/100] ASoC: Intel: Boards: New machine driver integrated
+Subject: [PATCH 018/120] ASoC: Intel: Boards: New machine driver integrated
  for GP MRB board
 
   Intial version of the Bxt GP MRB machine driver added.

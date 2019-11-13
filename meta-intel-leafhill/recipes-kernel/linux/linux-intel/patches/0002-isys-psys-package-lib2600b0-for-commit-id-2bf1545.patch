@@ -1,0 +1,56 @@
+From 9f9f10f6f7ee631734b650d0c72fa37e835c6b51 Mon Sep 17 00:00:00 2001
+From: icg_intg <icg_intg@intel.com>
+Date: Fri, 27 Sep 2019 10:11:37 +0800
+Subject: [PATCH] isys & psys package lib2600b0 for commit-id 2bf1545
+
+FW_Manifest_ID: beef2a4c9e1f48e8a5fadace628f1a3cdabac0de
+
+FW_Build_Branch: stable_iot_mr5_ivi_20190726
+
+FW_Build_Topic: auto_merge_queue
+
+library version: commit-id 2bf1545
+
+FW Bundle patch number of this release :  434903
+
+FW tag : scci_stable_iot_mr5_ivi_20190726_20190926_0017
+
+Change-Id: Iea005cad31c5bfef4250643007da14bfe6908fcf
+Tracked-On: PKT-2690
+Depends-on: Ia91afd644b1e17ccf8a54358d50a5ba2aca2a4b2
+Depends-on: Ic4999c3bb16d2ca05810fed553a9f3363c24e212
+Depends-on: If55b024774cff7f9c96b7f73e36d14d74efe688b
+Signed-off-by: icg_intg <icg_intg@intel.com>
+Reviewed-on: https://icggerrit.corp.intel.com/435165
+Reviewed-by: Coding Style
+Approver: CaiyingX Geng <caiyingx.geng@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+Signed-off-by: Yew, Chang Ching <chang.ching.yew@intel.com>
+---
+ drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h           | 2 +-
+ .../lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h        | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+index 9a60f1a..b137624 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20190813
++#define IA_CSS_FW_PKG_RELEASE  0x20190925
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+index 9a60f1a..b137624 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20190813
++#define IA_CSS_FW_PKG_RELEASE  0x20190925
+-- 
+1.9.1
+

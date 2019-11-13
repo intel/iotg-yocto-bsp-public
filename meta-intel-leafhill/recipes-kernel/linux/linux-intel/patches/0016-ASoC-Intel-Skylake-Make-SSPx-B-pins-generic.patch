@@ -1,0 +1,115 @@
+From 81bd1b2ee9da803c0adf3f78fc561689e514049e Mon Sep 17 00:00:00 2001
+From: Craig Kewley <craigx.kewley@intel.com>
+Date: Thu, 5 Apr 2018 12:02:39 +0100
+Subject: [PATCH] ASoC: Intel: Skylake: Make SSPx-B pins generic
+
+None -B pins are generic so lets make the -B pins the same.
+
+Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl-pcm.c
+
+ASoC: Intel: Skylake: Add extra SSP2-x pins
+
+This commit extends "ASoC: Intel: Skylake: Add secondary backend dais"
+
+The GPMRB topology has four pipelines connected to SSP2, lets add two
+extra SSP2 DAIs to match.
+
+Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
+---
+ sound/soc/intel/skylake/skl-pcm.c | 56 +++++++++++++++++++++++++++++++++------
+ 1 file changed, 48 insertions(+), 8 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index 434afd5..7d1d8cf 100644
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -1469,17 +1469,17 @@ struct skl_dsp_notify_ops cb_ops = {
+ 	.ops = &skl_be_ssp_dai_ops,
+ 	.playback = {
+ 		.stream_name = "ssp1-b Tx",
+-		.channels_min = HDA_STEREO,
++		.channels_min = HDA_MONO,
+ 		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_48000,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+ 		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
+ 			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+ 	},
+ 	.capture = {
+ 		.stream_name = "ssp1-b Rx",
+-		.channels_min = HDA_STEREO,
++		.channels_min = HDA_MONO,
+ 		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_48000,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+ 		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
+ 			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+ 	},
+@@ -1489,17 +1489,57 @@ struct skl_dsp_notify_ops cb_ops = {
+ 	.ops = &skl_be_ssp_dai_ops,
+ 	.playback = {
+ 		.stream_name = "ssp2-b Tx",
+-		.channels_min = HDA_STEREO,
++		.channels_min = HDA_MONO,
+ 		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_44100 | SNDRV_PCM_RATE_48000,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+ 		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
+ 			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+ 	},
+ 	.capture = {
+ 		.stream_name = "ssp2-b Rx",
+-		.channels_min = HDA_STEREO,
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++},
++{
++	.name = "SSP2-C Pin",
++	.ops = &skl_be_ssp_dai_ops,
++	.playback = {
++		.stream_name = "ssp2-c Tx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++	.capture = {
++		.stream_name = "ssp2-c Rx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++},
++{
++	.name = "SSP2-D Pin",
++	.ops = &skl_be_ssp_dai_ops,
++	.playback = {
++		.stream_name = "ssp2-d Tx",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++	.capture = {
++		.stream_name = "ssp2-d Rx",
++		.channels_min = HDA_MONO,
+ 		.channels_max = HDA_8_CH,
+-		.rates = SNDRV_PCM_RATE_44100 | SNDRV_PCM_RATE_48000,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+ 		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
+ 			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
+ 	},
+-- 
+1.9.1
+

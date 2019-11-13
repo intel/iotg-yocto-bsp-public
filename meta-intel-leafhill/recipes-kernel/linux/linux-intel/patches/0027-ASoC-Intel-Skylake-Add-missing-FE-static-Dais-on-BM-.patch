@@ -1,0 +1,40 @@
+From 9e33cb49fe6cb17330946e79a9981574f3134223 Mon Sep 17 00:00:00 2001
+From: Gaurav Vohra <gauravx.vohra@intel.com>
+Date: Wed, 10 Jul 2019 10:12:10 +0800
+Subject: [PATCH] ASoC: Intel: Skylake: Add missing FE static Dais on BM and
+ GPMRB
+
+GPMRB and WM8731 topology requires PT capture as System Capture 5
+
+Also APL-I TI machine driver uses System Pin 4 and System Pin 5, so enabling same
+Signed-off-by: Gaurav Vohra <gauravx.vohra@intel.com>
+---
+ sound/soc/intel/skylake/skl-pcm.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index 6f5baa0..79468a4 100644
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -1206,7 +1206,8 @@ struct skl_dsp_notify_ops cb_ops = {
+ 	},
+ },
+ #if IS_ENABLED(CONFIG_SND_SOC_INTEL_BXT_ULL_MACH) || \
+-	IS_ENABLED(CONFIG_SND_SOC_INTEL_BXT_GPMRB_MACH)
++	IS_ENABLED(CONFIG_SND_SOC_INTEL_BXT_GPMRB_MACH) || \
++	IS_ENABLED(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH)
+ {
+ 	.name = "System Pin 2",
+ 	.ops = &skl_pcm_dai_ops,
+@@ -1274,7 +1275,7 @@ struct skl_dsp_notify_ops cb_ops = {
+ 	.name = "System Pin 5",
+ 	.ops = &skl_pcm_dai_ops,
+ 	.capture = {
+-		.stream_name = "PT Capture",
++		.stream_name = "System Capture 5",
+ 		.channels_min = HDA_MONO,
+ 		.channels_max = HDA_8_CH,
+ 		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+-- 
+1.9.1
+

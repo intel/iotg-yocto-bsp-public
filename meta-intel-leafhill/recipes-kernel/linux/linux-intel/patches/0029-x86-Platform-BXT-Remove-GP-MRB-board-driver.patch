@@ -1,7 +1,7 @@
-From 72658b030384235c443a980ed4ebed4587a9dcd2 Mon Sep 17 00:00:00 2001
+From a2b21b7c2b56b46773f5a77ea29f4f41308e997d Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Fri, 24 Jun 2016 12:12:57 +0100
-Subject: [PATCH 029/100] x86: Platform: BXT: Remove GP MRB board driver.
+Subject: [PATCH 029/120] x86: Platform: BXT: Remove GP MRB board driver.
 
 Board driver was registering i2c amplifier chip. This is no longer
 required as we are now using ACPI instead.

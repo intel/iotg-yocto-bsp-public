@@ -1,0 +1,140 @@
+From d258ce4e4374d36d7faa762b4b8a2fbc8da2cdbc Mon Sep 17 00:00:00 2001
+From: Chris Wilson <chris@chris-wilson.co.uk>
+Date: Tue, 1 Oct 2019 15:27:02 -0700
+Subject: [PATCH] drm/i915: Prefault before locking pages in shmem_pwrite
+
+If the user passes in a pointer to a GGTT mmaping of the same buffer
+    being written to, we can hit a deadlock in acquiring the shmemfs page
+    (once as the write destination and then as the read source).
+
+    [<0>] io_schedule+0xd/0x30
+    [<0>] __lock_page+0x105/0x1b0
+    [<0>] find_lock_entry+0x55/0x90
+    [<0>] shmem_getpage_gfp+0xbb/0x800
+    [<0>] shmem_read_mapping_page_gfp+0x2d/0x50
+    [<0>] shmem_get_pages+0x158/0x5d0 [i915]
+    [<0>] ____i915_gem_object_get_pages+0x17/0x90 [i915]
+    [<0>] __i915_gem_object_get_pages+0x57/0x70 [i915]
+    [<0>] i915_gem_fault+0x1b4/0x5c0 [i915]
+    [<0>] __do_fault+0x2d/0x80
+    [<0>] __handle_mm_fault+0xad4/0xfb0
+    [<0>] handle_mm_fault+0xe6/0x1f0
+    [<0>] __do_page_fault+0x18f/0x3f0
+    [<0>] page_fault+0x1b/0x20
+    [<0>] copy_user_enhanced_fast_string+0x7/0x10
+    [<0>] _copy_from_user+0x37/0x60
+    [<0>] shmem_pwrite+0xf0/0x160 [i915]
+    [<0>] i915_gem_pwrite_ioctl+0x14e/0x520 [i915]
+    [<0>] drm_ioctl_kernel+0x81/0xd0
+    [<0>] drm_ioctl+0x1a7/0x310
+    [<0>] do_vfs_ioctl+0x88/0x5d0
+    [<0>] ksys_ioctl+0x35/0x70
+    [<0>] __x64_sys_ioctl+0x11/0x20
+    [<0>] do_syscall_64+0x39/0xe0
+    [<0>] entry_SYSCALL_64_after_hwframe+0x44/0xa9
+
+    We can reduce (but not eliminate!) the chance of this happening by
+    faulting the user_data before we take the page lock in
+    pagecache_write_begin(). One way to eliminate the potential recursion
+    here is by disabling pagefaults for the copy, and handling the fallback
+    to use an alternative method -- so convert to use kmap_atomic (which
+    should disable preemption and pagefaulting for the copy) and report
+    ENODEV instead of EFAULT so that our caller tries again with a different
+    copy mechanism -- we already check that the page should have been
+    faultable so a false negative should be rare.
+
+    Testcase: igt/gem_pwrite/self
+    Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+    Cc: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
+    Cc: Matthew Auld <matthew.william.auld@gmail.com>
+    Reviewed-by: Matthew Auld <matthew.william.auld@gmail.com>
+    Link: https://patchwork.freedesktop.org/patch/msgid/20190401133909.31203-1-chris@chris-wilson.co.uk
+---
+ drivers/gpu/drm/i915/i915_gem.c | 31 ++++++++++++++++++++++++-------
+ 1 file changed, 24 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_gem.c
+index 4f7fbc0..03cf193 100644
+--- a/drivers/gpu/drm/i915/i915_gem.c
++++ b/drivers/gpu/drm/i915/i915_gem.c
+@@ -46,7 +46,6 @@
+ #include <linux/swap.h>
+ #include <linux/pci.h>
+ #include <linux/dma-buf.h>
+-
+ #if IS_ENABLED(CONFIG_DRM_I915_MEMTRACK)
+ #include <linux/pid.h>
+ #include <linux/async.h>
+@@ -3797,7 +3796,11 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
+ 	u64 remain, offset;
+ 	unsigned int pg;
+ 
+-	/* Before we instantiate/pin the backing store for our use, we
++	/* Caller already validated user args */
++	GEM_BUG_ON(!access_ok(VERIFY_WRITE, user_data, arg->size));
++
++	/*
++	 * Before we instantiate/pin the backing store for our use, we
+ 	 * can prepopulate the shmemfs filp efficiently using a write into
+ 	 * the pagecache. We avoid the penalty of instantiating all the
+ 	 * pages, important if the user is just writing to a few and never
+@@ -3811,7 +3814,8 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
+ 	if (obj->mm.madv != I915_MADV_WILLNEED)
+ 		return -EFAULT;
+ 
+-	/* Before the pages are instantiated the object is treated as being
++	/*
++	 * Before the pages are instantiated the object is treated as being
+ 	 * in the CPU domain. The pages will be clflushed as required before
+ 	 * use, and we can freely write into the pages directly. If userspace
+ 	 * races pwrite with any other operation; corruption will ensue -
+@@ -3827,20 +3831,32 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
+ 		struct page *page;
+ 		void *data, *vaddr;
+ 		int err;
++		char c;
+ 
+ 		len = PAGE_SIZE - pg;
+ 		if (len > remain)
+ 			len = remain;
+ 
++		/* Prefalut the user page to reduce potential recursion */
++		err = __get_user(c, user_data);
++		if (err)
++			return err;
++
++		err = __get_user(c, user_data + len - 1);
++		if (err)
++			return err;
++
+ 		err = pagecache_write_begin(obj->base.filp, mapping,
+ 					    offset, len, 0,
+ 					    &page, &data);
+ 		if (err < 0)
+ 			return err;
+ 
+-		vaddr = kmap(page);
+-		unwritten = copy_from_user(vaddr + pg, user_data, len);
+-		kunmap(page);
++		vaddr = kmap_atomic(page);
++		unwritten = __copy_from_user_inatomic(vaddr + pg,
++						      user_data,
++						      len);
++		kunmap_atomic(vaddr);
+ 
+ 		err = pagecache_write_end(obj->base.filp, mapping,
+ 					  offset, len, len - unwritten,
+@@ -3848,8 +3864,9 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
+ 		if (err < 0)
+ 			return err;
+ 
++		/* We don't handle -EFAULT, leave it to the caller to check */
+ 		if (unwritten)
+-			return -EFAULT;
++			return -ENODEV;
+ 
+ 		remain -= len;
+ 		user_data += len;
+-- 
+1.9.1
+

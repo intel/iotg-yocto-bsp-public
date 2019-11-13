@@ -1,7 +1,7 @@
-From d78bf9c5581f723ca60f406016e0608984bb2282 Mon Sep 17 00:00:00 2001
+From 747c4750925673b4e961d1ca08cdbf3532276f4d Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 18:23:30 +0800
-Subject: [PATCH 31/42] igb: Watchdog task changes for runtime pm based on
+Subject: [PATCH 31/44] igb: Watchdog task changes for runtime pm based on
  activity monitoring
 
 If watchdog task is invoked while runtime suspend is in
@@ -21,7 +21,7 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 29 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 1ff14ea..ffc45ca 100644
+index efa4095..51ea9a5 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
 @@ -5053,14 +5053,27 @@ static void igb_watchdog_task(struct work_struct *work)

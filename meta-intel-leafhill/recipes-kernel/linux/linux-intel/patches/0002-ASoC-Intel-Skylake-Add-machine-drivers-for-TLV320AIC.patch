@@ -1,0 +1,993 @@
+From aec74d05ef0b62721c01ab60f11d464cc93955aa Mon Sep 17 00:00:00 2001
+From: "SengKai,Tan" <seng.kai.tan@intel.com>
+Date: Mon, 4 Jul 2016 17:34:05 +0800
+Subject: [PATCH] ASoC: Intel: Skylake: Add machine drivers for TLV320AIC3107
+
+This commit is to add new machine drivers for TI codec,
+for both soc master and slave control mode, which are named
+lhcrb_aic3107M_i2s and lhcrb_aic3107S_i2s respectively.
+
+The codec support is linked to SSP1 port.
+
+Signed-off-by: Ho, Yu Xin <yu.xin.ho@intel.com>
+Signed-off-by: Tan, Seng Kai <seng.kai.tan@intel.com>
+
+Conflicts:
+	sound/soc/intel/Kconfig
+
+ASoC: Intel: Boards: Clean up for AIC3107 Machine Driver
+
+Clean up for AIC3107 machine driver especially on the
+back end DAI link to improve clarity
+
+Signed-off-by: Ho, Yu Xin <yu.xin.ho@intel.com>
+
+Add ACPI ID Matching for TLV320AIC3107
+
+This method replaces the need for the platform board files required
+for the the TI codecs, AIC3107M and AIC3107S. The ACPI IDs here have
+to be matched with the IDs placed into the modified acpi_override
+tables placed in the /boot folder of the target platform. ACPI IDs used shown below:
+	1. AIC3107M - INT345B
+	2. AIC3107S - INT345C
+
+Change-Id: I34212fcd02a8e10016d1b9f5c1de6797ab962091
+Signed-off-by: Nahulanthran, Sanjeev <sanjeev.nahulanthran@intel.com>
+Signed-off-by: Ho, Yu Xin <yu.xin.ho@intel.com>
+Signed-off-by: Gaurav Vohra <gauravx.vohra@intel.com>
+
+Conflicts:
+	sound/soc/intel/boards/apli_lhcrb_aic3107M.c
+	sound/soc/intel/boards/apli_lhcrb_aic3107S.c
+---
+ MAINTAINERS                                  |   7 +
+ sound/soc/codecs/tlv320aic3x.c               |  18 +-
+ sound/soc/intel/boards/Kconfig               |  11 +
+ sound/soc/intel/boards/Makefile              |   4 +
+ sound/soc/intel/boards/apli_lhcrb_aic3107M.c | 403 ++++++++++++++++++++++++++
+ sound/soc/intel/boards/apli_lhcrb_aic3107S.c | 407 +++++++++++++++++++++++++++
+ 6 files changed, 849 insertions(+), 1 deletion(-)
+ create mode 100644 sound/soc/intel/boards/apli_lhcrb_aic3107M.c
+ create mode 100644 sound/soc/intel/boards/apli_lhcrb_aic3107S.c
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index d04f776..4337ad6 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -13657,6 +13657,13 @@ M:	Tan, Seng Kai <seng.kai.tan@intel.com>
+ S:	Maintained
+ F:	sound/soc/intel/boards/apli_lhcrb_wm8731.c
+ 
++APPOLO_LAKE_I AIC3107 MACHINE DRIVER
++M:>-----SengKai,Tan <seng.kai.tan@intel.com>
++M:>-----Yu Xin <yu.xin.ho@intel.com>
++S:>-----Maintained
++F:>-----sound/soc/intel/boards/apli_lhcrb_aic3107M.c
++F:>-----sound/soc/intel/boards/apli_lhcrb_aic3107S.c
++
+ SOUNDWIRE SUBSYSTEM
+ M:	Vinod Koul <vinod.koul@intel.com>
+ M:	Sanyog Kale <sanyog.r.kale@intel.com>
+diff --git a/sound/soc/codecs/tlv320aic3x.c b/sound/soc/codecs/tlv320aic3x.c
+index 6c0a3da..6e0081f 100644
+--- a/sound/soc/codecs/tlv320aic3x.c
++++ b/sound/soc/codecs/tlv320aic3x.c
+@@ -38,6 +38,7 @@
+ #include <linux/delay.h>
+ #include <linux/pm.h>
+ #include <linux/i2c.h>
++#include <linux/acpi.h>
+ #include <linux/gpio.h>
+ #include <linux/regulator/consumer.h>
+ #include <linux/of.h>
+@@ -1763,6 +1764,14 @@ static void aic3x_configure_ocmv(struct i2c_client *client)
+ 	{ AIC3X_PAGE_SELECT, 0x00 },
+ };
+ 
++const struct acpi_device_id aic3x_acpi_match[] = {
++	{"INT345B", AIC3X_MODEL_3007},
++	{"INT345C", AIC3X_MODEL_3007},
++	{},
++};
++MODULE_DEVICE_TABLE(acpi, aic3x_acpi_match);
++EXPORT_SYMBOL_GPL(aic3x_acpi_match);
++
+ /*
+  * If the i2c layer weren't so broken, we could pass this kind of data
+  * around
+@@ -1776,6 +1785,7 @@ static int aic3x_i2c_probe(struct i2c_client *i2c,
+ 	struct device_node *np = i2c->dev.of_node;
+ 	int ret, i;
+ 	u32 value;
++	const struct acpi_device_id *acpi_id;
+ 
+ 	aic3x = devm_kzalloc(&i2c->dev, sizeof(struct aic3x_priv), GFP_KERNEL);
+ 	if (!aic3x)
+@@ -1842,7 +1852,12 @@ static int aic3x_i2c_probe(struct i2c_client *i2c,
+ 		aic3x->gpio_reset = -1;
+ 	}
+ 
+-	aic3x->model = id->driver_data;
++	acpi_id = acpi_match_device(aic3x_acpi_match,&i2c->dev);
++	if(acpi_id) {
++		aic3x->model = acpi_id->driver_data;
++	} else {
++		aic3x->model = id->driver_data;
++	}
+ 
+ 	if (gpio_is_valid(aic3x->gpio_reset) &&
+ 	    !aic3x_is_shared_reset(aic3x)) {
+@@ -1922,6 +1937,7 @@ static int aic3x_i2c_remove(struct i2c_client *client)
+ 	.driver = {
+ 		.name = "tlv320aic3x-codec",
+ 		.of_match_table = of_match_ptr(tlv320aic3x_of_match),
++		.acpi_match_table = ACPI_PTR(aic3x_acpi_match),
+ 	},
+ 	.probe	= aic3x_i2c_probe,
+ 	.remove = aic3x_i2c_remove,
+diff --git a/sound/soc/intel/boards/Kconfig b/sound/soc/intel/boards/Kconfig
+index 888c299..b6806f3 100644
+--- a/sound/soc/intel/boards/Kconfig
++++ b/sound/soc/intel/boards/Kconfig
+@@ -446,6 +446,17 @@ config SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH
+ 	  Say Y if you have such a device
+ 	  If unsure select "N".
+ 
++config SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH
++	tristate "ASoC Audio driver for APLI LHCRB AIC3107"
++	 depends on X86_INTEL_LPSS && I2C
++	 select SND_SOC_TLV320AIC3x
++	 default n
++	 help
++	   This adds support for ASoC machine driver for  Intel(R)
++	   Apollo Lake-I Leaf Hill Customer reference board platform.
++	   Say Y if you have such a device
++	   If unsure select "N".
++
+ endif ## SND_SOC_INTEL_SKYLAKE
+ 
+ endif ## SND_SOC_INTEL_MACH
+diff --git a/sound/soc/intel/boards/Makefile b/sound/soc/intel/boards/Makefile
+index 8285bce..8e61d2d 100644
+--- a/sound/soc/intel/boards/Makefile
++++ b/sound/soc/intel/boards/Makefile
+@@ -36,6 +36,8 @@ snd-soc-bxtp_ivi_hu_rt298-objs := bxtp_ivi_hu_rt298.o
+ snd-soc-bxtp_ivi_m3-objs := bxtp_ivi_m3.o
+ snd-soc-bxtp_ivi_generic-objs := bxtp_ivi_generic.o
+ snd-soc-apli_lhcrb_wm8731-objs := apli_lhcrb_wm8731.o
++snd-soc-apli_lhcrb_aic3107M-objs := apli_lhcrb_aic3107M.o
++snd-soc-apli_lhcrb_aic3107S-objs := apli_lhcrb_aic3107S.o
+ 
+ obj-$(CONFIG_SND_SOC_INTEL_HASWELL_MACH) += snd-soc-sst-haswell.o
+ obj-$(CONFIG_SND_SOC_INTEL_BYT_RT5640_MACH) += snd-soc-sst-byt-rt5640-mach.o
+@@ -74,3 +76,5 @@ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_HU_MACH) += snd-soc-bxtp_ivi_hu_rt298.o
+ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_M3_MACH) += snd-soc-bxtp_ivi_m3.o
+ obj-$(CONFIG_SND_SOC_INTEL_BXTP_IVI_GENERIC_MACH) += snd-soc-bxtp_ivi_generic.o
+ obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH) += snd-soc-apli_lhcrb_wm8731.o
++obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH) += snd-soc-apli_lhcrb_aic3107M.o
++obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH) += snd-soc-apli_lhcrb_aic3107S.o
+diff --git a/sound/soc/intel/boards/apli_lhcrb_aic3107M.c b/sound/soc/intel/boards/apli_lhcrb_aic3107M.c
+new file mode 100644
+index 00000000..cabe471
+--- /dev/null
++++ b/sound/soc/intel/boards/apli_lhcrb_aic3107M.c
+@@ -0,0 +1,403 @@
++/*
++ * Intel Apli(Apollo Lake) I2S Machine Driver for
++ * LF (Leaf Hill) reference platform
++ *
++ * Copyright (C) 2014-2015, Intel Corporation. All rights reserved.
++ *
++ * Modified from:
++ *   Intel APLI I2S Machine driver
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License version
++ * 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <sound/core.h>
++#include <sound/pcm.h>
++#include <sound/soc.h>
++#include <linux/gpio.h>
++#include <linux/acpi.h>
++#include <sound/pcm_params.h>
++#include "../../codecs/tlv320aic3x.h"
++
++static int apli_lhcrb_aic3107M_startup(struct snd_pcm_substream *substream)
++{
++	int ret;
++	static unsigned int rates[] = { 48000 };
++	static unsigned int channels[] = {2};
++	static u64 formats = SNDRV_PCM_FMTBIT_S16_LE |
++						SNDRV_PCM_FMTBIT_S24_LE |
++						SNDRV_PCM_FMTBIT_S32_LE;
++
++	static struct snd_pcm_hw_constraint_list hw_constraints_rates = {
++		.count = ARRAY_SIZE(rates),
++		.list = rates,
++		.mask = 0,
++	};
++
++	static struct snd_pcm_hw_constraint_list hw_constraints_channels = {
++		.count = ARRAY_SIZE(channels),
++		.list = channels,
++		.mask = 0,
++	};
++
++	ret = snd_pcm_hw_constraint_list(substream->runtime, 0,
++			SNDRV_PCM_HW_PARAM_RATE,
++			&hw_constraints_rates);
++
++	ret = snd_pcm_hw_constraint_list(substream->runtime, 0,
++				SNDRV_PCM_HW_PARAM_CHANNELS,
++				&hw_constraints_channels);
++
++	ret = snd_pcm_hw_constraint_mask64(substream->runtime,
++				SNDRV_PCM_HW_PARAM_FORMAT,
++				formats);
++
++	return ret;
++}
++
++static struct snd_soc_ops apli_lhcrb_aic3107M_ops = {
++	.startup = apli_lhcrb_aic3107M_startup,
++};
++
++static const struct snd_kcontrol_new apli_controls[] = {
++	SOC_DAPM_PIN_SWITCH("Headphone Jack"),
++	SOC_DAPM_PIN_SWITCH("Mic Jack"),
++};
++
++static const struct snd_soc_dapm_widget apli_widgets[] = {
++	SND_SOC_DAPM_SPK("SSP1 Speaker", NULL),
++	SND_SOC_DAPM_MIC("SSP1 Mic", NULL),
++	SND_SOC_DAPM_SPK("SSP2 PbTestPin", NULL),
++	SND_SOC_DAPM_MIC("SSP2 CpTestPin", NULL),
++	SND_SOC_DAPM_SPK("SSP4 PbTestPin", NULL),
++	SND_SOC_DAPM_MIC("SSP4 CpTestPin", NULL),
++	SND_SOC_DAPM_HP("Headphone Jack", NULL),
++	SND_SOC_DAPM_MIC("Mic Jack", NULL),
++	SND_SOC_DAPM_LINE("Line In", NULL),
++	SND_SOC_DAPM_LINE("Line Out", NULL),
++};
++
++static const struct snd_soc_dapm_route apli_lhcrb_aic3107_map[] = {
++	/* HP Jack */
++	{"Headphone Jack", NULL, "HPLOUT"},
++	{"Headphone Jack", NULL, "HPROUT"},
++	{"HPROUT", NULL, "Playback"},
++	{"HPLOUT", NULL, "Playback"},
++
++	{"Line Out", NULL, "LLOUT"},
++	{"Line Out", NULL, "RLOUT"},
++
++	{"SSP1 Speaker", NULL, "SPOP"},
++	{"SPOP", NULL, "Playback"},
++	{"SSP1 Speaker", NULL, "SPOM"},
++	{"SPOM", NULL, "Playback"},
++
++	/* Mic Jack */
++	{"MIC3L", NULL, "Mic Jack"},
++	{"MIC3R", NULL, "Mic Jack"},
++	{"Mic Jack", NULL, "Mic Bias"},
++
++	{"LINE1L", NULL, "Line In"},
++	{"LINE1R", NULL, "Line In"},
++
++	{"LINE2L", NULL, "Line In"},
++	{"LINE2R", NULL, "Line In"},
++
++	/* Codec BE connections */
++	/* SSP1 follows Hardware pin naming */
++	{"SSP1 Speaker", NULL, "ssp1 Tx"},
++	{"ssp1 Tx", NULL, "codec2_out"},
++
++	{"codec2_in", NULL, "ssp1 Rx"},
++	{"ssp1 Rx", NULL, "SSP1 Mic"},
++
++	/* SSP2 follows Hardware pin naming */
++	{"SSP2 PbTestPin", NULL, "ssp2 Tx"},
++	{"ssp2 Tx", NULL, "codec0_out"},
++
++	{"codec0_in", NULL, "ssp2 Rx"},
++	{"ssp2 Rx", NULL, "SSP2 CpTestPin"},
++
++	/* SSP4 follows Hardware pin naming */
++	{"SSP4 PbTestPin", NULL, "ssp4 Tx"},
++	{"ssp4 Tx", NULL, "codec1_out"},
++
++	{"codec1_in", NULL, "ssp4 Rx"},
++	{"ssp4 Rx", NULL, "SSP4 CpTestPin"},
++};
++
++static int tlv320aic3107_init(struct snd_soc_pcm_runtime *rtd)
++{
++	struct snd_soc_card *card = rtd->card;
++	struct device_node *np = card->dev->of_node;
++	int ret;
++
++	/* Add specific widgets */
++	snd_soc_dapm_new_controls(&card->dapm, apli_widgets,
++				  ARRAY_SIZE(apli_widgets));
++
++	if (np) {
++		ret = snd_soc_of_parse_audio_routing(card, "ti,audio-routing");
++		if (ret)
++			return ret;
++	} else {
++		/* Set up specific audio path apli_lhcrb_aic3107_map */
++		snd_soc_dapm_add_routes(&card->dapm, apli_lhcrb_aic3107_map,
++					ARRAY_SIZE(apli_lhcrb_aic3107_map));
++	}
++
++	return 0;
++}
++
++static int apli_aic3107_hw_params(struct snd_pcm_substream *substream,
++	struct snd_pcm_hw_params *params)
++{
++	struct snd_soc_pcm_runtime *rtd = substream->private_data;
++	struct snd_soc_dai *codec_dai = rtd->codec_dai;
++	int ret = 0;
++	unsigned int sysclk = 0;
++
++	sysclk = 24576000;
++
++	/* set the codec system clock */
++	ret = snd_soc_dai_set_sysclk(codec_dai, 0, sysclk, SND_SOC_CLOCK_IN);
++	if (ret < 0)
++		dev_err(rtd->dev, "snd_soc_dai_set_sysclk err = %d\n", ret);
++
++	return ret;
++}
++
++static struct snd_soc_ops apli_aic3107_ops = {
++	.hw_params = apli_aic3107_hw_params,
++};
++
++static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
++			      struct snd_pcm_hw_params *params)
++{
++	struct snd_mask *fmt = hw_param_mask(params, SNDRV_PCM_HW_PARAM_FORMAT);
++
++	/* set back end format to 32 bit */
++	snd_mask_none(fmt);
++	snd_mask_set(fmt, SNDRV_PCM_FORMAT_S32_LE);
++	return 0;
++}
++
++static const char pname[] = "0000:00:0e.0";
++
++/* apli digital audio interface glue - connects codec <--> CPU */
++static struct snd_soc_dai_link apli_lhcrb_aic3107_dais[] = {
++	/* Front End DAI links */
++	{
++		.name = "SSP1 Playback Port",
++		.stream_name = "AIC3107 Playback",
++		.cpu_dai_name = "System Pin 4",
++		.platform_name = pname,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
++				SND_SOC_DPCM_TRIGGER_POST},
++		.dpcm_playback = 1,
++		.ops = &apli_lhcrb_aic3107M_ops,
++	},
++	{
++		.name = "SSP1 Capture Port",
++		.stream_name = "AIC3107 Capture",
++		.cpu_dai_name = "System Pin 5",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = pname,
++		.init = NULL,
++		.dpcm_capture = 1,
++		.ignore_suspend = 1,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.ops = &apli_lhcrb_aic3107M_ops,
++	},
++	{
++		.name = "SSP2 Playback Port",
++		.stream_name = "SSP2 Speaker",
++		.cpu_dai_name = "System Pin",
++		.platform_name = pname,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
++				SND_SOC_DPCM_TRIGGER_POST},
++		.dpcm_playback = 1,
++		.ops = &apli_lhcrb_aic3107M_ops,
++	},
++	{
++		.name = "SSP2 Capture Port",
++		.stream_name = "SSP2 Mic",
++		.cpu_dai_name = "System Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = pname,
++		.init = NULL,
++		.dpcm_capture = 1,
++		.ignore_suspend = 1,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.ops = &apli_lhcrb_aic3107M_ops,
++	},
++	{
++		.name = "SSP4 Playback Port",
++		.stream_name = "SSP4 Speaker",
++		.cpu_dai_name = "Deepbuffer Pin",
++		.platform_name = pname,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.trigger = {SND_SOC_DPCM_TRIGGER_POST
++			, SND_SOC_DPCM_TRIGGER_POST},
++		.dpcm_playback = 1,
++		.ops = &apli_lhcrb_aic3107M_ops,
++	},
++	{
++		.name = "SSP4 Capture Port",
++		.stream_name = "SSP4 Mic",
++		.cpu_dai_name = "Reference Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = pname,
++		.init = NULL,
++		.dpcm_capture = 1,
++		.ignore_suspend = 1,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.ops = &apli_lhcrb_aic3107M_ops,
++	},
++	/* Back End DAI links */
++	{
++		/* SSP1 - Codec */
++		.name = "SSP1-Codec",
++		.id = 0,
++		.cpu_dai_name = "SSP1 Pin",
++		.codec_name = "i2c-INT345B:00",
++		.codec_dai_name = "tlv320aic3x-hifi",
++		.ignore_suspend = 1,
++		.ignore_pmdown_time = 1,
++		.ops = &apli_aic3107_ops,
++		.dai_fmt = SND_SOC_DAIFMT_I2S |
++					SND_SOC_DAIFMT_NB_NF |
++					SND_SOC_DAIFMT_CBS_CFS,
++		.platform_name = pname,
++		.ignore_suspend = 1,
++		.dpcm_playback = 1,
++		.dpcm_capture = 1,
++		.no_pcm = 1,
++		.be_hw_params_fixup = aic3107_be_hw_params_fixup,
++	},
++	{
++		/* SSP2 - Codec */
++		.name = "SSP2-Codec",
++		.id = 1,
++		.cpu_dai_name = "SSP2 Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = pname,
++		.ignore_suspend = 1,
++		.dpcm_playback = 1,
++		.dpcm_capture = 1,
++		.no_pcm = 1,
++		.init = NULL,
++	},
++	{
++		/* SSP4 - Codec */
++		.name = "SSP4-Codec",
++		.id = 2,
++		.cpu_dai_name = "SSP4 Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.dai_fmt = SND_SOC_DAIFMT_I2S |
++					SND_SOC_DAIFMT_NB_NF |
++					SND_SOC_DAIFMT_CBS_CFS,
++		.platform_name = pname,
++		.ignore_suspend = 1,
++		.dpcm_playback = 1,
++		.dpcm_capture = 1,
++		.no_pcm = 1,
++		.init = NULL,
++	},
++};
++
++/* apli audio machine driver for aic3107 Proto Board*/
++static struct snd_soc_card apli_lhcrb_aic3107 = {
++	.name = "apli-lhcrb-aic3107_i2s",
++	.owner = THIS_MODULE,
++	.dai_link = apli_lhcrb_aic3107_dais,
++	.num_links = ARRAY_SIZE(apli_lhcrb_aic3107_dais),
++	.controls = apli_controls,
++	.num_controls = ARRAY_SIZE(apli_controls),
++	.dapm_widgets = apli_widgets,
++	.num_dapm_widgets = ARRAY_SIZE(apli_widgets),
++	.dapm_routes = apli_lhcrb_aic3107_map,
++	.num_dapm_routes = ARRAY_SIZE(apli_lhcrb_aic3107_map),
++	.fully_routed = true,
++};
++
++/* Northwest - GPIO 74 */
++#define I2S_1_BASE 0xD0C40000
++#define I2S_1 0x610
++#define I2S_1_VALUE 0x44000400
++static int apli_audio_probe(struct platform_device *pdev)
++{
++	char *gpio_addr;
++	u32 gpio_value;
++
++	gpio_addr = (void *)ioremap_nocache(I2S_1_BASE + I2S_1, 0x30);
++	gpio_value = I2S_1_VALUE;
++
++	if (gpio_addr == NULL)
++		return -EIO;
++
++	pr_info("%p has %#x\n", gpio_addr, *(u32 *)gpio_addr);
++
++	memcpy_toio(gpio_addr, &gpio_value, sizeof(gpio_value));
++	memcpy_toio(gpio_addr + 0x8, &gpio_value, sizeof(gpio_value));
++	memcpy_toio(gpio_addr + 0x10, &gpio_value, sizeof(gpio_value));
++	memcpy_toio(gpio_addr + 0x18, &gpio_value, sizeof(gpio_value));
++	memcpy_toio(gpio_addr + 0x20, &gpio_value, sizeof(gpio_value));
++
++	pr_info("%p has %#x\n", gpio_addr, *(u32 *)gpio_addr);
++	pr_info("%p has %#x\n", gpio_addr + 0x8, *(u32 *)(gpio_addr + 0x8));
++	pr_info("%p has %#x\n", gpio_addr + 0x10, *(u32 *)(gpio_addr + 0x10));
++	pr_info("%p has %#x\n", gpio_addr + 0x18, *(u32 *)(gpio_addr + 0x18));
++	pr_info("%p has %#x\n", gpio_addr + 0x20, *(u32 *)(gpio_addr + 0x18));
++
++	iounmap(gpio_addr);
++	apli_lhcrb_aic3107.dev = &pdev->dev;
++	return snd_soc_register_card(&apli_lhcrb_aic3107);
++}
++
++static int apli_audio_remove(struct platform_device *pdev)
++{
++	snd_soc_unregister_card(&apli_lhcrb_aic3107);
++	return 0;
++}
++
++static struct platform_driver apli_audio = {
++	.probe = apli_audio_probe,
++	.remove = apli_audio_remove,
++	.driver = {
++		.name = "lhcrb_aic3107M_i2s",
++	},
++};
++
++module_platform_driver(apli_audio)
++
++/* Module information */
++MODULE_DESCRIPTION("Intel Audio aic3170 Machine driver  for APL-I LH CRB");
++MODULE_LICENSE("GPL v2");
++MODULE_ALIAS("platform:lhcrb_aic3107M_i2s");
+diff --git a/sound/soc/intel/boards/apli_lhcrb_aic3107S.c b/sound/soc/intel/boards/apli_lhcrb_aic3107S.c
+new file mode 100644
+index 00000000..f3b7be1
+--- /dev/null
++++ b/sound/soc/intel/boards/apli_lhcrb_aic3107S.c
+@@ -0,0 +1,407 @@
++/*
++ * Intel Apli(Apollo Lake) I2S Machine Driver for
++ * LF (Leaf Hill) reference platform
++ *
++ * Copyright (C) 2014-2015, Intel Corporation. All rights reserved.
++ *
++ * Modified from:
++ *   Intel APLI I2S Machine driver
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License version
++ * 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++#include <linux/module.h>
++#include <linux/platform_device.h>
++#include <sound/core.h>
++#include <sound/pcm.h>
++#include <sound/soc.h>
++#include <linux/gpio.h>
++#include <sound/pcm_params.h>
++#include "../../codecs/tlv320aic3x.h"
++
++static int apli_lhcrb_aic3107S_startup(struct snd_pcm_substream *substream)
++{
++	int ret;
++	static unsigned int rates[] = { 48000 };
++	static unsigned int channels[] = {2};
++	static u64 formats = SNDRV_PCM_FMTBIT_S16_LE |
++						SNDRV_PCM_FMTBIT_S24_LE |
++						SNDRV_PCM_FMTBIT_S32_LE;
++
++	static struct snd_pcm_hw_constraint_list hw_constraints_rates = {
++		.count = ARRAY_SIZE(rates),
++		.list = rates,
++		.mask = 0,
++	};
++
++	static struct snd_pcm_hw_constraint_list hw_constraints_channels = {
++		.count = ARRAY_SIZE(channels),
++		.list = channels,
++		.mask = 0,
++	};
++
++	ret = snd_pcm_hw_constraint_list(substream->runtime, 0,
++			SNDRV_PCM_HW_PARAM_RATE,
++			&hw_constraints_rates);
++
++	ret = snd_pcm_hw_constraint_list(substream->runtime, 0,
++				SNDRV_PCM_HW_PARAM_CHANNELS,
++				&hw_constraints_channels);
++
++	ret = snd_pcm_hw_constraint_mask64(substream->runtime,
++				SNDRV_PCM_HW_PARAM_FORMAT,
++				formats);
++
++	return ret;
++}
++
++static struct snd_soc_ops apli_lhcrb_aic3107S_ops = {
++	.startup = apli_lhcrb_aic3107S_startup,
++};
++
++static const struct snd_kcontrol_new apli_controls[] = {
++	SOC_DAPM_PIN_SWITCH("SSP1 Speaker"),
++	SOC_DAPM_PIN_SWITCH("SSP1 Mic"),
++	SOC_DAPM_PIN_SWITCH("SSP2 Speaker"),
++	SOC_DAPM_PIN_SWITCH("SSP2 Mic"),
++	SOC_DAPM_PIN_SWITCH("SSP4 Speaker"),
++	SOC_DAPM_PIN_SWITCH("SSP4 Mic"),
++	SOC_DAPM_PIN_SWITCH("Headphone Jack"),
++	SOC_DAPM_PIN_SWITCH("Mic Jack"),
++};
++
++static const struct snd_soc_dapm_widget apli_widgets[] = {
++	SND_SOC_DAPM_SPK("SSP1 Speaker", NULL),
++	SND_SOC_DAPM_MIC("SSP1 Mic", NULL),
++	SND_SOC_DAPM_SPK("SSP2 PbTestPin", NULL),
++	SND_SOC_DAPM_MIC("SSP2 CpTestPin", NULL),
++	SND_SOC_DAPM_SPK("SSP4 PbTestPin", NULL),
++	SND_SOC_DAPM_MIC("SSP4 CpTestPin", NULL),
++	SND_SOC_DAPM_HP("Headphone Jack", NULL),
++	SND_SOC_DAPM_MIC("Mic Jack", NULL),
++	SND_SOC_DAPM_LINE("Line In", NULL),
++	SND_SOC_DAPM_LINE("Line Out", NULL),
++};
++
++static const struct snd_soc_dapm_route apli_lhcrb_aic3107_map[] = {
++	/* HP Jack */
++	{"Headphone Jack", NULL, "HPLOUT"},
++	{"Headphone Jack", NULL, "HPROUT"},
++	{"HPROUT", NULL, "Playback"},
++	{"HPLOUT", NULL, "Playback"},
++
++	{"Line Out", NULL, "LLOUT"},
++	{"Line Out", NULL, "RLOUT"},
++
++	{"SSP1 Speaker", NULL, "SPOP"},
++	{"SPOP", NULL, "Playback"},
++	{"SSP1 Speaker", NULL, "SPOM"},
++	{"SPOM", NULL, "Playback"},
++
++	/* Mic Jack */
++	{"MIC3L", NULL, "Mic Jack"},
++	{"MIC3R", NULL, "Mic Jack"},
++	{"Mic Jack", NULL, "Mic Bias"},
++
++	{"LINE1L", NULL, "Line In"},
++	{"LINE1R", NULL, "Line In"},
++
++	{"LINE2L", NULL, "Line In"},
++	{"LINE2R", NULL, "Line In"},
++
++	/* Codec BE connections */
++	/* SSP1 follows Hardware pin naming */
++	{"SSP1 Speaker", NULL, "ssp1 Tx"},
++	{"ssp1 Tx", NULL, "codec2_out"},
++
++	{"codec2_in", NULL, "ssp1 Rx"},
++	{"ssp1 Rx", NULL, "SSP1 Mic"},
++
++	/* SSP2 follows Hardware pin naming */
++	{"SSP2 PbTestPin", NULL, "ssp2 Tx"},
++	{"ssp2 Tx", NULL, "codec0_out"},
++
++	{"codec0_in", NULL, "ssp2 Rx"},
++	{"ssp2 Rx", NULL, "SSP2 CpTestPin"},
++
++	/* SSP4 follows Hardware pin naming */
++	{"SSP4 PbTestPin", NULL, "ssp4 Tx"},
++	{"ssp4 Tx", NULL, "codec1_out"},
++
++	{"codec1_in", NULL, "ssp4 Rx"},
++	{"ssp4 Rx", NULL, "SSP4 CpTestPin"},
++};
++
++static int tlv320aic3107_init(struct snd_soc_pcm_runtime *rtd)
++{
++	struct snd_soc_card *card = rtd->card;
++	struct device_node *np = card->dev->of_node;
++	int ret;
++
++	/* Add specific widgets */
++	snd_soc_dapm_new_controls(&card->dapm, apli_widgets,
++				  ARRAY_SIZE(apli_widgets));
++
++	if (np) {
++		ret = snd_soc_of_parse_audio_routing(card, "ti,audio-routing");
++		if (ret)
++			return ret;
++	} else {
++		/* Set up specific audio path apli_lhcrb_aic3107_map */
++		snd_soc_dapm_add_routes(&card->dapm, apli_lhcrb_aic3107_map,
++					ARRAY_SIZE(apli_lhcrb_aic3107_map));
++	}
++
++	return 0;
++}
++
++static int apli_aic3107_hw_params(struct snd_pcm_substream *substream,
++	struct snd_pcm_hw_params *params)
++{
++	struct snd_soc_pcm_runtime *rtd = substream->private_data;
++	struct snd_soc_dai *codec_dai = rtd->codec_dai;
++	int ret = 0;
++	unsigned int sysclk = 0;
++
++	sysclk = 24576000;
++
++	/* set the codec system clock */
++	ret = snd_soc_dai_set_sysclk(codec_dai, 0, sysclk, SND_SOC_CLOCK_IN);
++	if (ret < 0)
++		dev_err(rtd->dev, "snd_soc_dai_set_sysclk err = %d\n", ret);
++
++	return ret;
++}
++
++static struct snd_soc_ops apli_aic3107_ops = {
++	.hw_params = apli_aic3107_hw_params,
++};
++
++static int aic3107_be_hw_params_fixup(struct snd_soc_pcm_runtime *rtd,
++			      struct snd_pcm_hw_params *params)
++{
++	struct snd_mask *fmt = hw_param_mask(params, SNDRV_PCM_HW_PARAM_FORMAT);
++
++	/* set back end format to 32 bit */
++	snd_mask_none(fmt);
++	snd_mask_set(fmt, SNDRV_PCM_FORMAT_S32_LE);
++	return 0;
++}
++
++static const char pname[] = "0000:00:0e.0";
++/* apli digital audio interface glue - connects codec <--> CPU */
++static struct snd_soc_dai_link apli_lhcrb_aic3107_dais[] = {
++	/* Front End DAI links */
++	{
++		.name = "SSP1 Playback Port",
++		.stream_name = "AIC3107 Playback",
++		.cpu_dai_name = "System Pin 4",
++		.platform_name = pname,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
++				SND_SOC_DPCM_TRIGGER_POST},
++		.dpcm_playback = 1,
++		.ops = &apli_lhcrb_aic3107S_ops,
++	},
++	{
++		.name = "SSP1 Capture Port",
++		.stream_name = "AIC3107 Capture",
++		.cpu_dai_name = "System Pin 5",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = pname,
++		.init = NULL,
++		.dpcm_capture = 1,
++		.ignore_suspend = 1,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.ops = &apli_lhcrb_aic3107S_ops,
++	},
++	{
++		.name = "SSP2 Playback Port",
++		.stream_name = "SSP2 Speaker",
++		.cpu_dai_name = "System Pin",
++		.platform_name = pname,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.trigger = {SND_SOC_DPCM_TRIGGER_POST,
++				SND_SOC_DPCM_TRIGGER_POST},
++		.dpcm_playback = 1,
++		.ops = &apli_lhcrb_aic3107S_ops,
++	},
++	{
++		.name = "SSP2 Capture Port",
++		.stream_name = "SSP2 Mic",
++		.cpu_dai_name = "System Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = pname,
++		.init = NULL,
++		.dpcm_capture = 1,
++		.ignore_suspend = 1,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.ops = &apli_lhcrb_aic3107S_ops,
++	},
++	{
++		.name = "SSP4 Playback Port",
++		.stream_name = "SSP4 Speaker",
++		.cpu_dai_name = "Deepbuffer Pin",
++		.platform_name = pname,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.trigger = {SND_SOC_DPCM_TRIGGER_POST
++			, SND_SOC_DPCM_TRIGGER_POST},
++		.dpcm_playback = 1,
++		.ops = &apli_lhcrb_aic3107S_ops,
++	},
++	{
++		.name = "SSP4 Capture Port",
++		.stream_name = "SSP4 Mic",
++		.cpu_dai_name = "Reference Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = pname,
++		.init = NULL,
++		.dpcm_capture = 1,
++		.ignore_suspend = 1,
++		.nonatomic = 1,
++		.dynamic = 1,
++		.ops = &apli_lhcrb_aic3107S_ops,
++	},
++	/* Back End DAI links */
++	{
++		/* SSP0 - Codec */
++		.name = "SSP1-Codec",
++		.id = 0,
++		.cpu_dai_name = "SSP1 Pin",
++		.codec_name = "i2c-INT345C:00",
++		.codec_dai_name = "tlv320aic3x-hifi",
++		.ignore_suspend = 1,
++		.ignore_pmdown_time = 1,
++		.ops = &apli_aic3107_ops,
++		.dai_fmt = SND_SOC_DAIFMT_I2S |
++					SND_SOC_DAIFMT_NB_NF |
++					SND_SOC_DAIFMT_CBM_CFM,
++		.platform_name = pname,
++		.ignore_suspend = 1,
++		.dpcm_playback = 1,
++		.dpcm_capture = 1,
++		.no_pcm = 1,
++		.be_hw_params_fixup = aic3107_be_hw_params_fixup,
++	},
++	{
++		/* SSP1 - Codec */
++		.name = "SSP2-Codec",
++		.id = 1,
++		.cpu_dai_name = "SSP2 Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.platform_name = pname,
++		.ignore_suspend = 1,
++		.dpcm_playback = 1,
++		.dpcm_capture = 1,
++		.no_pcm = 1,
++		.init = NULL,
++	},
++	{
++		/* SSP3 - Codec */
++		.name = "SSP4-Codec",
++		.id = 2,
++		.cpu_dai_name = "SSP4 Pin",
++		.codec_name = "snd-soc-dummy",
++		.codec_dai_name = "snd-soc-dummy-dai",
++		.dai_fmt = SND_SOC_DAIFMT_I2S |
++					SND_SOC_DAIFMT_NB_NF |
++					SND_SOC_DAIFMT_CBS_CFS,
++		.platform_name = pname,
++		.ignore_suspend = 1,
++		.dpcm_playback = 1,
++		.dpcm_capture = 1,
++		.no_pcm = 1,
++		.init = NULL,
++	},
++};
++
++/* apli audio machine driver for aic3107 Proto Board*/
++static struct snd_soc_card apli_lhcrb_aic3107 = {
++	.name = "apli-lhcrb-aic3107_i2s",
++	.owner = THIS_MODULE,
++	.dai_link = apli_lhcrb_aic3107_dais,
++	.num_links = ARRAY_SIZE(apli_lhcrb_aic3107_dais),
++	.controls = apli_controls,
++	.num_controls = ARRAY_SIZE(apli_controls),
++	.dapm_widgets = apli_widgets,
++	.num_dapm_widgets = ARRAY_SIZE(apli_widgets),
++	.dapm_routes = apli_lhcrb_aic3107_map,
++	.num_dapm_routes = ARRAY_SIZE(apli_lhcrb_aic3107_map),
++	.fully_routed = true,
++};
++
++/* Northwest - GPIO 74 */
++#define I2S_1_BASE 0xD0C40000
++#define I2S_1 0x610
++#define I2S_1_VALUE 0x44000400
++static int apli_audio_probe(struct platform_device *pdev)
++{
++	char *gpio_addr;
++	u32 gpio_value;
++
++	gpio_addr = (void *)ioremap_nocache(I2S_1_BASE + I2S_1, 0x30);
++	gpio_value = I2S_1_VALUE;
++
++	if (gpio_addr == NULL)
++		return -EIO;
++
++	pr_info("%p has %#x\n", gpio_addr, *(u32 *)gpio_addr);
++
++	memcpy_toio(gpio_addr, &gpio_value, sizeof(gpio_value));
++	memcpy_toio(gpio_addr + 0x8, &gpio_value, sizeof(gpio_value));
++	memcpy_toio(gpio_addr + 0x10, &gpio_value, sizeof(gpio_value));
++	memcpy_toio(gpio_addr + 0x18, &gpio_value, sizeof(gpio_value));
++	memcpy_toio(gpio_addr + 0x20, &gpio_value, sizeof(gpio_value));
++
++	pr_info("%p has %#x\n", gpio_addr, *(u32 *)gpio_addr);
++	pr_info("%p has %#x\n", gpio_addr + 0x8, *(u32 *)(gpio_addr + 0x8));
++	pr_info("%p has %#x\n", gpio_addr + 0x10, *(u32 *)(gpio_addr + 0x10));
++	pr_info("%p has %#x\n", gpio_addr + 0x18, *(u32 *)(gpio_addr + 0x18));
++	pr_info("%p has %#x\n", gpio_addr + 0x20, *(u32 *)(gpio_addr + 0x18));
++
++	iounmap(gpio_addr);
++	apli_lhcrb_aic3107.dev = &pdev->dev;
++	return snd_soc_register_card(&apli_lhcrb_aic3107);
++}
++
++static int apli_audio_remove(struct platform_device *pdev)
++{
++	snd_soc_unregister_card(&apli_lhcrb_aic3107);
++	return 0;
++}
++
++static struct platform_driver apli_audio = {
++	.probe = apli_audio_probe,
++	.remove = apli_audio_remove,
++	.driver = {
++		.name = "lhcrb_aic3107S_i2s",
++	},
++};
++
++module_platform_driver(apli_audio)
++
++/* Module information */
++MODULE_DESCRIPTION("Intel Audio aic3107 Machine driver for APL-I LH CRB");
++MODULE_LICENSE("GPL v2");
++MODULE_ALIAS("platform:lhcrb_aic3107S_i2s");
+-- 
+1.9.1
+

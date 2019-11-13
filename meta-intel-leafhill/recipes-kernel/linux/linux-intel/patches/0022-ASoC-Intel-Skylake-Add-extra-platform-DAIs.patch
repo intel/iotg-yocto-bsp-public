@@ -1,0 +1,128 @@
+From 50b0f04f685a61506146797297474d8fb5dba38a Mon Sep 17 00:00:00 2001
+From: CraigX Kewley <craigx.kewley@intel.com>
+Date: Wed, 22 Feb 2017 11:45:45 +0000
+Subject: [PATCH 22/25] ASoC: Intel: Skylake: Add extra platform DAIs
+
+Add 2 extra System Pin DAIs as GPMRB needs 8 total.
+
+Signed-off-by: CraigX Kewley <craigx.kewley@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl-pcm.c
+
+ASoC: Intel: Skylake: Add HDMI capture support
+
+GPMRB contains HDMI capture device, add support in platform driver DAI.
+
+Signed-off-by: CraigX Kewley <craigx.kewley@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl-pcm.c
+
+ASoC: Intel: Skylake: Add extra platform DAIs
+
+Add 1 extra System Pin DAIs as GPMRB needs 9 total.
+
+Signed-off-by: Craig Kewley <craigx.kewley@intel.com>
+
+Conflicts:
+	sound/soc/intel/skylake/skl-pcm.c
+---
+ sound/soc/intel/skylake/skl-pcm.c | 74 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 74 insertions(+)
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index 04f1133..082ac8d 100644
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -1290,6 +1290,69 @@ struct skl_dsp_notify_ops cb_ops = {
+ 			SNDRV_PCM_FMTBIT_FLOAT_LE,
+ 	},
+ },
++{
++	.name = "System Pin 7",
++	.ops = &skl_pcm_dai_ops,
++	.capture = {
++		.stream_name = "System Capture 7",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++	.playback = {
++		.stream_name = "System Playback 7",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE |
++			SNDRV_PCM_FMTBIT_S24_3LE | SNDRV_PCM_FMTBIT_S32_LE |
++		SNDRV_PCM_FMTBIT_FLOAT_LE,
++	},
++},
++{
++	.name = "System Pin 8",
++	.ops = &skl_pcm_dai_ops,
++	.capture = {
++		.stream_name = "System Capture 8",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++},
++	.playback = {
++		.stream_name = "System Playback 8",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE |
++			SNDRV_PCM_FMTBIT_S24_3LE | SNDRV_PCM_FMTBIT_S32_LE |
++			SNDRV_PCM_FMTBIT_FLOAT_LE,
++	},
++},
++{
++	.name = "System Pin 9",
++	.ops = &skl_pcm_dai_ops,
++	.capture = {
++		.stream_name = "System Capture 9",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S20_3LE |
++			SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S32_LE,
++	},
++	.playback = {
++		.stream_name = "System Playback 9",
++		.channels_min = HDA_MONO,
++		.channels_max = HDA_8_CH,
++		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE |
++			SNDRV_PCM_FMTBIT_S24_3LE | SNDRV_PCM_FMTBIT_S32_LE |
++			SNDRV_PCM_FMTBIT_FLOAT_LE,
++	},
++},
+ #endif
+ {
+ 	.name = "Echoref Pin",
+@@ -1392,6 +1455,17 @@ struct skl_dsp_notify_ops cb_ops = {
+ 			SNDRV_PCM_FMTBIT_S32_LE,
+ 		.sig_bits = 32,
+ 	},
++	.capture = {
++		.stream_name = "HDMI2 Capture",
++		.channels_min = HDA_STEREO,
++		.channels_max = 8,
++		.rates = SNDRV_PCM_RATE_32000 | SNDRV_PCM_RATE_44100 |
++			SNDRV_PCM_RATE_48000 | SNDRV_PCM_RATE_88200 |
++			SNDRV_PCM_RATE_96000 | SNDRV_PCM_RATE_176400 |
++			SNDRV_PCM_RATE_192000,
++		.formats = SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE |
++			SNDRV_PCM_FMTBIT_S32_LE,
++	},
+ },
+ {
+ 	.name = "HDMI3 Pin",
+-- 
+1.9.1
+

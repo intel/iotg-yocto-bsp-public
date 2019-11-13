@@ -1,0 +1,68 @@
+From b359f806a4d0dc8e78b91ef8ad1072137e35b92d Mon Sep 17 00:00:00 2001
+From: Bob Paauwe <bob.j.paauwe@intel.com>
+Date: Tue, 24 Jan 2017 15:40:35 -0800
+Subject: [PATCH] drm/i915: Add turbo status to debugfs (v3)
+
+v2: Limit status read to Broxton only. (Matt)
+v3: Forward port to 4.19. (Zainie)
+
+Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
+Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
+---
+ drivers/gpu/drm/i915/i915_debugfs.c | 33 ++++++++++++++++++++++++++++++++-
+ 1 file changed, 32 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_debugfs.c b/drivers/gpu/drm/i915/i915_debugfs.c
+index 61b8a1f..b1a588b 100644
+--- a/drivers/gpu/drm/i915/i915_debugfs.c
++++ b/drivers/gpu/drm/i915/i915_debugfs.c
+@@ -4261,6 +4261,36 @@ static ssize_t cur_wm_latency_write(struct file *file, const char __user *ubuf,
+ 			i915_drop_caches_get, i915_drop_caches_set,
+ 			"0x%08llx\n");
+ 
++static int i915_turbo_status_get(void *data, u64 *val)
++{
++	struct drm_device *dev = data;
++	struct drm_i915_private *dev_priv = dev->dev_private;
++
++	if (!IS_BROXTON(dev_priv))
++		return -ENODEV;
++
++	*val = dev_priv->tfm_enabled;
++
++	return 0;
++}
++
++static int i915_turbo_status_set(void *data, u64 val)
++{
++	struct drm_device *dev = data;
++	struct drm_i915_private *dev_priv = dev->dev_private;
++
++	DRM_DEBUG_DRIVER("Setting GPU turbo to %s\n",
++			 val ? "disable" : "enable");
++
++	dev_priv->tfm_enabled = val;
++
++	return 0;
++}
++
++DEFINE_SIMPLE_ATTRIBUTE(i915_turbo_status_fops,
++			i915_turbo_status_get, i915_turbo_status_set,
++			"%llu\n");
++
+ static int
+ i915_cache_sharing_get(void *data, u64 *val)
+ {
+@@ -4853,7 +4883,8 @@ static int i915_drrs_ctl_set(void *data, u64 val)
+ 	{"i915_hpd_storm_ctl", &i915_hpd_storm_ctl_fops},
+ 	{"i915_ipc_status", &i915_ipc_status_fops},
+ 	{"i915_drrs_ctl", &i915_drrs_ctl_fops},
+-	{"i915_edp_psr_debug", &i915_edp_psr_debug_fops}
++	{"i915_edp_psr_debug", &i915_edp_psr_debug_fops},
++	{"i915_turbo_status", &i915_turbo_status_fops}
+ };
+ 
+ int i915_debugfs_register(struct drm_i915_private *dev_priv)
+-- 
+1.9.1
+

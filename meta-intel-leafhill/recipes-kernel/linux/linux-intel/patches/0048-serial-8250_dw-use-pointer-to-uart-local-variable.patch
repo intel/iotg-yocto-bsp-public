@@ -1,0 +1,45 @@
+From ddc74a4378819978e63f348620d77552ff4d60ec Mon Sep 17 00:00:00 2001
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Date: Thu, 17 Nov 2016 12:35:00 +0200
+Subject: [PATCH] serial: 8250_dw: use pointer to uart local variable
+
+The use of pointer will simplify enabling runtime PM for the driver.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/tty/serial/8250/8250_dw.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/tty/serial/8250/8250_dw.c b/drivers/tty/serial/8250/8250_dw.c
+index 7b559f9..010d0a2 100644
+--- a/drivers/tty/serial/8250/8250_dw.c
++++ b/drivers/tty/serial/8250/8250_dw.c
+@@ -492,10 +492,10 @@ static void dw8250_setup_port(struct uart_port *p)
+ 
+ static int dw8250_probe(struct platform_device *pdev)
+ {
+-	struct uart_8250_port uart = {};
++	struct uart_8250_port uart = {}, *up = &uart;
+ 	struct resource *regs = platform_get_resource(pdev, IORESOURCE_MEM, 0);
+ 	int irq = platform_get_irq(pdev, 0);
+-	struct uart_port *p = &uart.port;
++	struct uart_port *p = &up->port;
+ 	struct device *dev = &pdev->dev;
+ 	struct dw8250_data *data;
+ 	int err;
+@@ -634,10 +634,10 @@ static int dw8250_probe(struct platform_device *pdev)
+ 	if (p->fifosize) {
+ 		data->dma.rxconf.src_maxburst = p->fifosize / 4;
+ 		data->dma.txconf.dst_maxburst = p->fifosize / 4;
+-		uart.dma = &data->dma;
++		up->dma = &data->dma;
+ 	}
+ 
+-	data->line = serial8250_register_8250_port(&uart);
++	data->line = serial8250_register_8250_port(up);
+ 	if (data->line < 0) {
+ 		err = data->line;
+ 		goto err_reset;
+-- 
+1.9.1
+

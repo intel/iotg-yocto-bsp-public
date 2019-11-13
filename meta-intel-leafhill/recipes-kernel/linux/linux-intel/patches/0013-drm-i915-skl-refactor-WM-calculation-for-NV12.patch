@@ -1,7 +1,7 @@
-From 4b100ad530ffdeadbb8b39707714c14c41e85392 Mon Sep 17 00:00:00 2001
+From b522b9a9deca1438323e5015fd0797f21881ad2b Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:01 +0530
-Subject: [PATCH 13/45] drm/i915/skl+: refactor WM calculation for NV12
+Subject: [PATCH 13/46] drm/i915/skl+: refactor WM calculation for NV12
 
 Current code calculates DDB for planar formats in such a way that we
 store DDB of plane-0 in plane 1 & vice-versa.
@@ -86,10 +86,10 @@ index 191f556..69ace84 100644
  
  struct skl_pipe_wm {
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index ae1173c..811bb3d 100644
+index 5d86908..c2ed40a 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
-@@ -3988,9 +3988,9 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4027,9 +4027,9 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  static unsigned int
  skl_plane_relative_data_rate(const struct intel_crtc_state *cstate,
  			     const struct drm_plane_state *pstate,
@@ -101,7 +101,7 @@ index ae1173c..811bb3d 100644
  	struct intel_plane_state *intel_pstate = to_intel_plane_state(pstate);
  	uint32_t data_rate;
  	uint32_t width = 0, height = 0;
-@@ -4004,9 +4004,9 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4043,9 +4043,9 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  	fb = pstate->fb;
  	format = fb->format->format;
  
@@ -113,7 +113,7 @@ index ae1173c..811bb3d 100644
  		return 0;
  
  	/*
-@@ -4017,19 +4017,14 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4056,19 +4056,14 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  	width = drm_rect_width(&intel_pstate->base.src) >> 16;
  	height = drm_rect_height(&intel_pstate->base.src) >> 16;
  
@@ -139,7 +139,7 @@ index ae1173c..811bb3d 100644
  	down_scale_amount = skl_plane_downscale_amount(cstate, intel_pstate);
  
  	return mul_round_up_u32_fixed16(data_rate, down_scale_amount);
-@@ -4042,8 +4037,8 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4081,8 +4076,8 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
   */
  static unsigned int
  skl_get_total_relative_data_rate(struct intel_crtc_state *intel_cstate,
@@ -150,7 +150,7 @@ index ae1173c..811bb3d 100644
  {
  	struct drm_crtc_state *cstate = &intel_cstate->base;
  	struct drm_atomic_state *state = cstate->state;
-@@ -4059,17 +4054,17 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4098,17 +4093,17 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  		enum plane_id plane_id = to_intel_plane(plane)->id;
  		unsigned int rate;
  
@@ -171,7 +171,7 @@ index ae1173c..811bb3d 100644
  
  		total_data_rate += rate;
  	}
-@@ -4078,8 +4073,7 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4117,8 +4112,7 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  }
  
  static uint16_t
@@ -181,7 +181,7 @@ index ae1173c..811bb3d 100644
  {
  	struct drm_framebuffer *fb = pstate->fb;
  	struct intel_plane_state *intel_pstate = to_intel_plane_state(pstate);
-@@ -4090,8 +4084,8 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4129,8 +4123,8 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  	if (WARN_ON(!fb))
  		return 0;
  
@@ -192,7 +192,7 @@ index ae1173c..811bb3d 100644
  		return 0;
  
  	/* For Non Y-tile return 8-blocks */
-@@ -4110,15 +4104,12 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4149,15 +4143,12 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  	src_h = drm_rect_height(&intel_pstate->base.src) >> 16;
  
  	/* Halve UV plane width and height for NV12 */
@@ -210,7 +210,7 @@ index ae1173c..811bb3d 100644
  
  	if (drm_rotation_90_or_270(pstate->rotation)) {
  		switch (plane_bpp) {
-@@ -4146,7 +4137,7 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4185,7 +4176,7 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  
  static void
  skl_ddb_calc_min(const struct intel_crtc_state *cstate, int num_active,
@@ -219,7 +219,7 @@ index ae1173c..811bb3d 100644
  {
  	const struct drm_plane_state *pstate;
  	struct drm_plane *plane;
-@@ -4161,7 +4152,7 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4200,7 +4191,7 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  			continue;
  
  		minimum[plane_id] = skl_ddb_min_alloc(pstate, 0);
@@ -228,7 +228,7 @@ index ae1173c..811bb3d 100644
  	}
  
  	minimum[PLANE_CURSOR] = skl_cursor_allocation(num_active);
-@@ -4179,17 +4170,17 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4218,17 +4209,17 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  	struct skl_ddb_entry *alloc = &cstate->wm.skl.ddb;
  	uint16_t alloc_size, start;
  	uint16_t minimum[I915_MAX_PLANES] = {};
@@ -250,7 +250,7 @@ index ae1173c..811bb3d 100644
  
  	if (WARN_ON(!state))
  		return 0;
-@@ -4204,7 +4195,7 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4243,7 +4234,7 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  	if (alloc_size == 0)
  		return 0;
  
@@ -259,7 +259,7 @@ index ae1173c..811bb3d 100644
  
  	/*
  	 * 1. Allocate the mininum required blocks for each active plane
-@@ -4214,7 +4205,7 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4253,7 +4244,7 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  
  	for_each_plane_id_on_crtc(intel_crtc, plane_id) {
  		total_min_blocks += minimum[plane_id];
@@ -268,7 +268,7 @@ index ae1173c..811bb3d 100644
  	}
  
  	if (total_min_blocks > alloc_size) {
-@@ -4236,14 +4227,14 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4275,14 +4266,14 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  	 */
  	total_data_rate = skl_get_total_relative_data_rate(cstate,
  							   plane_data_rate,
@@ -286,7 +286,7 @@ index ae1173c..811bb3d 100644
  
  		if (plane_id == PLANE_CURSOR)
  			continue;
-@@ -4267,21 +4258,20 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
+@@ -4306,21 +4297,20 @@ int skl_check_pipe_max_pixel_rate(struct intel_crtc *intel_crtc,
  
  		start += plane_blocks;
  
@@ -318,7 +318,7 @@ index ae1173c..811bb3d 100644
  	}
  
  	return 0;
-@@ -4419,9 +4409,7 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
+@@ -4458,9 +4448,7 @@ static uint_fixed_16_16_t skl_wm_method2(uint32_t pixel_rate,
  		wp->width = drm_rect_width(&intel_pstate->base.src) >> 16;
  	}
  
@@ -329,7 +329,7 @@ index ae1173c..811bb3d 100644
  	if (drm_rotation_90_or_270(pstate->rotation)) {
  
  		switch (wp->cpp) {
-@@ -4614,6 +4602,9 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4653,6 +4641,9 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  			return ret;
  	}
  
@@ -339,7 +339,7 @@ index ae1173c..811bb3d 100644
  	return 0;
  }
  
-@@ -4799,19 +4790,25 @@ static void skl_pv_write_plane_wm(struct intel_crtc *intel_crtc,
+@@ -4838,19 +4829,25 @@ static void skl_pv_write_plane_wm(struct intel_crtc *intel_crtc,
  	}
  	tmp_plane_wm.plane_trans_wm_level = skl_calc_wm_level(&wm->trans_wm);
  
@@ -372,7 +372,7 @@ index ae1173c..811bb3d 100644
  }
  
  static void skl_write_plane_wm(struct intel_crtc *intel_crtc,
-@@ -4875,8 +4872,17 @@ static void skl_write_plane_wm(struct intel_crtc *intel_crtc,
+@@ -4914,8 +4911,17 @@ static void skl_write_plane_wm(struct intel_crtc *intel_crtc,
  
  	skl_ddb_entry_write(dev_priv, PLANE_BUF_CFG(pipe, plane_id),
  			    &ddb->plane[pipe][plane_id]);
@@ -392,7 +392,7 @@ index ae1173c..811bb3d 100644
  }
  
  static void skl_write_cursor_wm(struct intel_crtc *intel_crtc,
-@@ -4992,8 +4998,8 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
+@@ -5031,8 +5037,8 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
  
  		if (skl_ddb_entry_equal(&cur_ddb->plane[pipe][plane_id],
  					&new_ddb->plane[pipe][plane_id]) &&
@@ -403,7 +403,7 @@ index ae1173c..811bb3d 100644
  			continue;
  
  		plane_state = drm_atomic_get_plane_state(state, plane);
-@@ -5104,8 +5110,8 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
+@@ -5143,8 +5149,8 @@ static int skl_update_pipe_wm(struct drm_crtc_state *cstate,
  		      struct skl_ddb_values *src,
  		      enum pipe pipe)
  {

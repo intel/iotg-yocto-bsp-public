@@ -1,7 +1,7 @@
-From edd9ef4da5453a8d48ffd0cda374cdf786f6a1c5 Mon Sep 17 00:00:00 2001
+From 1983a27e6761e89f88cf8fe308e55faef6816427 Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Thu, 13 Apr 2017 12:04:43 +0800
-Subject: [PATCH 24/42] x86/platform/apl: Add pin mappings for Apollo Lake
+Subject: [PATCH 24/44] x86/platform/apl: Add pin mappings for Apollo Lake
 
 HS UART runtime PM support relies on different pin states, which must be
 provided and registered. Define and register pin mappings for

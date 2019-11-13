@@ -1,0 +1,184 @@
+From e64bc2fe613133356a2736c814bf2b778e72ecd2 Mon Sep 17 00:00:00 2001
+From: Cezary Rojewski <cezary.rojewski@intel.com>
+Date: Mon, 18 Feb 2019 16:28:37 +0100
+Subject: [PATCH 116/120] ASoC: Intel: Skylake: Remove MCPS available check.
+
+To perform correct MCPS calculations, driver needs to be able to access
+MCPS size for each module within each configuration and maximum available
+budget from firmware manifest. Moreover, manifest taken from customer
+defined modules must also provide valid MCPS data which driver can rely
+on.
+
+This is unfortunatelly not the case, thus currently performed MCPS
+calculations are unreliable, what in consequence may cause driver to
+prevent pipeline creation despite firmware being completely fine with
+its size.
+
+Change-Id: I5080ce78235e862badc4e0294c359ce05ff903a9
+Signed-off-by: Cezary Rojewski <cezary.rojewski@intel.com>
+Reviewed-on: https://git-gar-1.devtools.intel.com/gerrit/38534
+Tested-by: gkblditp <gkblditp@intel.com>
+Reviewed-by: Slawinski, AmadeuszX <amadeuszx.slawinski@intel.com>
+---
+ sound/soc/intel/skylake/skl-topology.c | 67 +---------------------------------
+ sound/soc/intel/skylake/skl.h          |  2 -
+ 2 files changed, 1 insertion(+), 68 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-topology.c b/sound/soc/intel/skylake/skl-topology.c
+index 81edbf9..e92095e 100644
+--- a/sound/soc/intel/skylake/skl-topology.c
++++ b/sound/soc/intel/skylake/skl-topology.c
+@@ -415,56 +415,6 @@ static void skl_tplg_alloc_pipe_mem(struct skl *skl,
+ }
+ 
+ /*
+- * Pipeline needs needs DSP CPU resources for computation, this is
+- * quantified in MCPS (Million Clocks Per Second) required for module/pipe
+- *
+- * Each pipelines needs mcps to be allocated. Check if we have mcps for this
+- * pipe.
+- */
+-
+-static bool skl_is_pipe_mcps_avail(struct skl *skl,
+-				struct skl_module_cfg *mconfig)
+-{
+-	struct skl_sst *ctx = skl->skl_sst;
+-	u8 res_idx = mconfig->res_idx;
+-	struct skl_module_res *res = &mconfig->module->resources[res_idx];
+-
+-	if (skl->resource.mcps + res->cpc*1000 > skl->resource.max_mcps) {
+-		dev_err(ctx->dev,
+-			"%s: module_id %d instance %d\n", __func__,
+-			mconfig->id.module_id, mconfig->id.instance_id);
+-		dev_err(ctx->dev,
+-			"exceeds ppl mcps available %d > mem %d\n",
+-			skl->resource.max_mcps, skl->resource.mcps);
+-		return false;
+-	} else {
+-		return true;
+-	}
+-}
+-
+-static void skl_tplg_alloc_pipe_mcps(struct skl *skl,
+-				struct skl_module_cfg *mconfig)
+-{
+-	u8 res_idx = mconfig->res_idx;
+-	struct skl_module_res *res = &mconfig->module->resources[res_idx];
+-
+-	skl->resource.mcps += res->cpc*1000;
+-}
+-
+-/*
+- * Free the mcps when tearing down
+- */
+-static void
+-skl_tplg_free_pipe_mcps(struct skl *skl, struct skl_module_cfg *mconfig)
+-{
+-	u8 res_idx = mconfig->res_idx;
+-	struct skl_module_res *res = &mconfig->module->resources[res_idx];
+-
+-	res = &mconfig->module->resources[res_idx];
+-	skl->resource.mcps -= res->cpc*1000;
+-}
+-
+-/*
+  * Free the memory when tearing down
+  */
+ static void
+@@ -1037,10 +987,6 @@ static int skl_tplg_set_module_init_data(struct snd_soc_dapm_widget *w)
+ 		mconfig->fmt_idx = mconfig->mod_cfg[cfg_idx].fmt_idx;
+ 		mconfig->res_idx = mconfig->mod_cfg[cfg_idx].res_idx;
+ 
+-		/* check resource available */
+-		if (!skl_is_pipe_mcps_avail(skl, mconfig))
+-			return -ENOMEM;
+-
+ 		if (mconfig->module->loadable && ctx->dsp->fw_ops.load_mod) {
+ 			ret = ctx->dsp->fw_ops.load_mod(ctx->dsp,
+ 				mconfig->id.module_id, mconfig->guid);
+@@ -1077,7 +1023,7 @@ static int skl_tplg_set_module_init_data(struct snd_soc_dapm_widget *w)
+ 			skl_put_pvt_id(ctx, uuid_mod, &mconfig->id.pvt_id);
+ 			goto err;
+ 		}
+-		skl_tplg_alloc_pipe_mcps(skl, mconfig);
++
+ 		ret = skl_tplg_set_module_params(w, ctx);
+ 		if (ret < 0)
+ 			goto err;
+@@ -1253,10 +1199,6 @@ static int skl_tplg_mixer_dapm_pre_pmu_event(struct snd_soc_dapm_widget *w,
+ 	if (ret < 0)
+ 		return ret;
+ 
+-	/* check resource available */
+-	if (!skl_is_pipe_mcps_avail(skl, mconfig))
+-		return -EBUSY;
+-
+ 	if (!skl_is_pipe_mem_avail(skl, mconfig))
+ 		return -ENOMEM;
+ 
+@@ -1805,7 +1747,6 @@ static int skl_tplg_mixer_dapm_pre_pmd_event(struct snd_soc_dapm_widget *w,
+ 
+ /*
+  * in the Post-PMD event of mixer we need to do following:
+- *   - Free the mcps used
+  *   - Free the mem used
+  *   - Unbind the modules within the pipeline
+  *   - Delete the pipeline (modules are not required to be explicitly
+@@ -1858,8 +1799,6 @@ static int skl_tplg_mixer_dapm_post_pmd_event(struct snd_soc_dapm_widget *w,
+ 	list_for_each_entry(w_module, &s_pipe->w_list, node) {
+ 		dst_module = w_module->w->priv;
+ 
+-		if (mconfig->m_state >= SKL_MODULE_INIT_DONE)
+-			skl_tplg_free_pipe_mcps(skl, dst_module);
+ 		if (src_module == NULL) {
+ 			src_module = dst_module;
+ 			continue;
+@@ -1882,7 +1821,6 @@ static int skl_tplg_mixer_dapm_post_pmd_event(struct snd_soc_dapm_widget *w,
+ 
+ /*
+  * in the Post-PMD event of PGA we need to do following:
+- *   - Free the mcps used
+  *   - Stop the pipeline
+  *   - In source pipe is connected, unbind with source pipelines
+  */
+@@ -4166,7 +4104,6 @@ void skl_cleanup_resources(struct skl *skl)
+ 		return;
+ 
+ 	skl->resource.mem = 0;
+-	skl->resource.mcps = 0;
+ 
+ 	list_for_each_entry(w, &card->widgets, list) {
+ 		if (is_skl_dsp_widget_type(w, ctx->dev) && w->priv != NULL)
+@@ -5017,7 +4954,6 @@ static void skl_tplg_set_pipe_type(struct skl *skl, struct skl_pipe *pipe)
+ }
+ 
+ /* This will be read from topology manifest, currently defined here */
+-#define SKL_MAX_MCPS 350000000
+ #define SKL_FW_MAX_MEM 1000000
+ 
+ /*
+@@ -5055,7 +4991,6 @@ int skl_tplg_init(struct snd_soc_platform *platform, struct hdac_ext_bus *ebus)
+ 		return -EINVAL;
+ 	}
+ 
+-	skl->resource.max_mcps = SKL_MAX_MCPS;
+ 	skl->resource.max_mem = SKL_FW_MAX_MEM;
+ 
+ 	skl->tplg = fw;
+diff --git a/sound/soc/intel/skylake/skl.h b/sound/soc/intel/skylake/skl.h
+index 2f23101..4e57007 100644
+--- a/sound/soc/intel/skylake/skl.h
++++ b/sound/soc/intel/skylake/skl.h
+@@ -46,9 +46,7 @@
+ 
+ 
+ struct skl_dsp_resource {
+-	u32 max_mcps;
+ 	u32 max_mem;
+-	u32 mcps;
+ 	u32 mem;
+ };
+ 
+-- 
+1.9.1
+

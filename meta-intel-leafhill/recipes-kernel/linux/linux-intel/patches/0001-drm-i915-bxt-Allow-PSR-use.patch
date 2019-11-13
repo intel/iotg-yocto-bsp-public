@@ -1,7 +1,7 @@
-From 4fa66626f1a76b989982417b8bb6cbf501459029 Mon Sep 17 00:00:00 2001
+From 5205123f491eb01f910e5e049ca5fa38887f0f5c Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Tue, 1 Dec 2015 13:22:32 -0800
-Subject: [PATCH 01/45] drm/i915/bxt: Allow PSR use
+Subject: [PATCH 01/46] drm/i915/bxt: Allow PSR use
 
 From a quick skim of the spec, I don't see any indication that PSR needs
 to be programmed differently on BXT than it is on SKL/KBL, so it looks

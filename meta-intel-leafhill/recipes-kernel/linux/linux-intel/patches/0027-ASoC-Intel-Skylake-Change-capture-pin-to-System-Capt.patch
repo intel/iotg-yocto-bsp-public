@@ -1,0 +1,28 @@
+From bb4e166e778bbadf9180c2b750e7654e1f542ef2 Mon Sep 17 00:00:00 2001
+From: Gaurav Vohra <gauravx.vohra@intel.com>
+Date: Wed, 10 Jul 2019 10:12:10 +0800
+Subject: [PATCH] ASoC: Intel: Skylake: Change capture pin to System Capture 5
+
+gpmrb topology requires capture pin as System Capture 5 for Dirana
+
+Signed-off-by: Gaurav Vohra <gauravx.vohra@intel.com>
+---
+ sound/soc/intel/skylake/skl-pcm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index 6f5baa0..7abf65b 100644
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -1274,7 +1274,7 @@ struct skl_dsp_notify_ops cb_ops = {
+ 	.name = "System Pin 5",
+ 	.ops = &skl_pcm_dai_ops,
+ 	.capture = {
+-		.stream_name = "PT Capture",
++		.stream_name = "System Capture 5",
+ 		.channels_min = HDA_MONO,
+ 		.channels_max = HDA_8_CH,
+ 		.rates = SNDRV_PCM_RATE_8000_192000 | SNDRV_PCM_RATE_KNOT,
+-- 
+1.9.1
+

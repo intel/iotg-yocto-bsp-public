@@ -1,7 +1,7 @@
-From 8ae379a9bbcbf73a7cb7b2f9bb0b88462b8e9ff4 Mon Sep 17 00:00:00 2001
+From 89d4847d05e28aba3a1f6551363e1362a5bd8f0d Mon Sep 17 00:00:00 2001
 From: Pardha Saradhi K <pardha.saradhi.kesapragada@intel.com>
 Date: Tue, 7 Jun 2016 13:43:39 +0530
-Subject: [PATCH 002/100] ASoC: Intel: Skylake: Add support for various PCM
+Subject: [PATCH 002/120] ASoC: Intel: Skylake: Add support for various PCM
  formats
 
 Add support for S24_LE, S24_3LE, S32_LE and FLOAT PCM formats.

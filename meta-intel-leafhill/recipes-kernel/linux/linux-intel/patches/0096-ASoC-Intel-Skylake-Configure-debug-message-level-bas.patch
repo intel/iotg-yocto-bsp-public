@@ -1,7 +1,7 @@
-From fe677527ad36c09a8be5409ada2bbfeb38d88d22 Mon Sep 17 00:00:00 2001
+From c396e851b9678c50836a27bfd9b683e4c5a96799 Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Mon, 22 Oct 2018 19:40:28 +0800
-Subject: [PATCH 096/100] ASoC: Intel: Skylake: Configure debug message level
+Subject: [PATCH 096/120] ASoC: Intel: Skylake: Configure debug message level
  based on FW Init retry iteration
 
 FW Init retry mechanism was already introduced as workaround

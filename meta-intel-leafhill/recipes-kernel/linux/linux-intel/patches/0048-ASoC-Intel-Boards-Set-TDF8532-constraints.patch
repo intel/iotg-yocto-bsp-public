@@ -1,7 +1,7 @@
-From 925ccfc5d119540f1dbc2ae0cdaaeda07b54f641 Mon Sep 17 00:00:00 2001
+From 0c7b073b4697fc71c70997741b2faa440449dd02 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Wed, 8 Mar 2017 15:57:47 +0000
-Subject: [PATCH 048/100] ASoC: Intel: Boards: Set TDF8532 constraints
+Subject: [PATCH 048/120] ASoC: Intel: Boards: Set TDF8532 constraints
 
 BE DAI constraints don't affect FE constraints. Add a startup callback
 to explicitly set constraints for TDF8532 FE.

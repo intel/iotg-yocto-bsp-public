@@ -1,7 +1,7 @@
-From 866af555c7c812d746c674c36d1a9b7dbdfe8912 Mon Sep 17 00:00:00 2001
+From 0c9ba25ded6626bf1b2ed1cf153c08b833e8a78a Mon Sep 17 00:00:00 2001
 From: Chandra Konduru <chandra.konduru@intel.com>
 Date: Sat, 12 May 2018 03:03:15 +0530
-Subject: [PATCH 27/45] drm/i915: Add NV12 support to intel_framebuffer_init
+Subject: [PATCH 27/46] drm/i915: Add NV12 support to intel_framebuffer_init
 
 This patch adds NV12 as supported format
 to intel_framebuffer_init and performs various checks.

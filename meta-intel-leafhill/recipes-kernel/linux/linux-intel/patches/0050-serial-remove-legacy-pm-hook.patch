@@ -1,0 +1,994 @@
+From 9bdd87c4a988c682fd80ffb132d752c584aa8961 Mon Sep 17 00:00:00 2001
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Date: Wed, 12 Oct 2016 19:23:29 +0300
+Subject: [PATCH] serial: *: remove legacy ->pm() hook
+
+Since we switch to runtime PM the old PM hook is not needed anymore.
+
+TODO: Use of serial8250_set_sleep() ?
+TODO: serial: *: enable runtime PM
+
+Enable runtime PM for all ports unconditionally. Set autosuspend time to
+infinity (-1) to avoid port being shutdown when using, for example, as a
+serial console since there is no means to resume it back.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ arch/arm/mach-sa1100/assabet.c        | 16 ----------------
+ arch/mips/alchemy/common/platform.c   | 21 --------------------
+ drivers/tty/serial/8250/8250_core.c   |  1 -
+ drivers/tty/serial/8250/8250_mtk.c    | 13 -------------
+ drivers/tty/serial/8250/8250_omap.c   | 23 ----------------------
+ drivers/tty/serial/8250/8250_port.c   | 11 -----------
+ drivers/tty/serial/atmel_serial.c     | 36 -----------------------------------
+ drivers/tty/serial/dz.c               | 25 +-----------------------
+ drivers/tty/serial/mpc52xx_uart.c     |  1 -
+ drivers/tty/serial/msm_serial.c       | 20 -------------------
+ drivers/tty/serial/omap-serial.c      | 25 ------------------------
+ drivers/tty/serial/pch_uart.c         |  1 -
+ drivers/tty/serial/pxa.c              | 13 -------------
+ drivers/tty/serial/qcom_geni_serial.c | 27 +-------------------------
+ drivers/tty/serial/sa1100.c           |  1 -
+ drivers/tty/serial/samsung.c          | 34 ---------------------------------
+ drivers/tty/serial/sc16is7xx.c        |  7 -------
+ drivers/tty/serial/serial_txx9.c      | 17 -----------------
+ drivers/tty/serial/sh-sci.c           | 16 ----------------
+ drivers/tty/serial/sirfsoc_uart.c     | 11 -----------
+ drivers/tty/serial/sn_console.c       |  1 -
+ drivers/tty/serial/st-asc.c           | 27 --------------------------
+ drivers/tty/serial/stm32-usart.c      | 23 ----------------------
+ drivers/tty/serial/uartlite.c         | 12 ------------
+ drivers/tty/serial/vr41xx_siu.c       | 27 --------------------------
+ drivers/tty/serial/xilinx_uartps.c    | 15 ---------------
+ drivers/tty/serial/zs.c               | 20 -------------------
+ include/linux/serial_8250.h           |  2 --
+ 28 files changed, 2 insertions(+), 444 deletions(-)
+
+diff --git a/arch/arm/mach-sa1100/assabet.c b/arch/arm/mach-sa1100/assabet.c
+index 575ec08..b8e1ce8 100644
+--- a/arch/arm/mach-sa1100/assabet.c
++++ b/arch/arm/mach-sa1100/assabet.c
+@@ -593,21 +593,6 @@ static void __init get_assabet_scr(void)
+ 		printk("Neponset expansion board detected\n");
+ }
+ 
+-
+-static void assabet_uart_pm(struct uart_port *port, u_int state, u_int oldstate)
+-{
+-	if (port->mapbase == _Ser1UTCR0) {
+-		if (state)
+-			ASSABET_BCR_clear(ASSABET_BCR_RS232EN |
+-					  ASSABET_BCR_COM_RTS |
+-					  ASSABET_BCR_COM_DTR);
+-		else
+-			ASSABET_BCR_set(ASSABET_BCR_RS232EN |
+-					ASSABET_BCR_COM_RTS |
+-					ASSABET_BCR_COM_DTR);
+-	}
+-}
+-
+ /*
+  * Assabet uses COM_RTS and COM_DTR for both UART1 (com port)
+  * and UART3 (radio module).  We only handle them for UART1 here.
+@@ -666,7 +651,6 @@ static u_int assabet_get_mctrl(struct uart_port *port)
+ static struct sa1100_port_fns assabet_port_fns __initdata = {
+ 	.set_mctrl	= assabet_set_mctrl,
+ 	.get_mctrl	= assabet_get_mctrl,
+-	.pm		= assabet_uart_pm,
+ };
+ 
+ static struct map_desc assabet_io_desc[] __initdata = {
+diff --git a/arch/mips/alchemy/common/platform.c b/arch/mips/alchemy/common/platform.c
+index 1454d9f..c5cbb8c 100644
+--- a/arch/mips/alchemy/common/platform.c
++++ b/arch/mips/alchemy/common/platform.c
+@@ -28,26 +28,6 @@
+ 
+ #include <prom.h>
+ 
+-static void alchemy_8250_pm(struct uart_port *port, unsigned int state,
+-			    unsigned int old_state)
+-{
+-#ifdef CONFIG_SERIAL_8250
+-	switch (state) {
+-	case 0:
+-		alchemy_uart_enable(CPHYSADDR(port->membase));
+-		serial8250_do_pm(port, state, old_state);
+-		break;
+-	case 3:		/* power off */
+-		serial8250_do_pm(port, state, old_state);
+-		alchemy_uart_disable(CPHYSADDR(port->membase));
+-		break;
+-	default:
+-		serial8250_do_pm(port, state, old_state);
+-		break;
+-	}
+-#endif
+-}
+-
+ #define PORT(_base, _irq)					\
+ 	{							\
+ 		.mapbase	= _base,			\
+@@ -57,7 +37,6 @@ static void alchemy_8250_pm(struct uart_port *port, unsigned int state,
+ 		.flags		= UPF_SKIP_TEST | UPF_IOREMAP | \
+ 				  UPF_FIXED_TYPE,		\
+ 		.type		= PORT_16550A,			\
+-		.pm		= alchemy_8250_pm,		\
+ 	}
+ 
+ static struct plat_serial8250_port au1x00_uart_data[][4] __initdata = {
+diff --git a/drivers/tty/serial/8250/8250_core.c b/drivers/tty/serial/8250/8250_core.c
+index b1b8bbc..a3c4684 100644
+--- a/drivers/tty/serial/8250/8250_core.c
++++ b/drivers/tty/serial/8250/8250_core.c
+@@ -837,7 +837,6 @@ static int serial8250_probe(struct platform_device *dev)
+ 		uart.port.set_termios	= p->set_termios;
+ 		uart.port.set_ldisc	= p->set_ldisc;
+ 		uart.port.get_mctrl	= p->get_mctrl;
+-		uart.port.pm		= p->pm;
+ 		uart.port.dev		= &dev->dev;
+ 		uart.port.irqflags	|= irqflag;
+ 		ret = serial8250_register_8250_port(&uart);
+diff --git a/drivers/tty/serial/8250/8250_mtk.c b/drivers/tty/serial/8250/8250_mtk.c
+index c3f933d..a17f692 100644
+--- a/drivers/tty/serial/8250/8250_mtk.c
++++ b/drivers/tty/serial/8250/8250_mtk.c
+@@ -131,18 +131,6 @@ static int __maybe_unused mtk8250_runtime_resume(struct device *dev)
+ 	return 0;
+ }
+ 
+-static void
+-mtk8250_do_pm(struct uart_port *port, unsigned int state, unsigned int old)
+-{
+-	if (!state)
+-		pm_runtime_get_sync(port->dev);
+-
+-	serial8250_do_pm(port, state, old);
+-
+-	if (state)
+-		pm_runtime_put_sync_suspend(port->dev);
+-}
+-
+ static int mtk8250_probe_of(struct platform_device *pdev, struct uart_port *p,
+ 			   struct mtk8250_data *data)
+ {
+@@ -197,7 +185,6 @@ static int mtk8250_probe(struct platform_device *pdev)
+ 	spin_lock_init(&uart.port.lock);
+ 	uart.port.mapbase = regs->start;
+ 	uart.port.irq = irq->start;
+-	uart.port.pm = mtk8250_do_pm;
+ 	uart.port.type = PORT_16550;
+ 	uart.port.flags = UPF_BOOT_AUTOCONF | UPF_FIXED_PORT;
+ 	uart.port.dev = &pdev->dev;
+diff --git a/drivers/tty/serial/8250/8250_omap.c b/drivers/tty/serial/8250/8250_omap.c
+index a019286..e2fbacb 100644
+--- a/drivers/tty/serial/8250/8250_omap.c
++++ b/drivers/tty/serial/8250/8250_omap.c
+@@ -485,28 +485,6 @@ static void omap_8250_set_termios(struct uart_port *port,
+ 		tty_termios_encode_baud_rate(termios, baud, baud);
+ }
+ 
+-/* same as 8250 except that we may have extra flow bits set in EFR */
+-static void omap_8250_pm(struct uart_port *port, unsigned int state,
+-			 unsigned int oldstate)
+-{
+-	struct uart_8250_port *up = up_to_u8250p(port);
+-	u8 efr;
+-
+-	pm_runtime_get_sync(port->dev);
+-	serial_out(up, UART_LCR, UART_LCR_CONF_MODE_B);
+-	efr = serial_in(up, UART_EFR);
+-	serial_out(up, UART_EFR, efr | UART_EFR_ECB);
+-	serial_out(up, UART_LCR, 0);
+-
+-	serial_out(up, UART_IER, (state != 0) ? UART_IERX_SLEEP : 0);
+-	serial_out(up, UART_LCR, UART_LCR_CONF_MODE_B);
+-	serial_out(up, UART_EFR, efr);
+-	serial_out(up, UART_LCR, 0);
+-
+-	pm_runtime_mark_last_busy(port->dev);
+-	pm_runtime_put_autosuspend(port->dev);
+-}
+-
+ static void omap_serial_fill_features_erratas(struct uart_8250_port *up,
+ 					      struct omap8250_priv *priv)
+ {
+@@ -1183,7 +1161,6 @@ static int omap8250_probe(struct platform_device *pdev)
+ #endif
+ 	up.port.set_termios = omap_8250_set_termios;
+ 	up.port.set_mctrl = omap8250_set_mctrl;
+-	up.port.pm = omap_8250_pm;
+ 	up.port.startup = omap_8250_startup;
+ 	up.port.shutdown = omap_8250_shutdown;
+ 	up.port.throttle = omap_8250_throttle;
+diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
+index e7e61e8..8f61b8b 100644
+--- a/drivers/tty/serial/8250/8250_port.c
++++ b/drivers/tty/serial/8250/8250_port.c
+@@ -2793,16 +2793,6 @@ void serial8250_do_pm(struct uart_port *port, unsigned int state,
+ }
+ EXPORT_SYMBOL(serial8250_do_pm);
+ 
+-static void
+-serial8250_pm(struct uart_port *port, unsigned int state,
+-	      unsigned int oldstate)
+-{
+-	if (port->pm)
+-		port->pm(port, state, oldstate);
+-	else
+-		serial8250_do_pm(port, state, oldstate);
+-}
+-
+ static unsigned int serial8250_port_size(struct uart_8250_port *pt)
+ {
+ 	if (pt->port.mapsize)
+@@ -3114,7 +3104,6 @@ static const char *serial8250_type(struct uart_port *port)
+ 	.shutdown	= serial8250_shutdown,
+ 	.set_termios	= serial8250_set_termios,
+ 	.set_ldisc	= serial8250_set_ldisc,
+-	.pm		= serial8250_pm,
+ 	.type		= serial8250_type,
+ 	.release_port	= serial8250_release_port,
+ 	.request_port	= serial8250_request_port,
+diff --git a/drivers/tty/serial/atmel_serial.c b/drivers/tty/serial/atmel_serial.c
+index dd8949e..be665ff 100644
+--- a/drivers/tty/serial/atmel_serial.c
++++ b/drivers/tty/serial/atmel_serial.c
+@@ -1986,41 +1986,6 @@ static void atmel_shutdown(struct uart_port *port)
+ }
+ 
+ /*
+- * Power / Clock management.
+- */
+-static void atmel_serial_pm(struct uart_port *port, unsigned int state,
+-			    unsigned int oldstate)
+-{
+-	struct atmel_uart_port *atmel_port = to_atmel_uart_port(port);
+-
+-	switch (state) {
+-	case 0:
+-		/*
+-		 * Enable the peripheral clock for this serial port.
+-		 * This is called on uart_open() or a resume event.
+-		 */
+-		clk_prepare_enable(atmel_port->clk);
+-
+-		/* re-enable interrupts if we disabled some on suspend */
+-		atmel_uart_writel(port, ATMEL_US_IER, atmel_port->backup_imr);
+-		break;
+-	case 3:
+-		/* Back up the interrupt mask and disable all interrupts */
+-		atmel_port->backup_imr = atmel_uart_readl(port, ATMEL_US_IMR);
+-		atmel_uart_writel(port, ATMEL_US_IDR, -1);
+-
+-		/*
+-		 * Disable the peripheral clock for this serial port.
+-		 * This is called on uart_close() or a suspend event.
+-		 */
+-		clk_disable_unprepare(atmel_port->clk);
+-		break;
+-	default:
+-		dev_err(port->dev, "atmel_serial: unknown pm %d\n", state);
+-	}
+-}
+-
+-/*
+  * Change the port parameters
+  */
+ static void atmel_set_termios(struct uart_port *port, struct ktermios *termios,
+@@ -2350,7 +2315,6 @@ static void atmel_poll_put_char(struct uart_port *port, unsigned char ch)
+ 	.request_port	= atmel_request_port,
+ 	.config_port	= atmel_config_port,
+ 	.verify_port	= atmel_verify_port,
+-	.pm		= atmel_serial_pm,
+ #ifdef CONFIG_CONSOLE_POLL
+ 	.poll_get_char	= atmel_poll_get_char,
+ 	.poll_put_char	= atmel_poll_put_char,
+diff --git a/drivers/tty/serial/dz.c b/drivers/tty/serial/dz.c
+index 7b57e84..3953711 100644
+--- a/drivers/tty/serial/dz.c
++++ b/drivers/tty/serial/dz.c
+@@ -636,26 +636,6 @@ static void dz_set_termios(struct uart_port *uport, struct ktermios *termios,
+ 	spin_unlock_irqrestore(&dport->port.lock, flags);
+ }
+ 
+-/*
+- * Hack alert!
+- * Required solely so that the initial PROM-based console
+- * works undisturbed in parallel with this one.
+- */
+-static void dz_pm(struct uart_port *uport, unsigned int state,
+-		  unsigned int oldstate)
+-{
+-	struct dz_port *dport = to_dport(uport);
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(&dport->port.lock, flags);
+-	if (state < 3)
+-		dz_start_tx(&dport->port);
+-	else
+-		dz_stop_tx(&dport->port);
+-	spin_unlock_irqrestore(&dport->port.lock, flags);
+-}
+-
+-
+ static const char *dz_type(struct uart_port *uport)
+ {
+ 	return "DZ";
+@@ -751,7 +731,6 @@ static int dz_verify_port(struct uart_port *uport, struct serial_struct *ser)
+ 	.startup	= dz_startup,
+ 	.shutdown	= dz_shutdown,
+ 	.set_termios	= dz_set_termios,
+-	.pm		= dz_pm,
+ 	.type		= dz_type,
+ 	.release_port	= dz_release_port,
+ 	.request_port	= dz_request_port,
+@@ -779,6 +758,7 @@ static void __init dz_init_ports(void)
+ 		struct uart_port *uport = &dport->port;
+ 
+ 		dport->mux	= &dz_mux;
++		spin_lock_init(&uport->lock);
+ 
+ 		uport->irq	= dec_interrupt[DEC_IRQ_DZ11];
+ 		uport->fifosize	= 1;
+@@ -875,10 +855,7 @@ static int __init dz_console_setup(struct console *co, char *options)
+ 	if (ret)
+ 		return ret;
+ 
+-	spin_lock_init(&dport->port.lock);	/* For dz_pm().  */
+-
+ 	dz_reset(dport);
+-	dz_pm(uport, 0, -1);
+ 
+ 	if (options)
+ 		uart_parse_options(options, &baud, &parity, &bits, &flow);
+diff --git a/drivers/tty/serial/mpc52xx_uart.c b/drivers/tty/serial/mpc52xx_uart.c
+index 3a75ee0..264d066 100644
+--- a/drivers/tty/serial/mpc52xx_uart.c
++++ b/drivers/tty/serial/mpc52xx_uart.c
+@@ -1356,7 +1356,6 @@ static u8 mpc5125_psc_get_mr1(struct uart_port *port)
+ 	.startup	= mpc52xx_uart_startup,
+ 	.shutdown	= mpc52xx_uart_shutdown,
+ 	.set_termios	= mpc52xx_uart_set_termios,
+-/*	.pm		= mpc52xx_uart_pm,		Not supported yet */
+ 	.type		= mpc52xx_uart_type,
+ 	.release_port	= mpc52xx_uart_release_port,
+ 	.request_port	= mpc52xx_uart_request_port,
+diff --git a/drivers/tty/serial/msm_serial.c b/drivers/tty/serial/msm_serial.c
+index 310bbae..b1ad1ae 100644
+--- a/drivers/tty/serial/msm_serial.c
++++ b/drivers/tty/serial/msm_serial.c
+@@ -1386,25 +1386,6 @@ static int msm_verify_port(struct uart_port *port, struct serial_struct *ser)
+ 	return 0;
+ }
+ 
+-static void msm_power(struct uart_port *port, unsigned int state,
+-		      unsigned int oldstate)
+-{
+-	struct msm_port *msm_port = UART_TO_MSM(port);
+-
+-	switch (state) {
+-	case 0:
+-		clk_prepare_enable(msm_port->clk);
+-		clk_prepare_enable(msm_port->pclk);
+-		break;
+-	case 3:
+-		clk_disable_unprepare(msm_port->clk);
+-		clk_disable_unprepare(msm_port->pclk);
+-		break;
+-	default:
+-		pr_err("msm_serial: Unknown PM state %d\n", state);
+-	}
+-}
+-
+ #ifdef CONFIG_CONSOLE_POLL
+ static int msm_poll_get_char_single(struct uart_port *port)
+ {
+@@ -1524,7 +1505,6 @@ static void msm_poll_put_char(struct uart_port *port, unsigned char c)
+ 	.request_port = msm_request_port,
+ 	.config_port = msm_config_port,
+ 	.verify_port = msm_verify_port,
+-	.pm = msm_power,
+ #ifdef CONFIG_CONSOLE_POLL
+ 	.poll_get_char	= msm_poll_get_char,
+ 	.poll_put_char	= msm_poll_put_char,
+diff --git a/drivers/tty/serial/omap-serial.c b/drivers/tty/serial/omap-serial.c
+index 6420ae5..b5abeaa 100644
+--- a/drivers/tty/serial/omap-serial.c
++++ b/drivers/tty/serial/omap-serial.c
+@@ -1097,30 +1097,6 @@ static void serial_omap_uart_qos_work(struct work_struct *work)
+ 	dev_dbg(up->port.dev, "serial_omap_set_termios+%d\n", up->port.line);
+ }
+ 
+-static void
+-serial_omap_pm(struct uart_port *port, unsigned int state,
+-	       unsigned int oldstate)
+-{
+-	struct uart_omap_port *up = to_uart_omap_port(port);
+-	unsigned char efr;
+-
+-	dev_dbg(up->port.dev, "serial_omap_pm+%d\n", up->port.line);
+-
+-	pm_runtime_get_sync(up->dev);
+-	serial_out(up, UART_LCR, UART_LCR_CONF_MODE_B);
+-	efr = serial_in(up, UART_EFR);
+-	serial_out(up, UART_EFR, efr | UART_EFR_ECB);
+-	serial_out(up, UART_LCR, 0);
+-
+-	serial_out(up, UART_IER, (state != 0) ? UART_IERX_SLEEP : 0);
+-	serial_out(up, UART_LCR, UART_LCR_CONF_MODE_B);
+-	serial_out(up, UART_EFR, efr);
+-	serial_out(up, UART_LCR, 0);
+-
+-	pm_runtime_mark_last_busy(up->dev);
+-	pm_runtime_put_autosuspend(up->dev);
+-}
+-
+ static void serial_omap_release_port(struct uart_port *port)
+ {
+ 	dev_dbg(port->dev, "serial_omap_release_port+\n");
+@@ -1459,7 +1435,6 @@ static inline void serial_omap_add_console_port(struct uart_omap_port *up)
+ 	.startup	= serial_omap_startup,
+ 	.shutdown	= serial_omap_shutdown,
+ 	.set_termios	= serial_omap_set_termios,
+-	.pm		= serial_omap_pm,
+ 	.type		= serial_omap_type,
+ 	.release_port	= serial_omap_release_port,
+ 	.request_port	= serial_omap_request_port,
+diff --git a/drivers/tty/serial/pch_uart.c b/drivers/tty/serial/pch_uart.c
+index cb85002..56b8475 100644
+--- a/drivers/tty/serial/pch_uart.c
++++ b/drivers/tty/serial/pch_uart.c
+@@ -1599,7 +1599,6 @@ static void pch_uart_put_poll_char(struct uart_port *port,
+ 	.startup = pch_uart_startup,
+ 	.shutdown = pch_uart_shutdown,
+ 	.set_termios = pch_uart_set_termios,
+-/*	.pm		= pch_uart_pm,		Not supported yet */
+ 	.type = pch_uart_type,
+ 	.release_port = pch_uart_release_port,
+ 	.request_port = pch_uart_request_port,
+diff --git a/drivers/tty/serial/pxa.c b/drivers/tty/serial/pxa.c
+index 4932b67..a63ea2a 100644
+--- a/drivers/tty/serial/pxa.c
++++ b/drivers/tty/serial/pxa.c
+@@ -547,18 +547,6 @@ static void serial_pxa_shutdown(struct uart_port *port)
+ 	spin_unlock_irqrestore(&up->port.lock, flags);
+ }
+ 
+-static void
+-serial_pxa_pm(struct uart_port *port, unsigned int state,
+-	      unsigned int oldstate)
+-{
+-	struct uart_pxa_port *up = (struct uart_pxa_port *)port;
+-
+-	if (!state)
+-		clk_prepare_enable(up->clk);
+-	else
+-		clk_disable_unprepare(up->clk);
+-}
+-
+ static void serial_pxa_release_port(struct uart_port *port)
+ {
+ }
+@@ -770,7 +758,6 @@ static void serial_pxa_put_poll_char(struct uart_port *port,
+ 	.startup	= serial_pxa_startup,
+ 	.shutdown	= serial_pxa_shutdown,
+ 	.set_termios	= serial_pxa_set_termios,
+-	.pm		= serial_pxa_pm,
+ 	.type		= serial_pxa_type,
+ 	.release_port	= serial_pxa_release_port,
+ 	.request_port	= serial_pxa_request_port,
+diff --git a/drivers/tty/serial/qcom_geni_serial.c b/drivers/tty/serial/qcom_geni_serial.c
+index 5b96df4..996b2c8 100644
+--- a/drivers/tty/serial/qcom_geni_serial.c
++++ b/drivers/tty/serial/qcom_geni_serial.c
+@@ -1198,21 +1198,6 @@ static void console_unregister(struct uart_driver *drv)
+ 	.nr =  GENI_UART_PORTS,
+ };
+ 
+-static void qcom_geni_serial_pm(struct uart_port *uport,
+-		unsigned int new_state, unsigned int old_state)
+-{
+-	struct qcom_geni_serial_port *port = to_dev_port(uport, uport);
+-
+-	if (new_state == UART_PM_STATE_ON && old_state == UART_PM_STATE_OFF)
+-		geni_se_resources_on(&port->se);
+-	else if (!uart_console(uport) && (new_state == UART_PM_STATE_ON &&
+-				old_state == UART_PM_STATE_UNDEFINED))
+-		geni_se_resources_on(&port->se);
+-	else if (new_state == UART_PM_STATE_OFF &&
+-			old_state == UART_PM_STATE_ON)
+-		geni_se_resources_off(&port->se);
+-}
+-
+ static const struct uart_ops qcom_geni_console_pops = {
+ 	.tx_empty = qcom_geni_serial_tx_empty,
+ 	.stop_tx = qcom_geni_serial_stop_tx,
+@@ -1230,7 +1215,6 @@ static void qcom_geni_serial_pm(struct uart_port *uport,
+ 	.poll_get_char	= qcom_geni_serial_get_char,
+ 	.poll_put_char	= qcom_geni_serial_poll_put_char,
+ #endif
+-	.pm = qcom_geni_serial_pm,
+ };
+ 
+ static const struct uart_ops qcom_geni_uart_pops = {
+@@ -1246,7 +1230,6 @@ static void qcom_geni_serial_pm(struct uart_port *uport,
+ 	.type = qcom_geni_serial_get_type,
+ 	.set_mctrl = qcom_geni_serial_set_mctrl,
+ 	.get_mctrl = qcom_geni_serial_get_mctrl,
+-	.pm = qcom_geni_serial_pm,
+ };
+ 
+ static int qcom_geni_serial_probe(struct platform_device *pdev)
+@@ -1332,16 +1315,8 @@ static int __maybe_unused qcom_geni_serial_sys_suspend_noirq(struct device *dev)
+ 	struct qcom_geni_serial_port *port = dev_get_drvdata(dev);
+ 	struct uart_port *uport = &port->uport;
+ 
+-	if (uart_console(uport)) {
++	if (uart_console(uport))
+ 		uart_suspend_port(uport->private_data, uport);
+-	} else {
+-		struct uart_state *state = uport->state;
+-		/*
+-		 * If the port is open, deny system suspend.
+-		 */
+-		if (state->pm_state == UART_PM_STATE_ON)
+-			return -EBUSY;
+-	}
+ 
+ 	return 0;
+ }
+diff --git a/drivers/tty/serial/sa1100.c b/drivers/tty/serial/sa1100.c
+index a399772b..647e629 100644
+--- a/drivers/tty/serial/sa1100.c
++++ b/drivers/tty/serial/sa1100.c
+@@ -645,7 +645,6 @@ void sa1100_register_uart_fns(struct sa1100_port_fns *fns)
+ 	if (fns->set_mctrl)
+ 		sa1100_pops.set_mctrl = fns->set_mctrl;
+ 
+-	sa1100_pops.pm       = fns->pm;
+ 	/*
+ 	 * FIXME: fns->set_wake is unused - this should be called from
+ 	 * the suspend() callback if device_may_wakeup(dev)) is set.
+diff --git a/drivers/tty/serial/samsung.c b/drivers/tty/serial/samsung.c
+index c6058b5..0d5da40 100644
+--- a/drivers/tty/serial/samsung.c
++++ b/drivers/tty/serial/samsung.c
+@@ -1101,39 +1101,6 @@ static int s3c64xx_serial_startup(struct uart_port *port)
+ 	return ret;
+ }
+ 
+-/* power power management control */
+-
+-static void s3c24xx_serial_pm(struct uart_port *port, unsigned int level,
+-			      unsigned int old)
+-{
+-	struct s3c24xx_uart_port *ourport = to_ourport(port);
+-	int timeout = 10000;
+-
+-	ourport->pm_level = level;
+-
+-	switch (level) {
+-	case 3:
+-		while (--timeout && !s3c24xx_serial_txempty_nofifo(port))
+-			udelay(100);
+-
+-		if (!IS_ERR(ourport->baudclk))
+-			clk_disable_unprepare(ourport->baudclk);
+-
+-		clk_disable_unprepare(ourport->clk);
+-		break;
+-
+-	case 0:
+-		clk_prepare_enable(ourport->clk);
+-
+-		if (!IS_ERR(ourport->baudclk))
+-			clk_prepare_enable(ourport->baudclk);
+-
+-		break;
+-	default:
+-		dev_err(port->dev, "s3c24xx_serial: unknown pm %d\n", level);
+-	}
+-}
+-
+ /* baud rate calculation
+  *
+  * The UARTs on the S3C2410/S3C2440 can take their clocks from a number
+@@ -1492,7 +1459,6 @@ static void s3c24xx_serial_put_poll_char(struct uart_port *port,
+ #endif
+ 
+ static struct uart_ops s3c24xx_serial_ops = {
+-	.pm		= s3c24xx_serial_pm,
+ 	.tx_empty	= s3c24xx_serial_tx_empty,
+ 	.get_mctrl	= s3c24xx_serial_get_mctrl,
+ 	.set_mctrl	= s3c24xx_serial_set_mctrl,
+diff --git a/drivers/tty/serial/sc16is7xx.c b/drivers/tty/serial/sc16is7xx.c
+index 372cc7f..b4248e2 100644
+--- a/drivers/tty/serial/sc16is7xx.c
++++ b/drivers/tty/serial/sc16is7xx.c
+@@ -1066,12 +1066,6 @@ static int sc16is7xx_verify_port(struct uart_port *port,
+ 	return 0;
+ }
+ 
+-static void sc16is7xx_pm(struct uart_port *port, unsigned int state,
+-			 unsigned int oldstate)
+-{
+-	sc16is7xx_power(port, (state == UART_PM_STATE_ON) ? 1 : 0);
+-}
+-
+ static void sc16is7xx_null_void(struct uart_port *port)
+ {
+ 	/* Do nothing */
+@@ -1093,7 +1087,6 @@ static void sc16is7xx_null_void(struct uart_port *port)
+ 	.release_port	= sc16is7xx_null_void,
+ 	.config_port	= sc16is7xx_config_port,
+ 	.verify_port	= sc16is7xx_verify_port,
+-	.pm		= sc16is7xx_pm,
+ };
+ 
+ #ifdef CONFIG_GPIOLIB
+diff --git a/drivers/tty/serial/serial_txx9.c b/drivers/tty/serial/serial_txx9.c
+index 1b4008d..e4ae426 100644
+--- a/drivers/tty/serial/serial_txx9.c
++++ b/drivers/tty/serial/serial_txx9.c
+@@ -731,22 +731,6 @@ static void serial_txx9_shutdown(struct uart_port *port)
+ 	spin_unlock_irqrestore(&up->port.lock, flags);
+ }
+ 
+-static void
+-serial_txx9_pm(struct uart_port *port, unsigned int state,
+-	      unsigned int oldstate)
+-{
+-	/*
+-	 * If oldstate was -1 this is called from
+-	 * uart_configure_port().  In this case do not initialize the
+-	 * port now, because the port was already initialized (for
+-	 * non-console port) or should not be initialized here (for
+-	 * console port).  If we initialized the port here we lose
+-	 * serial console settings.
+-	 */
+-	if (state == 0 && oldstate != -1)
+-		serial_txx9_initialize(port);
+-}
+-
+ static int serial_txx9_request_resource(struct uart_txx9_port *up)
+ {
+ 	unsigned int size = TXX9_REGION_SIZE;
+@@ -853,7 +837,6 @@ static void serial_txx9_config_port(struct uart_port *port, int uflags)
+ 	.startup	= serial_txx9_startup,
+ 	.shutdown	= serial_txx9_shutdown,
+ 	.set_termios	= serial_txx9_set_termios,
+-	.pm		= serial_txx9_pm,
+ 	.type		= serial_txx9_type,
+ 	.release_port	= serial_txx9_release_port,
+ 	.request_port	= serial_txx9_request_port,
+diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
+index 5550289..9a4a315 100644
+--- a/drivers/tty/serial/sh-sci.c
++++ b/drivers/tty/serial/sh-sci.c
+@@ -2620,21 +2620,6 @@ static void sci_set_termios(struct uart_port *port, struct ktermios *termios,
+ 		sci_enable_ms(port);
+ }
+ 
+-static void sci_pm(struct uart_port *port, unsigned int state,
+-		   unsigned int oldstate)
+-{
+-	struct sci_port *sci_port = to_sci_port(port);
+-
+-	switch (state) {
+-	case UART_PM_STATE_OFF:
+-		sci_port_disable(sci_port);
+-		break;
+-	default:
+-		sci_port_enable(sci_port);
+-		break;
+-	}
+-}
+-
+ static const char *sci_type(struct uart_port *port)
+ {
+ 	switch (port->type) {
+@@ -2749,7 +2734,6 @@ static int sci_verify_port(struct uart_port *port, struct serial_struct *ser)
+ 	.shutdown	= sci_shutdown,
+ 	.flush_buffer	= sci_flush_buffer,
+ 	.set_termios	= sci_set_termios,
+-	.pm		= sci_pm,
+ 	.type		= sci_type,
+ 	.release_port	= sci_release_port,
+ 	.request_port	= sci_request_port,
+diff --git a/drivers/tty/serial/sirfsoc_uart.c b/drivers/tty/serial/sirfsoc_uart.c
+index 38622f2..d382706 100644
+--- a/drivers/tty/serial/sirfsoc_uart.c
++++ b/drivers/tty/serial/sirfsoc_uart.c
+@@ -881,16 +881,6 @@ static void sirfsoc_uart_set_termios(struct uart_port *port,
+ 	spin_unlock_irqrestore(&port->lock, flags);
+ }
+ 
+-static void sirfsoc_uart_pm(struct uart_port *port, unsigned int state,
+-			      unsigned int oldstate)
+-{
+-	struct sirfsoc_uart_port *sirfport = to_sirfport(port);
+-	if (!state)
+-		clk_prepare_enable(sirfport->clk);
+-	else
+-		clk_disable_unprepare(sirfport->clk);
+-}
+-
+ static int sirfsoc_uart_startup(struct uart_port *port)
+ {
+ 	struct sirfsoc_uart_port *sirfport	= to_sirfport(port);
+@@ -1072,7 +1062,6 @@ static void sirfsoc_uart_config_port(struct uart_port *port, int flags)
+ 	.startup	= sirfsoc_uart_startup,
+ 	.shutdown	= sirfsoc_uart_shutdown,
+ 	.set_termios	= sirfsoc_uart_set_termios,
+-	.pm		= sirfsoc_uart_pm,
+ 	.type		= sirfsoc_uart_type,
+ 	.release_port	= sirfsoc_uart_release_port,
+ 	.request_port	= sirfsoc_uart_request_port,
+diff --git a/drivers/tty/serial/sn_console.c b/drivers/tty/serial/sn_console.c
+index 42b9ade..e548cd8 100644
+--- a/drivers/tty/serial/sn_console.c
++++ b/drivers/tty/serial/sn_console.c
+@@ -372,7 +372,6 @@ static void snp_config_port(struct uart_port *port, int flags)
+ 	.startup = snp_startup,
+ 	.shutdown = snp_shutdown,
+ 	.set_termios = snp_set_termios,
+-	.pm = NULL,
+ 	.type = snp_type,
+ 	.release_port = snp_release_port,
+ 	.request_port = snp_request_port,
+diff --git a/drivers/tty/serial/st-asc.c b/drivers/tty/serial/st-asc.c
+index 7971997c..9401978 100644
+--- a/drivers/tty/serial/st-asc.c
++++ b/drivers/tty/serial/st-asc.c
+@@ -478,32 +478,6 @@ static void asc_shutdown(struct uart_port *port)
+ 	free_irq(port->irq, port);
+ }
+ 
+-static void asc_pm(struct uart_port *port, unsigned int state,
+-		unsigned int oldstate)
+-{
+-	struct asc_port *ascport = to_asc_port(port);
+-	unsigned long flags = 0;
+-	u32 ctl;
+-
+-	switch (state) {
+-	case UART_PM_STATE_ON:
+-		clk_prepare_enable(ascport->clk);
+-		break;
+-	case UART_PM_STATE_OFF:
+-		/*
+-		 * Disable the ASC baud rate generator, which is as close as
+-		 * we can come to turning it off. Note this is not called with
+-		 * the port spinlock held.
+-		 */
+-		spin_lock_irqsave(&port->lock, flags);
+-		ctl = asc_in(port, ASC_CTL) & ~ASC_CTL_RUN;
+-		asc_out(port, ASC_CTL, ctl);
+-		spin_unlock_irqrestore(&port->lock, flags);
+-		clk_disable_unprepare(ascport->clk);
+-		break;
+-	}
+-}
+-
+ static void asc_set_termios(struct uart_port *port, struct ktermios *termios,
+ 			    struct ktermios *old)
+ {
+@@ -710,7 +684,6 @@ static void asc_put_poll_char(struct uart_port *port, unsigned char c)
+ 	.request_port	= asc_request_port,
+ 	.config_port	= asc_config_port,
+ 	.verify_port	= asc_verify_port,
+-	.pm		= asc_pm,
+ #ifdef CONFIG_CONSOLE_POLL
+ 	.poll_get_char = asc_get_poll_char,
+ 	.poll_put_char = asc_put_poll_char,
+diff --git a/drivers/tty/serial/stm32-usart.c b/drivers/tty/serial/stm32-usart.c
+index e8d7a7b..1535157 100644
+--- a/drivers/tty/serial/stm32-usart.c
++++ b/drivers/tty/serial/stm32-usart.c
+@@ -754,28 +754,6 @@ static void stm32_config_port(struct uart_port *port, int flags)
+ 	return -EINVAL;
+ }
+ 
+-static void stm32_pm(struct uart_port *port, unsigned int state,
+-		unsigned int oldstate)
+-{
+-	struct stm32_port *stm32port = container_of(port,
+-			struct stm32_port, port);
+-	struct stm32_usart_offsets *ofs = &stm32port->info->ofs;
+-	struct stm32_usart_config *cfg = &stm32port->info->cfg;
+-	unsigned long flags = 0;
+-
+-	switch (state) {
+-	case UART_PM_STATE_ON:
+-		clk_prepare_enable(stm32port->clk);
+-		break;
+-	case UART_PM_STATE_OFF:
+-		spin_lock_irqsave(&port->lock, flags);
+-		stm32_clr_bits(port, ofs->cr1, BIT(cfg->uart_enable_bit));
+-		spin_unlock_irqrestore(&port->lock, flags);
+-		clk_disable_unprepare(stm32port->clk);
+-		break;
+-	}
+-}
+-
+ static const struct uart_ops stm32_uart_ops = {
+ 	.tx_empty	= stm32_tx_empty,
+ 	.set_mctrl	= stm32_set_mctrl,
+@@ -789,7 +767,6 @@ static void stm32_pm(struct uart_port *port, unsigned int state,
+ 	.startup	= stm32_startup,
+ 	.shutdown	= stm32_shutdown,
+ 	.set_termios	= stm32_set_termios,
+-	.pm		= stm32_pm,
+ 	.type		= stm32_type,
+ 	.release_port	= stm32_release_port,
+ 	.request_port	= stm32_request_port,
+diff --git a/drivers/tty/serial/uartlite.c b/drivers/tty/serial/uartlite.c
+index 8df3058..cdb2b53 100644
+--- a/drivers/tty/serial/uartlite.c
++++ b/drivers/tty/serial/uartlite.c
+@@ -382,17 +382,6 @@ static int ulite_verify_port(struct uart_port *port, struct serial_struct *ser)
+ 	return -EINVAL;
+ }
+ 
+-static void ulite_pm(struct uart_port *port, unsigned int state,
+-		     unsigned int oldstate)
+-{
+-	struct uartlite_data *pdata = port->private_data;
+-
+-	if (!state)
+-		clk_enable(pdata->clk);
+-	else
+-		clk_disable(pdata->clk);
+-}
+-
+ #ifdef CONFIG_CONSOLE_POLL
+ static int ulite_get_poll_char(struct uart_port *port)
+ {
+@@ -428,7 +417,6 @@ static void ulite_put_poll_char(struct uart_port *port, unsigned char ch)
+ 	.request_port	= ulite_request_port,
+ 	.config_port	= ulite_config_port,
+ 	.verify_port	= ulite_verify_port,
+-	.pm		= ulite_pm,
+ #ifdef CONFIG_CONSOLE_POLL
+ 	.poll_get_char	= ulite_get_poll_char,
+ 	.poll_put_char	= ulite_put_poll_char,
+diff --git a/drivers/tty/serial/vr41xx_siu.c b/drivers/tty/serial/vr41xx_siu.c
+index 6d106e3..06f1ae8 100644
+--- a/drivers/tty/serial/vr41xx_siu.c
++++ b/drivers/tty/serial/vr41xx_siu.c
+@@ -581,32 +581,6 @@ static void siu_set_termios(struct uart_port *port, struct ktermios *new,
+ 	spin_unlock_irqrestore(&port->lock, flags);
+ }
+ 
+-static void siu_pm(struct uart_port *port, unsigned int state, unsigned int oldstate)
+-{
+-	switch (state) {
+-	case 0:
+-		switch (port->type) {
+-		case PORT_VR41XX_SIU:
+-			vr41xx_supply_clock(SIU_CLOCK);
+-			break;
+-		case PORT_VR41XX_DSIU:
+-			vr41xx_supply_clock(DSIU_CLOCK);
+-			break;
+-		}
+-		break;
+-	case 3:
+-		switch (port->type) {
+-		case PORT_VR41XX_SIU:
+-			vr41xx_mask_clock(SIU_CLOCK);
+-			break;
+-		case PORT_VR41XX_DSIU:
+-			vr41xx_mask_clock(DSIU_CLOCK);
+-			break;
+-		}
+-		break;
+-	}
+-}
+-
+ static const char *siu_type(struct uart_port *port)
+ {
+ 	return siu_type_name(port);
+@@ -680,7 +654,6 @@ static int siu_verify_port(struct uart_port *port, struct serial_struct *serial)
+ 	.startup	= siu_startup,
+ 	.shutdown	= siu_shutdown,
+ 	.set_termios	= siu_set_termios,
+-	.pm		= siu_pm,
+ 	.type		= siu_type,
+ 	.release_port	= siu_release_port,
+ 	.request_port	= siu_request_port,
+diff --git a/drivers/tty/serial/xilinx_uartps.c b/drivers/tty/serial/xilinx_uartps.c
+index 77efa0a..4ec4c89 100644
+--- a/drivers/tty/serial/xilinx_uartps.c
++++ b/drivers/tty/serial/xilinx_uartps.c
+@@ -1067,20 +1067,6 @@ static void cdns_uart_poll_put_char(struct uart_port *port, unsigned char c)
+ }
+ #endif
+ 
+-static void cdns_uart_pm(struct uart_port *port, unsigned int state,
+-		   unsigned int oldstate)
+-{
+-	switch (state) {
+-	case UART_PM_STATE_OFF:
+-		pm_runtime_mark_last_busy(port->dev);
+-		pm_runtime_put_autosuspend(port->dev);
+-		break;
+-	default:
+-		pm_runtime_get_sync(port->dev);
+-		break;
+-	}
+-}
+-
+ static const struct uart_ops cdns_uart_ops = {
+ 	.set_mctrl	= cdns_uart_set_mctrl,
+ 	.get_mctrl	= cdns_uart_get_mctrl,
+@@ -1092,7 +1078,6 @@ static void cdns_uart_pm(struct uart_port *port, unsigned int state,
+ 	.set_termios	= cdns_uart_set_termios,
+ 	.startup	= cdns_uart_startup,
+ 	.shutdown	= cdns_uart_shutdown,
+-	.pm		= cdns_uart_pm,
+ 	.type		= cdns_uart_type,
+ 	.verify_port	= cdns_uart_verify_port,
+ 	.request_port	= cdns_uart_request_port,
+diff --git a/drivers/tty/serial/zs.c b/drivers/tty/serial/zs.c
+index b03d3e4..120b46b 100644
+--- a/drivers/tty/serial/zs.c
++++ b/drivers/tty/serial/zs.c
+@@ -959,24 +959,6 @@ static void zs_set_termios(struct uart_port *uport, struct ktermios *termios,
+ 	spin_unlock_irqrestore(&scc->zlock, flags);
+ }
+ 
+-/*
+- * Hack alert!
+- * Required solely so that the initial PROM-based console
+- * works undisturbed in parallel with this one.
+- */
+-static void zs_pm(struct uart_port *uport, unsigned int state,
+-		  unsigned int oldstate)
+-{
+-	struct zs_port *zport = to_zport(uport);
+-
+-	if (state < 3)
+-		zport->regs[5] |= TxENAB;
+-	else
+-		zport->regs[5] &= ~TxENAB;
+-	write_zsreg(zport, R5, zport->regs[5]);
+-}
+-
+-
+ static const char *zs_type(struct uart_port *uport)
+ {
+ 	return "Z85C30 SCC";
+@@ -1058,7 +1040,6 @@ static int zs_verify_port(struct uart_port *uport, struct serial_struct *ser)
+ 	.startup	= zs_startup,
+ 	.shutdown	= zs_shutdown,
+ 	.set_termios	= zs_set_termios,
+-	.pm		= zs_pm,
+ 	.type		= zs_type,
+ 	.release_port	= zs_release_port,
+ 	.request_port	= zs_request_port,
+@@ -1212,7 +1193,6 @@ static int __init zs_console_setup(struct console *co, char *options)
+ 		return ret;
+ 
+ 	zs_reset(zport);
+-	zs_pm(uport, 0, -1);
+ 
+ 	if (options)
+ 		uart_parse_options(options, &baud, &parity, &bits, &flow);
+diff --git a/include/linux/serial_8250.h b/include/linux/serial_8250.h
+index 33e4ee4..3d0be37 100644
+--- a/include/linux/serial_8250.h
++++ b/include/linux/serial_8250.h
+@@ -40,8 +40,6 @@ struct plat_serial8250_port {
+ 				     struct ktermios *);
+ 	unsigned int	(*get_mctrl)(struct uart_port *);
+ 	int		(*handle_irq)(struct uart_port *);
+-	void		(*pm)(struct uart_port *, unsigned int state,
+-			      unsigned old);
+ 	void		(*handle_break)(struct uart_port *);
+ };
+ 
+-- 
+1.9.1
+

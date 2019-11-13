@@ -1,7 +1,7 @@
-From 24fe2f84415f74c8f4a7aab883129a7c2928b0e1 Mon Sep 17 00:00:00 2001
+From 502500877b6862aabfaf51a8f10278ab09c6723e Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:05 +0530
-Subject: [PATCH 17/45] drm/i915/skl+: pass skl_wm_level struct to wm compute
+Subject: [PATCH 17/46] drm/i915/skl+: pass skl_wm_level struct to wm compute
  func
 
 This patch passes skl_wm_level structure itself to watermark
@@ -31,10 +31,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 8 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index abd42b9..7134df1 100644
+index e17d417..7b1a2f4 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
-@@ -4511,9 +4511,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4550,9 +4550,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  				uint16_t ddb_allocation,
  				int level,
  				const struct skl_wm_params *wp,
@@ -45,7 +45,7 @@ index abd42b9..7134df1 100644
  {
  	const struct drm_plane_state *pstate = &intel_pstate->base;
  	uint32_t latency = dev_priv->wm.skl_latency[level];
-@@ -4526,7 +4524,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4565,7 +4563,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  
  	if (latency == 0 ||
  	    !intel_wm_plane_visible(cstate, intel_pstate)) {
@@ -54,7 +54,7 @@ index abd42b9..7134df1 100644
  		return 0;
  	}
  
-@@ -4580,7 +4578,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4619,7 +4617,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  	}
  
  	if (res_blocks >= ddb_allocation || res_lines > 31) {
@@ -63,7 +63,7 @@ index abd42b9..7134df1 100644
  
  		/*
  		 * If there are no valid level 0 watermarks, then we can't
-@@ -4603,9 +4601,10 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4642,9 +4640,10 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  		}
  	}
  
@@ -77,7 +77,7 @@ index abd42b9..7134df1 100644
  
  	return 0;
  }
-@@ -4645,9 +4644,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
+@@ -4684,9 +4683,7 @@ static int skl_compute_plane_wm(const struct drm_i915_private *dev_priv,
  					   ddb_blocks,
  					   level,
  					   wm_params,

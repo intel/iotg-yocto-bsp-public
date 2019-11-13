@@ -1,7 +1,7 @@
-From 44375ee2a4ec8950292e7d115fadc88084f84670 Mon Sep 17 00:00:00 2001
+From 494e9b70c7862d96bf0c319cef5df387d202ad99 Mon Sep 17 00:00:00 2001
 From: Joshua Wong Weng Onn <joshua.weng.onn.wong@intel.com>
 Date: Thu, 28 Jun 2018 13:36:05 +0800
-Subject: [PATCH 084/100] ASoC: Intel: Change be_id variable in machine driver
+Subject: [PATCH 084/120] ASoC: Intel: Change be_id variable in machine driver
 
 The be_id variable has been replaced with id. Hence, change be_id to id for the
 bxt_gpmrb machine driver.

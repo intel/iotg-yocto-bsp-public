@@ -1,7 +1,7 @@
-From e8177b928282aec515e5ef49dbbe66a4bbe51c1c Mon Sep 17 00:00:00 2001
+From 1f63a7820e3b60285c77c01e98968c7e64e25f24 Mon Sep 17 00:00:00 2001
 From: Hans de Goede <j.w.r.degoede@gmail.com>
 Date: Fri, 20 Apr 2018 11:59:33 +0200
-Subject: [PATCH 43/45] drm/i915: Do NOT skip the first 4k of stolen memory for
+Subject: [PATCH 43/46] drm/i915: Do NOT skip the first 4k of stolen memory for
  pre-allocated buffers v2
 
 Before this commit the WaSkipStolenMemoryFirstPage workaround code was

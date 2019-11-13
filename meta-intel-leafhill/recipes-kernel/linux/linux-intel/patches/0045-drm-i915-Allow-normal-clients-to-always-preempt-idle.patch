@@ -1,0 +1,57 @@
+From 4fda363995e5109e9a53834862f7af501b934bf2 Mon Sep 17 00:00:00 2001
+From: Chris Wilson <chris@chris-wilson.co.uk>
+Date: Mon, 4 Feb 2019 08:41:05 +0000
+Subject: [PATCH 45/46] drm/i915: Allow normal clients to always preempt idle
+ priority clients
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+When first enabling preemption, we hesitated from making it a free-for-all
+where every higher priority client would force a preempt-to-idle cycle
+and take over from all lower priority clients. We hesitated because we
+were uncertain just how well preemption would work in practice, whether
+the preemption latency itself would detract from the latency gains for
+higher priority tasks and whether it would work at all. Since
+introducing preemption, we have been enabling it for more common tasks,
+even giving normal clients a small preemptive boost when they first
+start (to aide fairness and improve interactivity). Now lets take one
+step further and give permission for all normal (priority:0) clients to
+preempt any idle (priority:<0) task so that users running long compute
+jobs do not overly impact other jobs (i.e. their desktop) and the system
+remains responsive under such idle loads.
+
+References: f6322eddaff7 ("drm/i915/preemption: Allow preemption between submission ports")
+References: b16c765122f9 ("drm/i915: Priority boost for new clients")
+Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+Cc: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+Cc: Michal Wajdeczko <michal.wajdeczko@intel.com>
+Cc: Michał Winiarski <michal.winiarski@intel.com>
+Cc: "Bloomfield, Jon" <jon.bloomfield@intel.com>
+Cc: "Stead, Alan" <alan.stead@intel.com>
+Reviewed-by: Daniele Ceraolo Spurio <daniele.ceraolospurio@intel.com>
+Reviewed-by: Tvrtko Ursulin <tvrtko.ursulin@intel.com>
+Link: https://patchwork.freedesktop.org/patch/msgid/20190204084116.3013-1-chris@chris-wilson.co.uk
+(cherry picked from commit 3d7a64b992eab27be75c6cf734be4e87fc88e4b5)
+[mattrope: Adapt to kernel 4.14]
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_lrc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_lrc.c b/drivers/gpu/drm/i915/intel_lrc.c
+index 0ee8a2a..c11b991 100644
+--- a/drivers/gpu/drm/i915/intel_lrc.c
++++ b/drivers/gpu/drm/i915/intel_lrc.c
+@@ -627,7 +627,7 @@ static void execlists_dequeue(struct intel_engine_cs *engine)
+ 
+ 		if (can_preempt(engine) &&
+ 		    rb_entry(rb, struct i915_priolist, node)->priority >
+-		    max(last->priotree.priority, 0)) {
++		    max(last->priotree.priority, -1)) {
+ 			/*
+ 			 * Switch to our empty preempt context so
+ 			 * the state of the GPU is known (idle).
+-- 
+1.9.1
+

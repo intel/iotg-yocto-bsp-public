@@ -1,7 +1,7 @@
-From 1282430aff1ecebd7dbe0f6702297a870e40cc92 Mon Sep 17 00:00:00 2001
+From 15365d710cd85daecd099721a8816bdea83bec72 Mon Sep 17 00:00:00 2001
 From: Pardha Saradhi K <pardha.saradhi.kesapragada@intel.com>
 Date: Tue, 10 Apr 2018 23:46:48 +0530
-Subject: [PATCH 093/100] ASoC: Intel: Skylake: Add support to notify resource
+Subject: [PATCH 093/120] ASoC: Intel: Skylake: Add support to notify resource
  event
 
 ADSP notifies to driver in case of any resource events that

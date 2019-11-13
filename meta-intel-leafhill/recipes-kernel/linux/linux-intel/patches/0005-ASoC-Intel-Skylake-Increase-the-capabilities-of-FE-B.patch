@@ -1,7 +1,7 @@
-From 46aa8b4f977273f5480622895f27f1287fad69bb Mon Sep 17 00:00:00 2001
+From ae3b98dc4d382cf0a2017078644c5e8ad6e90e16 Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Thu, 20 Apr 2017 11:07:53 +0800
-Subject: [PATCH 005/100] ASoC: Intel: Skylake: Increase the capabilities of
+Subject: [PATCH 005/120] ASoC: Intel: Skylake: Increase the capabilities of
  FE/BE streams
 
 Add more capabilities to the existing streams so as to support

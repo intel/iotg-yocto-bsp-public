@@ -1,7 +1,7 @@
-From 69e753959804627fe43a2051f23b274d573bd3af Mon Sep 17 00:00:00 2001
+From 3a5d65f37f2efaa43da872acdcca68fc21f820da Mon Sep 17 00:00:00 2001
 From: Weifeng Voon <weifeng.voon@intel.com>
 Date: Sat, 23 Jul 2016 12:12:07 +0800
-Subject: [PATCH 21/42] x86/platform/apl: Enable board file for APL LPSS PCI
+Subject: [PATCH 21/44] x86/platform/apl: Enable board file for APL LPSS PCI
  mode
 
 This patch is for registering SPI slave for APL platform: Leaf Hill,
@@ -17,7 +17,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  create mode 100644 arch/x86/platform/apl/apl-board.c
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 9d709fa..07bb9b8 100644
+index d00a0f54..a0156fb 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -30,6 +30,14 @@ config X86_64

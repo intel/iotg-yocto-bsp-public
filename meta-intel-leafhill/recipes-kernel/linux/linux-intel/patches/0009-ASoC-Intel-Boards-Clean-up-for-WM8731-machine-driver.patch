@@ -1,7 +1,7 @@
-From 7aca4602e344aa0ce9dd7b56e0d9afff7869dd1f Mon Sep 17 00:00:00 2001
+From 632a57822a108e28dbcb7259cd9450cb10174e3c Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Fri, 14 Sep 2018 18:49:06 +0800
-Subject: [PATCH 009/100] ASoC: Intel: Boards: Clean up for WM8731 machine
+Subject: [PATCH 009/120] ASoC: Intel: Boards: Clean up for WM8731 machine
  driver
 
 Clean up apli_lhcrb_wm8731 machine driver especially on
