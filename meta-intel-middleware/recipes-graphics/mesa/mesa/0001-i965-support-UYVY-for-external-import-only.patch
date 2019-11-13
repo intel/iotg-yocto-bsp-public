@@ -1,0 +1,31 @@
+From 8ead5bebdb5cedc5250116403166279b1b292a85 Mon Sep 17 00:00:00 2001
+From: Haihao Xiang <haihao.xiang@intel.com>
+Date: Wed, 12 Jun 2019 16:28:58 +0800
+Subject: [PATCH] i965: support UYVY for external import only
+
+It is similar with YUYV
+
+Fixes: 165e704719b85c ("i965/i915: Add UYVY as the supported format")
+Signed-off-by: Haihao Xiang <haihao.xiang@intel.com>
+Reviewed-by: Lionel Landwerlin <lionel.g.landwerlin@intel.com>
+---
+ src/mesa/drivers/dri/i965/intel_screen.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/src/mesa/drivers/dri/i965/intel_screen.c b/src/mesa/drivers/dri/i965/intel_screen.c
+index d84793f71f8..2bc2e41178d 100644
+--- a/src/mesa/drivers/dri/i965/intel_screen.c
++++ b/src/mesa/drivers/dri/i965/intel_screen.c
+@@ -1383,7 +1383,8 @@ intel_query_dma_buf_modifiers(__DRIscreen *_screen, int fourcc, int max,
+       for (i = 0; i < num_mods && i < max; i++) {
+          if (f->components == __DRI_IMAGE_COMPONENTS_Y_U_V ||
+              f->components == __DRI_IMAGE_COMPONENTS_Y_UV ||
+-             f->components == __DRI_IMAGE_COMPONENTS_Y_XUXV) {
++             f->components == __DRI_IMAGE_COMPONENTS_Y_XUXV ||
++             f->components == __DRI_IMAGE_COMPONENTS_Y_UXVX) {
+             external_only[i] = GL_TRUE;
+          }
+          else {
+-- 
+2.13.6
+

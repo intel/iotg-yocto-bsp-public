@@ -1,0 +1,81 @@
+From 17053c58cd24dbe746936f462e761d6108996a56 Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Thu, 20 Jun 2019 14:16:19 -0700
+Subject: [PATCH 1/7] i965: rebased SIMD32 heuristic patches
+
+These two patches are rebased for current branch.
+
+Author: Toni Lonnberg <toni.lonnberg@intel.com>
+i965: SIMD32 heuristics debug flag
+
+Added a new DEBUG_HEUR32 flag to INTEL_DEBUG flags for enabling SIMD32
+selection heuristics.
+
+Author: Toni Lonnberg <toni.lonnberg@intel.com>
+i965: SIMD32 heuristics control data
+
+Added a new structure for holding SIMD32 heuristics control data. The
+control data itself will be fetched from drirc.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ src/intel/common/gen_debug.c      |  1 +
+ src/intel/common/gen_debug.h      |  1 +
+ src/intel/compiler/brw_compiler.h | 10 ++++++++++
+ 3 files changed, 12 insertions(+)
+
+diff --git a/src/intel/common/gen_debug.c b/src/intel/common/gen_debug.c
+index a978f2f5818..8990d208207 100644
+--- a/src/intel/common/gen_debug.c
++++ b/src/intel/common/gen_debug.c
+@@ -85,6 +85,7 @@ static const struct debug_control debug_control[] = {
+    { "nohiz",       DEBUG_NO_HIZ },
+    { "color",       DEBUG_COLOR },
+    { "reemit",      DEBUG_REEMIT },
++   { "heur32",      DEBUG_HEUR32 },
+    { NULL,    0 }
+ };
+ 
+diff --git a/src/intel/common/gen_debug.h b/src/intel/common/gen_debug.h
+index 72d7ca20a39..1dfb5da5115 100644
+--- a/src/intel/common/gen_debug.h
++++ b/src/intel/common/gen_debug.h
+@@ -83,6 +83,7 @@ extern uint64_t INTEL_DEBUG;
+ #define DEBUG_NO_HIZ              (1ull << 39)
+ #define DEBUG_COLOR               (1ull << 40)
+ #define DEBUG_REEMIT              (1ull << 41)
++#define DEBUG_HEUR32              (1ull << 42)
+ 
+ /* These flags are not compatible with the disk shader cache */
+ #define DEBUG_DISK_CACHE_DISABLE_MASK DEBUG_SHADER_TIME
+diff --git a/src/intel/compiler/brw_compiler.h b/src/intel/compiler/brw_compiler.h
+index 61a4528d372..19321bf0f2f 100644
+--- a/src/intel/compiler/brw_compiler.h
++++ b/src/intel/compiler/brw_compiler.h
+@@ -38,6 +38,15 @@ struct ra_regs;
+ struct nir_shader;
+ struct brw_program;
+ 
++struct brw_simd32_heuristics_control {
++   bool grouped_sends_check;
++   int max_grouped_sends;
++   bool inst_count_check;
++   float inst_count_ratio;
++   bool mrt_check;
++   int max_mrts;
++};
++
+ struct brw_compiler {
+    const struct gen_device_info *devinfo;
+ 
+@@ -118,6 +127,7 @@ struct brw_compiler {
+     * whether nir_opt_large_constants will be run.
+     */
+    bool supports_shader_constants;
++   struct brw_simd32_heuristics_control simd32_heuristics_control;
+ };
+ 
+ /**
+-- 
+2.17.1
+

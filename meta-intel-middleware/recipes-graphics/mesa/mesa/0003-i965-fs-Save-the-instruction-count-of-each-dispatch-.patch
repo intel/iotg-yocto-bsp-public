@@ -1,0 +1,66 @@
+From c5301efd135539608edab9ace153d2102f116c36 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Toni=20L=C3=B6nnberg?= <toni.lonnberg@intel.com>
+Date: Tue, 28 Aug 2018 14:16:55 +0300
+Subject: [PATCH 3/7] i965/fs: Save the instruction count of each dispatch
+ width
+
+The SIMD32 selection heuristics will use this information for deciding whether
+SIMD32 shaders should be used.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ src/intel/compiler/brw_fs.h             |  2 ++
+ src/intel/compiler/brw_fs_generator.cpp | 12 ++++++++++++
+ 2 files changed, 14 insertions(+)
+
+diff --git a/src/intel/compiler/brw_fs.h b/src/intel/compiler/brw_fs.h
+index 5361b768003..10d153ebd52 100644
+--- a/src/intel/compiler/brw_fs.h
++++ b/src/intel/compiler/brw_fs.h
+@@ -400,6 +400,7 @@ public:
+ 
+    void enable_debug(const char *shader_name);
+    int generate_code(const cfg_t *cfg, int dispatch_width);
++   int get_inst_count(int dispatch_width);
+    const unsigned *get_assembly();
+ 
+ private:
+@@ -495,6 +496,7 @@ private:
+    struct brw_stage_prog_data * const prog_data;
+ 
+    unsigned dispatch_width; /**< 8, 16 or 32 */
++   int inst_count[3]; /* for 8, 16 and 32 */
+ 
+    exec_list discard_halt_patches;
+    unsigned promoted_constants;
+diff --git a/src/intel/compiler/brw_fs_generator.cpp b/src/intel/compiler/brw_fs_generator.cpp
+index 09382775f3e..82c2713a77f 100644
+--- a/src/intel/compiler/brw_fs_generator.cpp
++++ b/src/intel/compiler/brw_fs_generator.cpp
+@@ -2297,6 +2297,8 @@ fs_generator::generate_code(const cfg_t *cfg, int dispatch_width)
+                               fill_count, promoted_constants, before_size,
+                               after_size);
+ 
++   inst_count[ffs(dispatch_width) - 4] = before_size / 16;
++
+    return start_offset;
+ }
+ 
+@@ -2305,3 +2307,13 @@ fs_generator::get_assembly()
+ {
+    return brw_get_program(p, &prog_data->program_size);
+ }
++
++int
++fs_generator::get_inst_count(int dispatch_width)
++{
++   if (dispatch_width == 8 || dispatch_width == 16 || dispatch_width == 32) {
++      return inst_count[ffs(dispatch_width) - 4];
++   } else {
++      return 0;
++   }
++}
+\ No newline at end of file
+-- 
+2.17.1
+
