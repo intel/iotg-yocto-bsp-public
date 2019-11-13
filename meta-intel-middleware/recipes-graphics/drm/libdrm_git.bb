@@ -10,20 +10,15 @@ LIC_FILES_CHKSUM = "file://xf86drm.c;beginline=9;endline=32;md5=c8a3b961af7667c5
 PROVIDES = "drm"
 DEPENDS = "libpthread-stubs libpciaccess"
 
-SRC_URI = "git://anongit.freedesktop.org/mesa/drm \
-           file://0001-intel-New-libdrm-interface-to-create-unbound-wc-user.patch \
-           file://0002-intel-add-the-new-bo-emit-reloc2-for-bo-offset.patch \
-           file://0003-intel-Watchdog-timeout-DRM-kernel-interface-to-set-t.patch \
-           file://0004-xf86drmMode-Add-RGBA-property-helpers.patch \
-           file://0005-xf86drmMode-Add-plane-blending-helpers.patch \
-           file://0006-To-disable-hook-dist-gzip-to-dist.patch \
+SRC_URI = "git://gitlab.freedesktop.org/mesa/drm;protocol=https;branch=master \
+           file://libdrm_version_diff.patch \
           "
 
-PV = "2.4.96"
+PV = "2.4.99"
 
 S = "${WORKDIR}/git"
 
-SRCREV = "597725e9511f8c0405fdd8d92d749bce58c0bce3"
+SRCREV = "33db83fd1a4b79a918e7ca4297c0484bd263a825"
 
 inherit autotools pkgconfig manpages
 
