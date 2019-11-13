@@ -1,0 +1,32 @@
+From 6aec4f735594b833fe4a16ad2e96d2286cec579c Mon Sep 17 00:00:00 2001
+From: Chong Yi Chai <chong.yi.chai@intel.com>
+Date: Wed, 25 Sep 2019 15:57:08 +0800
+Subject: [PATCH] glimagesink: Change plugins RANKING to GST_RANK_PRIMARY
+
+In X11 environment xvimagesink is higher rank than
+glimagesink, it will causing gst-play-1.0 using xvimagesink
+first if success. This will causing 4k video resolution playback
+slow in gst-play-1.0 which is not using dmabuf support for
+rendering. So we have to switch glimagesink to GST_RANK_PRIMARY.
+
+Signed-off-by: Lim Siew Hoon <siew.hoon.lim@intel.com>
+---
+ ext/gl/gstopengl.c      |   2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ext/gl/gstopengl.c b/ext/gl/gstopengl.c
+index 463be9c..11f8cba 100644
+--- a/ext/gl/gstopengl.c
++++ b/ext/gl/gstopengl.c
+@@ -127,7 +127,7 @@ plugin_init (GstPlugin * plugin)
+ #endif
+ 
+   if (!gst_element_register (plugin, "glimagesink",
+-          GST_RANK_MARGINAL, gst_gl_image_sink_bin_get_type ())) {
++          GST_RANK_PRIMARY, gst_gl_image_sink_bin_get_type ())) {
+     return FALSE;
+   }
+ 
+-- 
+2.22.0
+

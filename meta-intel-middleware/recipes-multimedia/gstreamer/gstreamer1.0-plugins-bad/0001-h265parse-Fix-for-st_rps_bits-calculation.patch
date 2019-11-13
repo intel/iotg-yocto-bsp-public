@@ -1,0 +1,59 @@
+From 247a571cab1ca6e89d0ad65c3b9db638355fc906 Mon Sep 17 00:00:00 2001
+From: "Prathaban, Thinesh" <thinesh.prathaban@intel.com>
+Date: Wed, 16 Jan 2019 16:44:48 +0800
+Subject: [PATCH] h265parse: Fix for st_rps_bits calculation
+
+short_term_ref_pic_set( num_short_term_ref_pic_sets ) takes in slice
+segment header when short_term_ref_pic_set_sps_flag equals 0, the
+bit length of the short_rerm ref_pic_set needs to be counted and set
+into the HW for the accelerator to skip parsing this structure.
+
+Signed-off-by: Prathaban, Thinesh <thinesh.prathaban@intel.com>
+---
+ gst-libs/gst/codecparsers/gsth265parser.c | 3 +++
+ gst-libs/gst/codecparsers/gsth265parser.h | 1 +
+ 2 files changed, 4 insertions(+)
+
+diff --git a/gst-libs/gst/codecparsers/gsth265parser.c b/gst-libs/gst/codecparsers/gsth265parser.c
+index d44a045..f6955e8 100644
+--- a/gst-libs/gst/codecparsers/gsth265parser.c
++++ b/gst-libs/gst/codecparsers/gsth265parser.c
+@@ -1978,6 +1978,7 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
+   guint32 UsedByCurrPicLt[16];
+   guint32 PicSizeInCtbsY;
+   gint NumPocTotalCurr = 0;
++  gint pos;
+ 
+   memset (slice, 0, sizeof (*slice));
+ 
+@@ -2051,6 +2052,7 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
+           (sps->log2_max_pic_order_cnt_lsb_minus4 + 4));
+ 
+       READ_UINT8 (&nr, slice->short_term_ref_pic_set_sps_flag, 1);
++      pos = nal_reader_get_remaining (&nr);
+       if (!slice->short_term_ref_pic_set_sps_flag) {
+         if (!gst_h265_parser_parse_short_term_ref_pic_sets
+             (&slice->short_term_ref_pic_sets, &nr,
+@@ -2062,6 +2064,7 @@ gst_h265_parser_parse_slice_hdr (GstH265Parser * parser,
+         CHECK_ALLOWED_MAX (slice->short_term_ref_pic_set_idx,
+             sps->num_short_term_ref_pic_sets - 1);
+       }
++      slice->short_term_ref_pic_set_size = pos - nal_reader_get_remaining (&nr);
+ 
+       if (sps->long_term_ref_pics_present_flag) {
+         guint32 limit;
+diff --git a/gst-libs/gst/codecparsers/gsth265parser.h b/gst-libs/gst/codecparsers/gsth265parser.h
+index b4d1901..a983688 100644
+--- a/gst-libs/gst/codecparsers/gsth265parser.h
++++ b/gst-libs/gst/codecparsers/gsth265parser.h
+@@ -973,6 +973,7 @@ struct _GstH265SliceHdr
+   guint8 colour_plane_id;
+   guint16 pic_order_cnt_lsb;
+ 
++  guint8  short_term_ref_pic_set_size;
+   guint8  short_term_ref_pic_set_sps_flag;
+   GstH265ShortTermRefPicSet short_term_ref_pic_sets;
+   guint8 short_term_ref_pic_set_idx;
+-- 
+2.7.4
+

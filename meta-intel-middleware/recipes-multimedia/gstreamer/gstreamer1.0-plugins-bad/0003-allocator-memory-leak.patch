@@ -1,0 +1,87 @@
+From 7f0f48a3dc774c4180300caf6db89040981f0262 Mon Sep 17 00:00:00 2001
+From: Haihao Xiang <haihao.xiang@intel.com>
+Date: Tue, 24 Sep 2019 13:02:50 +0800
+Subject: [PATCH 3/3] allocator memory leak
+
+---
+ sys/msdk/gstmsdksystemmemory.c | 11 ++++++++++-
+ sys/msdk/gstmsdkvideomemory.c  | 13 ++++++++++++-
+ 2 files changed, 22 insertions(+), 2 deletions(-)
+
+diff --git a/sys/msdk/gstmsdksystemmemory.c b/sys/msdk/gstmsdksystemmemory.c
+index 336e83f..be9351c 100644
+--- a/sys/msdk/gstmsdksystemmemory.c
++++ b/sys/msdk/gstmsdksystemmemory.c
+@@ -187,13 +187,21 @@ gst_msdk_system_memory_new (GstAllocator * base_allocator)
+ 
+   mem->surface = gst_msdk_system_allocator_create_surface (base_allocator);
+ 
++  if (!mem->surface) {
++    g_slice_free (GstMsdkSystemMemory, mem);
++    return NULL;
++  }
++
+   vip = &allocator->image_info;
+   gst_memory_init (&mem->parent_instance, GST_MEMORY_FLAG_NO_SHARE,
+       base_allocator, NULL, GST_VIDEO_INFO_SIZE (vip), 0, 0,
+       GST_VIDEO_INFO_SIZE (vip));
+ 
+-  if (!ensure_data (mem))
++  if (!ensure_data (mem)) {
++    g_slice_free (mfxFrameSurface1, mem->surface);
++    g_slice_free (GstMsdkSystemMemory, mem);
+     return NULL;
++  }
+ 
+   return GST_MEMORY_CAST (mem);
+ }
+@@ -236,6 +244,7 @@ gst_msdk_system_allocator_free (GstAllocator * allocator, GstMemory * base_mem)
+ 
+   _aligned_free (mem->cache);
+   g_slice_free (mfxFrameSurface1, mem->surface);
++  g_slice_free (GstMsdkSystemMemory, mem);
+ }
+ 
+ static GstMemory *
+diff --git a/sys/msdk/gstmsdkvideomemory.c b/sys/msdk/gstmsdkvideomemory.c
+index 5823e78..5d59a80 100644
+--- a/sys/msdk/gstmsdkvideomemory.c
++++ b/sys/msdk/gstmsdkvideomemory.c
+@@ -166,8 +166,10 @@ gst_msdk_video_memory_new (GstAllocator * base_allocator)
+     return NULL;
+ 
+   mem->surface = gst_msdk_video_allocator_get_surface (base_allocator);
+-  if (!mem->surface)
++  if (!mem->surface) {
++    g_slice_free (GstMsdkVideoMemory, mem);
+     return NULL;
++  }
+ 
+   vip = &allocator->image_info;
+   gst_memory_init (&mem->parent_instance, GST_MEMORY_FLAG_NO_SHARE,
+@@ -331,6 +333,14 @@ gst_msdk_video_allocator_finalize (GObject * object)
+   G_OBJECT_CLASS (gst_msdk_video_allocator_parent_class)->finalize (object);
+ }
+ 
++static void
++gst_msdk_video_allocator_free (GstAllocator * allocator, GstMemory * base_mem)
++{
++  GstMsdkVideoMemory *const mem = GST_MSDK_VIDEO_MEMORY_CAST (base_mem);
++
++  g_slice_free (GstMsdkVideoMemory, mem);
++}
++
+ static void
+ gst_msdk_video_allocator_class_init (GstMsdkVideoAllocatorClass * klass)
+ {
+@@ -340,6 +350,7 @@ gst_msdk_video_allocator_class_init (GstMsdkVideoAllocatorClass * klass)
+   object_class->finalize = gst_msdk_video_allocator_finalize;
+ 
+   allocator_class->alloc = gst_msdk_video_allocator_alloc;
++  allocator_class->free = gst_msdk_video_allocator_free;
+ }
+ 
+ static void
+-- 
+2.22.0
+

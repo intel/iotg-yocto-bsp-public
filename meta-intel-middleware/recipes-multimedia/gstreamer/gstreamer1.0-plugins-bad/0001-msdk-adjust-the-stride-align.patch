@@ -1,0 +1,56 @@
+From e3ddf8fdb3f801524790a7848d67f509aa9da868 Mon Sep 17 00:00:00 2001
+From: Lim Siew Hoon <siew.hoon.lim@intel.com>
+Date: Thu, 3 Oct 2019 01:35:45 +0800
+Subject: [PATCH 1/2] msdk: adjust the stride align
+
+GstAllocationParams::align is set to 31 in msdkdec/msdken/msdkvpp, hence
+the stride align should be greater than or equal to 31, otherwise it
+will result in issue
+https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/861
+(msdk: "GStreamer-CRITICAL: gst_buffer_resize_range failed" SPAM),
+
+In addition, the stride should match the pitch alignment in the media driver,
+otherwise it will result in some issues when a buffer is shared between
+different elements, e.g. the NV12 issue mentioned in commit 3f2314a, which
+can be reproduced by `gst-launch-1.0 vidoetestsrc ! msdkvpp !
+video/x-raw\(memory:DMABuf\),format=NV12 ! glimagesink`
+
+Fixed https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/861
+
+Port from master branch to 1.16.0 code based.
+
+Signed-off-by: Lim Siew Hoon <siew.hoon.lim@intel.com>
+---
+ sys/msdk/msdk.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/sys/msdk/msdk.c b/sys/msdk/msdk.c
+index 8153a9c11..6a9295a0c 100644
+--- a/sys/msdk/msdk.c
++++ b/sys/msdk/msdk.c
+@@ -215,13 +215,21 @@ gst_msdk_set_video_alignment (GstVideoInfo * info,
+     GstVideoAlignment * alignment)
+ {
+   guint i, width, height;
++  guint stride_align = 127;     /* 128-byte alignment */
+ 
+   width = GST_VIDEO_INFO_WIDTH (info);
+   height = GST_VIDEO_INFO_HEIGHT (info);
+ 
++  /* PitchAlignment is set to 64 bytes in the media driver for the following formats */
++  if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_BGRA ||
++    GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_BGRx ||
++    GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_BGR10A2_LE ||
++    GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_RGB16)
++    stride_align = 63;          /* 64-byte alignment */
++
+   gst_video_alignment_reset (alignment);
+   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++)
+-    alignment->stride_align[i] = 15;    /* 16-byte alignment */
++    alignment->stride_align[i] = stride_align;
+ 
+   if (width & 15)
+     alignment->padding_right = GST_MSDK_ALIGNMENT_PADDING (width, 16);
+-- 
+2.13.6
+
