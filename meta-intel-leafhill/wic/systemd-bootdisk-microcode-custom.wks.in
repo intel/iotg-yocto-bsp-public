@@ -10,4 +10,4 @@ part / --source rootfs --ondisk sda --fstype=ext4 --label platform --align 1024 
 
 part swap --ondisk sda --size 44 --label swap1 --fstype=swap --use-uuid
 
-bootloader --ptable gpt --timeout=5 --append="3 snd_hda_intel.power_save=1 snd_hda_intel.power_save_controller=y scsi_mod.scan=async i915.enable_guc_loading=1 reboot=efi console=ttyS2,115200n8 rootwait rootfstype=ext4 console=ttyS0,115200 console=tty0"
+bootloader --ptable gpt --timeout=5 --append="{APPEND}"
