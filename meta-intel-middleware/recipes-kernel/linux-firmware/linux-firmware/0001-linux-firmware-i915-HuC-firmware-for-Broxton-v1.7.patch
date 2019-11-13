@@ -1,7 +1,7 @@
-From a56be780608d973a7d9856b4eb1ff2dca9256296 Mon Sep 17 00:00:00 2001
+From a93ea7e49c8ba1ea99c8fa8f36b63fe5c15cfb1e Mon Sep 17 00:00:00 2001
 From: Ryan <ryan.wu@intel.com>
 Date: Fri, 23 Sep 2016 14:09:06 -0700
-Subject: [PATCH 1/2] linux-firmware/i915: HuC firmware for Broxton v1.7
+Subject: [PATCH] linux-firmware/i915: HuC firmware for Broxton v1.7
 
 This is the first release of HuC firmware for Broxton platforms.
 
@@ -15,16 +15,23 @@ Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
  create mode 100644 i915/bxt_huc_ver01_07_2013.bin
 
 diff --git a/WHENCE b/WHENCE
-index 2fb6048..cf3b041 100644
+index 32eca87..652da1a 100644
 --- a/WHENCE
 +++ b/WHENCE
-@@ -3488,6 +3488,10 @@ Version: DMC API/ABI ver 1 - release 06 for Cannonlake
+@@ -3748,6 +3748,9 @@ Version: HuC API/ABI ver 1 - release 7 for Skylake
+ File: i915/bxt_huc_ver01_07_1398.bin
+ Version: HuC API/APB ver 1 - release 7 for Broxton
  
- File: i915/cnl_dmc_ver1_07.bin
- Version: DMC API/ABI ver 1 - release 07 for Cannonlake
-+
 +File: i915/bxt_huc_ver01_07_2013.bin
 +Version: Huc API/ABI ver 1 - release 07 for Broxton
++
+ File: i915/bxt_huc_ver01_8_2893.bin
+ Version: HuC API/APB ver 1 - release 8 for Broxton
+ 
+@@ -3795,6 +3798,7 @@ Version: Guc API/APB ver 32 release 0 for Icelake
+ 
+ File: i915/icl_huc_ver8_4_3238.bin
+ Version: Huc API/APB ver 8 release 4 for Icelake
 +
  License: Redistributable. See LICENSE.i915 for details
  
@@ -1365,5 +1372,5 @@ literal 0
 HcmV?d00001
 
 -- 
-1.9.1
+2.22.0
 
