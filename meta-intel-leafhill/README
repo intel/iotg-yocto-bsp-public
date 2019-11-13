@@ -43,11 +43,11 @@ This layer depends on:
 
   URI: git://git.yoctoproject.org/poky
   layers: meta
-  branch: sumo
+  branch: warrior
 
   URI: git://git.yoctoproject.org/meta-intel
   layers: intel
-  branch: sumo
+  branch: warrior
 
 
 Patches
