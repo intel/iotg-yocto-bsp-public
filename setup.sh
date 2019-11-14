@@ -70,13 +70,7 @@ check_distro () {
 
         case $distro in
                 Ubuntu)
-                        if [ $version != "14.04" ]; then
-                                ver_fail=1
-                        fi
-                        ;;
-
-                Fedora)
-                        if [ $version != "21" ]; then
+                        if [ $version != "16.04" ]; then
                                 ver_fail=1
                         fi
                         ;;
@@ -86,7 +80,7 @@ check_distro () {
         esac
 
         if [ $ver_fail -eq 1 ]; then
-                echo -e "The Linux OS of choice for Yocto Project build is Ubuntu 14.04 LTS. \nAll other versions are not supported."
+                echo -e "The Linux OS of choice for Yocto Project build is Ubuntu 16.04 LTS. \nAll other versions are not supported."
                 read -p "Would you still like to continue with the setup (Y/N)" answer
                 if [[ $answer =~ [Yy] ]]; then
                         return
