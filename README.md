@@ -15,7 +15,7 @@ This Intel Atom E3900 BSP contains the following essential components for buildi
 
 Minimum host system configuration for Yocto BSP build:
 - Intel Core i7 multi-core (4 cores)
-- The Linux OS of choice for Yocto Project build is Ubuntu 14.04 LTS.
+- The Linux OS of choice for Yocto Project build is Ubuntu 16.04 LTS.
 - 4GB RAM and at least 500GB disk space
 - High speed network connectivity
 
@@ -32,13 +32,13 @@ See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/S
 ```
 - This git tree will maintained as single product branch. In order to get code base from previous release, you need to checkout to the specific tag.
 
-   <br> - For Intel Atom E3900 Maintenance Release Version 3.1:
-```
-      git checkout E3900-MR3.1
-```
    <br> - For Intel Atom E3900 Maintenance Release Version 4:
 ```
-      git checkout E3900-MR4
+      git checkout MR4-B-01
+```
+   <br> - For Intel Atom E3900 Maintenance Release Version 5:
+```
+      git checkout MR5-B-01
 ```
 - After checking out one of the release tags, you will noticed that you are in 'detached HEAD' state. You can now create a local git branch to host the code.
 ```
@@ -57,18 +57,7 @@ See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/S
 You will find the packagegroup-graphics-essential in meta-intel-middleware.
 This packagegroup is set to build into core-image-sato-sdk by default in this BSP.
 
-- To execute 64-bit standalone applications, you need to enable multilib environment in your image.
- The configurations below is not set by default, to enable multilib, please set the configuration below in your build/local.conf.
-```
- require conf/multilib.conf
- DEFAULTTUNE = "corei7-64"
- MULTILIBS = "multilib:lib32"
- DEFAULTTUNE_virtclass-multilib-lib32 = "corei7-32"
- PACKAGE_EXCLUDE_pn-<Image name> = "lib32-libgmp-dev lib32-xtrans-dev lib32-python3-core"
-```
-
-Image name can be core-image-sato or core-image-sato-sdk. The above libraries are known to cause issue on
-multilib image and should be excluded.
+Image name can be core-image-sato or core-image-sato-sdk.
 
 At the end of a successful build, you should have a live image that you can boot from a USB flash drive.
 You can deploy the hddimg image to a USB or SATA device.
@@ -90,8 +79,8 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
 	- check for required software dependencies (this is only performed for Linux Ubuntu 14.04)
 	- test python, network, gitconfig and git proxy
 	- Prepare sources
-	- download Linux kernel v4.14.92 from Intel Linux Kernel from github.
-	- combolayer downloads Poky Sumo v2.5.1 and other meta layers based on setup/combolayer.conf
+	- download Linux kernel v4.19.80 from Intel Linux Kernel from github.
+	- combolayer downloads Poky Warrior v2.7.1 and other meta layers based on setup/combolayer.conf
 	- setup bblayers for bitbake build
 	- setup local.conf for bitbake build
 	- prepare environment for bitbake build
@@ -127,7 +116,7 @@ If you need to modify the recipes or configurations, make your customization in 
 ```
 
 ### Kernel Source
-Intel Atom E3900 BSP utilize linux-intel kernel from Intel Github which is hosted in [Intel Github repositories](https://github.com/intel/linux-intel-lts). The branch for Intel Atom E3900 BSP kernel is 4.14/base.
+Intel Atom E3900 BSP utilize linux-intel kernel from Intel Github which is hosted in [Intel Github repositories](https://github.com/intel/linux-intel-lts). The branch for Intel Atom E3900 BSP kernel is 4.19/base.
 
 ### Features supported
 To view the full list of supported features, please refer BSP release notes in [Technical Libary for Intel Atom E3900 Series](https://www.intel.com/content/www/us/en/embedded/products/apollo-lake/technical-library.html)
