@@ -1,0 +1,44 @@
+From 9f66008a49b973b284ab2c035baaf4e5d522dfd7 Mon Sep 17 00:00:00 2001
+From: "Xiong, James" <james.xiong@intel.com>
+Date: Fri, 17 May 2019 11:20:05 -0700
+Subject: [PATCH 6/7] i965: handle batch or state mapping failures in
+ submit_batch
+
+validate the addresses after mapping batch and state buffers, and
+fail the submission if any of mapping failed.
+
+Signed-off-by: Xiong, James <james.xiong@intel.com>
+---
+ src/mesa/drivers/dri/i965/intel_batchbuffer.c | 15 +++++++++++----
+ 1 file changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/src/mesa/drivers/dri/i965/intel_batchbuffer.c b/src/mesa/drivers/dri/i965/intel_batchbuffer.c
+index 7e3988c96b0..1b95b8b25c5 100644
+--- a/src/mesa/drivers/dri/i965/intel_batchbuffer.c
++++ b/src/mesa/drivers/dri/i965/intel_batchbuffer.c
+@@ -754,11 +754,18 @@ submit_batch(struct brw_context *brw, int in_fence_fd, int *out_fence_fd)
+    int ret = 0;
+ 
+    if (batch->use_shadow_copy) {
+-      void *bo_map = brw_bo_map(brw, batch->batch.bo, MAP_WRITE);
+-      memcpy(bo_map, batch->batch.map, 4 * USED_BATCH(*batch));
++      void *state_map, *batch_map = brw_bo_map(brw, batch->batch.bo, MAP_WRITE);
++      if(batch_map == NULL)
++        return -1;
++
++      state_map = brw_bo_map(brw, batch->state.bo, MAP_WRITE);
++      if (state_map == NULL) {
++        brw_bo_unmap(batch->batch.bo);
++        return -1;
++      }
+ 
+-      bo_map = brw_bo_map(brw, batch->state.bo, MAP_WRITE);
+-      memcpy(bo_map, batch->state.map, batch->state_used);
++      memcpy(batch_map, batch->batch.map, 4 * USED_BATCH(*batch));
++      memcpy(state_map, batch->state.map, batch->state_used);
+    }
+ 
+    brw_bo_unmap(batch->batch.bo);
+-- 
+2.17.1
+

@@ -1,0 +1,78 @@
+From 8038bd20addc8948272efb394efc7057142d7d6c Mon Sep 17 00:00:00 2001
+From: Dongwon Kim <dongwon.kim@intel.com>
+Date: Thu, 20 Jun 2019 14:19:41 -0700
+Subject: [PATCH 2/7] i965: SIMD32 heuristics control data from drirc
+
+To be able to test the heuristics with different parameters, they can be
+controlled via environment variables through drirc.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ src/mesa/drivers/dri/i965/brw_context.c  | 13 ++++++++++++
+ src/mesa/drivers/dri/i965/intel_screen.c | 26 ++++++++++++++++++++++++
+ 2 files changed, 39 insertions(+)
+
+diff --git a/src/mesa/drivers/dri/i965/brw_context.c b/src/mesa/drivers/dri/i965/brw_context.c
+index 505da9896b3..e4bc5fe99f0 100644
+--- a/src/mesa/drivers/dri/i965/brw_context.c
++++ b/src/mesa/drivers/dri/i965/brw_context.c
+@@ -893,6 +893,19 @@ brw_process_driconf_options(struct brw_context *brw)
+    ctx->Const.dri_config_options_sha1 = ralloc_array(brw, unsigned char, 20);
+    driComputeOptionsSha1(&brw->screen->optionCache,
+                          ctx->Const.dri_config_options_sha1);
++
++   brw->screen->compiler->simd32_heuristics_control.grouped_sends_check =
++      driQueryOptionb(&brw->optionCache, "simd32_heuristic_grouped_check");
++   brw->screen->compiler->simd32_heuristics_control.max_grouped_sends =
++      driQueryOptioni(&brw->optionCache, "simd32_heuristic_grouped_sends");
++   brw->screen->compiler->simd32_heuristics_control.inst_count_check =
++      driQueryOptionb(&brw->optionCache, "simd32_heuristic_inst_check");
++   brw->screen->compiler->simd32_heuristics_control.inst_count_ratio =
++      driQueryOptionf(&brw->optionCache, "simd32_heuristic_inst_ratio");
++   brw->screen->compiler->simd32_heuristics_control.mrt_check =
++      driQueryOptionb(&brw->optionCache, "simd32_heuristic_mrt_check");
++   brw->screen->compiler->simd32_heuristics_control.max_mrts =
++      driQueryOptioni(&brw->optionCache, "simd32_heuristic_max_mrts");
+ }
+ 
+ GLboolean
+diff --git a/src/mesa/drivers/dri/i965/intel_screen.c b/src/mesa/drivers/dri/i965/intel_screen.c
+index 8838f977bb6..afa329a437f 100644
+--- a/src/mesa/drivers/dri/i965/intel_screen.c
++++ b/src/mesa/drivers/dri/i965/intel_screen.c
+@@ -61,6 +61,32 @@ DRI_CONF_BEGIN
+ 	    DRI_CONF_ENUM(1, "Enable reuse of all sizes of buffer objects")
+ 	 DRI_CONF_DESC_END
+       DRI_CONF_OPT_END
++
++      DRI_CONF_OPT_BEGIN_B(simd32_heuristic_grouped_check, "true")
++              DRI_CONF_DESC(en, "Enable/disable grouped texture fetch "
++                            "check in the SIMD32 selection heuristic.")
++      DRI_CONF_OPT_END
++      DRI_CONF_OPT_BEGIN_V(simd32_heuristic_grouped_sends, int, 4, "1:999")
++              DRI_CONF_DESC(en, "How many grouped texture fetches should "
++                            "the SIMD32 selection heuristic allow.")
++      DRI_CONF_OPT_END
++      DRI_CONF_OPT_BEGIN_B(simd32_heuristic_inst_check, "true")
++              DRI_CONF_DESC(en, "Enable/disable SIMD32/SIMD16 instruction "
++                            "count ratio check in the SIMD32 selection "
++                            "heuristic.")
++      DRI_CONF_OPT_END
++      DRI_CONF_OPT_BEGIN_V(simd32_heuristic_inst_ratio, float, 2, "1:999")
++              DRI_CONF_DESC(en, "SIMD32/SIMD16 instruction count ratio "
++                            "the SIMD32 selection heuristic should allow.")
++      DRI_CONF_OPT_END
++      DRI_CONF_OPT_BEGIN_B(simd32_heuristic_mrt_check, "true")
++              DRI_CONF_DESC(en, "Enable/disable MRT write check in the "
++                            "SIMD32 selection heuristic.")
++      DRI_CONF_OPT_END
++      DRI_CONF_OPT_BEGIN_V(simd32_heuristic_max_mrts, int, 1, "1:8")
++              DRI_CONF_DESC(en, "How many MRT writes should the SIMD32 "
++                            "selection heuristic allow.")
++      DRI_CONF_OPT_END
+       DRI_CONF_MESA_NO_ERROR("false")
+    DRI_CONF_SECTION_END
+ 
+-- 
+2.17.1
+

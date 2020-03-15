@@ -1,0 +1,70 @@
+From 9c3ed23842c758a8fa9106e51fd39676ffc1a3c1 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Toni=20L=C3=B6nnberg?= <toni.lonnberg@intel.com>
+Date: Tue, 28 Aug 2018 14:32:27 +0300
+Subject: [PATCH 4/7] i965/fs: SIMD32 selection heuristic based on grouped
+ texture fetches
+
+The function goes through the compiled shader and checks how many grouped
+texture fetches there are. This is a simple heuristic which gets rid of most
+of the regressions when enabling SIMD32 shaders but still retains some of
+the benefits.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+---
+ src/intel/compiler/brw_fs.cpp | 26 ++++++++++++++++++++++++++
+ src/intel/compiler/brw_fs.h   |  2 ++
+ 2 files changed, 28 insertions(+)
+
+diff --git a/src/intel/compiler/brw_fs.cpp b/src/intel/compiler/brw_fs.cpp
+index 8481fde50b1..249c0404f67 100644
+--- a/src/intel/compiler/brw_fs.cpp
++++ b/src/intel/compiler/brw_fs.cpp
+@@ -7781,6 +7781,32 @@ brw_compile_fs(const struct brw_compiler *compiler, void *log_data,
+    return g.get_assembly();
+ }
+ 
++bool
++fs_visitor::run_heuristic(const struct brw_simd32_heuristics_control *ctrl) {
++   int grouped_sends = 0;
++   int max_grouped_sends = 0;
++   bool pass = true;
++
++   foreach_block_and_inst(block, fs_inst, inst, cfg) {
++      if (inst->opcode >= SHADER_OPCODE_TEX && inst->opcode <= SHADER_OPCODE_SAMPLEINFO_LOGICAL) {
++         ++grouped_sends;
++      } else if (grouped_sends > 0) {
++         if (grouped_sends > max_grouped_sends) {
++            max_grouped_sends = grouped_sends;
++         }
++         grouped_sends = 0;
++      }
++   }
++
++   if (ctrl->grouped_sends_check) {
++      if (max_grouped_sends > ctrl->max_grouped_sends) {
++         pass = false;
++      }
++   }
++
++   return pass;
++}
++
+ fs_reg *
+ fs_visitor::emit_cs_work_group_id_setup()
+ {
+diff --git a/src/intel/compiler/brw_fs.h b/src/intel/compiler/brw_fs.h
+index 10d153ebd52..72acf85581e 100644
+--- a/src/intel/compiler/brw_fs.h
++++ b/src/intel/compiler/brw_fs.h
+@@ -289,6 +289,8 @@ public:
+    void dump_instruction(backend_instruction *inst);
+    void dump_instruction(backend_instruction *inst, FILE *file);
+ 
++   bool run_heuristic(const struct brw_simd32_heuristics_control *ctrl);
++
+    const void *const key;
+    const struct brw_sampler_prog_key_data *key_tex;
+ 
+-- 
+2.17.1
+
