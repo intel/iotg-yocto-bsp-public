@@ -1,0 +1,722 @@
+diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/configure.ac libdrm/configure.ac
+--- upstream_libdrm/configure.ac	2019-11-22 06:20:08.951212426 +0000
++++ libdrm/configure.ac	2019-11-22 06:19:47.731213671 +0000
+@@ -37,7 +37,7 @@
+ XORG_WITH_XSLTPROC
+ XORG_MANPAGE_SECTIONS
+ 
+-AM_INIT_AUTOMAKE([1.10 foreign dist-bzip2])
++AM_INIT_AUTOMAKE([1.10 foreign dist-bzip2 no-dist-gzip])
+ 
+ # Enable quiet compiles on automake 1.11.
+ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
+diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/include/drm/i915_drm.h libdrm/include/drm/i915_drm.h
+--- upstream_libdrm/include/drm/i915_drm.h	2019-11-22 06:20:08.959212425 +0000
++++ libdrm/include/drm/i915_drm.h	2019-11-22 06:19:47.739213670 +0000
+@@ -1470,6 +1470,7 @@
+ #define   I915_CONTEXT_MAX_USER_PRIORITY	1023 /* inclusive */
+ #define   I915_CONTEXT_DEFAULT_PRIORITY		0
+ #define   I915_CONTEXT_MIN_USER_PRIORITY	-1023 /* inclusive */
++#define I915_CONTEXT_PARAM_WATCHDOG	0x7
+ 	/*
+ 	 * When using the following param, value should be a pointer to
+ 	 * drm_i915_gem_context_param_sseu.
+diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/intel/intel_bufmgr.c libdrm/intel/intel_bufmgr.c
+--- upstream_libdrm/intel/intel_bufmgr.c	2019-11-22 06:20:08.959212425 +0000
++++ libdrm/intel/intel_bufmgr.c	2019-11-22 06:19:47.739213670 +0000
+@@ -196,6 +196,18 @@
+ }
+ 
+ drm_public int
++drm_intel_bo_emit_reloc2(drm_intel_bo *bo, uint32_t offset,
++			drm_intel_bo *target_bo, uint32_t target_offset,
++			uint32_t read_domains, uint32_t write_domain,
++			uint64_t presumed_offset)
++{
++	return bo->bufmgr->bo_emit_reloc2(bo, offset,
++					 target_bo, target_offset,
++					 read_domains, write_domain,
++					 presumed_offset);
++}
++
++drm_public int
+ drm_intel_bo_emit_reloc(drm_intel_bo *bo, uint32_t offset,
+ 			drm_intel_bo *target_bo, uint32_t target_offset,
+ 			uint32_t read_domains, uint32_t write_domain)
+diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/intel/intel_bufmgr_gem.c libdrm/intel/intel_bufmgr_gem.c
+--- upstream_libdrm/intel/intel_bufmgr_gem.c	2019-11-22 06:20:08.959212425 +0000
++++ libdrm/intel/intel_bufmgr_gem.c	2019-11-22 06:19:47.743213670 +0000
+@@ -146,6 +146,7 @@
+ 	unsigned int no_exec : 1;
+ 	unsigned int has_vebox : 1;
+ 	unsigned int has_exec_async : 1;
++	unsigned int has_ext_mmap : 1;
+ 	bool fenced_relocs;
+ 
+ 	struct {
+@@ -213,6 +214,8 @@
+ 
+ 	/** Mapped address for the buffer, saved across map/unmap cycles */
+ 	void *mem_virtual;
++	/** Uncached Mapped address for the buffer, saved across map/unmap cycles */
++	void *mem_wc_virtual;
+ 	/** GTT virtual address for the buffer, saved across map/unmap cycles */
+ 	void *gtt_virtual;
+ 	/** WC CPU address for the buffer, saved across map/unmap cycles */
+@@ -1193,6 +1196,10 @@
+ 		drm_munmap(bo_gem->gtt_virtual, bo_gem->bo.size);
+ 		bufmgr_gem->vma_count--;
+ 	}
++	if (bo_gem->mem_wc_virtual) {
++		munmap(bo_gem->mem_wc_virtual, bo_gem->bo.size);
++		bufmgr_gem->vma_count--;
++	}
+ 
+ 	if (bo_gem->global_name)
+ 		HASH_DELETE(name_hh, bufmgr_gem->name_table, bo_gem);
+@@ -1223,6 +1230,9 @@
+ 
+ 	if (bo_gem->gtt_virtual)
+ 		VALGRIND_MAKE_MEM_NOACCESS(bo_gem->gtt_virtual, bo->size);
++
++	if (bo_gem->mem_wc_virtual)
++		VALGRIND_MAKE_MEM_NOACCESS(bo_gem->mem_wc_virtual, bo->size);
+ #endif
+ }
+ 
+@@ -1268,6 +1278,8 @@
+ 
+ 	/* We may need to evict a few entries in order to create new mmaps */
+ 	limit = bufmgr_gem->vma_max - 2*bufmgr_gem->vma_open;
++	if (bufmgr_gem->has_ext_mmap)
++		limit -= bufmgr_gem->vma_open;
+ 	if (limit < 0)
+ 		limit = 0;
+ 
+@@ -1295,6 +1307,11 @@
+ 			bo_gem->gtt_virtual = NULL;
+ 			bufmgr_gem->vma_count--;
+ 		}
++		if (bo_gem->mem_wc_virtual) {
++			munmap(bo_gem->mem_wc_virtual, bo_gem->bo.size);
++			bo_gem->mem_wc_virtual = NULL;
++			bufmgr_gem->vma_count--;
++		}
+ 	}
+ }
+ 
+@@ -1309,6 +1326,8 @@
+ 		bufmgr_gem->vma_count++;
+ 	if (bo_gem->gtt_virtual)
+ 		bufmgr_gem->vma_count++;
++	if (bo_gem->mem_wc_virtual)
++		bufmgr_gem->vma_count++;
+ 	drm_intel_gem_bo_purge_vma_cache(bufmgr_gem);
+ }
+ 
+@@ -1323,6 +1342,8 @@
+ 		bufmgr_gem->vma_count--;
+ 	if (bo_gem->gtt_virtual)
+ 		bufmgr_gem->vma_count--;
++	if (bo_gem->mem_wc_virtual)
++		bufmgr_gem->vma_count--;
+ 	drm_intel_gem_bo_purge_vma_cache(bufmgr_gem);
+ }
+ 
+@@ -1426,6 +1447,123 @@
+ 	}
+ }
+ 
++static int
++map_wc(drm_intel_bo *bo)
++{
++	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
++	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
++	int ret;
++
++	if (bo_gem->is_userptr)
++		return -EINVAL;
++
++	if (!bufmgr_gem->has_ext_mmap)
++		return -EINVAL;
++
++	if (bo_gem->map_count++ == 0)
++		drm_intel_gem_bo_open_vma(bufmgr_gem, bo_gem);
++
++	/* Get a mapping of the buffer if we haven't before. */
++	if (bo_gem->mem_wc_virtual == NULL) {
++		struct drm_i915_gem_mmap mmap_arg;
++
++		DBG("bo_map_wc: mmap %d (%s), map_count=%d\n",
++		    bo_gem->gem_handle, bo_gem->name, bo_gem->map_count);
++
++		memclear(mmap_arg);
++		mmap_arg.handle = bo_gem->gem_handle;
++		/* To indicate the uncached virtual mapping to KMD */
++		mmap_arg.flags = I915_MMAP_WC;
++		mmap_arg.offset = 0;
++		mmap_arg.size = bo->size;
++		ret = drmIoctl(bufmgr_gem->fd,
++			       DRM_IOCTL_I915_GEM_MMAP,
++			       &mmap_arg);
++		if (ret != 0) {
++			ret = -errno;
++			DBG("%s:%d: Error mapping buffer %d (%s): %s .\n",
++			    __FILE__, __LINE__, bo_gem->gem_handle,
++			    bo_gem->name, strerror(errno));
++			if (--bo_gem->map_count == 0)
++				drm_intel_gem_bo_close_vma(bufmgr_gem, bo_gem);
++			return ret;
++		}
++		VG(VALGRIND_MALLOCLIKE_BLOCK(mmap_arg.addr_ptr, mmap_arg.size, 0, 1));
++		bo_gem->mem_wc_virtual = (void *)(uintptr_t) mmap_arg.addr_ptr;
++	}
++
++	bo->virtual = bo_gem->mem_wc_virtual;
++
++	DBG("bo_map_wc: %d (%s) -> %p\n", bo_gem->gem_handle, bo_gem->name,
++	    bo_gem->mem_wc_virtual);
++
++	return 0;
++}
++
++/* To be used in a similar way to mmap_gtt */
++drm_public int
++drm_intel_gem_bo_map_wc(drm_intel_bo *bo) {
++	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
++	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
++	struct drm_i915_gem_set_domain set_domain;
++	int ret;
++
++	pthread_mutex_lock(&bufmgr_gem->lock);
++
++	ret = map_wc(bo);
++	if (ret) {
++		pthread_mutex_unlock(&bufmgr_gem->lock);
++		return ret;
++	}
++
++	/* Now move it to the GTT domain so that the GPU and CPU
++	 * caches are flushed and the GPU isn't actively using the
++	 * buffer.
++	 *
++	 * The domain change is done even for the objects which
++	 * are not bounded. For them first the pages are acquired,
++	 * before the domain change.
++	 */
++	memclear(set_domain);
++	set_domain.handle = bo_gem->gem_handle;
++	set_domain.read_domains = I915_GEM_DOMAIN_GTT;
++	set_domain.write_domain = I915_GEM_DOMAIN_GTT;
++	ret = drmIoctl(bufmgr_gem->fd,
++		       DRM_IOCTL_I915_GEM_SET_DOMAIN,
++		       &set_domain);
++	if (ret != 0) {
++		DBG("%s:%d: Error setting domain %d: %s\n",
++		    __FILE__, __LINE__, bo_gem->gem_handle,
++		    strerror(errno));
++	}
++	drm_intel_gem_bo_mark_mmaps_incoherent(bo);
++	VG(VALGRIND_MAKE_MEM_DEFINED(bo_gem->mem_wc_virtual, bo->size));
++	pthread_mutex_unlock(&bufmgr_gem->lock);
++
++	return 0;
++}
++
++drm_public int
++drm_intel_gem_bo_map_wc_unsynchronized(drm_intel_bo *bo) {
++	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
++#ifdef HAVE_VALGRIND
++	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
++#endif
++	int ret;
++
++	pthread_mutex_lock(&bufmgr_gem->lock);
++
++	ret = map_wc(bo);
++	if (ret == 0) {
++		drm_intel_gem_bo_mark_mmaps_incoherent(bo);
++		VG(VALGRIND_MAKE_MEM_DEFINED(bo_gem->mem_wc_virtual, bo->size));
++	}
++
++	pthread_mutex_unlock(&bufmgr_gem->lock);
++
++	return ret;
++}
++
+ static int drm_intel_gem_bo_map(drm_intel_bo *bo, int write_enable)
+ {
+ 	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
+@@ -1452,6 +1590,7 @@
+ 
+ 		memclear(mmap_arg);
+ 		mmap_arg.handle = bo_gem->gem_handle;
++		mmap_arg.flags = 0;
+ 		mmap_arg.size = bo->size;
+ 		ret = drmIoctl(bufmgr_gem->fd,
+ 			       DRM_IOCTL_I915_GEM_MMAP,
+@@ -1711,6 +1850,12 @@
+ }
+ 
+ drm_public int
++drm_intel_gem_bo_unmap_wc(drm_intel_bo *bo)
++{
++	return drm_intel_gem_bo_unmap(bo);
++}
++
++drm_public int
+ drm_intel_gem_bo_unmap_gtt(drm_intel_bo *bo)
+ {
+ 	return drm_intel_gem_bo_unmap(bo);
+@@ -2023,6 +2168,83 @@
+ 	return 0;
+ }
+ 
++static int
++do_bo_emit_reloc2(drm_intel_bo *bo, uint32_t offset,
++		 drm_intel_bo *target_bo, uint32_t target_offset,
++		 uint32_t read_domains, uint32_t write_domain,
++		 bool need_fence, uint64_t presumed_offset)
++{
++	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *) bo->bufmgr;
++	drm_intel_bo_gem *bo_gem = (drm_intel_bo_gem *) bo;
++	drm_intel_bo_gem *target_bo_gem = (drm_intel_bo_gem *) target_bo;
++	bool fenced_command;
++
++	if (bo_gem->has_error)
++		return -ENOMEM;
++
++	if (target_bo_gem->has_error) {
++		bo_gem->has_error = true;
++		return -ENOMEM;
++	}
++
++	/* We never use HW fences for rendering on 965+ */
++	if (bufmgr_gem->gen >= 4)
++		need_fence = false;
++
++	fenced_command = need_fence;
++	if (target_bo_gem->tiling_mode == I915_TILING_NONE)
++		need_fence = false;
++
++	/* Create a new relocation list if needed */
++	if (bo_gem->relocs == NULL && drm_intel_setup_reloc_list(bo))
++		return -ENOMEM;
++
++	/* Check overflow */
++	assert(bo_gem->reloc_count < bufmgr_gem->max_relocs);
++
++	/* Check args */
++	assert(offset <= bo->size - 4);
++	assert((write_domain & (write_domain - 1)) == 0);
++
++	/* An object needing a fence is a tiled buffer, so it won't have
++	 * relocs to other buffers.
++	 */
++	if (need_fence) {
++		assert(target_bo_gem->reloc_count == 0);
++		target_bo_gem->reloc_tree_fences = 1;
++	}
++
++	/* Make sure that we're not adding a reloc to something whose size has
++	 * already been accounted for.
++	 */
++	assert(!bo_gem->used_as_reloc_target);
++	if (target_bo_gem != bo_gem) {
++		target_bo_gem->used_as_reloc_target = true;
++		bo_gem->reloc_tree_size += target_bo_gem->reloc_tree_size;
++		bo_gem->reloc_tree_fences += target_bo_gem->reloc_tree_fences;
++	}
++
++	bo_gem->reloc_target_info[bo_gem->reloc_count].bo = target_bo;
++	if (target_bo != bo)
++		drm_intel_gem_bo_reference(target_bo);
++	if (fenced_command)
++		bo_gem->reloc_target_info[bo_gem->reloc_count].flags =
++			DRM_INTEL_RELOC_FENCE;
++	else
++		bo_gem->reloc_target_info[bo_gem->reloc_count].flags = 0;
++
++	bo_gem->relocs[bo_gem->reloc_count].offset = offset;
++	bo_gem->relocs[bo_gem->reloc_count].delta = target_offset;
++	bo_gem->relocs[bo_gem->reloc_count].target_handle =
++	    target_bo_gem->gem_handle;
++	bo_gem->relocs[bo_gem->reloc_count].read_domains = read_domains;
++	bo_gem->relocs[bo_gem->reloc_count].write_domain = write_domain;
++	bo_gem->relocs[bo_gem->reloc_count].presumed_offset = presumed_offset;
++	bo_gem->reloc_count++;
++
++	return 0;
++}
++
+ static void
+ drm_intel_gem_bo_use_48b_address_range(drm_intel_bo *bo, uint32_t enable)
+ {
+@@ -2089,6 +2311,20 @@
+ }
+ 
+ static int
++drm_intel_gem_bo_emit_reloc2(drm_intel_bo *bo, uint32_t offset,
++			    drm_intel_bo *target_bo, uint32_t target_offset,
++			    uint32_t read_domains, uint32_t write_domain,
++			    uint64_t presumed_offset)
++{
++	drm_intel_bufmgr_gem *bufmgr_gem = (drm_intel_bufmgr_gem *)bo->bufmgr;
++
++	return do_bo_emit_reloc2(bo, offset, target_bo, target_offset,
++					read_domains, write_domain,
++					!bufmgr_gem->fenced_relocs,
++					presumed_offset);
++}
++
++static int
+ drm_intel_gem_bo_emit_reloc_fence(drm_intel_bo *bo, uint32_t offset,
+ 				  drm_intel_bo *target_bo,
+ 				  uint32_t target_offset,
+@@ -3720,6 +3956,10 @@
+ 	if (ret == 0 && *gp.value > 0)
+ 		bufmgr_gem->bufmgr.bo_set_softpin_offset = drm_intel_gem_bo_set_softpin_offset;
+ 
++	gp.param = I915_PARAM_MMAP_VERSION;
++	ret = drmIoctl(bufmgr_gem->fd, DRM_IOCTL_I915_GETPARAM, &gp);
++	bufmgr_gem->has_ext_mmap = (ret == 0) & (*gp.value > 0);
++
+ 	if (bufmgr_gem->gen < 4) {
+ 		gp.param = I915_PARAM_NUM_FENCES_AVAIL;
+ 		gp.value = &bufmgr_gem->available_fences;
+@@ -3773,6 +4013,7 @@
+ 	bufmgr_gem->bufmgr.bo_get_subdata = drm_intel_gem_bo_get_subdata;
+ 	bufmgr_gem->bufmgr.bo_wait_rendering = drm_intel_gem_bo_wait_rendering;
+ 	bufmgr_gem->bufmgr.bo_emit_reloc = drm_intel_gem_bo_emit_reloc;
++	bufmgr_gem->bufmgr.bo_emit_reloc2 = drm_intel_gem_bo_emit_reloc2;
+ 	bufmgr_gem->bufmgr.bo_emit_reloc_fence = drm_intel_gem_bo_emit_reloc_fence;
+ 	bufmgr_gem->bufmgr.bo_pin = drm_intel_gem_bo_pin;
+ 	bufmgr_gem->bufmgr.bo_unpin = drm_intel_gem_bo_unpin;
+diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/intel/intel_bufmgr.h libdrm/intel/intel_bufmgr.h
+--- upstream_libdrm/intel/intel_bufmgr.h	2019-11-22 06:20:08.959212425 +0000
++++ libdrm/intel/intel_bufmgr.h	2019-11-22 06:19:47.739213670 +0000
+@@ -151,6 +151,10 @@
+ int drm_intel_bo_emit_reloc(drm_intel_bo *bo, uint32_t offset,
+ 			    drm_intel_bo *target_bo, uint32_t target_offset,
+ 			    uint32_t read_domains, uint32_t write_domain);
++int drm_intel_bo_emit_reloc2(drm_intel_bo *bo, uint32_t offset,
++		 drm_intel_bo *target_bo, uint32_t target_offset,
++		 uint32_t read_domains, uint32_t write_domain,
++		 uint64_t presumed_offset);
+ int drm_intel_bo_emit_reloc_fence(drm_intel_bo *bo, uint32_t offset,
+ 				  drm_intel_bo *target_bo,
+ 				  uint32_t target_offset,
+@@ -183,6 +187,9 @@
+ int drm_intel_gem_bo_map_unsynchronized(drm_intel_bo *bo);
+ int drm_intel_gem_bo_map_gtt(drm_intel_bo *bo);
+ int drm_intel_gem_bo_unmap_gtt(drm_intel_bo *bo);
++int drm_intel_gem_bo_map_wc_unsynchronized(drm_intel_bo *bo);
++int drm_intel_gem_bo_map_wc(drm_intel_bo *bo);
++int drm_intel_gem_bo_unmap_wc(drm_intel_bo *bo);
+ 
+ #define HAVE_DRM_INTEL_GEM_BO_DISABLE_IMPLICIT_SYNC 1
+ int drm_intel_bufmgr_gem_can_disable_implicit_sync(drm_intel_bufmgr *bufmgr);
+diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/intel/intel_bufmgr_priv.h libdrm/intel/intel_bufmgr_priv.h
+--- upstream_libdrm/intel/intel_bufmgr_priv.h	2019-11-22 06:20:08.959212425 +0000
++++ libdrm/intel/intel_bufmgr_priv.h	2019-11-22 06:19:47.743213670 +0000
+@@ -188,6 +188,10 @@
+ 	int (*bo_emit_reloc) (drm_intel_bo *bo, uint32_t offset,
+ 			      drm_intel_bo *target_bo, uint32_t target_offset,
+ 			      uint32_t read_domains, uint32_t write_domain);
++	int (*bo_emit_reloc2) (drm_intel_bo *bo, uint32_t offset,
++			      drm_intel_bo *target_bo, uint32_t target_offset,
++			      uint32_t read_domains, uint32_t write_domain,
++			      uint64_t presumed_offset);
+ 	int (*bo_emit_reloc_fence)(drm_intel_bo *bo, uint32_t offset,
+ 				   drm_intel_bo *target_bo,
+ 				   uint32_t target_offset,
+diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/tests/util/pattern.c libdrm/tests/util/pattern.c
+--- upstream_libdrm/tests/util/pattern.c	2019-11-22 06:20:08.975212424 +0000
++++ libdrm/tests/util/pattern.c	2019-11-22 06:19:47.755213669 +0000
+@@ -643,7 +643,7 @@
+ 		printf("Error: gamma too small: %d < %d\n", size, 7 + 7 + 8);
+ 		return;
+ 	}
+-	memset(lut, size * sizeof(struct drm_color_lut), 0);
++	memset(lut, 0, size * sizeof(struct drm_color_lut));
+ 
+ #define FILL_COLOR(idx, r, g, b) \
+ 	lut[idx].red = (r) << 8; \
+diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/xf86drm.c libdrm/xf86drm.c
+--- upstream_libdrm/xf86drm.c	2019-11-22 06:20:08.975212424 +0000
++++ libdrm/xf86drm.c	2019-11-22 06:19:47.759213669 +0000
+@@ -71,16 +71,6 @@
+ 
+ #include "util_math.h"
+ 
+-#ifdef __OpenBSD__
+-#define DRM_PRIMARY_MINOR_NAME  "drm"
+-#define DRM_CONTROL_MINOR_NAME  "drmC"
+-#define DRM_RENDER_MINOR_NAME   "drmR"
+-#else
+-#define DRM_PRIMARY_MINOR_NAME  "card"
+-#define DRM_CONTROL_MINOR_NAME  "controlD"
+-#define DRM_RENDER_MINOR_NAME   "renderD"
+-#endif
+-
+ #if defined(__FreeBSD__) || defined(__FreeBSD_kernel__) || defined(__DragonFly__)
+ #define DRM_MAJOR 145
+ #endif
+@@ -310,6 +300,19 @@
+ }
+ #endif
+ 
++static const char *drmGetDeviceName(int type)
++{
++    switch (type) {
++    case DRM_NODE_PRIMARY:
++        return DRM_DEV_NAME;
++    case DRM_NODE_CONTROL:
++        return DRM_CONTROL_DEV_NAME;
++    case DRM_NODE_RENDER:
++        return DRM_RENDER_DEV_NAME;
++    }
++    return NULL;
++}
++
+ /**
+  * Open the DRM device, creating it if necessary.
+  *
+@@ -326,8 +329,8 @@
+ static int drmOpenDevice(dev_t dev, int minor, int type)
+ {
+     stat_t          st;
+-    const char      *dev_name;
+-    char            buf[64];
++    const char      *dev_name = drmGetDeviceName(type);
++    char            buf[DRM_NODE_NAME_MAX];
+     int             fd;
+     mode_t          devmode = DRM_DEV_MODE, serv_mode;
+     gid_t           serv_group;
+@@ -337,19 +340,8 @@
+     gid_t           group   = DRM_DEV_GID;
+ #endif
+ 
+-    switch (type) {
+-    case DRM_NODE_PRIMARY:
+-        dev_name = DRM_DEV_NAME;
+-        break;
+-    case DRM_NODE_CONTROL:
+-        dev_name = DRM_CONTROL_DEV_NAME;
+-        break;
+-    case DRM_NODE_RENDER:
+-        dev_name = DRM_RENDER_DEV_NAME;
+-        break;
+-    default:
++    if (!dev_name)
+         return -EINVAL;
+-    };
+ 
+     sprintf(buf, dev_name, DRM_DIR_NAME, minor);
+     drmMsg("drmOpenDevice: node name is %s\n", buf);
+@@ -455,25 +447,14 @@
+ static int drmOpenMinor(int minor, int create, int type)
+ {
+     int  fd;
+-    char buf[64];
+-    const char *dev_name;
++    char buf[DRM_NODE_NAME_MAX];
++    const char *dev_name = drmGetDeviceName(type);
+ 
+     if (create)
+         return drmOpenDevice(makedev(DRM_MAJOR, minor), minor, type);
+ 
+-    switch (type) {
+-    case DRM_NODE_PRIMARY:
+-        dev_name = DRM_DEV_NAME;
+-        break;
+-    case DRM_NODE_CONTROL:
+-        dev_name = DRM_CONTROL_DEV_NAME;
+-        break;
+-    case DRM_NODE_RENDER:
+-        dev_name = DRM_RENDER_DEV_NAME;
+-        break;
+-    default:
++    if (!dev_name)
+         return -EINVAL;
+-    };
+ 
+     sprintf(buf, dev_name, DRM_DIR_NAME, minor);
+     if ((fd = open(buf, O_RDWR | O_CLOEXEC, 0)) >= 0)
+@@ -2902,9 +2883,9 @@
+ #else
+     struct stat sbuf;
+     char buf[PATH_MAX + 1];
+-    const char *dev_name;
++    const char *dev_name = drmGetDeviceName(type);
+     unsigned int maj, min;
+-    int n, base;
++    int n;
+ 
+     if (fstat(fd, &sbuf))
+         return NULL;
+@@ -2915,25 +2896,10 @@
+     if (!drmNodeIsDRM(maj, min) || !S_ISCHR(sbuf.st_mode))
+         return NULL;
+ 
+-    switch (type) {
+-    case DRM_NODE_PRIMARY:
+-        dev_name = DRM_DEV_NAME;
+-        break;
+-    case DRM_NODE_CONTROL:
+-        dev_name = DRM_CONTROL_DEV_NAME;
+-        break;
+-    case DRM_NODE_RENDER:
+-        dev_name = DRM_RENDER_DEV_NAME;
+-        break;
+-    default:
+-        return NULL;
+-    };
+-
+-    base = drmGetMinorBase(type);
+-    if (base < 0)
++    if (!dev_name)
+         return NULL;
+ 
+-    n = snprintf(buf, sizeof(buf), dev_name, DRM_DIR_NAME, min - base);
++    n = snprintf(buf, sizeof(buf), dev_name, DRM_DIR_NAME, min);
+     if (n == -1 || n >= sizeof(buf))
+         return NULL;
+ 
+@@ -3141,10 +3107,6 @@
+ 
+ static int drmGetNodeType(const char *name)
+ {
+-    if (strncmp(name, DRM_PRIMARY_MINOR_NAME,
+-        sizeof(DRM_PRIMARY_MINOR_NAME) - 1) == 0)
+-        return DRM_NODE_PRIMARY;
+-
+     if (strncmp(name, DRM_CONTROL_MINOR_NAME,
+         sizeof(DRM_CONTROL_MINOR_NAME ) - 1) == 0)
+         return DRM_NODE_CONTROL;
+@@ -3153,6 +3115,10 @@
+         sizeof(DRM_RENDER_MINOR_NAME) - 1) == 0)
+         return DRM_NODE_RENDER;
+ 
++    if (strncmp(name, DRM_PRIMARY_MINOR_NAME,
++        sizeof(DRM_PRIMARY_MINOR_NAME) - 1) == 0)
++        return DRM_NODE_PRIMARY;
++
+     return -EINVAL;
+ }
+ 
+@@ -3827,7 +3793,7 @@
+     char             node[PATH_MAX + 1];
+     const char      *dev_name;
+     int              node_type, subsystem_type;
+-    int              maj, min, n, ret, base;
++    int              maj, min, n, ret;
+ 
+     if (fd == -1 || device == NULL)
+         return -EINVAL;
+@@ -3845,25 +3811,11 @@
+     if (node_type == -1)
+         return -ENODEV;
+ 
+-    switch (node_type) {
+-    case DRM_NODE_PRIMARY:
+-        dev_name = DRM_DEV_NAME;
+-        break;
+-    case DRM_NODE_CONTROL:
+-        dev_name = DRM_CONTROL_DEV_NAME;
+-        break;
+-    case DRM_NODE_RENDER:
+-        dev_name = DRM_RENDER_DEV_NAME;
+-        break;
+-    default:
++    dev_name = drmGetDeviceName(node_type);
++    if (!dev_name)
+         return -EINVAL;
+-    };
+ 
+-    base = drmGetMinorBase(node_type);
+-    if (base < 0)
+-        return -EINVAL;
+-
+-    n = snprintf(node, PATH_MAX, dev_name, DRM_DIR_NAME, min - base);
++    n = snprintf(node, PATH_MAX, dev_name, DRM_DIR_NAME, min);
+     if (n == -1 || n >= PATH_MAX)
+       return -errno;
+     if (stat(node, &sbuf))
+@@ -4083,7 +4035,7 @@
+     char             node[PATH_MAX + 1];
+     const char      *dev_name;
+     int              node_type;
+-    int              maj, min, n, base;
++    int              maj, min, n;
+ 
+     if (fstat(fd, &sbuf))
+         return NULL;
+@@ -4098,25 +4050,11 @@
+     if (node_type == -1)
+         return NULL;
+ 
+-    switch (node_type) {
+-    case DRM_NODE_PRIMARY:
+-        dev_name = DRM_DEV_NAME;
+-        break;
+-    case DRM_NODE_CONTROL:
+-        dev_name = DRM_CONTROL_DEV_NAME;
+-        break;
+-    case DRM_NODE_RENDER:
+-        dev_name = DRM_RENDER_DEV_NAME;
+-        break;
+-    default:
+-        return NULL;
+-    };
+-
+-    base = drmGetMinorBase(node_type);
+-    if (base < 0)
++    dev_name = drmGetDeviceName(node_type);
++    if (!dev_name)
+         return NULL;
+ 
+-    n = snprintf(node, PATH_MAX, dev_name, DRM_DIR_NAME, min - base);
++    n = snprintf(node, PATH_MAX, dev_name, DRM_DIR_NAME, min);
+     if (n == -1 || n >= PATH_MAX)
+       return NULL;
+ 
+diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/xf86drm.h libdrm/xf86drm.h
+--- upstream_libdrm/xf86drm.h	2019-11-22 06:20:08.975212424 +0000
++++ libdrm/xf86drm.h	2019-11-22 06:19:47.759213669 +0000
+@@ -78,17 +78,29 @@
+ 
+ #ifdef __OpenBSD__
+ #define DRM_DIR_NAME  "/dev"
+-#define DRM_DEV_NAME  "%s/drm%d"
+-#define DRM_CONTROL_DEV_NAME  "%s/drmC%d"
+-#define DRM_RENDER_DEV_NAME  "%s/drmR%d"
++#define DRM_PRIMARY_MINOR_NAME  "drm"
++#define DRM_CONTROL_MINOR_NAME  "drmC"
++#define DRM_RENDER_MINOR_NAME   "drmR"
+ #else
+ #define DRM_DIR_NAME  "/dev/dri"
+-#define DRM_DEV_NAME  "%s/card%d"
+-#define DRM_CONTROL_DEV_NAME  "%s/controlD%d"
+-#define DRM_RENDER_DEV_NAME  "%s/renderD%d"
++#define DRM_PRIMARY_MINOR_NAME  "card"
++#define DRM_CONTROL_MINOR_NAME  "controlD"
++#define DRM_RENDER_MINOR_NAME   "renderD"
+ #define DRM_PROC_NAME "/proc/dri/" /* For backward Linux compatibility */
+ #endif
+ 
++#define DRM_DEV_NAME          "%s/" DRM_PRIMARY_MINOR_NAME "%d"
++#define DRM_CONTROL_DEV_NAME  "%s/" DRM_CONTROL_MINOR_NAME "%d"
++#define DRM_RENDER_DEV_NAME   "%s/" DRM_RENDER_MINOR_NAME  "%d"
++
++#define DRM_NODE_NAME_MAX \
++    (sizeof(DRM_DIR_NAME) + 1 /* slash */ \
++     + MAX3(sizeof(DRM_PRIMARY_MINOR_NAME), \
++            sizeof(DRM_CONTROL_MINOR_NAME), \
++            sizeof(DRM_RENDER_MINOR_NAME)) \
++     + sizeof("144") /* highest possible node number */ \
++     + 1) /* NULL-terminator */
++
+ #define DRM_ERR_NO_DEVICE  (-1001)
+ #define DRM_ERR_NO_ACCESS  (-1002)
+ #define DRM_ERR_NOT_ROOT   (-1003)
