@@ -1,7 +1,7 @@
-From 813348970ae494efea724d2563be8915925b4691 Mon Sep 17 00:00:00 2001
+From f2ccbf9b56bd4f1599956fb3a5e1a7506d2704f2 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Thu, 5 Apr 2018 12:12:57 +0100
-Subject: [PATCH 077/100] ASoC: Intel: Skylake: Add extra SSP2-x pins
+Subject: [PATCH] ASoC: Intel: Skylake: Add extra SSP2-x pins
 
 This commit extends "ASoC: Intel: Skylake: Add secondary backend dais"
 

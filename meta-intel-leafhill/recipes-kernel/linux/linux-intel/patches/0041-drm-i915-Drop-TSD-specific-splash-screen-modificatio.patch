@@ -1,7 +1,7 @@
-From 5bb502fcfb0c80999057cf594573e0b73c4647f2 Mon Sep 17 00:00:00 2001
+From ad9e058e688efd54204cb37f3def1a9d4224b568 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Tue, 21 Aug 2018 14:05:09 -0700
-Subject: [PATCH 41/45] drm/i915: Drop TSD-specific splash-screen modifications
+Subject: [PATCH] drm/i915: Drop TSD-specific splash-screen modifications
 
 TSD made a few changes to the i915 splash screen support that that has
 been delivered to the rest of IOTG:  they changed the image format from

@@ -1,8 +1,7 @@
-From e4e1fa92f2efc4ef912213ee974949aa286bd5d7 Mon Sep 17 00:00:00 2001
+From 1d2f10ebb9a1ed5f01a92a7f2d434686a3d2060f Mon Sep 17 00:00:00 2001
 From: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
 Date: Sat, 12 May 2018 03:03:12 +0530
-Subject: [PATCH 23/45] drm/i915: Enable display workaround 827 for all planes,
- v2.
+Subject: [PATCH] drm/i915: Enable display workaround 827 for all planes, v2.
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

@@ -1,8 +1,8 @@
-From 6bc451631817a501d846aced07a5cb6b29d4156a Mon Sep 17 00:00:00 2001
+From 33902046369d7db20864dbcd8a0a517a6389e8ad Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 20 Dec 2016 13:16:25 +0800
-Subject: [PATCH 36/42] igb: On rmmod prevent the device from being power
- managed at run time
+Subject: [PATCH] igb: On rmmod prevent the device from being power managed at
+ run time
 
 By default, driver is loaded with runtime pm disabled, so we
 ensure that the driver does not suspend when it is unloaded.
@@ -15,7 +15,7 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 347338a..60ed8bf 100644
+index b2cf787..cd9e5e7 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
 @@ -3457,6 +3457,7 @@ static void igb_remove(struct pci_dev *pdev)

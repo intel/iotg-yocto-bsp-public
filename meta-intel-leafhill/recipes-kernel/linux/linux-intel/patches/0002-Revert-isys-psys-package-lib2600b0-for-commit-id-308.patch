@@ -1,0 +1,40 @@
+From 4603b39a7cf392f1b01d2dbf62b6fdc5c5d50377 Mon Sep 17 00:00:00 2001
+From: CaiyingX Geng <caiyingx.geng@intel.com>
+Date: Thu, 29 Aug 2019 07:32:55 +0100
+Subject: [PATCH] Revert "isys & psys package lib2600b0 for commit-id 3081854"
+
+This reverts commit ab5113abc130fb54d7ff0a9bb2fdb3437e7bc321.
+
+Change-Id: I7d12e3ac28719cb91b2e92cdfa0f63ae2ff5a183
+Depends-on: I5f7bbb47c110e10d04a32483a6e32ab37c480375
+Depends-on: I9e63cfca27eb7cbd1a4dbcc340f7dad00c828c32
+Depends-on: I19f37800ba6ccc3cbc2451f81d85cd4692e9b1d3
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h           | 2 +-
+ .../lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h        | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+index e7e8177..50ec8e9 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20190730
++#define IA_CSS_FW_PKG_RELEASE  0x20181107
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+index e7e8177..50ec8e9 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20190730
++#define IA_CSS_FW_PKG_RELEASE  0x20181107
+-- 
+1.9.1
+

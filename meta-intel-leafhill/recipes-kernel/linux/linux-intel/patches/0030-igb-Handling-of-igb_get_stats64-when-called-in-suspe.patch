@@ -1,8 +1,8 @@
-From 8d3d40e0171738f6fca6f7ee2a42260cb2776123 Mon Sep 17 00:00:00 2001
+From 68ca2dc026eb34cf5450a47a23bea4ed73179681 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Thu, 29 Dec 2016 11:40:59 +0800
-Subject: [PATCH 30/42] igb: Handling of igb_get_stats64 when called in
- suspended state
+Subject: [PATCH] igb: Handling of igb_get_stats64 when called in suspended
+ state
 
 In igb_get_stats64() function, it invokes pm_runtime_get()
 to resume the driver. After finished updating the statistics,
@@ -16,10 +16,10 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 12 insertions(+)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 0e6545a..1ff14ea 100644
+index 2a64d2b..efa4095 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -6033,11 +6033,23 @@ static void igb_get_stats64(struct net_device *netdev,
+@@ -6034,11 +6034,23 @@ static void igb_get_stats64(struct net_device *netdev,
  			    struct rtnl_link_stats64 *stats)
  {
  	struct igb_adapter *adapter = netdev_priv(netdev);

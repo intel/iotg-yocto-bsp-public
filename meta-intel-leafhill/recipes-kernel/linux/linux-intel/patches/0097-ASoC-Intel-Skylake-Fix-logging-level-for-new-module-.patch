@@ -1,8 +1,8 @@
-From 326ede26d1164c9860e30f01f74f38c8521c6b83 Mon Sep 17 00:00:00 2001
+From 5af6a82ddf8a33add431d6b7657d261edf6d3242 Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Tue, 23 Oct 2018 18:26:45 +0800
-Subject: [PATCH 097/100] ASoC: Intel: Skylake: Fix logging level for new
- module resource event notifications
+Subject: [PATCH] ASoC: Intel: Skylake: Fix logging level for new module
+ resource event notifications
 
 FW sends module resource event notifications to driver
 through IPC messages. These messages are informational

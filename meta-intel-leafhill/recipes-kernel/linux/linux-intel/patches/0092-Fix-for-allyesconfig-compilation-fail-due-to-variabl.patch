@@ -1,8 +1,8 @@
-From bb0c5e4a39229343ad9b430a5498d8581c429b31 Mon Sep 17 00:00:00 2001
+From d993b9fca032ea8202bf50b99366229d04911cba Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra.gaurav.vohra@intel.com>
 Date: Wed, 26 Sep 2018 10:52:07 +0800
-Subject: [PATCH 092/100] Fix for allyesconfig compilation fail due to variable
- name change from be_id to id
+Subject: [PATCH] Fix for allyesconfig compilation fail due to variable name
+ change from be_id to id
 
 ---
  sound/soc/intel/boards/bxt_ull.c | 4 ++--

@@ -1,8 +1,8 @@
-From 6a4406210c80cd6004d8fe2480db5385fcf2f406 Mon Sep 17 00:00:00 2001
+From f2c065e20c4a3be23573df0e84d3a2af861ddf5d Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Tue, 18 Sep 2018 14:14:19 +0800
-Subject: [PATCH 051/100] Revert "ASoC: Intel: Boards: Added option to enable
- TDF8532 DAI link"
+Subject: [PATCH] Revert "ASoC: Intel: Boards: Added option to enable TDF8532
+ DAI link"
 
 This reverts commit 6069470fff05b7b40c6f281adb880e2648702b76.
 ---

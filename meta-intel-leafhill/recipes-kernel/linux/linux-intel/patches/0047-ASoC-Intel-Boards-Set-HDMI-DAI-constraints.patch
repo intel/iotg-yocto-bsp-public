@@ -1,7 +1,7 @@
-From 4800b2a3cbc302bc88d70302cdb771a51703e612 Mon Sep 17 00:00:00 2001
+From 00a0bc570eaa0ce8e7ee1c2ef638f7163557fa79 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Wed, 1 Mar 2017 15:56:02 +0000
-Subject: [PATCH 047/100] ASoC: Intel: Boards: Set HDMI DAI constraints
+Subject: [PATCH] ASoC: Intel: Boards: Set HDMI DAI constraints
 
 HDMI chip is not controlled by an ASoC Codec driver so dummy codec is
 used. Set explicit constraints for the HDMI chip in the DAI startup

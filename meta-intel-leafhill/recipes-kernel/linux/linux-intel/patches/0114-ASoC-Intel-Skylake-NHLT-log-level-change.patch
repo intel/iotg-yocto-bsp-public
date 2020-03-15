@@ -1,0 +1,35 @@
+From 30ab58582829ae6b9f3d7c84a8029ab0aa7939d0 Mon Sep 17 00:00:00 2001
+From: Bartlomiej Horiszny <bartlomiejx.horiszny@intel.com>
+Date: Mon, 13 May 2019 14:19:48 +0200
+Subject: [PATCH] ASoC: Intel: Skylake: NHLT log level change
+
+Change of the log level of querying NHLT blob from
+warning to debug. Warning level was misinforming.
+
+Change-Id: I1afbad3c2770f63ba1e7959c23e3d360faee6b97
+Signed-off-by: Bartlomiej Horiszny <bartlomiejx.horiszny@intel.com>
+---
+ sound/soc/intel/skylake/skl-nhlt.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-nhlt.c b/sound/soc/intel/skylake/skl-nhlt.c
+index 0e725d4..d39708b 100644
+--- a/sound/soc/intel/skylake/skl-nhlt.c
++++ b/sound/soc/intel/skylake/skl-nhlt.c
+@@ -152,11 +152,11 @@ struct nhlt_specific_cfg *
+ 
+ 	/* update the blob based on virtual bus_id*/
+ 	if (!skl->nhlt_override) {
+-		dev_warn(ebus_to_hbus(ebus)->dev, "Querying NHLT blob from ACPI NHLT table !!\n");
++		dev_dbg(ebus_to_hbus(ebus)->dev, "Querying NHLT blob from ACPI NHLT table !!\n");
+ 		cfg = skl_get_ep_blob(skl, instance, link_type, s_fmt,
+ 				num_ch, s_rate, dir, dev_type);
+ 	} else {
+-		dev_warn(ebus_to_hbus(ebus)->dev, "Querying NHLT blob from Debugfs!!\n");
++		dev_dbg(ebus_to_hbus(ebus)->dev, "Querying NHLT blob from Debugfs!!\n");
+ 		cfg = skl_nhlt_get_debugfs_blob(skl->debugfs, link_type, instance, dir);
+ 	}
+ 
+-- 
+1.9.1
+

@@ -1,7 +1,7 @@
-From 45af8eb652f11dc40a53afa27efaa5d98015c193 Mon Sep 17 00:00:00 2001
+From 86cf4e6520e7657bd4e3f4d8023deadb0e10c59b Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Tue, 19 Sep 2017 12:52:30 +0100
-Subject: [PATCH 070/100] ASoC: TDF8532: update license and author info
+Subject: [PATCH] ASoC: TDF8532: update license and author info
 
 Update license and author info.
 

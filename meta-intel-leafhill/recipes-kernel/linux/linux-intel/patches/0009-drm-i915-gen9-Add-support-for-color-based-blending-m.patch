@@ -1,8 +1,8 @@
-From 8a7f6fc5ddf83a989f8d78baec30fc28c3d27195 Mon Sep 17 00:00:00 2001
+From de9ed6e89f7e66321dca73d5261ac681a8a7edbf Mon Sep 17 00:00:00 2001
 From: Damien Lespiau <damien.lespiau@intel.com>
 Date: Mon, 7 May 2018 13:32:10 -0700
-Subject: [PATCH 09/45] drm/i915/gen9: Add support for color-based blending
- modes (v3)
+Subject: [PATCH] drm/i915/gen9: Add support for color-based blending modes
+ (v3)
 
 This patch adds support for blending modes involving
 color.

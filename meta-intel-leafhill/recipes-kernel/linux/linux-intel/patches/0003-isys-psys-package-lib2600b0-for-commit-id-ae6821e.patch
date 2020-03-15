@@ -1,0 +1,48 @@
+From 0c95b9dfb42a411de6f55f312b92387583a93e9f Mon Sep 17 00:00:00 2001
+From: icg_intg <icg_intg@intel.com>
+Date: Tue, 3 Sep 2019 11:30:22 +0800
+Subject: [PATCH] isys & psys package lib2600b0 for commit-id ae6821e
+
+FW_Manifest_ID: 529efddfcf254badb9358abbfc96be21dabac0de
+
+FW_Build_Branch: stable_iot_mr4_pv_r1_20180817
+
+FW_Build_Topic: auto_merge_queue
+
+library version: commit-id ae6821e
+
+FW Bundle patch number of this release :  430164
+
+FW tag : scci_stable_iot_mr4_pv_r1_20180817_20190902_0524
+
+Change-Id: I6d5f385be0eb738b7a00b9f28e4b171d7aa62740
+Signed-off-by: icg_intg <icg_intg@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h           | 2 +-
+ .../lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h        | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+index 50ec8e9..cbd28aa 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20181107
++#define IA_CSS_FW_PKG_RELEASE  0x20190902
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+index 50ec8e9..cbd28aa 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20181107
++#define IA_CSS_FW_PKG_RELEASE  0x20190902
+-- 
+1.9.1
+

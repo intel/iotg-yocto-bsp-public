@@ -1,9 +1,11 @@
-From 1a64ef35c411ed8c39618a6260f400716cc543d6 Mon Sep 17 00:00:00 2001
-From: "Vohra, GauravX" <gauravx.vohra@intel.com>
-Date: Tue, 28 Aug 2018 17:04:21 +0800
-Subject: [PATCH 085/100] ASoC: TDF8532: Fix for aplay suspend and resume
+From 97f7415d73e14502c163eb50c09ec50cb78447b5 Mon Sep 17 00:00:00 2001
+From: Muhammad Mustafa <muhammad.mustafa@intel.com>
+Date: Wed, 25 Jul 2018 16:16:11 +0200
+Subject: [PATCH] ASoC: TDF8532: Avoid race condition for I2C commands to
+ execute
 
-Signed-off-by: Vohra, GauravX <gauravx.vohra@intel.com>
+Add a delay of 180ms incase mute command is invoked while the codec is
+in transitional state to avoid dirty state.
 ---
  sound/soc/codecs/tdf8532.c | 24 +++++++++++++++++++-----
  sound/soc/codecs/tdf8532.h |  1 +

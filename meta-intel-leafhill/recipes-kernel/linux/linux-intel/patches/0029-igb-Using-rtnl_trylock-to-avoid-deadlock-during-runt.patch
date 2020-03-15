@@ -1,8 +1,8 @@
-From a63a76683e7d42451ddbc21d9fdffd5ab1a2fd25 Mon Sep 17 00:00:00 2001
+From 88e4372990be287b6defe5cfcd197a6560f1b34a Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Thu, 29 Dec 2016 11:37:47 +0800
-Subject: [PATCH 29/42] igb: Using rtnl_trylock to avoid deadlock during
- runtime resume
+Subject: [PATCH] igb: Using rtnl_trylock to avoid deadlock during runtime
+ resume
 
 Network device ioctl function in net/core/dev_ioctl.c is acquiring
 rtnl_lock for some ioctl commands like ethtool(SIOCETHTOOL) before
@@ -27,10 +27,10 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 17 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 7c638b4..0e6545a 100644
+index 60039ee..2a64d2b 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -8680,6 +8680,7 @@ static int __maybe_unused igb_resume(struct device *dev)
+@@ -8657,6 +8657,7 @@ static int __maybe_unused igb_resume(struct device *dev)
  	struct igb_adapter *adapter = netdev_priv(netdev);
  	struct e1000_hw *hw = &adapter->hw;
  	u32 err, val;
@@ -38,7 +38,7 @@ index 7c638b4..0e6545a 100644
  
  	pci_set_power_state(pdev, PCI_D0);
  	pci_restore_state(pdev);
-@@ -8716,14 +8717,24 @@ static int __maybe_unused igb_resume(struct device *dev)
+@@ -8693,14 +8694,24 @@ static int __maybe_unused igb_resume(struct device *dev)
  
  	wr32(E1000_WUS, ~0);
  

@@ -1,7 +1,7 @@
-From 949c4d19e12cb7c6055f9d0749643692ccb94455 Mon Sep 17 00:00:00 2001
+From 55ed8cadece3ff8122d845ea6d35649099d87322 Mon Sep 17 00:00:00 2001
 From: Chandra Konduru <chandra.konduru@intel.com>
 Date: Mon, 9 Apr 2018 09:11:13 +0530
-Subject: [PATCH 25/45] drm/i915: Upscale scaler max scale for NV12
+Subject: [PATCH] drm/i915: Upscale scaler max scale for NV12
 
 This patch updates scaler max limit support for NV12
 

@@ -1,7 +1,7 @@
-From 7f6a513ca45486a506cba7f0d30b7b824ceacfde Mon Sep 17 00:00:00 2001
+From 0e940c42f242a37e4b209ebf06b1d75c28e629a9 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Thu, 18 May 2017 15:45:58 +0100
-Subject: [PATCH 065/100] ASoC: TDF8532: reorder state change commands
+Subject: [PATCH] ASoC: TDF8532: reorder state change commands
 
 Early audio component holds speaker ALSA device open even when not playing.
 Move all state change functions to the trigger callback so the TDF8532 is

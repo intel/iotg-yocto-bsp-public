@@ -1,8 +1,7 @@
-From 1282430aff1ecebd7dbe0f6702297a870e40cc92 Mon Sep 17 00:00:00 2001
+From 19061f26420046fbdce63947cac99ce7ba2ca784 Mon Sep 17 00:00:00 2001
 From: Pardha Saradhi K <pardha.saradhi.kesapragada@intel.com>
 Date: Tue, 10 Apr 2018 23:46:48 +0530
-Subject: [PATCH 093/100] ASoC: Intel: Skylake: Add support to notify resource
- event
+Subject: [PATCH] ASoC: Intel: Skylake: Add support to notify resource event
 
 ADSP notifies to driver in case of any resource events that
 occur while executing a usecase. These are notification

@@ -1,7 +1,7 @@
-From 75f21892c9ad2fe31cc745ba1236d42976500051 Mon Sep 17 00:00:00 2001
+From 326d15a7306b91c543dbb7e2621434b9f6a31b42 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Wed, 22 Feb 2017 11:47:22 +0000
-Subject: [PATCH 042/100] ASoC: Intel: Skylake: Add HDMI capture support
+Subject: [PATCH] ASoC: Intel: Skylake: Add HDMI capture support
 
 GPMRB contains HDMI capture device, add support in platform driver DAI.
 

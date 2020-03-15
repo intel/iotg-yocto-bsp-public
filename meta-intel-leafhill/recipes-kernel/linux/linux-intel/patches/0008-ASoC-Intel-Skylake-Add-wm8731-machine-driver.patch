@@ -1,7 +1,7 @@
-From 2261de9b3569e1d55bde71d3e28eb500cdfc77dc Mon Sep 17 00:00:00 2001
+From ea4dda1bc49e0a15b072831425a362b90f6d88ab Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Mon, 4 Jul 2016 17:25:12 +0800
-Subject: [PATCH 008/100] ASoC: Intel: Skylake: Add wm8731 machine driver
+Subject: [PATCH] ASoC: Intel: Skylake: Add wm8731 machine driver
 
 This commit is to add new wm8731 codec machine drivers for
 Apollo Lake-I LeafHill CRB.
@@ -32,7 +32,7 @@ Conflicts:
  create mode 100644 sound/soc/intel/boards/apli_lhcrb_wm8731.c
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 1ae34b0..9e53d4f 100644
+index 7b39716..938017d 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
 @@ -12549,6 +12549,11 @@ F:	Documentation/sound/alsa/soc/
@@ -88,7 +88,7 @@ index 646b293b..d4b3817 100644
 +obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_WM8731_MACH) += snd-soc-apli_lhcrb_wm8731.o
 diff --git a/sound/soc/intel/boards/apli_lhcrb_wm8731.c b/sound/soc/intel/boards/apli_lhcrb_wm8731.c
 new file mode 100644
-index 0000000..2b1f0e5
+index 00000000..2b1f0e5
 --- /dev/null
 +++ b/sound/soc/intel/boards/apli_lhcrb_wm8731.c
 @@ -0,0 +1,271 @@

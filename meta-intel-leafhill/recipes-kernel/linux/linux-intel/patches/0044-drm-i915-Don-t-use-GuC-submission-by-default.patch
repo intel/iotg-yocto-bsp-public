@@ -1,7 +1,7 @@
-From ff74fb7d9f34b8e7c16e48fbb8f66002ec903118 Mon Sep 17 00:00:00 2001
+From 7b32b0c3f58b04f53de11d11814f851f64b1a8a4 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Fri, 5 Oct 2018 14:26:20 -0700
-Subject: [PATCH 44/45] drm/i915: Don't use GuC submission by default
+Subject: [PATCH] drm/i915: Don't use GuC submission by default
 
 Turning on GuC submission disables GPU preemption, which is an important
 feature for IOTG releases (future upstream kernels allow GuC+preemption,

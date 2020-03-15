@@ -1,7 +1,7 @@
-From cd12bd71dfb58a0da36daee0af80c4c5a0737e2c Mon Sep 17 00:00:00 2001
+From 6a1ae1970469619eece98d93af6fd986b68d86c1 Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Thu, 19 Nov 2015 06:51:46 +0100
-Subject: [PATCH 014/100] ASoC: Intel: FE and BE DAI added.
+Subject: [PATCH] ASoC: Intel: FE and BE DAI added.
 
  FE DAI Dirana Cp and Pb added.
  BE Cp and Pb DAI for SSP2 added.
@@ -18,7 +18,7 @@ Conflicts:
 
 diff --git a/sound/soc/intel/boards/bxt_gpmrb.c b/sound/soc/intel/boards/bxt_gpmrb.c
 new file mode 100644
-index 0000000..0a2690d
+index 00000000..0a2690d
 --- /dev/null
 +++ b/sound/soc/intel/boards/bxt_gpmrb.c
 @@ -0,0 +1,187 @@

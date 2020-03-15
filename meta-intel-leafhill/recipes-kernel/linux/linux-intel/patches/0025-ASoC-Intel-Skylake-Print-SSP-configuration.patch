@@ -1,7 +1,7 @@
-From f5d7ecf60e7382a187c8ddfe881fb3e6df673291 Mon Sep 17 00:00:00 2001
+From d35f2fe00d32418e7a8639d2d47172a907b40761 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Wed, 1 Jun 2016 14:39:46 +0100
-Subject: [PATCH 025/100] ASoC: Intel: Skylake: Print SSP configuration
+Subject: [PATCH] ASoC: Intel: Skylake: Print SSP configuration
 
 Print SSP configuration (debug level) when a pipeline is opened.
 

@@ -1,7 +1,7 @@
-From 093b4d6990dae3555f7f12138f1282395bc57fa0 Mon Sep 17 00:00:00 2001
+From 53ed8956fdd451d0d5638cdbe178854094e56d79 Mon Sep 17 00:00:00 2001
 From: Jakub Dorzak <jakubx.dorzak@intel.com>
 Date: Fri, 16 Dec 2016 14:29:04 +0000
-Subject: [PATCH 040/100] ASoC: Intel: Skylake: Add capture widgets to dirana
+Subject: [PATCH] ASoC: Intel: Skylake: Add capture widgets to dirana
 
 Signed-off-by: Jakub Dorzak <jakubx.dorzak@intel.com>
 ---

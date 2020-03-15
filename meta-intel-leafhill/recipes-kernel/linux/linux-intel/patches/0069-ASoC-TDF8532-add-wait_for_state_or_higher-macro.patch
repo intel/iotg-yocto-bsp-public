@@ -1,7 +1,7 @@
-From fd59cb1c1842816814a6ee01c533638ec38c651a Mon Sep 17 00:00:00 2001
+From 4092de7d2391e5a944e37a5233c81349bede27b4 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Mon, 18 Sep 2017 15:24:08 +0100
-Subject: [PATCH 069/100] ASoC: TDF8532: add wait_for_state_or_higher macro
+Subject: [PATCH] ASoC: TDF8532: add wait_for_state_or_higher macro
 
 Sometimes the amplifier would be in the playing state for too long
 before the clock was applied. This would lead to the amp moving to

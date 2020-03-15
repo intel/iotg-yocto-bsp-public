@@ -1,8 +1,7 @@
-From 1c9e19ba1a6dc8babba4d35632d7b0038e44ddbd Mon Sep 17 00:00:00 2001
+From 23b16f043504576ae468380b0d6d3a41d39f4da2 Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Mon, 4 Jul 2016 17:34:05 +0800
-Subject: [PATCH 010/100] ASoC: Intel: Skylake: Add machine drivers for
- TLV320AIC3107
+Subject: [PATCH] ASoC: Intel: Skylake: Add machine drivers for TLV320AIC3107
 
 This commit is to add new machine drivers for TI codec,
 for both soc master and slave control mode, which are named
@@ -26,7 +25,7 @@ Conflicts:
  create mode 100644 sound/soc/intel/boards/apli_lhcrb_aic3107S.c
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 9e53d4f..3a42e4d 100644
+index 938017d..d89f6963 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
 @@ -12554,6 +12554,13 @@ M:	Tan, Seng Kai <seng.kai.tan@intel.com>
@@ -86,7 +85,7 @@ index d4b3817..70c8ffa 100644
 +obj-$(CONFIG_SND_SOC_INTEL_APLI_LHCRB_AIC3107_MACH) += snd-soc-apli_lhcrb_aic3107S.o
 diff --git a/sound/soc/intel/boards/apli_lhcrb_aic3107M.c b/sound/soc/intel/boards/apli_lhcrb_aic3107M.c
 new file mode 100644
-index 0000000..a07883e
+index 00000000..a07883e
 --- /dev/null
 +++ b/sound/soc/intel/boards/apli_lhcrb_aic3107M.c
 @@ -0,0 +1,406 @@
@@ -498,7 +497,7 @@ index 0000000..a07883e
 +MODULE_ALIAS("platform:lfcrb_aic3107M_i2s");
 diff --git a/sound/soc/intel/boards/apli_lhcrb_aic3107S.c b/sound/soc/intel/boards/apli_lhcrb_aic3107S.c
 new file mode 100644
-index 0000000..93e2ab9
+index 00000000..93e2ab9
 --- /dev/null
 +++ b/sound/soc/intel/boards/apli_lhcrb_aic3107S.c
 @@ -0,0 +1,406 @@

@@ -1,7 +1,7 @@
-From 77e8c7956e59ac91135133d890cf5f15da72ad2e Mon Sep 17 00:00:00 2001
+From 5de897b0972b97b8dd6225045b02563e6079f713 Mon Sep 17 00:00:00 2001
 From: "Ooi, Joyce" <joyce.ooi@intel.com>
 Date: Wed, 21 Dec 2016 00:37:07 +0800
-Subject: [PATCH 11/42] misc: intel-ish-client: add intel ishtp clients driver
+Subject: [PATCH] misc: intel-ish-client: add intel ishtp clients driver
 
 Intel ISHFW supports many different clients, in
 hid/intel-ish-hid/ishtp bus driver, it creates following client devices:
@@ -49,17 +49,17 @@ index 8136dc7..a350d6b 100644
 +source "drivers/misc/intel-ish-client/Kconfig"
  endmenu
 diff --git a/drivers/misc/Makefile b/drivers/misc/Makefile
-index ad0e64f..22e2e21 100644
+index 76f6a4f..951c7dd 100644
 --- a/drivers/misc/Makefile
 +++ b/drivers/misc/Makefile
-@@ -74,3 +74,4 @@ OBJCOPYFLAGS_lkdtm_rodata_objcopy.o := \
+@@ -73,3 +73,4 @@ OBJCOPYFLAGS_lkdtm_rodata_objcopy.o := \
  targets += lkdtm_rodata.o lkdtm_rodata_objcopy.o
  $(obj)/lkdtm_rodata_objcopy.o: $(obj)/lkdtm_rodata.o FORCE
  	$(call if_changed,objcopy)
 +obj-$(CONFIG_INTEL_ISH_CLIENT)	+= intel-ish-client/
 diff --git a/drivers/misc/intel-ish-client/Kconfig b/drivers/misc/intel-ish-client/Kconfig
 new file mode 100644
-index 0000000..6fa9cc0
+index 00000000..6fa9cc0
 --- /dev/null
 +++ b/drivers/misc/intel-ish-client/Kconfig
 @@ -0,0 +1,15 @@
@@ -80,7 +80,7 @@ index 0000000..6fa9cc0
 +endmenu
 diff --git a/drivers/misc/intel-ish-client/Makefile b/drivers/misc/intel-ish-client/Makefile
 new file mode 100644
-index 0000000..29a5461
+index 00000000..29a5461
 --- /dev/null
 +++ b/drivers/misc/intel-ish-client/Makefile
 @@ -0,0 +1,8 @@
@@ -94,7 +94,7 @@ index 0000000..29a5461
 +ccflags-y += -I$(srctree)/drivers/hid/intel-ish-hid/ishtp
 diff --git a/drivers/misc/intel-ish-client/intel-ishtp-clients.c b/drivers/misc/intel-ish-client/intel-ishtp-clients.c
 new file mode 100644
-index 0000000..71c8b1a
+index 00000000..71c8b1a
 --- /dev/null
 +++ b/drivers/misc/intel-ish-client/intel-ishtp-clients.c
 @@ -0,0 +1,910 @@
@@ -1010,7 +1010,7 @@ index 0000000..71c8b1a
 +MODULE_ALIAS("ishtp:*");
 diff --git a/include/uapi/linux/intel-ishtp-clients.h b/include/uapi/linux/intel-ishtp-clients.h
 new file mode 100644
-index 0000000..d228f19
+index 00000000..d228f19
 --- /dev/null
 +++ b/include/uapi/linux/intel-ishtp-clients.h
 @@ -0,0 +1,71 @@

@@ -1,8 +1,8 @@
-From 1fb0ea30d45f3ba38127ecb01fe6749c8100af39 Mon Sep 17 00:00:00 2001
+From 7548f74848ce3c92ddf34bb86ac1e2f0cfd3a66a Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Tue, 23 Oct 2018 19:08:14 +0800
-Subject: [PATCH 098/100] ASoC: Intel: Skylake: Improve
- SKL_I2S_CLK_STATE_CHANGED logging message
+Subject: [PATCH] ASoC: Intel: Skylake: Improve SKL_I2S_CLK_STATE_CHANGED
+ logging message
 
 Translate additional details on I2S clock state and port index
 based on IPC payloads.

@@ -1,8 +1,8 @@
-From 08633b0e133d28a590b07f55f88560b7a05743d9 Mon Sep 17 00:00:00 2001
+From 8db5cabec93615e529399c51894f17e03e2cad0c Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Thu, 25 Oct 2018 17:56:20 +0800
-Subject: [PATCH 100/100] ASoC: Intel: Skylake: Implement FW recovery mechanism
- when encountering FW boot timeout error
+Subject: [PATCH] ASoC: Intel: Skylake: Implement FW recovery mechanism when
+ encountering FW boot timeout error
 
 When FW boots with timeout error, reinitialize, transfer
 and boot firmware to recover audio.

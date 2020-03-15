@@ -1,7 +1,7 @@
-From 03742f610f208a265936c38e6db06e7c3dc6c5e8 Mon Sep 17 00:00:00 2001
+From cbf6056fd61d89a6a7a40f0334441713bb9b849b Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Tue, 20 Dec 2016 10:24:21 -0800
-Subject: [PATCH 37/45] drm/i915/bxt: Bring MIPI out of reset
+Subject: [PATCH] drm/i915/bxt: Bring MIPI out of reset
 
 and power up the DSI regulator when initializing a MIPI display.
 

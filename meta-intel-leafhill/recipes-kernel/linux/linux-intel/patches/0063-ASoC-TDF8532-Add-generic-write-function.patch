@@ -1,7 +1,7 @@
-From 238daa23bf716ad7d9f99ecf96f134f5a51b76ba Mon Sep 17 00:00:00 2001
+From e6328041a72d8c4fd1c3a7f3c076b0dc4172d4b3 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Mon, 6 Feb 2017 09:12:57 +0000
-Subject: [PATCH 063/100] ASoC: TDF8532: Add generic write function
+Subject: [PATCH] ASoC: TDF8532: Add generic write function
 
 Allow future expansion of the codec driver by adding generic write function
 and macro. Also update all writes to use this.

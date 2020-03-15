@@ -1,9 +1,25 @@
-From 556e53aeee984765598886e2fcee05bef401348f Mon Sep 17 00:00:00 2001
-From: Gaurav Vohra <gauravx.vohra.gaurav.vohra@intel.com>
-Date: Wed, 5 Sep 2018 17:11:18 +0800
-Subject: [PATCH 089/100] ASoC: Intel: Skylake: validate the downloaded
- firmware for driver compatability
+From 2e3b1f93a979c19a534cfbb0a15bbcce1d833ab3 Mon Sep 17 00:00:00 2001
+From: Pardha Saradhi K <pardha.saradhi.kesapragada@intel.com>
+Date: Thu, 4 Jan 2018 19:40:48 +0530
+Subject: [PATCH] ASoC: Intel: Skylake: validate the downloaded firmware
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+Print the firmware version downloaded and verify if it is
+equal or greater than the minimum supported version for
+the existing driver. Report error and exit driver
+initialization if downloaded firmware is not compatible
+with current driver.
+
+Change-Id: I6e0f046d88123c9c216ac9a1c9054f37661e1bfe
+Signed-off-by: Prakash, Divya1 <divya1.prakash@intel.com>
+Signed-off-by: Mohit Sinha <mohit.sinha@intel.com>
+Signed-off-by: Pardha Saradhi K <pardha.saradhi.kesapragada@intel.com>
+Signed-off-by: Amadeusz Sławiński <amadeuszx.slawinski@intel.com>
+Reviewed-on: https://git-gar-1.devtools.intel.com/gerrit/20586
+Reviewed-by: Rojewski, Cezary <cezary.rojewski@intel.com>
+Tested-by: Rojewski, Cezary <cezary.rojewski@intel.com>
 ---
  sound/soc/intel/skylake/bxt-sst.c       | 17 +++++++++++++++--
  sound/soc/intel/skylake/cnl-sst-dsp.h   |  2 +-

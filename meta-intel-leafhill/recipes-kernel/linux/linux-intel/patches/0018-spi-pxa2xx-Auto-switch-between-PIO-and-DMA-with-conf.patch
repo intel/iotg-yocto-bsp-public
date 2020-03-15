@@ -1,7 +1,7 @@
-From 1fb6e0ff7e1d73652b1e2d489f032e77294206d6 Mon Sep 17 00:00:00 2001
+From 0adf4f90929eb2a8041338f3e152ad5d5b2792d7 Mon Sep 17 00:00:00 2001
 From: Weifeng Voon <weifeng.voon@intel.com>
 Date: Thu, 5 Oct 2017 13:05:10 +0800
-Subject: [PATCH 18/42] spi: pxa2xx: Auto switch between PIO and DMA with
+Subject: [PATCH] spi: pxa2xx: Auto switch between PIO and DMA with
  configurable threshold value
 
 It is not efficient to transfer small data size using dma. Hence,
@@ -37,10 +37,10 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  3 files changed, 5 insertions(+)
 
 diff --git a/drivers/spi/spi-pxa2xx.c b/drivers/spi/spi-pxa2xx.c
-index 4cb515a..a606f14 100644
+index 9bf3e5f..4cf0563 100644
 --- a/drivers/spi/spi-pxa2xx.c
 +++ b/drivers/spi/spi-pxa2xx.c
-@@ -1102,6 +1102,7 @@ static void pump_transfers(unsigned long data)
+@@ -1106,6 +1106,7 @@ static void pump_transfers(unsigned long data)
  
  	dma_mapped = master->can_dma &&
  		     master->can_dma(master, message->spi, transfer) &&
@@ -48,7 +48,7 @@ index 4cb515a..a606f14 100644
  		     master->cur_msg_mapped;
  	if (dma_mapped) {
  
-@@ -1341,6 +1342,8 @@ static int setup(struct spi_device *spi)
+@@ -1345,6 +1346,8 @@ static int setup(struct spi_device *spi)
  		chip->dma_threshold = 0;
  		if (chip_info->enable_loopback)
  			chip->cr1 = SSCR1_LBM;

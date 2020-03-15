@@ -1,8 +1,8 @@
-From 4a1e43efc164211aa38f9026937a063058b3dfc7 Mon Sep 17 00:00:00 2001
+From d971d420ce0321d4f50a856ba9e3dd4ef1b33c1f Mon Sep 17 00:00:00 2001
 From: "Ooi, Joyce" <joyce.ooi@intel.com>
 Date: Tue, 21 Jun 2016 11:42:11 +0800
-Subject: [PATCH 10/42] iio: light and pressure: Change data fields for ambient
- light and pressure sensor
+Subject: [PATCH] iio: light and pressure: Change data fields for ambient light
+ and pressure sensor
 
 Sensitivity Percent Relative is added for ambient light sensor as it is
 used based on HID Sensor Usages specifications (Chapter 4.3.6 for Ambient
@@ -21,10 +21,10 @@ Signed-off-by: Ruslan, Rusaimi Amira <rusaimi.amira.ruslan@intel.com>
  3 files changed, 21 insertions(+)
 
 diff --git a/drivers/iio/light/hid-sensor-als.c b/drivers/iio/light/hid-sensor-als.c
-index 059d964..aba3073 100644
+index 95ca86f..d3e5864 100644
 --- a/drivers/iio/light/hid-sensor-als.c
 +++ b/drivers/iio/light/hid-sensor-als.c
-@@ -270,6 +270,16 @@ static int als_parse_report(struct platform_device *pdev,
+@@ -272,6 +272,16 @@ static int als_parse_report(struct platform_device *pdev,
  			st->common_attributes.sensitivity.index,
  			st->common_attributes.sensitivity.report_id);
  	}
@@ -42,10 +42,10 @@ index 059d964..aba3073 100644
  }
  
 diff --git a/drivers/iio/pressure/hid-sensor-press.c b/drivers/iio/pressure/hid-sensor-press.c
-index 6848d8c..4cbbf88 100644
+index 1c49ef7..334ec9e 100644
 --- a/drivers/iio/pressure/hid-sensor-press.c
 +++ b/drivers/iio/pressure/hid-sensor-press.c
-@@ -249,6 +249,16 @@ static int press_parse_report(struct platform_device *pdev,
+@@ -251,6 +251,16 @@ static int press_parse_report(struct platform_device *pdev,
  			st->common_attributes.sensitivity.index,
  			st->common_attributes.sensitivity.report_id);
  	}

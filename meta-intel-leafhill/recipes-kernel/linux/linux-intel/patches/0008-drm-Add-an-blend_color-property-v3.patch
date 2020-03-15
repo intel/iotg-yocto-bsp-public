@@ -1,7 +1,7 @@
-From aa58a7dc50f895a37c2339cc03bbf97b569fa0b3 Mon Sep 17 00:00:00 2001
+From 08cb1f6a2d8edc0fc6521786c5ad1db005f0c042 Mon Sep 17 00:00:00 2001
 From: Damien Lespiau <damien.lespiau@intel.com>
 Date: Mon, 7 May 2018 13:32:09 -0700
-Subject: [PATCH 08/45] drm: Add an blend_color property (v3)
+Subject: [PATCH] drm: Add an blend_color property (v3)
 
 Add blend color property and update the
 documentation for the same

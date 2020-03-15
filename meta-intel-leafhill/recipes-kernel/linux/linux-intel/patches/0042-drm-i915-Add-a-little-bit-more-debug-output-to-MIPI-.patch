@@ -1,8 +1,8 @@
-From 961cf7a2dacd33ac636c3d540513cf96a13f3eb9 Mon Sep 17 00:00:00 2001
+From 43ad3d02347e82d8e04704b0dee0a0b117c1ced6 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Thu, 23 Aug 2018 17:12:14 -0700
-Subject: [PATCH 42/45] drm/i915: Add a little bit more debug output to
- MIPI-DSI readout
+Subject: [PATCH] drm/i915: Add a little bit more debug output to MIPI-DSI
+ readout
 
 We'd like a little bit more information about how the BIOS setup our
 MIPI panels before the driver started, especially when dual-link panels

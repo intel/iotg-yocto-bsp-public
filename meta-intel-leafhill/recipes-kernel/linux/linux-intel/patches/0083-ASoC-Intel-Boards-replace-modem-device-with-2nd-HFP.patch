@@ -1,8 +1,7 @@
-From 96bd342f08569c62ace47bdfbbaefab85b11bc94 Mon Sep 17 00:00:00 2001
+From 89c616f4419990c03abfd144331aff8ae6f35868 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Wed, 7 Mar 2018 10:11:04 +0000
-Subject: [PATCH 083/100] ASoC: Intel: Boards: replace modem device with 2nd
- HFP
+Subject: [PATCH] ASoC: Intel: Boards: replace modem device with 2nd HFP
 
 Replace the modem device with a 2nd HFP (BT) device. These devices are
 both connected to SSP0 but use separate channels. This was done to better

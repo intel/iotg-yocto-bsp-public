@@ -1,8 +1,8 @@
-From a5704cee13bf9b4edc8a78388183d38a0d08f394 Mon Sep 17 00:00:00 2001
+From 64e8d4baf9b92e9f122626a522dbc466dfca6e8c Mon Sep 17 00:00:00 2001
 From: Michel Thierry <michel.thierry@intel.com>
 Date: Fri, 21 Apr 2017 09:37:30 -0700
-Subject: [PATCH 33/45] drm/i915: Watchdog timeout: Ringbuffer command emission
- for gen8+
+Subject: [PATCH] drm/i915: Watchdog timeout: Ringbuffer command emission for
+ gen8+
 
 Emit the required commands into the ring buffer for starting and
 stopping the watchdog timer before/after batch buffer start during

@@ -1,8 +1,7 @@
-From 96e984217021d72c27ef082a8156564849a958fd Mon Sep 17 00:00:00 2001
+From e13c7041e4a69f3cad0d52d7598f59a7b4f47c84 Mon Sep 17 00:00:00 2001
 From: Chandra Konduru <chandra.konduru@intel.com>
 Date: Sat, 12 May 2018 03:03:16 +0530
-Subject: [PATCH 28/45] drm/i915: Add NV12 as supported format for primary
- plane
+Subject: [PATCH] drm/i915: Add NV12 as supported format for primary plane
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

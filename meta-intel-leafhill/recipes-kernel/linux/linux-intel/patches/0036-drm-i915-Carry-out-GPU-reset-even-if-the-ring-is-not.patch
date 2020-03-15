@@ -1,8 +1,7 @@
-From 5c3ced66901aa8c2b6ca6d9ee9868e8b7d571159 Mon Sep 17 00:00:00 2001
+From d04c8e07dd819bdf3441384380f711cf740edc73 Mon Sep 17 00:00:00 2001
 From: Antonio Argenziano <antonio.argenziano@intel.com>
 Date: Wed, 26 Apr 2017 12:48:43 -0700
-Subject: [PATCH 36/45] drm/i915: Carry out GPU reset even if the ring is not
- ready
+Subject: [PATCH] drm/i915: Carry out GPU reset even if the ring is not ready
 
 When we attempt at a full GPU reset we try to get all engines ready before the
 actual reset is triggered. If we miss the acknowledgment, currently, we

@@ -1,7 +1,7 @@
-From dde337fd36cbaaacfb8a937ef51c8841fe348ad9 Mon Sep 17 00:00:00 2001
+From 4c19a5e9a709fc5c767e8271474116ca9149eb98 Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:03:24 +0100
-Subject: [PATCH 05/42] intel_pstate: Add pstate notifier callback
+Subject: [PATCH] intel_pstate: Add pstate notifier callback
 
 Whenever the CPU frequency is changed, notify any other kernel processes
 that have registered to receive this information.
@@ -13,7 +13,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 32 insertions(+)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 72fe151..2db8a14 100644
+index 15626bf..c7caa3c 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -30,6 +30,7 @@

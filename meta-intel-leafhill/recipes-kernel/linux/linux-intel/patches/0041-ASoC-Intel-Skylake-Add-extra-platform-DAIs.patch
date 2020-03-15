@@ -1,7 +1,7 @@
-From 6f94f9fe5c43640f42c4113aa60f9826c92e08c6 Mon Sep 17 00:00:00 2001
+From 539047b891dc15eb12a3a47aa813e5aff4586bd3 Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Wed, 22 Feb 2017 11:45:45 +0000
-Subject: [PATCH 041/100] ASoC: Intel: Skylake: Add extra platform DAIs
+Subject: [PATCH] ASoC: Intel: Skylake: Add extra platform DAIs
 
 Add 2 extra System Pin DAIs as GPMRB needs 8 total.
 

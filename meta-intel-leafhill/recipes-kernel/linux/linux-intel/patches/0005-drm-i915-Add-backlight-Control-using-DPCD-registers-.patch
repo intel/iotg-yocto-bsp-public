@@ -1,8 +1,8 @@
-From 287bb3c67439bb63a845863662b714d51acdb59c Mon Sep 17 00:00:00 2001
+From eec1172a72590171c28fc47db03359bd56a42b98 Mon Sep 17 00:00:00 2001
 From: Yetunde Adebisi <yetundex.adebisi@intel.com>
 Date: Tue, 5 Apr 2016 13:56:01 +0100
-Subject: [PATCH 05/45] drm/i915: Add backlight Control using DPCD registers
- for DP connectors
+Subject: [PATCH] drm/i915: Add backlight Control using DPCD registers for DP
+ connectors
 
 This patch enables support for DPCD backlight control for DP connectors.
 The VESA spec defines DPCD backlight control only for eDP but some add-on

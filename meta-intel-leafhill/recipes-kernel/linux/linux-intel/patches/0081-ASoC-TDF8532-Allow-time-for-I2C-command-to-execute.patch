@@ -1,7 +1,7 @@
-From 5a25af247462859e32ed433a2d3691a75e1b8ca3 Mon Sep 17 00:00:00 2001
+From 5ab8238b5b87eac92b36d50177280f2b076ae9c0 Mon Sep 17 00:00:00 2001
 From: lmcneilx <lornax.mcneil@intel.com>
 Date: Mon, 26 Mar 2018 16:43:25 +0100
-Subject: [PATCH 081/100] ASoC: TDF8532: Allow time for I2C command to execute
+Subject: [PATCH] ASoC: TDF8532: Allow time for I2C command to execute
 
 Add a sufficient delay after i2c send / recv to allow for the I2C command
 execution time. Delay chosen (2ms for send, 1ms for recv) is based on the

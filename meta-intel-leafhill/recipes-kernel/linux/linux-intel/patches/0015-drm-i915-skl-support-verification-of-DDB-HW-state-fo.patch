@@ -1,8 +1,7 @@
-From a60be8f848fab50e6b8b409c32ec13550c0d6c72 Mon Sep 17 00:00:00 2001
+From 263081482486018018a9aeac44744f424432e95f Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:03 +0530
-Subject: [PATCH 15/45] drm/i915/skl+: support verification of DDB HW state for
- NV12
+Subject: [PATCH] drm/i915/skl+: support verification of DDB HW state for NV12
 
 For YUV 420 Planar formats like NV12,
 buffer allocation is done for Y and UV surfaces separately.
@@ -62,10 +61,10 @@ index 69ace84..4d4f44d 100644
  /* intel_csr.c */
  void intel_csr_ucode_init(struct drm_i915_private *);
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 811bb3d..5979af8 100644
+index c2ed40a..b727439 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
-@@ -3801,6 +3801,44 @@ static void skl_ddb_entry_init_from_hw(struct skl_ddb_entry *entry, u32 reg)
+@@ -3840,6 +3840,44 @@ static void skl_ddb_entry_init_from_hw(struct skl_ddb_entry *entry, u32 reg)
  		entry->end += 1;
  }
  
@@ -110,7 +109,7 @@ index 811bb3d..5979af8 100644
  void skl_ddb_get_hw_state(struct drm_i915_private *dev_priv,
  			  struct skl_ddb_allocation *ddb /* out */)
  {
-@@ -3817,16 +3855,9 @@ void skl_ddb_get_hw_state(struct drm_i915_private *dev_priv,
+@@ -3856,16 +3894,9 @@ void skl_ddb_get_hw_state(struct drm_i915_private *dev_priv,
  		if (!intel_display_power_get_if_enabled(dev_priv, power_domain))
  			continue;
  

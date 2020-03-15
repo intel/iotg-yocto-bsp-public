@@ -1,0 +1,51 @@
+From 56c164d2d4103308f3d2daba16ed037ba0281336 Mon Sep 17 00:00:00 2001
+From: Gaurav Vohra <gauravx.vohra@intel.com>
+Date: Sat, 29 Jun 2019 14:08:43 +0800
+Subject: [PATCH] Revert "fix value of SDxFMT register"
+
+This reverts commit 8298bfee4382dc5f526dd29a1e3b58721ac40917.
+
+This fix is not required as "ASoC: Intel: Skylake: Prepare host DMA when pipe already in RESET state"
+fixes the issue with multiple wav file playback and this patch was additional change on top of
+"ASoC: Intel: Skylake: Fixed issue with aplay multiple wav files"
+---
+ include/sound/hdaudio_ext.h       | 6 ++++++
+ sound/soc/intel/skylake/skl-pcm.c | 3 +--
+ 2 files changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/include/sound/hdaudio_ext.h b/include/sound/hdaudio_ext.h
+index 7b1558e..ade1b9f 100644
+--- a/include/sound/hdaudio_ext.h
++++ b/include/sound/hdaudio_ext.h
+@@ -18,6 +18,12 @@ struct hdac_ext_bus {
+ 	int num_streams;
+ 	int idx;
+ 
++	void __iomem *ppcap;
++	void __iomem *spbcap;
++	void __iomem *mlcap;
++	void __iomem *gtscap;
++	void __iomem *drsmcap;
++
+ 	struct list_head hlink_list;
+ 
+ 	struct mutex lock;
+diff --git a/sound/soc/intel/skylake/skl-pcm.c b/sound/soc/intel/skylake/skl-pcm.c
+index fe94353..9018875 100644
+--- a/sound/soc/intel/skylake/skl-pcm.c
++++ b/sound/soc/intel/skylake/skl-pcm.c
+@@ -278,10 +278,9 @@ static int skl_get_format(struct snd_pcm_substream *substream,
+ 	struct snd_soc_pcm_runtime *rtd = snd_pcm_substream_chip(substream);
+ 	struct skl_dma_params *dma_params;
+ 	struct hdac_ext_bus *ebus = dev_get_drvdata(dai->dev);
+-	struct hdac_bus *bus = ebus_to_hbus(ebus);
+ 	int format_val = 0;
+ 
+-	if (bus->ppcap) {
++	if (ebus->ppcap) {
+ 		struct snd_pcm_runtime *runtime = substream->runtime;
+ 
+ 		format_val = snd_hdac_calc_stream_format(runtime->rate,
+-- 
+1.9.1
+

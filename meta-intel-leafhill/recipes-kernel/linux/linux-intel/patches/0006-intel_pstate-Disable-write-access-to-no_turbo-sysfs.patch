@@ -1,7 +1,7 @@
-From 49d7afc1ea6189b855a702f1c8bd5c78c08c6b63 Mon Sep 17 00:00:00 2001
+From aaf71d5c7bc9d22d7f1f235316ffba5f01fca946 Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:04:32 +0100
-Subject: [PATCH 06/42] intel_pstate: Disable write access to no_turbo sysfs
+Subject: [PATCH] intel_pstate: Disable write access to no_turbo sysfs
 
 Whenever any kernel process registered to intel_pstate notifications,
 disable write access to no_turbo sysfs entry and intel_pstate
@@ -14,7 +14,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 7 insertions(+)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 2db8a14..3e81156 100644
+index c7caa3c..2a95221 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -59,6 +59,8 @@
@@ -26,7 +26,7 @@ index 2db8a14..3e81156 100644
  static inline int32_t mul_fp(int32_t x, int32_t y)
  {
  	return ((int64_t)x * (int64_t)y) >> FRAC_BITS;
-@@ -983,6 +985,9 @@ static ssize_t store_no_turbo(struct kobject *a, struct attribute *b,
+@@ -983,6 +985,9 @@ static ssize_t store_no_turbo(struct kobject *a, struct kobj_attribute *b,
  		return -EPERM;
  	}
  

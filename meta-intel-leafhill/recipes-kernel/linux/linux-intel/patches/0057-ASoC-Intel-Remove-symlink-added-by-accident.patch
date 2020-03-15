@@ -1,7 +1,7 @@
-From 19e4a455e9cffa76eaa86cd0f963de6c0962c9a4 Mon Sep 17 00:00:00 2001
+From ae74b455823a1048f34a2f770a5530dd3555ad82 Mon Sep 17 00:00:00 2001
 From: Markus Schuetterle <markus.schuetterle@intel.com>
 Date: Thu, 28 Apr 2016 15:35:50 +0200
-Subject: [PATCH 057/100] ASoC: Intel: Remove symlink added by accident
+Subject: [PATCH] ASoC: Intel: Remove symlink added by accident
 
 Change-Id: Id14a44262d17356d2b81deed19fa95dbdabfc11b
 Signed-off-by: Markus Schuetterle <markus.schuetterle@intel.com>
@@ -12,7 +12,7 @@ Signed-off-by: Markus Schuetterle <markus.schuetterle@intel.com>
 
 diff --git a/source b/source
 deleted file mode 120000
-index d600a8b..0000000
+index d600a8b..00000000
 --- a/source
 +++ /dev/null
 @@ -1 +0,0 @@

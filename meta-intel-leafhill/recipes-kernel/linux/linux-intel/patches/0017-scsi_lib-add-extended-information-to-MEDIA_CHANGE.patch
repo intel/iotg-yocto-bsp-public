@@ -1,7 +1,7 @@
-From 42e48fb7313432e7f87b78727581ab6bab1622dc Mon Sep 17 00:00:00 2001
+From 7939d1f960323dd612db5a9965b27a2b6ea6c4ec Mon Sep 17 00:00:00 2001
 From: Vitaly Wool <vwool@dev.rtsoft.ru>
 Date: Thu, 30 Jun 2016 07:06:53 +0000
-Subject: [PATCH 17/42] scsi_lib: add extended information to MEDIA_CHANGE
+Subject: [PATCH] scsi_lib: add extended information to MEDIA_CHANGE
 
 Add media change reason string to SDEV_MEDIA_CHANGE uevent
 in the format of "SDEV_MEDIA_CHANGE_REASON=<reason>, where
@@ -17,10 +17,10 @@ Signed-off-by: Lim Key Seong <key.seong.lim@intel.com>
  3 files changed, 85 insertions(+)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index bfd8f12..1b74d62 100644
+index efb8af5..8296a2c 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -2730,6 +2730,64 @@ void scsi_exit_queue(void)
+@@ -2743,6 +2743,64 @@ void scsi_exit_queue(void)
  }
  EXPORT_SYMBOL(scsi_device_set_state);
  
@@ -85,7 +85,7 @@ index bfd8f12..1b74d62 100644
  /**
   * 	sdev_evt_emit - emit a single SCSI device uevent
   *	@sdev: associated SCSI device
-@@ -2741,10 +2799,18 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
+@@ -2754,10 +2812,18 @@ static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
  {
  	int idx = 0;
  	char *envp[3];
@@ -105,10 +105,10 @@ index bfd8f12..1b74d62 100644
  	case SDEV_EVT_INQUIRY_CHANGE_REPORTED:
  		scsi_rescan_device(&sdev->sdev_gendev);
 diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 3f3cb72..8892b7a 100644
+index d0389b2..33e57ee 100644
 --- a/drivers/scsi/sr.c
 +++ b/drivers/scsi/sr.c
-@@ -747,6 +747,7 @@ static int sr_probe(struct device *dev)
+@@ -760,6 +760,7 @@ static int sr_probe(struct device *dev)
  	disk->flags |= GENHD_FL_REMOVABLE;
  	device_add_disk(&sdev->sdev_gendev, disk);
  

@@ -1,7 +1,7 @@
-From b6557a93ad145e9ecd6a1041a63e2b97c84b3be5 Mon Sep 17 00:00:00 2001
+From d69daeff08520810f2240831358938b980311900 Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:11:48 +0100
-Subject: [PATCH 07/42] intel_pstate: Add forced CPU pstate change notification
+Subject: [PATCH] intel_pstate: Add forced CPU pstate change notification
 
 In case of no CPU frequency changes during 10 periods of a timer,
 send a force notification with a current value of CPU frequency.
@@ -13,7 +13,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 3e81156..e460af2 100644
+index 2a95221..064ddd5 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -57,6 +57,9 @@

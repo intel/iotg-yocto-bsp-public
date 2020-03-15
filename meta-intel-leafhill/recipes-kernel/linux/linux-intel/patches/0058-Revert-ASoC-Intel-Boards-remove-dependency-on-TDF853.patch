@@ -1,8 +1,8 @@
-From c0751aeda6a7ef95b89ca9e24325765c61642a2d Mon Sep 17 00:00:00 2001
+From ef17b23c354115beee4eb8fb5e6636edcba3cf73 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Fri, 18 Aug 2017 09:33:34 +0100
-Subject: [PATCH 058/100] Revert "ASoC: Intel: Boards: remove dependency on
- TDF8532 codec"
+Subject: [PATCH] Revert "ASoC: Intel: Boards: remove dependency on TDF8532
+ codec"
 
 This reverts commit 227b50e2735733fae1d3dc2770d360074c3b3637.
 

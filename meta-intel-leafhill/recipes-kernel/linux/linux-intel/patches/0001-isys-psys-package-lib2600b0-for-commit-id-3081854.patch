@@ -1,0 +1,51 @@
+From ed4b4d30c7bcb45257df0c3fbb0e729b935d18d1 Mon Sep 17 00:00:00 2001
+From: icg_intg <icg_intg@intel.com>
+Date: Thu, 1 Aug 2019 10:37:21 +0800
+Subject: [PATCH] isys & psys package lib2600b0 for commit-id 3081854
+
+FW_Manifest_ID: fca68219f39f499ab94095dbbfdf8906dabac0de
+
+FW_Build_Branch: stable_iot_mr4_pv_r1_20180817
+
+FW_Build_Topic: auto_merge_queue
+
+library version: commit-id 3081854
+
+FW Bundle patch number of this release :  423048
+
+FW tag : scci_stable_iot_mr4_pv_r1_20180817_20190731_1700
+
+Change-Id: Ic4cb069a960dba75cec1f2f87b0347730f308aed
+Depends-on: I70a4e1ac1912a74929614bca7441ba030b52d281
+Depends-on: I93d437942c70475447eb18bb630985ce218364e8
+Depends-on: If97074e1f26a34af73608e328b3001a69619255d
+Signed-off-by: icg_intg <icg_intg@intel.com>
+Signed-off-by: Meng Wei <wei.meng@intel.com>
+---
+ drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h           | 2 +-
+ .../lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h        | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+index b939cf7..e7e8177 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20190320
++#define IA_CSS_FW_PKG_RELEASE  0x20190730
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+index b939cf7..e7e8177 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20190320
++#define IA_CSS_FW_PKG_RELEASE  0x20190730
+-- 
+1.9.1
+

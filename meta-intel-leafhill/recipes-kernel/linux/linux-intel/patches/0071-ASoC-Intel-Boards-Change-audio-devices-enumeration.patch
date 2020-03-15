@@ -1,7 +1,7 @@
-From e7374acb56b421e9d2b846ee74dd9315f419fb71 Mon Sep 17 00:00:00 2001
+From 577134ba5ec9962493226cb620579d8717fbf2a5 Mon Sep 17 00:00:00 2001
 From: Jakub Dorzak <jakubx.dorzak@intel.com>
 Date: Fri, 19 May 2017 10:18:27 +0200
-Subject: [PATCH 071/100] ASoC: Intel: Boards: Change audio devices enumeration
+Subject: [PATCH] ASoC: Intel: Boards: Change audio devices enumeration
 
 Squeeze playback and capture devices under one device number.
 Modem, BT and test pin have now the same device enumerator.

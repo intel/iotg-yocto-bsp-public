@@ -1,0 +1,43 @@
+From 50b29f95d5a9e168ee67b79401d7b3eafe353c00 Mon Sep 17 00:00:00 2001
+From: Jeff McGee <jeff.mcgee@intel.com>
+Date: Thu, 26 Oct 2017 14:59:46 -0700
+Subject: [PATCH] drm/i915/guc: Change default GuC FW for BXT to v9.37
+
+This patch makes v9.37 firmware as default firmware for BXT.
+This update includes (since v9.29):
+
+- Remove disable PIC instructions since PIC is not present in GuC HW.
+- Fix updating LogBufWrPtr and Fix GUC crash due to default logging
+  when no log buffer is provided.
+- Adding missed UkLogAlways Log during porting.
+- WQ size in GuC process descriptor can be accessed by client hence can
+  be security threat.
+- SLPC logging - Added/Modified to get more useful debug info. Also
+  changing the UkLogAlways implementation to Function type.
+- Submitting Only the interface changes. Not applicable to BXT.
+- Guc fix for 0x119 issue & Adding additional GuC logs in Preemption path.
+- Enabling scheduling for media reset workload if scheduling is disabled
+  due to pending preemption.
+
+Signed-off-by: Jeff McGee <jeff.mcgee@intel.com>
+Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
+---
+ drivers/gpu/drm/i915/intel_guc_loader.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/gpu/drm/i915/intel_guc_loader.c b/drivers/gpu/drm/i915/intel_guc_loader.c
+index 5ba0c8e..941562d 100644
+--- a/drivers/gpu/drm/i915/intel_guc_loader.c
++++ b/drivers/gpu/drm/i915/intel_guc_loader.c
+@@ -56,7 +56,7 @@
+ #define SKL_FW_MINOR 1
+ 
+ #define BXT_FW_MAJOR 9
+-#define BXT_FW_MINOR 29
++#define BXT_FW_MINOR 37
+ 
+ #define KBL_FW_MAJOR 9
+ #define KBL_FW_MINOR 14
+-- 
+1.9.1
+

@@ -1,7 +1,7 @@
-From 6fd49bab69a2e6eb54f7f340df421d38eddecd3a Mon Sep 17 00:00:00 2001
+From a2541418975e4bba7077714039de9e9802866d70 Mon Sep 17 00:00:00 2001
 From: Jakub Dorzak <jdorzakx@intel.com>
 Date: Mon, 25 Jul 2016 09:57:22 +0100
-Subject: [PATCH 034/100] ASoC: Intel: Boards: Removed BIOS option from Kconfig
+Subject: [PATCH] ASoC: Intel: Boards: Removed BIOS option from Kconfig
 
 Removed BIOS related functions from the machine driver and menuconfig respectively.
 

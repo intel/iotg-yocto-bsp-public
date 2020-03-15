@@ -1,8 +1,7 @@
-From 402ec48c9cbb27a6401858a978ac30b9481bdb0a Mon Sep 17 00:00:00 2001
+From 829e744998560bd442668083d7a1dec14ab52458 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Tue, 20 Dec 2016 10:24:23 -0800
-Subject: [PATCH 38/45] drm/i915/bxt: Fix dual-link DSI pipe config clock
- mismatch.
+Subject: [PATCH] drm/i915/bxt: Fix dual-link DSI pipe config clock mismatch.
 
 When using a dual link DSI panel, the port clock is programed to
 approximately half of crtc clock specified by the mode. When we

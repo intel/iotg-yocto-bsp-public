@@ -1,7 +1,7 @@
-From bf1d375cc826a3f78a0f22539a1647b403a229cf Mon Sep 17 00:00:00 2001
+From f67961366ea3bbe71fed03b7171b94c42fb12b19 Mon Sep 17 00:00:00 2001
 From: Mahesh Kumar <mahesh1.kumar@intel.com>
 Date: Mon, 9 Apr 2018 09:11:02 +0530
-Subject: [PATCH 14/45] drm/i915/skl+: add NV12 in skl_format_to_fourcc
+Subject: [PATCH] drm/i915/skl+: add NV12 in skl_format_to_fourcc
 
 Add support of recognizing DRM_FORMAT_NV12 from plane_format
 register value.

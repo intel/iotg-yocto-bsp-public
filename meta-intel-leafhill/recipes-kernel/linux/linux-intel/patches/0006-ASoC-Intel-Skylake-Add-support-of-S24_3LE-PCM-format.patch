@@ -1,8 +1,8 @@
-From 61c660f7d3a9c2454537ed93106f9ba77024d58a Mon Sep 17 00:00:00 2001
+From 0c49d8f8da45fff73c47d6e6ee5e58afcf955db3 Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Thu, 21 Sep 2017 09:52:34 +0800
-Subject: [PATCH 006/100] ASoC: Intel: Skylake: Add support of S24_3LE PCM
- formats for FE
+Subject: [PATCH] ASoC: Intel: Skylake: Add support of S24_3LE PCM formats for
+ FE
 
 Add support of missing S24_3LE PCM formats for System Pin 6,
 Deepbuffer and Reference Pin of FE CPU DAI.

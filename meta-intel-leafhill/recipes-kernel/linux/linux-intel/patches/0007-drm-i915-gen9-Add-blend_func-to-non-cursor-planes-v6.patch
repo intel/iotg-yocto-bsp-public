@@ -1,7 +1,7 @@
-From ab08fe331b2bf97f273017a2b3668d9255e010ce Mon Sep 17 00:00:00 2001
+From 6282df7bd5f14ce23732fc0c7fb9e506c5a660a4 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Mon, 7 May 2018 13:32:08 -0700
-Subject: [PATCH 07/45] drm/i915/gen9: Add blend_func to non-cursor planes (v6)
+Subject: [PATCH] drm/i915/gen9: Add blend_func to non-cursor planes (v6)
 
 This patch adds the blend functions, and as per the
 blend function, updates the plane control register values

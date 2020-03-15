@@ -1,8 +1,7 @@
-From e1564f45f377878a299156e7a119e8179e2d881b Mon Sep 17 00:00:00 2001
+From d33636f2c5b965d8a0126fa9589a996b02fc7356 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Wed, 20 Jul 2016 11:37:30 +0100
-Subject: [PATCH 032/100] ASoC: Codecs: TDF8532: move packet_id to driver data
- struct
+Subject: [PATCH] ASoC: Codecs: TDF8532: move packet_id to driver data struct
 
 Move packet_id to driver data structure. The packet_id variable is incremented
 for each i2c packet sent to the TDF8532. It is fine if it wraps around back

@@ -1,8 +1,8 @@
-From 2cfe508a7fc813346845d2af054417249a7e0f6d Mon Sep 17 00:00:00 2001
+From da6dbb1db69d45ce5b7b8c54dcb2a7b86de8dec8 Mon Sep 17 00:00:00 2001
 From: "Vohra, GauravX" <gauravx.vohra@intel.com>
 Date: Tue, 28 Aug 2018 17:11:04 +0800
-Subject: [PATCH 087/100] ASoC: Intel: Skylake: Fixed issue with aplay multiple
- wav files
+Subject: [PATCH] ASoC: Intel: Skylake: Fixed issue with aplay multiple wav
+ files
 
 ---
  include/sound/hdaudio_ext.h            |   6 ++

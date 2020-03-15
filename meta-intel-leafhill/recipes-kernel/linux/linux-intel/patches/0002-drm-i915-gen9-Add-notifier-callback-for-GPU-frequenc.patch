@@ -1,8 +1,7 @@
-From 12e40bef047d44aab84cd1250d0d78a2a39aa9cc Mon Sep 17 00:00:00 2001
+From 17490157beded63b9e970bf21aa6f7bdb581e6e3 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Mon, 7 Nov 2016 10:52:45 -0800
-Subject: [PATCH 02/42] drm/i915/gen9: Add notifier callback for GPU frequency
- change
+Subject: [PATCH] drm/i915/gen9: Add notifier callback for GPU frequency change
 
 Whenever the GPU frequency is changed, notify any other kernel processes
 that have registered to receive this information.
@@ -14,7 +13,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 26 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index ec558ed..bb50fa9f 100644
+index 2e5a140..73c19ad 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
 @@ -31,6 +31,7 @@
@@ -34,7 +33,7 @@ index ec558ed..bb50fa9f 100644
  /**
   * DOC: RC6
   *
-@@ -6272,6 +6275,9 @@ static int gen6_set_rps(struct drm_i915_private *dev_priv, u8 val)
+@@ -6320,6 +6323,9 @@ static int gen6_set_rps(struct drm_i915_private *dev_priv, u8 val)
  				   GEN6_FREQUENCY(val) |
  				   GEN6_OFFSET(0) |
  				   GEN6_AGGRESSIVE_TURBO);
@@ -44,7 +43,7 @@ index ec558ed..bb50fa9f 100644
  	}
  
  	/* Make sure we continue to get interrupts
-@@ -7900,6 +7906,26 @@ void intel_gpu_tfm_teardown(void)
+@@ -7948,6 +7954,26 @@ void intel_gpu_tfm_teardown(void)
  }
  
  /**

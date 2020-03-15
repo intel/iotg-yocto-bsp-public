@@ -1,7 +1,7 @@
-From 807657d305d0091c95c734718734daed52112013 Mon Sep 17 00:00:00 2001
+From 58a86546c45b714eaeaa58372daf3b0ea418262a Mon Sep 17 00:00:00 2001
 From: "Yong, Jonathan" <jonathan.yong@intel.com>
 Date: Tue, 28 Jun 2016 01:28:20 +0000
-Subject: [PATCH 14/42] x86: Sideband Interface driver for Apollo Lake
+Subject: [PATCH] x86: Sideband Interface driver for Apollo Lake
 
 The Sideband Interface driver for Apollo Lake shares much similarity
 with the existing iosf_mbi driver functionality wise, but was rewritten
@@ -21,10 +21,10 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  create mode 100644 include/linux/platform_data/sbi_apl.h
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index b4d015e..9d709fa 100644
+index 6830a25..d00a0f54 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
-@@ -651,6 +651,24 @@ config IOSF_MBI_DEBUG
+@@ -649,6 +649,24 @@ config IOSF_MBI_DEBUG
  
  	  If you don't require the option or are in doubt, say N.
  
@@ -62,14 +62,14 @@ index d0e8354..0472c49 100644
  obj-y	+= efi/
 diff --git a/arch/x86/platform/apl/Makefile b/arch/x86/platform/apl/Makefile
 new file mode 100644
-index 0000000..5990592
+index 00000000..5990592
 --- /dev/null
 +++ b/arch/x86/platform/apl/Makefile
 @@ -0,0 +1 @@
 +obj-$(CONFIG_X86_INTEL_SBI_APL) += sbi_apl.o
 diff --git a/arch/x86/platform/apl/sbi_apl.c b/arch/x86/platform/apl/sbi_apl.c
 new file mode 100644
-index 0000000..46e0a6f
+index 00000000..46e0a6f
 --- /dev/null
 +++ b/arch/x86/platform/apl/sbi_apl.c
 @@ -0,0 +1,400 @@
@@ -475,7 +475,7 @@ index 0000000..46e0a6f
 +MODULE_ALIAS("platform:" DRV_NAME);
 diff --git a/include/linux/platform_data/sbi_apl.h b/include/linux/platform_data/sbi_apl.h
 new file mode 100644
-index 0000000..7cd6889
+index 00000000..7cd6889
 --- /dev/null
 +++ b/include/linux/platform_data/sbi_apl.h
 @@ -0,0 +1,67 @@

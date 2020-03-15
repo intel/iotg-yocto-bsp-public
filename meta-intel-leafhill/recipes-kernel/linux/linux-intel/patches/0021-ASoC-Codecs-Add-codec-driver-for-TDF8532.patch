@@ -1,7 +1,7 @@
-From 5da1620676f529207c5ef12d07fe953f59942414 Mon Sep 17 00:00:00 2001
+From 56c56a0fe330b77ce26b1a313f869784e4a98b0e Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Tue, 16 Feb 2016 10:26:40 +0100
-Subject: [PATCH 021/100] ASoC: Codecs: Add codec driver for TDF8532
+Subject: [PATCH] ASoC: Codecs: Add codec driver for TDF8532
 
  I2C based codec driver for TDF8532 added. Driver
  sends enable/disbale command via I2C in dai_trigger callback.
@@ -29,7 +29,7 @@ Conflicts:
  create mode 100644 arch/x86/platform/bxt/gpmrb-board.c
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 0e93905..f1aed2f 100644
+index 6830a25..a761a81 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -1,4 +1,7 @@
@@ -42,14 +42,14 @@ index 0e93905..f1aed2f 100644
  	bool "64-bit kernel" if ARCH = "x86"
 diff --git a/arch/x86/platform/bxt/Makefile b/arch/x86/platform/bxt/Makefile
 new file mode 100644
-index 0000000..2dc47f6
+index 00000000..2dc47f6
 --- /dev/null
 +++ b/arch/x86/platform/bxt/Makefile
 @@ -0,0 +1 @@
 +obj-$(CONFIG_GPMRB_BRD) += gpmrb-board.o
 diff --git a/arch/x86/platform/bxt/gpmrb-board.c b/arch/x86/platform/bxt/gpmrb-board.c
 new file mode 100644
-index 0000000..d77dec8
+index 00000000..d77dec8
 --- /dev/null
 +++ b/arch/x86/platform/bxt/gpmrb-board.c
 @@ -0,0 +1,23 @@

@@ -1,7 +1,7 @@
-From 37008801e14dd06766939f371d5aab3fb37d79e6 Mon Sep 17 00:00:00 2001
+From 1cfc64334a00d3e2c54f82a7b2a4a1554432ed1c Mon Sep 17 00:00:00 2001
 From: Maarten Lankhorst <maarten.lankhorst@linux.intel.com>
 Date: Sat, 12 May 2018 03:03:14 +0530
-Subject: [PATCH 26/45] drm/i915: Add skl_check_nv12_surface for NV12
+Subject: [PATCH] drm/i915: Add skl_check_nv12_surface for NV12
 
 We skip src trunction/adjustments for
 NV12 case and handle the sizes directly.

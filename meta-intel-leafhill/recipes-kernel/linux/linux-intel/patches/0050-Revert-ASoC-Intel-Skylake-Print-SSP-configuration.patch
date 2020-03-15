@@ -1,8 +1,7 @@
-From 5ae932a2e2cf7725e1caa4a0f209855d0af6e1c4 Mon Sep 17 00:00:00 2001
+From b68978960ad588fd5c8c143e61d87f3d6b2634f8 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Wed, 31 May 2017 13:14:15 +0100
-Subject: [PATCH 050/100] Revert "ASoC: Intel: Skylake: Print SSP
- configuration"
+Subject: [PATCH] Revert "ASoC: Intel: Skylake: Print SSP configuration"
 
 This reverts commit 4b09432387664619328c2b7467549e715f6119cb.
 

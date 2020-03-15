@@ -1,7 +1,7 @@
-From 2e3284e40c34992ff5437c581138a11ba3529777 Mon Sep 17 00:00:00 2001
+From 21440f04b7955400d8d6a57c552abd97d8f660ab Mon Sep 17 00:00:00 2001
 From: "Lai, Poey Seng" <poey.seng.lai@intel.com>
 Date: Thu, 23 Feb 2017 14:18:02 +0800
-Subject: [PATCH 38/42] igb: Enable directed ARP wake for RTD3
+Subject: [PATCH] igb: Enable directed ARP wake for RTD3
 
 This patch configures IP4AT register with the IP address value and sets
 the corresponding IPAV register bit when entering RTD3. The target wakes
@@ -15,7 +15,7 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  2 files changed, 34 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/e1000_defines.h b/drivers/net/ethernet/intel/igb/e1000_defines.h
-index 62bc7d8..776ac14 100644
+index 8329f60..e786dc13 100644
 --- a/drivers/net/ethernet/intel/igb/e1000_defines.h
 +++ b/drivers/net/ethernet/intel/igb/e1000_defines.h
 @@ -38,6 +38,7 @@
@@ -27,7 +27,7 @@ index 62bc7d8..776ac14 100644
  /* Wake Up Status */
  #define E1000_WUS_EX	0x00000004 /* Directed Exact */
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 1cfc948..6196e41 100644
+index c945d04..03262ea 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
 @@ -29,6 +29,7 @@
@@ -38,21 +38,22 @@ index 1cfc948..6196e41 100644
  #include <linux/netdevice.h>
  #include <linux/ipv6.h>
  #include <linux/slab.h>
-@@ -8749,8 +8750,11 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
+@@ -8750,9 +8751,12 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
  	struct net_device *netdev = pci_get_drvdata(pdev);
  	struct igb_adapter *adapter = netdev_priv(netdev);
  	struct e1000_hw *hw = &adapter->hw;
 -	u32 ctrl, rctl, status;
 -	u32 wufc = runtime ? (E1000_WUFC_LNKC | E1000_WUFC_EX) : adapter->wol;
 +	u32 ctrl, rctl, status, ipav;
-+	u8 i;
++	u32 wufc = runtime ? (E1000_WUFC_LNKC | E1000_WUFC_EX | E1000_WUFC_ARPD)
++		: adapter->wol;
+ 	bool wake;
 +	__be32 ipv4_addr;
-+	u32 wufc = runtime ? (E1000_WUFC_LNKC | E1000_WUFC_EX |
-+						E1000_WUFC_ARPD) : adapter->wol;
- #ifdef CONFIG_PM
- 	int retval = 0;
- #endif
-@@ -8801,6 +8805,33 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
++	int i;
+ 
+ 	rtnl_lock();
+ 	/* For supporting runtime pm based on activity monitoring
+@@ -8794,6 +8798,33 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
  			rctl |= E1000_RCTL_UPE;
  			wr32(E1000_RCTL, rctl);
  		}
@@ -84,8 +85,8 @@ index 1cfc948..6196e41 100644
 +		}
 +
  		ctrl = rd32(E1000_CTRL);
- 		/* advertise wake from D3Cold */
- 		#define E1000_CTRL_ADVD3WUC 0x00100000
+ 		ctrl |= E1000_CTRL_ADVD3WUC;
+ 		wr32(E1000_CTRL, ctrl);
 -- 
 1.9.1
 

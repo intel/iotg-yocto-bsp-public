@@ -1,8 +1,8 @@
-From c3d8263adb75da794ddba950798c4918fa0b984e Mon Sep 17 00:00:00 2001
+From 4a31faa8f957b4178fc784096314e5e83d04e57e Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Thu, 1 Sep 2016 15:10:05 +0100
-Subject: [PATCH 037/100] ASoC: Codecs: TDF8532 change i2c sequence to be
- compatible with GP MRB fab D
+Subject: [PATCH] ASoC: Codecs: TDF8532 change i2c sequence to be compatible
+ with GP MRB fab D
 
 Updated i2c sequence and refactored common i2c code. Added delay before
 shutdown to allow state transition to complete.

@@ -1,7 +1,7 @@
-From 2fbfab78511c220aeb43b76e53644372eb18daee Mon Sep 17 00:00:00 2001
+From 70fe98f2331b92d217be3804d27251cfeb0402fe Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Wed, 17 May 2017 15:41:51 +0100
-Subject: [PATCH 062/100] ASoC: TDF8532: remove ultrafast mute config
+Subject: [PATCH] ASoC: TDF8532: remove ultrafast mute config
 
 It's not clear what the effects of using ultrafast mode over the default
 are. Tests showed no discernible difference so remove it.

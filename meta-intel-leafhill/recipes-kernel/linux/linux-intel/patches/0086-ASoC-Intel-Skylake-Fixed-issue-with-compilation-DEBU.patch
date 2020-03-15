@@ -1,8 +1,7 @@
-From 990b07c66d9920b360ef8d095750305a9738895d Mon Sep 17 00:00:00 2001
+From 2a551054faa4b8f4b909b6d059965dee3902446f Mon Sep 17 00:00:00 2001
 From: "Vohra, GauravX" <gauravx.vohra@intel.com>
 Date: Tue, 28 Aug 2018 17:09:12 +0800
-Subject: [PATCH 086/100] ASoC: Intel: Skylake: Fixed issue with compilation
- DEBUG_FS=n
+Subject: [PATCH] ASoC: Intel: Skylake: Fixed issue with compilation DEBUG_FS=n
 
 ---
  sound/soc/intel/skylake/skl.h | 2 +-

@@ -1,8 +1,8 @@
-From 1be199119e39b15a022e944f67efba42d8086d76 Mon Sep 17 00:00:00 2001
+From ff182a599f1179d3acf4c46e6fa8a6817ec63852 Mon Sep 17 00:00:00 2001
 From: Michel Thierry <michel.thierry@intel.com>
 Date: Fri, 21 Apr 2017 09:37:31 -0700
-Subject: [PATCH 34/45] drm/i915: Watchdog timeout: DRM kernel interface to set
- the timeout
+Subject: [PATCH] drm/i915: Watchdog timeout: DRM kernel interface to set the
+ timeout
 
 Final enablement patch for GPU hang detection using watchdog timeout.
 Using the gem_context_setparam ioctl, users can specify the desired
@@ -228,7 +228,7 @@ index dfcbb2a..16cc39f 100644
  		ret = -EINVAL;
  		break;
 diff --git a/include/uapi/drm/i915_drm.h b/include/uapi/drm/i915_drm.h
-index 791368c..20687fb 100644
+index c689bcb..542fc3a 100644
 --- a/include/uapi/drm/i915_drm.h
 +++ b/include/uapi/drm/i915_drm.h
 @@ -1395,6 +1395,7 @@ struct drm_i915_gem_context_param {

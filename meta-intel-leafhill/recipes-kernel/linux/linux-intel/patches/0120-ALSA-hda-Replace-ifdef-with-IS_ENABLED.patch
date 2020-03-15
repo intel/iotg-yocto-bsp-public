@@ -1,0 +1,92 @@
+From 7f3d85cc1234785593755f21f13be2c29db901bc Mon Sep 17 00:00:00 2001
+From: Gaurav Vohra <gauravx.vohra@intel.com>
+Date: Tue, 2 Jul 2019 10:51:10 +0800
+Subject: [PATCH] ALSA: hda: Replace ifdef with IS_ENABLED
+
+IS_ENABLED can handle tristate configs. Commit 4061602f6467fba015e9923e58102fc2d022b39b
+"x86/cpu: fix FAM6_ATOM naming" enabled check ifdef. When CONFIG_SND_SOC_INTEL_SKYLAKE=m
+then its fails to find the function reference for mark_pages_uc
+
+[   44.568419] Call Trace:
+[   44.569710]  skl_pcm_hw_params+0xc4/0x270 [snd_soc_skl]
+[   44.574108]  soc_dai_hw_params+0x60/0xc0
+[   44.577038]  soc_pcm_hw_params+0x1c1/0x5a0
+[   44.580353]  dpcm_fe_dai_hw_params+0xc8/0x1c0
+[   44.583768]  snd_pcm_hw_params+0x15f/0x400
+[   44.586891]  snd_pcm_common_ioctl+0x396/0xa40
+[   44.590299]  ? __vfs_write+0x2b/0x130
+[   44.592936]  snd_pcm_ioctl+0x28/0x40
+[   44.595671]  do_vfs_ioctl+0x95/0x5c0
+[   44.598202]  ? vfs_write+0x134/0x190
+[   44.600743]  SyS_ioctl+0x79/0x90
+[   44.602897]  do_syscall_64+0x65/0x120
+[   44.605537]  entry_SYSCALL_64_after_hwframe+0x3d/0xa2
+[   44.609728] RIP: 0033:0x7f673b91d8f7
+[   44.612377] RSP: 002b:00007ffeba4ac368 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+[   44.619388] RAX: ffffffffffffffda RBX: 000055d57ee93e60 RCX: 00007f673b91d8f7
+[   44.625907] RDX: 00007ffeba4ac510 RSI: 00000000c2604111 RDI: 0000000000000004
+[   44.632570] RBP: 00007ffeba4ac510 R08: 0000000000000000 R09: 0000000000000000
+[   44.639094] R10: 0000000000000004 R11: 0000000000000246 R12: 000055d57ee93ee0
+[   44.645672] R13: 00007ffeba4ac394 R14: 0000000000000003 R15: 00007ffeba4ac960
+[   44.652191] Code:  Bad RIP value.
+[   44.654449] RIP:           (null) RSP: ffffb5ed405d3a38
+[   44.658834] CR2: 0000000000000000
+[   44.661186] ---[ end trace 0afd4d3095bd6dfc ]---
+
+Signed-off-by: Gaurav Vohra <gauravx.vohra@intel.com>
+---
+ sound/hda/ext/hdac_ext_bus.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/sound/hda/ext/hdac_ext_bus.c b/sound/hda/ext/hdac_ext_bus.c
+index 1cd01c8..c3a1e57 100644
+--- a/sound/hda/ext/hdac_ext_bus.c
++++ b/sound/hda/ext/hdac_ext_bus.c
+@@ -20,7 +20,7 @@
+ #include <linux/module.h>
+ #include <linux/slab.h>
+ #include <linux/io.h>
+-#ifdef CONFIG_SND_SOC_INTEL_SKYLAKE
++#if IS_ENABLED(CONFIG_SND_SOC_INTEL_SKYLAKE)
+ #include <asm/pgtable.h>
+ #include <asm/set_memory.h>
+ #endif
+@@ -59,7 +59,7 @@ static u8 hdac_ext_readb(u8 __iomem *addr)
+ 	return readb(addr);
+ }
+ 
+-#ifdef CONFIG_SND_SOC_INTEL_SKYLAKE
++#if IS_ENABLED(CONFIG_SND_SOC_INTEL_SKYLAKE)
+ static void hdac_ext_mark_pages_uc(struct snd_dma_buffer *dmab, bool enable)
+ {
+ 	int pages;
+@@ -92,7 +92,7 @@ static int hdac_ext_dma_alloc_pages(struct hdac_bus *bus, int type,
+ 	int ret;
+ 
+ 	ret = snd_dma_alloc_pages(type, bus->dev, size, buf);
+-#ifdef CONFIG_SND_SOC_INTEL_SKYLAKE
++#if IS_ENABLED(CONFIG_SND_SOC_INTEL_SKYLAKE)
+ 	if (ret < 0)
+ 		return ret;
+ 	hdac_ext_mark_pages_uc(buf, true);
+@@ -102,7 +102,7 @@ static int hdac_ext_dma_alloc_pages(struct hdac_bus *bus, int type,
+ 
+ static void hdac_ext_dma_free_pages(struct hdac_bus *bus, struct snd_dma_buffer *buf)
+ {
+-#ifdef CONFIG_SND_SOC_INTEL_SKYLAKE
++#if IS_ENABLED(CONFIG_SND_SOC_INTEL_SKYLAKE)
+ 	hdac_ext_mark_pages_uc(buf, false);
+ #endif
+ 	snd_dma_free_pages(buf);
+@@ -117,7 +117,7 @@ static void hdac_ext_dma_free_pages(struct hdac_bus *bus, struct snd_dma_buffer
+ 	.reg_readb = hdac_ext_readb,
+ 	.dma_alloc_pages = hdac_ext_dma_alloc_pages,
+ 	.dma_free_pages = hdac_ext_dma_free_pages,
+-#ifdef CONFIG_SND_SOC_INTEL_SKYLAKE
++#if IS_ENABLED(CONFIG_SND_SOC_INTEL_SKYLAKE)
+ 	.mark_pages_uc = hdac_ext_mark_pages_uc,
+ #endif
+ };
+-- 
+1.9.1
+

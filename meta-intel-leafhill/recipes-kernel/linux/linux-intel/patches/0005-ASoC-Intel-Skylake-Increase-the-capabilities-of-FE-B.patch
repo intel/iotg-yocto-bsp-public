@@ -1,8 +1,8 @@
-From 46aa8b4f977273f5480622895f27f1287fad69bb Mon Sep 17 00:00:00 2001
+From 4e259d8b5879a9ee1598dfe433002099e3705d84 Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Thu, 20 Apr 2017 11:07:53 +0800
-Subject: [PATCH 005/100] ASoC: Intel: Skylake: Increase the capabilities of
- FE/BE streams
+Subject: [PATCH] ASoC: Intel: Skylake: Increase the capabilities of FE/BE
+ streams
 
 Add more capabilities to the existing streams so as to support
 APLI usecases. APLI needs a total of 6 PB/CP streams

@@ -1,7 +1,7 @@
-From b4843699a0d0aa122c5a7b1e1b2a7a3110226369 Mon Sep 17 00:00:00 2001
+From a3b9525f950042dc9c19188443838edcf1632d25 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Fri, 1 Apr 2016 09:20:46 -0700
-Subject: [PATCH 02/45] drm/i915: Read DPCD when connector forced on.
+Subject: [PATCH] drm/i915: Read DPCD when connector forced on.
 
 When a DP connector is forced on using using the video=<connector>:e
 kernel command line, we bypass the calls to check if the port is

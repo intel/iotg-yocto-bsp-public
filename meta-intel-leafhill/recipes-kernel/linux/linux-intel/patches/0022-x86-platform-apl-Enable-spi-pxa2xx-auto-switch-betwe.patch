@@ -1,8 +1,8 @@
-From a9fcc35e3f4b4d5bbfaea0100d3551fc3064b49c Mon Sep 17 00:00:00 2001
+From bf226537a8e21a1efd96598271c834552ab0f09d Mon Sep 17 00:00:00 2001
 From: Sachin Mokashi <sachinx.mokashi@intel.com>
 Date: Thu, 5 Oct 2017 13:28:07 +0800
-Subject: [PATCH 22/42] x86/platform/apl: Enable spi-pxa2xx auto switch between
- PIO and DMA mode
+Subject: [PATCH] x86/platform/apl: Enable spi-pxa2xx auto switch between PIO
+ and DMA mode
 
 Add and configure pio_dma_threshold in board configuration for SPI PXA2XX
 controller. The driver will automatically switch the data transfer between

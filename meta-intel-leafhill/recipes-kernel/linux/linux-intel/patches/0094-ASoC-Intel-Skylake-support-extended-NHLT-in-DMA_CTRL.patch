@@ -1,8 +1,8 @@
-From bbefb5f6124311b482f4178078a0c7c4e69ef359 Mon Sep 17 00:00:00 2001
+From 5d6a451c344e9470e93bddeb506d12a366714b1e Mon Sep 17 00:00:00 2001
 From: Dominik Bozek <dominikx.bozek@intel.com>
 Date: Tue, 17 Jul 2018 11:20:43 +0200
-Subject: [PATCH 094/100] ASoC: Intel: Skylake: support extended NHLT in
- DMA_CTRL_ID message
+Subject: [PATCH] ASoC: Intel: Skylake: support extended NHLT in DMA_CTRL_ID
+ message
 
 The NHLT blob may have different size depend on blob version.
 This patch allow to transfer blobs of different size from NHLT

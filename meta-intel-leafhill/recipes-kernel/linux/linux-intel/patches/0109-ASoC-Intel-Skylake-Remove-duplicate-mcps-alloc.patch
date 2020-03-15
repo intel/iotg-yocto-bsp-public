@@ -1,0 +1,41 @@
+From a10ffd62252ec2bf2cb557e429bfa7e8c00e5417 Mon Sep 17 00:00:00 2001
+From: Ramesh Babu <ramesh.babu@intel.com>
+Date: Thu, 18 Aug 2016 09:34:41 +0530
+Subject: [PATCH] ASoC: Intel: Skylake: Remove duplicate mcps alloc
+
+Remove the Extra mcps alloc and free call in mixer
+pre and post dapm event. MCPS allocation anyway happens
+during module init, so remove the duplicate allocation.
+
+Change-Id: Ifce860589e5d800c73509a3632f0597aa0710b0d
+Signed-off-by: Ramesh Babu <ramesh.babu@intel.com>
+Reviewed-on: https://git-gar-1.devtools.intel.com/gerrit/10981
+Reviewed-by: Jayanti, Satya Charitardha <satya.charitardha.jayanti@intel.com>
+Tested-by: Jayanti, Satya Charitardha <satya.charitardha.jayanti@intel.com>
+---
+ sound/soc/intel/skylake/skl-topology.c | 2 --
+ 1 file changed, 2 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-topology.c b/sound/soc/intel/skylake/skl-topology.c
+index 870f66e..81edbf9 100644
+--- a/sound/soc/intel/skylake/skl-topology.c
++++ b/sound/soc/intel/skylake/skl-topology.c
+@@ -1269,7 +1269,6 @@ static int skl_tplg_mixer_dapm_pre_pmu_event(struct snd_soc_dapm_widget *w,
+ 		return ret;
+ 
+ 	skl_tplg_alloc_pipe_mem(skl, mconfig);
+-	skl_tplg_alloc_pipe_mcps(skl, mconfig);
+ 
+ 	/* Init all pipe modules from source to sink */
+ 	ret = skl_tplg_init_pipe_modules(skl, s_pipe);
+@@ -1825,7 +1824,6 @@ static int skl_tplg_mixer_dapm_post_pmd_event(struct snd_soc_dapm_widget *w,
+ 	if (s_pipe->state == SKL_PIPE_INVALID)
+ 		return -EINVAL;
+ 
+-	skl_tplg_free_pipe_mcps(skl, mconfig);
+ 	skl_tplg_free_pipe_mem(skl, mconfig);
+ 
+ 	list_for_each_entry(w_module, &s_pipe->w_list, node) {
+-- 
+1.9.1
+

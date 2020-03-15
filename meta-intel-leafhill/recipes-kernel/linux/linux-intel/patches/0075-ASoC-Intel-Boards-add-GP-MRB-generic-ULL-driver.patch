@@ -1,7 +1,7 @@
-From 40a6c268924ed51350a1c730a12e122ae670f170 Mon Sep 17 00:00:00 2001
+From cc067b8f2aab3ee603c08befae36337d7fe84e5a Mon Sep 17 00:00:00 2001
 From: Jakub Dorzak <jakubx.dorzak@intel.com>
 Date: Tue, 20 Feb 2018 10:59:30 +0100
-Subject: [PATCH 075/100] ASoC: Intel: Boards: add GP MRB generic ULL driver
+Subject: [PATCH] ASoC: Intel: Boards: add GP MRB generic ULL driver
 
 This is a generic ULL (Ultra Low Latency) machine
 driver with a DSP loop, capture and playback pipes.
@@ -65,7 +65,7 @@ index e192d6e..5d5691b 100644
 +obj-$(CONFIG_SND_SOC_INTEL_BXT_ULL_MACH) += snd-soc-bxt_ull.o
 diff --git a/sound/soc/intel/boards/bxt_ull.c b/sound/soc/intel/boards/bxt_ull.c
 new file mode 100644
-index 0000000..03ee20a
+index 00000000..03ee20a
 --- /dev/null
 +++ b/sound/soc/intel/boards/bxt_ull.c
 @@ -0,0 +1,210 @@

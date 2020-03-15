@@ -1,8 +1,8 @@
-From c6bb19a8da288f3e8ab096e04371ede7e24445e0 Mon Sep 17 00:00:00 2001
+From 2e4b9945a6809d898be772ddef928fbcf6faf4b2 Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Mon, 17 Apr 2017 13:24:50 +0800
-Subject: [PATCH 09/42] cpufreq/x86: Add Turbo Frequency Mode (TFM) governor
- driver for Apollo Lake
+Subject: [PATCH] cpufreq/x86: Add Turbo Frequency Mode (TFM) governor driver
+ for Apollo Lake
 
 The TFM Governor module manages the turbo frequency mode usage and budget
 for CPU and GPU, over the lifetime of the processors to keep the quality
@@ -79,7 +79,7 @@ index 812f9e0..1b7647e 100644
  # ARM SoC drivers
 diff --git a/drivers/cpufreq/intel_tfm_governor.c b/drivers/cpufreq/intel_tfm_governor.c
 new file mode 100644
-index 0000000..ae810d8
+index 00000000..ae810d8
 --- /dev/null
 +++ b/drivers/cpufreq/intel_tfm_governor.c
 @@ -0,0 +1,1138 @@
@@ -1223,7 +1223,7 @@ index 0000000..ae810d8
 +MODULE_LICENSE("GPL v2");
 diff --git a/drivers/cpufreq/intel_tfmg.h b/drivers/cpufreq/intel_tfmg.h
 new file mode 100644
-index 0000000..398ab8b
+index 00000000..398ab8b
 --- /dev/null
 +++ b/drivers/cpufreq/intel_tfmg.h
 @@ -0,0 +1,140 @@

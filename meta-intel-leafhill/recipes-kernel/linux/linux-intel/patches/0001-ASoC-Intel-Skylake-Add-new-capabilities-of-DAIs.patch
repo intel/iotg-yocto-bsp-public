@@ -1,7 +1,7 @@
-From 48306c886a35ab5a493c0140b50d41b12ca33fec Mon Sep 17 00:00:00 2001
+From 7880804191fa085850ac226fb5fa485a921b2981 Mon Sep 17 00:00:00 2001
 From: Pardha Saradhi K <pardha.saradhi.kesapragada@intel.com>
 Date: Sat, 7 Nov 2015 12:11:29 +0530
-Subject: [PATCH 001/100] ASoC: Intel: Skylake: Add new capabilities of DAIs
+Subject: [PATCH] ASoC: Intel: Skylake: Add new capabilities of DAIs
 
 Enhance the capabilties of the FE and BE DAIs with respect
 to new features implemented for IVI. Number of FEs have

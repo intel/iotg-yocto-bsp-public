@@ -1,7 +1,7 @@
-From 327673637b64f067b621e056c72fee8eca860a64 Mon Sep 17 00:00:00 2001
+From 9bd9ef2fbbc22f8d6e3f30901dc9eeff1dab750b Mon Sep 17 00:00:00 2001
 From: Lorna McNeill <lornax.mcneill@intel.com>
 Date: Thu, 17 Aug 2017 15:40:45 +0100
-Subject: [PATCH 072/100] ASoC: Intel: Boards: BT and Modem pipelines updated
+Subject: [PATCH] ASoC: Intel: Boards: BT and Modem pipelines updated
 
 Front End is now 24KHz, 16bit
 Pipelines now contain ASRC to convert 8/16KHz to 24KHz

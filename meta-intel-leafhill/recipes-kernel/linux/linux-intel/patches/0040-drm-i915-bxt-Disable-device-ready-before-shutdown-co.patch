@@ -1,8 +1,8 @@
-From 81d92d4afadc8e739e52839c7b333cc688801576 Mon Sep 17 00:00:00 2001
+From d317af69001dac963f7dfe77b047c22b46e669e5 Mon Sep 17 00:00:00 2001
 From: Uma Shankar <uma.shankar@intel.com>
 Date: Tue, 20 Dec 2016 10:24:29 -0800
-Subject: [PATCH 40/45] drm/i915/bxt: Disable device ready before shutdown
- command (v2)
+Subject: [PATCH] drm/i915/bxt: Disable device ready before shutdown command
+ (v2)
 
 Disable device ready before MIPI port shutdown command. This helps
 to avoid mipi split screen issues.

@@ -1,7 +1,7 @@
-From f7fdf1a839cd4cf15902d26f5a39bdc223a9076a Mon Sep 17 00:00:00 2001
+From 11b4c322391d580d090a7ad22f62ec6a4dc3d48e Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Tue, 14 Mar 2017 14:38:28 +0000
-Subject: [PATCH 049/100] Revert "ASoC: Intel: Skylake: increase FW timeout"
+Subject: [PATCH] Revert "ASoC: Intel: Skylake: increase FW timeout"
 
 This reverts commit f0559a77990752805cb44aa4665106a959ef3982.
 

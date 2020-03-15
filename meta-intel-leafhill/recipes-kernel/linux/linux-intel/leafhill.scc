@@ -41,6 +41,9 @@ patch patches/0039-igb-Fix-able-to-enter-runtime-suspend-when-power-con.patch
 patch patches/0040-igb-Fix-driver-compilation-errors-when-building-with.patch
 patch patches/0041-igb-Initialize-the-spinlock-and-replace-the-VLAN-wit.patch
 patch patches/0042-usb-roles-intel_xhci-Add-default_role-module-paramet.patch
+patch patches/0043-intel_pstate-fix-hang-issue-after-failed-write-no_tu.patch
+patch patches/0044-cpufreq-intel_tfm_gov-convert-to-use-kobj_attribute.patch
+patch patches/0045-usb-hcd-use-managed-device-resources.patch
 
 # GFX
 patch patches/0001-drm-i915-bxt-Allow-PSR-use.patch
@@ -87,7 +90,12 @@ patch patches/0041-drm-i915-Drop-TSD-specific-splash-screen-modificatio.patch
 patch patches/0042-drm-i915-Add-a-little-bit-more-debug-output-to-MIPI-.patch
 patch patches/0043-drm-i915-Do-NOT-skip-the-first-4k-of-stolen-memory-f.patch
 patch patches/0044-drm-i915-Don-t-use-GuC-submission-by-default.patch
-patch patches/0045-Add-IOTG-kernel-identifier.patch
+patch patches/0045-drm-i915-Allow-normal-clients-to-always-preempt-idle.patch
+patch patches/0046-drm-i915-lrc-Only-enable-per-context-and-per-bb-buff.patch
+patch patches/0047-drm-i915-lrc-Skip-no-op-per-bb-buffer-on-gen9.patch
+patch patches/0048-drm-i915-preemption-Allow-preemption-between-submiss.patch
+patch patches/0049-drm-i915-guc-Change-default-GuC-FW-for-BXT-to-v9.37.patch
+patch patches/0050-Add-IOTG-kernel-identifier.patch
 
 # AUDIO
 patch patches/0001-ASoC-Intel-Skylake-Add-new-capabilities-of-DAIs.patch
@@ -174,22 +182,50 @@ patch patches/0081-ASoC-TDF8532-Allow-time-for-I2C-command-to-execute.patch
 patch patches/0082-ASoC-TDF8532-add-macro-to-reduce-code-size.patch
 patch patches/0083-ASoC-Intel-Boards-replace-modem-device-with-2nd-HFP.patch
 patch patches/0084-ASoC-Intel-Change-be_id-variable-in-machine-driver.patch
-patch patches/0085-ASoC-TDF8532-Fix-for-aplay-suspend-and-resume.patch
+patch patches/0085-ASoC-TDF8532-Avoid-race-condition-for-I2C-commands-t.patch
 patch patches/0086-ASoC-Intel-Skylake-Fixed-issue-with-compilation-DEBU.patch
 patch patches/0087-ASoC-Intel-Skylake-Fixed-issue-with-aplay-multiple-w.patch
 patch patches/0088-ASoC-Intel-Allow-for-firmware-load-retry.patch
-patch patches/0089-ASoC-Intel-Skylake-validate-the-downloaded-firmware-.patch
+patch patches/0089-ASoC-Intel-Skylake-validate-the-downloaded-firmware.patch
 patch patches/0090-ASoC-Intel-Skylake-Fixed-Compilation-issue-after-ari.patch
 patch patches/0091-ASoC-Intel-Common-add-ACPI-match-for-GPMRB-machine-d.patch
 patch patches/0092-Fix-for-allyesconfig-compilation-fail-due-to-variabl.patch
 patch patches/0093-ASoC-Intel-Skylake-Add-support-to-notify-resource-ev.patch
 patch patches/0094-ASoC-Intel-Skylake-support-extended-NHLT-in-DMA_CTRL.patch
 patch patches/0095-ASOC-Intel-Skylake-Reset-pipe-in-POST_PMD-DAPM.patch
-patch patches/0096-ASoC-Intel-Skylake-Configure-debug-message-level.patch
-patch patches/0097-ASoC-Intel-Skylake-Fix-logging-level-for-new-module.patch
+patch patches/0096-ASoC-Intel-Skylake-Configure-debug-message-level-bas.patch
+patch patches/0097-ASoC-Intel-Skylake-Fix-logging-level-for-new-module-.patch
 patch patches/0098-ASoC-Intel-Skylake-Improve-SKL_I2S_CLK_STATE_CHANGED.patch
 patch patches/0099-ASoC-Intel-Skylake-Abort-D0-sequence-if-core-is-alre.patch
-patch patches/0100-ASoC-Intel-Skylake-Implement-FW-recovery-mechanism.patch
+patch patches/0100-ASoC-Intel-Skylake-Implement-FW-recovery-mechanism-w.patch
+patch patches/0101-ASoC-Intel-Fix-race-condition-in-IPC-rx-list.patch
+patch patches/0102-ASoC-Intel-Skylake-Provide-tplg_name-module-param.patch
+patch patches/0103-ASoC-Intel-Increase-IPC-Timeout.patch
+patch patches/0104-ASoC-Intel-Correct-TLV-parsing-for-non-vendor-module.patch
+patch patches/0105-ASoC-Intel-Skylake-Firmware-reload-aligement.patch
+patch patches/0106-ASoC-Intel-Skylake-Correct-skl_base_cfg-declaration.patch
+patch patches/0107-ASoC-Intel-Skylake-Fixed-compilation-failure-for-CNL.patch
+patch patches/0108-ASoC-Intel-Skylake-Firmware-reload-alignment.patch
+patch patches/0109-ASoC-Intel-Skylake-Remove-duplicate-mcps-alloc.patch
+patch patches/0110-fix-value-of-SDxFMT-register.patch
+patch patches/0111-ASoC-Intel-Skylake-Enable-codec-command-I-O-function.patch
+patch patches/0112-ASoC-Intel-Boards-Enable-Resume-on-for-TI-Codec.patch
+patch patches/0113-ASoC-TDF8532-Fix-for-double-memory-free-in-case-of-e.patch
+patch patches/0114-ASoC-Intel-Skylake-NHLT-log-level-change.patch
+patch patches/0115-ASoC-Intel-Skylake-Lower-log-level-for-FW-notificati.patch
+patch patches/0116-ASoC-Intel-Skylake-Remove-MCPS-available-check.patch
+patch patches/0117-Revert-fix-value-of-SDxFMT-register.patch
+patch patches/0118-Revert-ASoC-Intel-Skylake-Fixed-issue-with-aplay-mul.patch
+patch patches/0119-ASoC-Intel-Skylake-Prepare-host-DMA-when-pipe-alread.patch
+patch patches/0120-ALSA-hda-Replace-ifdef-with-IS_ENABLED.patch
+patch patches/0121-ASoC-Intel-Boards-Failure-handling-for-ioremap_nocac.patch
+
+# IPU
+patch patches/0001-isys-psys-package-lib2600b0-for-commit-id-3081854.patch
+patch patches/0002-Revert-isys-psys-package-lib2600b0-for-commit-id-308.patch
+patch patches/0003-isys-psys-package-lib2600b0-for-commit-id-ae6821e.patch
+patch patches/0004-isys-psys-package-lib2600b0-for-commit-id-7afe4e2.patch
+patch patches/0005-isys-psys-package-lib2600b0-for-commit-id-6b5a66f.patch
 
 
 # Kernel configuration

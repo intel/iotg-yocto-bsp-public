@@ -1,7 +1,7 @@
-From f680d7bf28b4c68a05c9b0c64f1f92186c3f9132 Mon Sep 17 00:00:00 2001
+From cec6b36806518dcdefc2bf8151efb0b1a1e1d9ee Mon Sep 17 00:00:00 2001
 From: Damien Lespiau <damien.lespiau@intel.com>
 Date: Mon, 7 May 2018 13:32:07 -0700
-Subject: [PATCH 06/45] drm: Introduce the blend-func property (v3)
+Subject: [PATCH] drm: Introduce the blend-func property (v3)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit

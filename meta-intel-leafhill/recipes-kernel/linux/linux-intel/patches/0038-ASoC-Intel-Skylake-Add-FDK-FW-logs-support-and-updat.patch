@@ -1,8 +1,8 @@
-From eb30644a9f76ba6ab7cc2513851e61b42811f53f Mon Sep 17 00:00:00 2001
+From 20a2800f3d1f9d3138329e59d3003819c6784e28 Mon Sep 17 00:00:00 2001
 From: Jakub Dorzak <jakubx.dorzak@intel.com>
 Date: Tue, 15 Nov 2016 14:00:40 +0000
-Subject: [PATCH 038/100] ASoC: Intel: Skylake: Add FDK FW logs support and
- update naming for probing.
+Subject: [PATCH] ASoC: Intel: Skylake: Add FDK FW logs support and update
+ naming for probing.
 
 FDK FW logging needs support in the machine driver. Added required entries in the FE DAI links. Minor change in probe naming, so the DAIs look like BMW ones.
 

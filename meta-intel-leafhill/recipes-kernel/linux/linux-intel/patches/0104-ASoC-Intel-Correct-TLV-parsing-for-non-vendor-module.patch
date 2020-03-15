@@ -1,0 +1,59 @@
+From 0a308d6da5da1f16c02acc484a4c6271129caf9b Mon Sep 17 00:00:00 2001
+From: "Lulko, KamilX" <kamilx.lulko@intel.com>
+Date: Mon, 21 Jan 2019 18:47:41 +0100
+Subject: [PATCH] ASoC: Intel: Correct TLV parsing for non-vendor modules
+
+Base firmware modules expose TLV controls which expect
+the T and L to be omitted from data. Account for this
+here. Without this patch the user will be unable to
+correctly set mic select params.
+
+Change-Id: Ieae8b85f1faa892e5a65f2b9d606bb7c76a52ee0
+Signed-off-by: Lulko, KamilX <kamilx.lulko@intel.com>
+Signed-off-by: Cezary Rojewski <cezary.rojewski@intel.com>
+Reviewed-on: https://git-gar-1.devtools.intel.com/gerrit/35263
+Reviewed-by: Slawinski, AmadeuszX <amadeuszx.slawinski@intel.com>
+Tested-by: Slawinski, AmadeuszX <amadeuszx.slawinski@intel.com>
+---
+ sound/soc/intel/skylake/skl-topology.c | 22 +++++++++-------------
+ 1 file changed, 9 insertions(+), 13 deletions(-)
+
+diff --git a/sound/soc/intel/skylake/skl-topology.c b/sound/soc/intel/skylake/skl-topology.c
+index 2283648..afe9bb6 100644
+--- a/sound/soc/intel/skylake/skl-topology.c
++++ b/sound/soc/intel/skylake/skl-topology.c
+@@ -2319,22 +2319,18 @@ static int skl_tplg_tlv_control_set(struct snd_kcontrol *kcontrol,
+ 	struct skl *skl = get_skl_ctx(w->dapm->dev);
+ 
+ 	if (ac->params) {
++		/*
++		 * Widget data is expected to be stripped of T and L
++		 */
++		size -= 2 * sizeof(unsigned int);
++		data += 2;
++
+ 		if (size > ac->max)
+ 			return -EINVAL;
+-
+ 		ac->size = size;
+-		/*
+-		 * if the param_is is of type Vendor, firmware expects actual
+-		 * parameter id and size from the control.
+-		 */
+-		if (ac->param_id == SKL_PARAM_VENDOR_ID) {
+-			if (copy_from_user(ac->params, data, size))
+-				return -EFAULT;
+-		} else {
+-			if (copy_from_user(ac->params,
+-					   data + 2, size))
+-				return -EFAULT;
+-		}
++
++		if (copy_from_user(ac->params, data, size))
++			return -EFAULT;
+ 
+ 		if (w->power)
+ 			return skl_set_module_params(skl->skl_sst,
+-- 
+1.9.1
+

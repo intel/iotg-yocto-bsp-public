@@ -1,8 +1,7 @@
-From a1498fbd8166d8a0aea2ed510a2a482c25777ad5 Mon Sep 17 00:00:00 2001
+From 66309c22da6d2d40e3bc8d60925e210a8b3806b7 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Fri, 30 Jun 2017 15:00:23 +0100
-Subject: [PATCH 056/100] ASoC: Intel: Boards: remove dependency on TDF8532
- codec
+Subject: [PATCH] ASoC: Intel: Boards: remove dependency on TDF8532 codec
 
 The TDF8532 codec driver has been removed. Remove the dependency in the
 machine driver DAI link and machine driver kernel config.

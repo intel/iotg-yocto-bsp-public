@@ -1,7 +1,7 @@
-From e19f6f40c0e828a00fcf14a6cbbaaa86a55b3f36 Mon Sep 17 00:00:00 2001
+From f0598d0453bce6bdcc67faa39c040990d277aa3a Mon Sep 17 00:00:00 2001
 From: Imre Deak <imre.deak@intel.com>
 Date: Mon, 2 Oct 2017 10:55:57 +0300
-Subject: [PATCH 21/45] drm/i915/glk, cnl: Implement WaDisableScalarClockGating
+Subject: [PATCH] drm/i915/glk, cnl: Implement WaDisableScalarClockGating
 
 On GLK and CNL enabling a pipe with its pipe scaler enabled will result
 in a FIFO underrun. This happens only once after driver loading or
