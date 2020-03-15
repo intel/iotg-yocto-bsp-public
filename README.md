@@ -90,8 +90,8 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
 	- check for required software dependencies (this is only performed for Linux Ubuntu 14.04)
 	- test python, network, gitconfig and git proxy
 	- Prepare sources
-	- download Linux kernel v4.14.92 from Intel Linux Kernel from github.
-	- combolayer downloads Poky Sumo v2.5.1 and other meta layers based on setup/combolayer.conf
+	- download Linux kernel v4.14.153 from Intel Linux Kernel from github.
+	- combolayer downloads Poky Sumo v2.5.3 and other meta layers based on setup/combolayer.conf
 	- setup bblayers for bitbake build
 	- setup local.conf for bitbake build
 	- prepare environment for bitbake build
