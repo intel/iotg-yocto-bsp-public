@@ -110,8 +110,8 @@ IMAGE_INSTALL_append = " nodejs swig mraa"
 # Install USB-modeswitch and USB-modeswitch-data in image
 IMAGE_INSTALL_append = " usb-modeswitch usb-modeswitch-data"
 
-# Install JHI
-IMAGE_INSTALL_append = " jhi"
+# Install JHI and JHI tests
+IMAGE_INSTALL_append = " jhi jhi-tests"
 
 # Install IQV driver
 IMAGE_INSTALL_append = " iqvlinux"
@@ -124,6 +124,9 @@ IMAGE_INSTALL_append = " xinit-env"
 
 # By default, we want our OS to includes all kernel modules.
 IMAGE_INSTALL_append = " kernel-modules"
+
+# Enable opencl ICL Loader opencl headers and hlhpp
+IMAGE_INSTALL_append = " opencl-icd-loader opencl-headers-dev opencl-clhpp-dev"
 
 # Take note that as we are building 3rd party ingredient.
 # We need the LICENSE_FLAGS below.
@@ -333,6 +336,3 @@ require conf/distro/include/security_flags.inc
 SECURITY_CFLAGS = "-fstack-protector-strong -pie -fpie -D_FORTIFY_SOURCE=2 -O2 -Wformat -Wformat-security"
 SECURITY_NO_PIE_CFLAGS = "-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -Wformat -Wformat-security"
 SECURITY_LDFLAGS = "-Wl,-z,relro,-z,now,-z,noexecstack"
-
-# Enable opencl headers and hlhpp
-IMAGE_INSTALL_append = " opencl-headers-dev opencl-clhpp-dev"
