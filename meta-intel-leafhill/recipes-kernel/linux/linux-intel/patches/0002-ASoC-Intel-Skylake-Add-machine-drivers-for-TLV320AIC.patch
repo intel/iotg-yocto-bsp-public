@@ -1,4 +1,4 @@
-From aec74d05ef0b62721c01ab60f11d464cc93955aa Mon Sep 17 00:00:00 2001
+From b7058e7c79145a84866ca0c84e72193af9f1d93b Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Mon, 4 Jul 2016 17:34:05 +0800
 Subject: [PATCH] ASoC: Intel: Skylake: Add machine drivers for TLV320AIC3107

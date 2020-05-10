@@ -1,4 +1,4 @@
-From b07cc4306cbf66d948dc06ad80a9ca991770d4d3 Mon Sep 17 00:00:00 2001
+From 54548fab6ef09945ef1366d7c17b6ecff42d6c9f Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 16 Nov 2016 10:34:58 +0800
 Subject: [PATCH] igb: Enabling wake on unicast
@@ -15,10 +15,10 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 12 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index b57758a..cd73e30 100644
+index bdb8696..c0b7704 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -8901,7 +8901,7 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
+@@ -8902,7 +8902,7 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
  	struct igb_adapter *adapter = netdev_priv(netdev);
  	struct e1000_hw *hw = &adapter->hw;
  	u32 ctrl, rctl, status;
@@ -27,7 +27,7 @@ index b57758a..cd73e30 100644
  	bool wake;
  
  	rtnl_lock();
-@@ -8921,7 +8921,11 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
+@@ -8922,7 +8922,11 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
  	rtnl_unlock();
  
  	status = rd32(E1000_STATUS);
@@ -40,7 +40,7 @@ index b57758a..cd73e30 100644
  		wufc &= ~E1000_WUFC_LNKC;
  
  	if (wufc) {
-@@ -8934,7 +8938,12 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
+@@ -8935,7 +8939,12 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
  			rctl |= E1000_RCTL_MPE;
  			wr32(E1000_RCTL, rctl);
  		}

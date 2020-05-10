@@ -1,4 +1,4 @@
-From 29b71b4c695930aef4e0ebf8406a67d53f4fea5f Mon Sep 17 00:00:00 2001
+From 738d79b07f8195d31d762179f98ec03f30d00373 Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Sun, 21 Jul 2019 23:16:01 +0800
 Subject: [PATCH] ASoC: Intel: Common: TLV320AIC3107 Addition of ACPI IDs for

@@ -1,4 +1,4 @@
-From 075daba526b9ca5890390ec382b382869fa783cf Mon Sep 17 00:00:00 2001
+From 08b9888d812a970b913f570c448de29831d6189a Mon Sep 17 00:00:00 2001
 From: "Yong, Jonathan" <jonathan.yong@intel.com>
 Date: Tue, 28 Jun 2016 01:28:20 +0000
 Subject: [PATCH] x86: Sideband Interface driver for Apollo Lake
@@ -21,7 +21,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  create mode 100644 include/linux/platform_data/sbi_apl.h
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 065668f..0b83b71 100644
+index 2a3c348..8984a37 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -656,6 +656,24 @@ config IOSF_MBI_DEBUG

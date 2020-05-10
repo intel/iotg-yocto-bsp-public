@@ -1,4 +1,4 @@
-From c5d1662da8da9d78ae275233f4e9d2035031468e Mon Sep 17 00:00:00 2001
+From dccad2998bccc024ae2f93cc3ba7e3a03bb3c73d Mon Sep 17 00:00:00 2001
 From: Chris Wilson <chris@chris-wilson.co.uk>
 Date: Mon, 4 Feb 2019 08:41:05 +0000
 Subject: [PATCH] drm/i915: Allow normal clients to always preempt idle
@@ -37,10 +37,10 @@ Link: https://patchwork.freedesktop.org/patch/msgid/20190204084116.3013-1-chris@
  1 file changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_ringbuffer.h b/drivers/gpu/drm/i915/intel_ringbuffer.h
-index 5ef96c6..2e3d50a 100644
+index f6ed5b4..43e01c5 100644
 --- a/drivers/gpu/drm/i915/intel_ringbuffer.h
 +++ b/drivers/gpu/drm/i915/intel_ringbuffer.h
-@@ -673,7 +673,20 @@ struct intel_engine_cs {
+@@ -680,7 +680,20 @@ struct intel_engine_cs {
  
  static inline bool __execlists_need_preempt(int prio, int last)
  {

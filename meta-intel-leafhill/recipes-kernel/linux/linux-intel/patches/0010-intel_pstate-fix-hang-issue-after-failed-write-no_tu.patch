@@ -1,4 +1,4 @@
-From db8965a52b24e80c8c934b37629d23ae26a5e938 Mon Sep 17 00:00:00 2001
+From 13d7e834f43c2edc68b8fb63105f0e989716f80c Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Tue, 12 Feb 2019 09:49:51 +0800
 Subject: [PATCH] intel_pstate: fix hang issue after failed write no_turbo if

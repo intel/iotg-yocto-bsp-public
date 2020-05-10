@@ -1,4 +1,4 @@
-From 325c954d97636b77d7bc390f28012c17b33adf5e Mon Sep 17 00:00:00 2001
+From c6415193453324a2fff6cff8807083db8818cfc1 Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Mon, 12 Sep 2016 14:40:45 +0300
 Subject: [PATCH] serial: 8250_dw: enable runtime PM

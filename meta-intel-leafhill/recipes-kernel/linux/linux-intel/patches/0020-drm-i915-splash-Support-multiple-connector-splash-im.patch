@@ -1,4 +1,4 @@
-From 3fc8ca04d5fdc8e376c9612308cecd846945a4cf Mon Sep 17 00:00:00 2001
+From 9e1a3392fe34d383cf41c48c44a2298570cd7b9d Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Fri, 22 Apr 2016 16:43:26 -0700
 Subject: [PATCH] drm/i915/splash: Support multiple connector/splash images.
@@ -26,7 +26,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  2 files changed, 164 insertions(+), 98 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
-index ac4dfe7..e57b752 100644
+index eb1bdc2..982eb12 100644
 --- a/drivers/gpu/drm/i915/i915_drv.h
 +++ b/drivers/gpu/drm/i915/i915_drv.h
 @@ -625,9 +625,11 @@ struct i915_drrs {
@@ -49,7 +49,7 @@ index ac4dfe7..e57b752 100644
  };
  
  struct i915_psr {
-@@ -1852,7 +1855,7 @@ struct drm_i915_private {
+@@ -1853,7 +1856,7 @@ struct drm_i915_private {
  	struct intel_fbdev *fbdev;
  	struct work_struct fbdev_suspend_work;
  

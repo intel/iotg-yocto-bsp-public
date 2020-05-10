@@ -1,4 +1,4 @@
-From bb967c421ba3e720315b4a70fd7295bfbbc06b3e Mon Sep 17 00:00:00 2001
+From 3e2db7bb1a463cf2c625d60366ac45d0caa64c45 Mon Sep 17 00:00:00 2001
 From: Jeff McGee <jeff.mcgee@intel.com>
 Date: Tue, 7 Mar 2017 08:42:32 -0800
 Subject: [PATCH] drm/i915/huc: Update BXT to use HuC 1.7.2013

@@ -1,4 +1,4 @@
-From c73d41d3526d34ed3ce87b0ef4d8f1fd7b751bfd Mon Sep 17 00:00:00 2001
+From aa78b442f9d719ed561e8b3b9626ff1b5b255e5b Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Thu, 6 Sep 2018 11:02:25 +0800
 Subject: [PATCH] ASoC: Intel: Boards: Add pin muxing for SSP3

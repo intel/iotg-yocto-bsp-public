@@ -1,4 +1,4 @@
-From 1a770d00555b06054fb0924d094a2548dcbf9417 Mon Sep 17 00:00:00 2001
+From b692ed2bb0d3b932d9a2f40cd7db8fbb8056b446 Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Mon, 17 Apr 2017 13:24:50 +0800
 Subject: [PATCH] cpufreq/x86: Add Turbo Frequency Mode (TFM) governor driver

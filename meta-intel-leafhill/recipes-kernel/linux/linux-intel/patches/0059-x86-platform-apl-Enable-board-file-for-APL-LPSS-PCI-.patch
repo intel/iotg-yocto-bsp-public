@@ -1,4 +1,4 @@
-From bbb2bfe1db0bfb4dec9b16bf50e4abafa0604228 Mon Sep 17 00:00:00 2001
+From 2dfbe7b2d8ba82a197acb53b24a8bfc34ee99524 Mon Sep 17 00:00:00 2001
 From: Weifeng Voon <weifeng.voon@intel.com>
 Date: Sat, 23 Jul 2016 12:12:07 +0800
 Subject: [PATCH] x86/platform/apl: Enable board file for APL LPSS PCI mode
@@ -16,7 +16,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  create mode 100644 arch/x86/platform/apl/apl-board.c
 
 diff --git a/arch/x86/Kconfig b/arch/x86/Kconfig
-index 0b83b71..da0f128 100644
+index 8984a37..b2a2205 100644
 --- a/arch/x86/Kconfig
 +++ b/arch/x86/Kconfig
 @@ -33,6 +33,14 @@ config X86_64

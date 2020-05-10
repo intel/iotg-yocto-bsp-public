@@ -1,4 +1,4 @@
-From ed1c995e7b1d1778a9f58438f7b513958d089ee9 Mon Sep 17 00:00:00 2001
+From d10cd22c52f9a9d2e25511b0d3511c1b2a5ea09a Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 16 Nov 2016 09:38:05 +0800
 Subject: [PATCH] igb: Scheduling suspend in transmit side based on activity
@@ -44,7 +44,7 @@ index 4acf1e3..a4abf58 100644
  
  	/* structs defined in e1000_hw.h */
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index f36faca..b4bd91c 100644
+index 3514c42..583be49 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
 @@ -128,6 +128,7 @@ enum tx_queue_prio {
@@ -55,7 +55,7 @@ index f36faca..b4bd91c 100644
  static netdev_tx_t igb_xmit_frame(struct sk_buff *skb, struct net_device *);
  static void igb_get_stats64(struct net_device *dev,
  			    struct rtnl_link_stats64 *stats);
-@@ -3267,7 +3268,7 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -3268,7 +3269,7 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  
  	INIT_WORK(&adapter->reset_task, igb_reset_task);
  	INIT_WORK(&adapter->watchdog_task, igb_watchdog_task);
@@ -64,7 +64,7 @@ index f36faca..b4bd91c 100644
  	/* Initialize link properties that are user-changeable */
  	adapter->fc_autoneg = true;
  	hw->mac.autoneg = true;
-@@ -3862,7 +3863,8 @@ static int igb_sw_init(struct igb_adapter *adapter)
+@@ -3863,7 +3864,8 @@ static int igb_sw_init(struct igb_adapter *adapter)
  				  VLAN_HLEN;
  	adapter->min_frame_size = ETH_ZLEN + ETH_FCS_LEN;
  
@@ -74,7 +74,7 @@ index f36faca..b4bd91c 100644
  	spin_lock_init(&adapter->stats64_lock);
  #ifdef CONFIG_PCI_IOV
  	switch (hw->mac.type) {
-@@ -5734,10 +5736,12 @@ static void igb_tx_ctxtdesc(struct igb_ring *tx_ring,
+@@ -5735,10 +5737,12 @@ static void igb_tx_ctxtdesc(struct igb_ring *tx_ring,
  	struct e1000_adv_tx_context_desc *context_desc;
  	u16 i = tx_ring->next_to_use;
  	struct timespec64 ts;
@@ -87,7 +87,7 @@ index f36faca..b4bd91c 100644
  	tx_ring->next_to_use = (i < tx_ring->count) ? i : 0;
  
  	/* set bits to identify this as an advanced context descriptor */
-@@ -6000,12 +6004,13 @@ static int igb_tx_map(struct igb_ring *tx_ring,
+@@ -6001,12 +6005,13 @@ static int igb_tx_map(struct igb_ring *tx_ring,
  	struct igb_tx_buffer *tx_buffer;
  	union e1000_adv_tx_desc *tx_desc;
  	struct skb_frag_struct *frag;
@@ -102,7 +102,7 @@ index f36faca..b4bd91c 100644
  	tx_desc = IGB_TX_DESC(tx_ring, i);
  
  	igb_tx_olinfo_status(tx_ring, tx_desc, tx_flags, skb->len - hdr_len);
-@@ -6033,6 +6038,7 @@ static int igb_tx_map(struct igb_ring *tx_ring,
+@@ -6034,6 +6039,7 @@ static int igb_tx_map(struct igb_ring *tx_ring,
  
  			i++;
  			tx_desc++;
@@ -110,7 +110,7 @@ index f36faca..b4bd91c 100644
  			if (i == tx_ring->count) {
  				tx_desc = IGB_TX_DESC(tx_ring, 0);
  				i = 0;
-@@ -6052,6 +6058,7 @@ static int igb_tx_map(struct igb_ring *tx_ring,
+@@ -6053,6 +6059,7 @@ static int igb_tx_map(struct igb_ring *tx_ring,
  
  		i++;
  		tx_desc++;
@@ -118,7 +118,7 @@ index f36faca..b4bd91c 100644
  		if (i == tx_ring->count) {
  			tx_desc = IGB_TX_DESC(tx_ring, 0);
  			i = 0;
-@@ -6094,6 +6101,7 @@ static int igb_tx_map(struct igb_ring *tx_ring,
+@@ -6095,6 +6102,7 @@ static int igb_tx_map(struct igb_ring *tx_ring,
  
  	tx_ring->next_to_use = i;
  
@@ -126,7 +126,7 @@ index f36faca..b4bd91c 100644
  	/* Make sure there is space in the ring for the next send. */
  	igb_maybe_stop_tx(tx_ring, DESC_NEEDED);
  
-@@ -6239,10 +6247,32 @@ static inline struct igb_ring *igb_tx_queue_mapping(struct igb_adapter *adapter,
+@@ -6240,10 +6248,32 @@ static inline struct igb_ring *igb_tx_queue_mapping(struct igb_adapter *adapter,
  	return adapter->tx_ring[r_idx];
  }
  
@@ -159,7 +159,7 @@ index f36faca..b4bd91c 100644
  
  	/* The minimum packet size with TCTL.PSP set is 17 so pad the skb
  	 * in order to meet this minimum size requirement.
-@@ -6250,7 +6280,19 @@ static netdev_tx_t igb_xmit_frame(struct sk_buff *skb,
+@@ -6251,7 +6281,19 @@ static netdev_tx_t igb_xmit_frame(struct sk_buff *skb,
  	if (skb_put_padto(skb, 17))
  		return NETDEV_TX_OK;
  
@@ -180,7 +180,7 @@ index f36faca..b4bd91c 100644
  }
  
  /**
-@@ -7845,11 +7887,15 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
+@@ -7846,11 +7888,15 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
  	unsigned int total_bytes = 0, total_packets = 0;
  	unsigned int budget = q_vector->tx.work_limit;
  	unsigned int i = tx_ring->next_to_clean;
@@ -196,7 +196,7 @@ index f36faca..b4bd91c 100644
  	tx_desc = IGB_TX_DESC(tx_ring, i);
  	i -= tx_ring->count;
  
-@@ -7891,6 +7937,7 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
+@@ -7892,6 +7938,7 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
  			tx_buffer++;
  			tx_desc++;
  			i++;
@@ -204,7 +204,7 @@ index f36faca..b4bd91c 100644
  			if (unlikely(!i)) {
  				i -= tx_ring->count;
  				tx_buffer = tx_ring->tx_buffer_info;
-@@ -7996,7 +8043,18 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
+@@ -7997,7 +8044,18 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
  			u64_stats_update_end(&tx_ring->tx_syncp);
  		}
  	}
@@ -224,7 +224,7 @@ index f36faca..b4bd91c 100644
  	return !!budget;
  }
  
-@@ -9003,6 +9061,13 @@ static int __maybe_unused igb_runtime_idle(struct device *dev)
+@@ -9004,6 +9062,13 @@ static int __maybe_unused igb_runtime_idle(struct device *dev)
  
  static int __maybe_unused igb_runtime_suspend(struct device *dev)
  {

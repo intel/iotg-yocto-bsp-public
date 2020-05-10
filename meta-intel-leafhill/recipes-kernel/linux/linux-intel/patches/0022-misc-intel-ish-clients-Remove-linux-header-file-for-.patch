@@ -1,4 +1,4 @@
-From 6938ccaa4dce8ed9845e7a48dd1560907163f6d4 Mon Sep 17 00:00:00 2001
+From 419aadeed3f3cb31a20c61d5a1bf9ae01fb7afea Mon Sep 17 00:00:00 2001
 From: "Ruslan, Rusaimi Amira" <rusaimi.amira.ruslan@intel.com>
 Date: Fri, 13 Apr 2018 17:49:19 +0800
 Subject: [PATCH] misc: intel-ish-clients: Remove linux header file for uapi

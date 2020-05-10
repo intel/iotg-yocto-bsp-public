@@ -1,4 +1,4 @@
-From 109121a3df8c0723d5a71b117c2c8977e6b15076 Mon Sep 17 00:00:00 2001
+From a3d574ff3654c030a9ca658ab6099db46d912767 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 20 Dec 2016 13:16:25 +0800
 Subject: [PATCH] igb: On rmmod prevent the device from being power managed at
@@ -15,10 +15,10 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 1 insertion(+)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 7738ee5..5434365 100644
+index 36971be..0670bb1 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -3679,6 +3679,7 @@ static void igb_remove(struct pci_dev *pdev)
+@@ -3680,6 +3680,7 @@ static void igb_remove(struct pci_dev *pdev)
  	struct e1000_hw *hw = &adapter->hw;
  
  	pm_runtime_get_noresume(&pdev->dev);

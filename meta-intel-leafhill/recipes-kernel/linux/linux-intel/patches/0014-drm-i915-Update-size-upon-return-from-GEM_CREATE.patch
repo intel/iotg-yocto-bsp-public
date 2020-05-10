@@ -1,4 +1,4 @@
-From d6b4de98d786f319b58888c72f1bb8de743daa42 Mon Sep 17 00:00:00 2001
+From 3fdf33d10bcec2be85ab695f0ea7b4568f9e0cec Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Micha=C5=82=20Winiarski?= <michal.winiarski@intel.com>
 Date: Tue, 26 Mar 2019 18:02:18 +0100
 Subject: [PATCH] drm/i915: Update size upon return from GEM_CREATE
@@ -25,10 +25,10 @@ Link: https://patchwork.freedesktop.org/patch/msgid/20190326170218.13255-1-micha
  1 file changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_gem.c
-index 4404b71..4f7fbc0 100644
+index 89b8e64..5b3e455 100644
 --- a/drivers/gpu/drm/i915/i915_gem.c
 +++ b/drivers/gpu/drm/i915/i915_gem.c
-@@ -1558,14 +1558,15 @@ void i915_gem_object_free(struct drm_i915_gem_object *obj)
+@@ -1566,14 +1566,15 @@ void i915_gem_object_free(struct drm_i915_gem_object *obj)
  static int
  i915_gem_create(struct drm_file *file,
  		struct drm_i915_private *dev_priv,
@@ -47,7 +47,7 @@ index 4404b71..4f7fbc0 100644
  	if (size == 0)
  		return -EINVAL;
  
-@@ -1581,6 +1582,7 @@ void i915_gem_object_free(struct drm_i915_gem_object *obj)
+@@ -1589,6 +1590,7 @@ void i915_gem_object_free(struct drm_i915_gem_object *obj)
  		return ret;
  
  	*handle_p = handle;
@@ -55,7 +55,7 @@ index 4404b71..4f7fbc0 100644
  	return 0;
  }
  
-@@ -1593,7 +1595,7 @@ void i915_gem_object_free(struct drm_i915_gem_object *obj)
+@@ -1601,7 +1603,7 @@ void i915_gem_object_free(struct drm_i915_gem_object *obj)
  	args->pitch = ALIGN(args->width * DIV_ROUND_UP(args->bpp, 8), 64);
  	args->size = args->pitch * args->height;
  	return i915_gem_create(file, to_i915(dev),
@@ -64,7 +64,7 @@ index 4404b71..4f7fbc0 100644
  }
  
  static bool gpu_write_needs_clflush(struct drm_i915_gem_object *obj)
-@@ -1618,7 +1620,7 @@ static bool gpu_write_needs_clflush(struct drm_i915_gem_object *obj)
+@@ -1626,7 +1628,7 @@ static bool gpu_write_needs_clflush(struct drm_i915_gem_object *obj)
  	i915_gem_flush_free_objects(dev_priv);
  
  	return i915_gem_create(file, dev_priv,

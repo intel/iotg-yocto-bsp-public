@@ -1,4 +1,4 @@
-From 03331b978b1a0d638cf10805ed25f04f3492269e Mon Sep 17 00:00:00 2001
+From 6cb602d16260d97095a3752dfccf0c03e44b9be7 Mon Sep 17 00:00:00 2001
 From: Yetunde Adebisi <yetundex.adebisi@intel.com>
 Date: Tue, 5 Apr 2016 13:56:01 +0100
 Subject: [PATCH] drm/i915: Add backlight Control using DPCD registers for DP
@@ -84,7 +84,7 @@ index 357136f..ac8df51 100644
 +			enable);
 +}
 diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
-index e8f7ad1..351ae3a 100644
+index 98a1472..d61d527 100644
 --- a/drivers/gpu/drm/i915/intel_drv.h
 +++ b/drivers/gpu/drm/i915/intel_drv.h
 @@ -1781,6 +1781,8 @@ static inline unsigned int intel_dp_unused_lane_mask(int lane_count)

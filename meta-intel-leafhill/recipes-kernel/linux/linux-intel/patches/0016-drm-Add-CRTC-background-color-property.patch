@@ -1,4 +1,4 @@
-From 8c509c7a566b97395f59484d5320650d6890d19b Mon Sep 17 00:00:00 2001
+From 7fc5e8ff527b23576c4bc31d7691dd7e4000d590 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Mon, 30 Sep 2019 15:47:05 -0700
 Subject: [PATCH] drm: Add CRTC background color property

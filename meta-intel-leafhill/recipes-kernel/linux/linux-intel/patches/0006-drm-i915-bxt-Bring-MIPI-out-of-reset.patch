@@ -1,4 +1,4 @@
-From d8e582849bfc0c7b482246259c275a5ccc321fa2 Mon Sep 17 00:00:00 2001
+From 556144a8a3f6e79b95a1cc738d8609e2e75b2e25 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Tue, 20 Dec 2016 10:24:21 -0800
 Subject: [PATCH] drm/i915/bxt: Bring MIPI out of reset
@@ -14,10 +14,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  2 files changed, 17 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/i915_reg.h b/drivers/gpu/drm/i915/i915_reg.h
-index bee1a50..b1a5479 100644
+index 12d3d15..637aed8 100644
 --- a/drivers/gpu/drm/i915/i915_reg.h
 +++ b/drivers/gpu/drm/i915/i915_reg.h
-@@ -1600,6 +1600,13 @@ enum i915_power_well_id {
+@@ -1606,6 +1606,13 @@ enum i915_power_well_id {
  #define CHV_TX_DW14(ch, lane) _TXLANE(ch, lane, 0xb8)
  #define   DPIO_UPAR_SHIFT		30
  

@@ -1,4 +1,4 @@
-From ff483f4fce9e9ab09bc4f51ebbf4fc8b8459f3d6 Mon Sep 17 00:00:00 2001
+From 852d5ea4a758a89c0e0c3c4e4fbcca25ef1b3f73 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Wed, 18 Jan 2017 14:02:16 -0800
 Subject: [PATCH] drm/i915/gen9: Turbo Frequency Mode control (v4).
@@ -43,7 +43,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  4 files changed, 151 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/i915_drv.c b/drivers/gpu/drm/i915/i915_drv.c
-index 459b7ef..4fb83aa 100644
+index cf328ee..7f43ca9 100644
 --- a/drivers/gpu/drm/i915/i915_drv.c
 +++ b/drivers/gpu/drm/i915/i915_drv.c
 @@ -1287,6 +1287,9 @@ static void i915_driver_register(struct drm_i915_private *dev_priv)
@@ -66,10 +66,10 @@ index 459b7ef..4fb83aa 100644
  	intel_opregion_unregister(dev_priv);
  
 diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
-index 452c8d1..b71609e 100644
+index 3f1a37f..740dae1 100644
 --- a/drivers/gpu/drm/i915/i915_drv.h
 +++ b/drivers/gpu/drm/i915/i915_drv.h
-@@ -1833,6 +1833,12 @@ struct drm_i915_private {
+@@ -1834,6 +1834,12 @@ struct drm_i915_private {
  	 * mchdev_lock in intel_pm.c */
  	struct intel_ilk_power_mgmt ips;
  
@@ -83,7 +83,7 @@ index 452c8d1..b71609e 100644
  
  	struct i915_psr psr;
 diff --git a/drivers/gpu/drm/i915/intel_drv.h b/drivers/gpu/drm/i915/intel_drv.h
-index e8f7ad1..1dbdf12 100644
+index 98a1472..d301e4c 100644
 --- a/drivers/gpu/drm/i915/intel_drv.h
 +++ b/drivers/gpu/drm/i915/intel_drv.h
 @@ -2085,6 +2085,8 @@ bool chv_phy_powergate_ch(struct drm_i915_private *dev_priv, enum dpio_phy phy,
@@ -96,7 +96,7 @@ index e8f7ad1..1dbdf12 100644
  void intel_cleanup_gt_powersave(struct drm_i915_private *dev_priv);
  void intel_sanitize_gt_powersave(struct drm_i915_private *dev_priv);
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index e14a0ce..14598a2 100644
+index 7390dea..969efb5 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
 @@ -37,6 +37,9 @@
@@ -109,7 +109,7 @@ index e14a0ce..14598a2 100644
  /**
   * DOC: RC6
   *
-@@ -6720,6 +6723,10 @@ static int gen6_set_rps(struct drm_i915_private *dev_priv, u8 val)
+@@ -6728,6 +6731,10 @@ static int gen6_set_rps(struct drm_i915_private *dev_priv, u8 val)
  {
  	struct intel_rps *rps = &dev_priv->gt_pm.rps;
  
@@ -120,7 +120,7 @@ index e14a0ce..14598a2 100644
  	/* min/max delay may still have been modified so be sure to
  	 * write the limits value.
  	 */
-@@ -8376,6 +8383,137 @@ void intel_gpu_ips_teardown(void)
+@@ -8384,6 +8391,137 @@ void intel_gpu_ips_teardown(void)
  	spin_unlock_irq(&mchdev_lock);
  }
  

@@ -1,4 +1,4 @@
-From ec52255d0b6973cbc415daed360784e926400818 Mon Sep 17 00:00:00 2001
+From e41cbf5b2ab48c912af09e5e871c7fb7be1e49ca Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 16 Nov 2016 12:54:20 +0800
 Subject: [PATCH] igb: Adding runtime PM support to various netdev ops
@@ -44,7 +44,7 @@ index a4abf58..a22eb91 100644
  	u8  tx_timeout_factor;
  	struct timer_list blink_timer;
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index cd73e30..7738ee5 100644
+index c0b7704..36971be 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
 @@ -129,6 +129,8 @@ enum tx_queue_prio {
@@ -73,7 +73,7 @@ index cd73e30..7738ee5 100644
  	igb_setup_tx_mode(adapter);
  
  	igb_restore_vlan(adapter);
-@@ -3269,6 +3272,8 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -3270,6 +3273,8 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  	INIT_WORK(&adapter->reset_task, igb_reset_task);
  	INIT_WORK(&adapter->watchdog_task, igb_watchdog_task);
  	INIT_WORK(&adapter->rpm_xmit_task, igb_rpm_xmit_task);
@@ -82,7 +82,7 @@ index cd73e30..7738ee5 100644
  	/* Initialize link properties that are user-changeable */
  	adapter->fc_autoneg = true;
  	hw->mac.autoneg = true;
-@@ -4855,16 +4860,22 @@ static int igb_set_mac(struct net_device *netdev, void *p)
+@@ -4856,16 +4861,22 @@ static int igb_set_mac(struct net_device *netdev, void *p)
  	struct igb_adapter *adapter = netdev_priv(netdev);
  	struct e1000_hw *hw = &adapter->hw;
  	struct sockaddr *addr = p;
@@ -107,7 +107,7 @@ index cd73e30..7738ee5 100644
  	return 0;
  }
  
-@@ -5031,16 +5042,59 @@ static void igb_vlan_promisc_disable(struct igb_adapter *adapter)
+@@ -5032,16 +5043,59 @@ static void igb_vlan_promisc_disable(struct igb_adapter *adapter)
  		igb_scrub_vfta(adapter, i);
  }
  
@@ -168,7 +168,7 @@ index cd73e30..7738ee5 100644
  {
  	struct igb_adapter *adapter = netdev_priv(netdev);
  	struct e1000_hw *hw = &adapter->hw;
-@@ -6366,6 +6420,7 @@ static int igb_change_mtu(struct net_device *netdev, int new_mtu)
+@@ -6367,6 +6421,7 @@ static int igb_change_mtu(struct net_device *netdev, int new_mtu)
  	struct pci_dev *pdev = adapter->pdev;
  	int max_frame = new_mtu + ETH_HLEN + ETH_FCS_LEN + VLAN_HLEN;
  
@@ -176,7 +176,7 @@ index cd73e30..7738ee5 100644
  	/* adjust max frame to be at least the size of a standard frame */
  	if (max_frame < (ETH_FRAME_LEN + ETH_FCS_LEN))
  		max_frame = ETH_FRAME_LEN + ETH_FCS_LEN;
-@@ -6390,6 +6445,8 @@ static int igb_change_mtu(struct net_device *netdev, int new_mtu)
+@@ -6391,6 +6446,8 @@ static int igb_change_mtu(struct net_device *netdev, int new_mtu)
  
  	clear_bit(__IGB_RESETTING, &adapter->state);
  
@@ -185,7 +185,7 @@ index cd73e30..7738ee5 100644
  	return 0;
  }
  
-@@ -6947,7 +7004,7 @@ static int igb_set_vf_multicasts(struct igb_adapter *adapter,
+@@ -6948,7 +7005,7 @@ static int igb_set_vf_multicasts(struct igb_adapter *adapter,
  		vf_data->vf_mc_hashes[i] = hash_list[i];
  
  	/* Flush and reset the mta with the new values */
@@ -194,7 +194,7 @@ index cd73e30..7738ee5 100644
  
  	return 0;
  }
-@@ -7224,7 +7281,7 @@ static inline void igb_vf_reset(struct igb_adapter *adapter, u32 vf)
+@@ -7225,7 +7282,7 @@ static inline void igb_vf_reset(struct igb_adapter *adapter, u32 vf)
  	adapter->vf_data[vf].num_vf_mc_hashes = 0;
  
  	/* Flush and reset the mta with the new values */
@@ -203,7 +203,7 @@ index cd73e30..7738ee5 100644
  }
  
  static void igb_vf_reset_event(struct igb_adapter *adapter, u32 vf)
-@@ -8796,6 +8853,28 @@ static int igb_vlan_rx_add_vid(struct net_device *netdev,
+@@ -8797,6 +8854,28 @@ static int igb_vlan_rx_add_vid(struct net_device *netdev,
  			       __be16 proto, u16 vid)
  {
  	struct igb_adapter *adapter = netdev_priv(netdev);
@@ -232,7 +232,7 @@ index cd73e30..7738ee5 100644
  	struct e1000_hw *hw = &adapter->hw;
  	int pf_id = adapter->vfs_allocated_count;
  
-@@ -8814,12 +8893,24 @@ static int igb_vlan_rx_kill_vid(struct net_device *netdev,
+@@ -8815,12 +8894,24 @@ static int igb_vlan_rx_kill_vid(struct net_device *netdev,
  	struct igb_adapter *adapter = netdev_priv(netdev);
  	int pf_id = adapter->vfs_allocated_count;
  	struct e1000_hw *hw = &adapter->hw;
@@ -257,7 +257,7 @@ index cd73e30..7738ee5 100644
  
  	return 0;
  }
-@@ -8832,7 +8923,7 @@ static void igb_restore_vlan(struct igb_adapter *adapter)
+@@ -8833,7 +8924,7 @@ static void igb_restore_vlan(struct igb_adapter *adapter)
  	igb_vlan_rx_add_vid(adapter->netdev, htons(ETH_P_8021Q), 0);
  
  	for_each_set_bit_from(vid, adapter->active_vlans, VLAN_N_VID)
@@ -266,7 +266,7 @@ index cd73e30..7738ee5 100644
  }
  
  int igb_set_spd_dplx(struct igb_adapter *adapter, u32 spd, u8 dplx)
-@@ -8930,7 +9021,7 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
+@@ -8931,7 +9022,7 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
  
  	if (wufc) {
  		igb_setup_rctl(adapter);

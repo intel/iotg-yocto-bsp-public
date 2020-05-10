@@ -1,4 +1,4 @@
-From 4bf6c1a4974119466d5d05af34fd37f395dcdc1e Mon Sep 17 00:00:00 2001
+From 86f47479f3148109532d12e0dff01b142b22c59f Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Fri, 21 Sep 2018 16:33:52 +0800
 Subject: [PATCH] usb: roles: intel_xhci: Add default_role module parameter

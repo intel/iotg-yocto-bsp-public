@@ -1,4 +1,4 @@
-From 56b76a6f514e31293b73acb8a285e6674b5520cb Mon Sep 17 00:00:00 2001
+From 4e43de8b7b625f5edf00c98c62689ae63bc7d95e Mon Sep 17 00:00:00 2001
 From: "Bozek, DominikX" <dominikx.bozek@intel.com>
 Date: Tue, 12 Mar 2019 15:15:27 +0100
 Subject: [PATCH] ASoC: Intel: Skylake: Enable codec command I/O functionality

@@ -1,4 +1,4 @@
-From 409ed9d0d05fcc979d9b6a47c2b7296315a2e20b Mon Sep 17 00:00:00 2001
+From ef91ff3089c2b7703dae21fd074a45ead079cfb2 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 17:39:41 +0800
 Subject: [PATCH] igb: During runtime resume do not reinitialize the net device
@@ -18,10 +18,10 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 27 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 3ba97a3..5654f3c 100644
+index 36f694e..14b5490 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -3947,7 +3947,8 @@ static int __igb_open(struct net_device *netdev, bool resuming)
+@@ -3948,7 +3948,8 @@ static int __igb_open(struct net_device *netdev, bool resuming)
  	if (!resuming)
  		pm_runtime_get_sync(&pdev->dev);
  
@@ -31,7 +31,7 @@ index 3ba97a3..5654f3c 100644
  
  	/* allocate transmit descriptors */
  	err = igb_setup_all_tx_resources(adapter);
-@@ -3972,16 +3973,22 @@ static int __igb_open(struct net_device *netdev, bool resuming)
+@@ -3973,16 +3974,22 @@ static int __igb_open(struct net_device *netdev, bool resuming)
  	if (err)
  		goto err_req_irq;
  
@@ -63,7 +63,7 @@ index 3ba97a3..5654f3c 100644
  
  	/* From here on the code is the same as igb_up() */
  	clear_bit(__IGB_DOWN, &adapter->state);
-@@ -4003,7 +4010,11 @@ static int __igb_open(struct net_device *netdev, bool resuming)
+@@ -4004,7 +4011,11 @@ static int __igb_open(struct net_device *netdev, bool resuming)
  		wr32(E1000_CTRL_EXT, reg_data);
  	}
  
@@ -76,7 +76,7 @@ index 3ba97a3..5654f3c 100644
  
  	/* schedule runtime suspend from open */
  	if (!resuming) {
-@@ -8954,7 +8965,11 @@ static int __maybe_unused igb_runtime_suspend(struct device *dev)
+@@ -8955,7 +8966,11 @@ static int __maybe_unused igb_runtime_suspend(struct device *dev)
  
  static int __maybe_unused igb_runtime_resume(struct device *dev)
  {

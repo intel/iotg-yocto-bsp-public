@@ -1,4 +1,4 @@
-From 6d26e86fb10c7b18b72b61e92dac8f5970ad7e80 Mon Sep 17 00:00:00 2001
+From a529a4fa3c606c5a951148a31685cb2f226f1f09 Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Thu, 17 Nov 2016 13:12:45 +0200
 Subject: [PATCH] serial: 8250_port: Don't use power management for kernel
@@ -27,7 +27,7 @@ Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
  3 files changed, 26 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/tty/serial/8250/8250_core.c b/drivers/tty/serial/8250/8250_core.c
-index 8fe3d0e..b1b8bbc 100644
+index 69aaee5..dec7427 100644
 --- a/drivers/tty/serial/8250/8250_core.c
 +++ b/drivers/tty/serial/8250/8250_core.c
 @@ -612,6 +612,14 @@ static int univ8250_console_setup(struct console *co, char *options)
@@ -113,10 +113,10 @@ index 2470adc..0f8f0ca 100644
  
  #endif /* CONFIG_SERIAL_8250_CONSOLE */
 diff --git a/include/linux/serial_8250.h b/include/linux/serial_8250.h
-index 18e2142..bf8d72e 100644
+index 5a655ba..fffdc7e 100644
 --- a/include/linux/serial_8250.h
 +++ b/include/linux/serial_8250.h
-@@ -174,6 +174,7 @@ extern void serial8250_do_set_divisor(struct uart_port *port, unsigned int baud,
+@@ -178,6 +178,7 @@ extern void serial8250_do_set_divisor(struct uart_port *port, unsigned int baud,
  void serial8250_console_write(struct uart_8250_port *up, const char *s,
  			      unsigned int count);
  int serial8250_console_setup(struct uart_port *port, char *options, bool probe);

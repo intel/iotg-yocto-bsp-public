@@ -1,4 +1,4 @@
-From e5f2d0aee73e64f1c72375d5d6c4becee9c5f02f Mon Sep 17 00:00:00 2001
+From e4dc40e61fa1ac8443aa77af5d3bffeb9a57da37 Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Fri, 5 Jul 2019 16:27:29 +0800
 Subject: [PATCH] ASoC: Intel: Common : Add use_tplg_pcm flag for IVI Drivers

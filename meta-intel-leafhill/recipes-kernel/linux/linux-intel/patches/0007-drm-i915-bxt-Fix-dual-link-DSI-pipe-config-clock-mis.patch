@@ -1,4 +1,4 @@
-From 718138c480ead94c452805a90ec4a06a108c12e2 Mon Sep 17 00:00:00 2001
+From dc51c5c36284845d58afb981632e76a7b7f76f40 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Tue, 20 Dec 2016 10:24:23 -0800
 Subject: [PATCH] drm/i915/bxt: Fix dual-link DSI pipe config clock mismatch.

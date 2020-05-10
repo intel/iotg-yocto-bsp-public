@@ -1,4 +1,4 @@
-From 4f81dc1589da85360dcaf8d38ce514f9019f935b Mon Sep 17 00:00:00 2001
+From 893826ab0360c687d57f8222346720118f5ec8b0 Mon Sep 17 00:00:00 2001
 From: James Xiong <james.xiong@intel.com>
 Date: Fri, 16 Dec 2016 14:37:12 -0800
 Subject: [PATCH] drm/i915/splash: Add support for a splash screen image. (v10)
@@ -61,7 +61,7 @@ index 9e145c9..1e8877b 100644
  	  i915_gem_userptr.o \
  	  i915_gemfs.o \
 diff --git a/drivers/gpu/drm/i915/i915_drv.h b/drivers/gpu/drm/i915/i915_drv.h
-index a9b8734..ac4dfe7 100644
+index 85d3fd8..eb1bdc2 100644
 --- a/drivers/gpu/drm/i915/i915_drv.h
 +++ b/drivers/gpu/drm/i915/i915_drv.h
 @@ -624,6 +624,19 @@ struct i915_drrs {
@@ -84,7 +84,7 @@ index a9b8734..ac4dfe7 100644
  struct i915_psr {
  	struct mutex lock;
  	bool sink_support;
-@@ -1839,6 +1852,8 @@ struct drm_i915_private {
+@@ -1840,6 +1853,8 @@ struct drm_i915_private {
  	struct intel_fbdev *fbdev;
  	struct work_struct fbdev_suspend_work;
  
@@ -93,7 +93,7 @@ index a9b8734..ac4dfe7 100644
  	struct drm_property *broadcast_rgb_property;
  	struct drm_property *force_audio_property;
  
-@@ -2946,6 +2961,12 @@ struct drm_i915_gem_object *
+@@ -2957,6 +2972,12 @@ struct drm_i915_gem_object *
  #endif
  
  void i915_gem_close_object(struct drm_gem_object *gem, struct drm_file *file);

@@ -1,4 +1,4 @@
-From affacc8b8ab2db0e8470f4cd38d9a4eb745cac6f Mon Sep 17 00:00:00 2001
+From 619d5b575c19c323e11f290cfaae3aeba557ee0f Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 18:23:30 +0800
 Subject: [PATCH] igb: Watchdog task changes for runtime pm based on activity
@@ -21,10 +21,10 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 29 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 60be2cf..f36faca 100644
+index fc832d7..3514c42 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -5289,14 +5289,27 @@ static void igb_watchdog_task(struct work_struct *work)
+@@ -5290,14 +5290,27 @@ static void igb_watchdog_task(struct work_struct *work)
  	int i;
  	u32 connsw;
  	u16 phy_data, retry_count = 20;
@@ -57,7 +57,7 @@ index 60be2cf..f36faca 100644
  	}
  
  	/* Force link down if we have fiber to swap to */
-@@ -5314,8 +5327,12 @@ static void igb_watchdog_task(struct work_struct *work)
+@@ -5315,8 +5328,12 @@ static void igb_watchdog_task(struct work_struct *work)
  			adapter->flags |= IGB_FLAG_MEDIA_RESET;
  			igb_reset(adapter);
  		}
@@ -72,7 +72,7 @@ index 60be2cf..f36faca 100644
  
  		if (!netif_carrier_ok(netdev)) {
  			u32 ctrl;
-@@ -5428,8 +5445,6 @@ static void igb_watchdog_task(struct work_struct *work)
+@@ -5429,8 +5446,6 @@ static void igb_watchdog_task(struct work_struct *work)
  					return;
  				}
  			}
@@ -81,7 +81,7 @@ index 60be2cf..f36faca 100644
  
  		/* also check for alternate media here */
  		} else if (!netif_carrier_ok(netdev) &&
-@@ -5441,6 +5456,11 @@ static void igb_watchdog_task(struct work_struct *work)
+@@ -5442,6 +5457,11 @@ static void igb_watchdog_task(struct work_struct *work)
  				return;
  			}
  		}

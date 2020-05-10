@@ -1,4 +1,4 @@
-From e65ef013a204236143c7eeb15199d28ba98d32cf Mon Sep 17 00:00:00 2001
+From 4c785794d8e2a8e4f38d07d925335a2ec32abfc8 Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Sun, 7 Jul 2019 18:09:53 +0800
 Subject: [PATCH] Revert "Revert "ASoC: core: Do not return for dummy codec in
@@ -6,20 +6,22 @@ Subject: [PATCH] Revert "Revert "ASoC: core: Do not return for dummy codec in
 
 This reverts commit 6c42c5998cbbec1d82cbf38668dca82a94d2f7b5.
 ---
- sound/soc/soc-core.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ sound/soc/soc-core.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/sound/soc/soc-core.c b/sound/soc/soc-core.c
-index 18a7c5e..d0a5af6 100644
+index 51f2e21..84c3640 100644
 --- a/sound/soc/soc-core.c
 +++ b/sound/soc/soc-core.c
-@@ -1242,10 +1242,10 @@ static int soc_probe_component(struct snd_soc_card *card,
+@@ -1242,11 +1242,10 @@ static int soc_probe_component(struct snd_soc_card *card,
  	struct snd_soc_dapm_context *dapm = snd_soc_component_get_dapm(component);
  	struct snd_soc_dai *dai;
  	int ret;
 -
+-	if (!strcmp(component->name, "snd-soc-dummy") &&
+-		!IS_ENABLED(CONFIG_SND_SOC_INTEL_BXT_ULL_MACH))
 +#if 0
- 	if (!strcmp(component->name, "snd-soc-dummy"))
++	if (!strcmp(component->name, "snd-soc-dummy"))
  		return 0;
 -
 +#endif

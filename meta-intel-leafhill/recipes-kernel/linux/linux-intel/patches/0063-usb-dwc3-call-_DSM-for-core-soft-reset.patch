@@ -1,4 +1,4 @@
-From 0388aab99c746862fdb6e14d924a61c16ae92483 Mon Sep 17 00:00:00 2001
+From 34ed01cab044d9a0d1e4cac1d66a373e43cb87e6 Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Wed, 11 Jan 2017 14:15:31 +0800
 Subject: [PATCH] usb: dwc3: call _DSM for core soft reset
@@ -20,7 +20,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  3 files changed, 50 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/usb/dwc3/core.c b/drivers/usb/dwc3/core.c
-index 05b9ccf..6a64abc 100644
+index 6666d2a..bd92088 100644
 --- a/drivers/usb/dwc3/core.c
 +++ b/drivers/usb/dwc3/core.c
 @@ -218,6 +218,36 @@ u32 dwc3_core_fifo_space(struct dwc3_ep *dep, u8 type)
@@ -72,7 +72,7 @@ index 05b9ccf..6a64abc 100644
  	reg = dwc3_readl(dwc->regs, DWC3_DCTL);
  	reg |= DWC3_DCTL_CSFTRST;
  	dwc3_writel(dwc->regs, DWC3_DCTL, reg);
-@@ -1298,6 +1333,9 @@ static void dwc3_get_properties(struct dwc3 *dwc)
+@@ -1300,6 +1335,9 @@ static void dwc3_get_properties(struct dwc3 *dwc)
  	dwc->dis_metastability_quirk = device_property_read_bool(dev,
  				"snps,dis_metastability_quirk");
  
@@ -103,10 +103,10 @@ index 13102850..04f68cd 100644
  
  #define INCRX_BURST_MODE 0
 diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-index 8cced36..95c7c44 100644
+index edf7984..0ebf007 100644
 --- a/drivers/usb/dwc3/dwc3-pci.c
 +++ b/drivers/usb/dwc3/dwc3-pci.c
-@@ -108,6 +108,13 @@ static int dwc3_byt_enable_ulpi_refclock(struct pci_dev *pci)
+@@ -110,6 +110,13 @@ static int dwc3_byt_enable_ulpi_refclock(struct pci_dev *pci)
  	{}
  };
  
@@ -120,7 +120,7 @@ index 8cced36..95c7c44 100644
  static const struct property_entry dwc3_pci_mrfld_properties[] = {
  	PROPERTY_ENTRY_STRING("dr_mode", "otg"),
  	PROPERTY_ENTRY_BOOL("linux,sysdev_is_parent"),
-@@ -140,7 +147,8 @@ static int dwc3_pci_quirks(struct dwc3_pci *dwc)
+@@ -142,7 +149,8 @@ static int dwc3_pci_quirks(struct dwc3_pci *dwc)
  
  	if (pdev->vendor == PCI_VENDOR_ID_INTEL) {
  		if (pdev->device == PCI_DEVICE_ID_INTEL_BXT ||
@@ -130,7 +130,7 @@ index 8cced36..95c7c44 100644
  			guid_parse(PCI_INTEL_BXT_DSM_GUID, &dwc->guid);
  			dwc->has_dsm_for_pm = true;
  		}
-@@ -322,7 +330,7 @@ static void dwc3_pci_remove(struct pci_dev *pci)
+@@ -327,7 +335,7 @@ static void dwc3_pci_remove(struct pci_dev *pci)
  	  (kernel_ulong_t) &dwc3_pci_intel_properties, },
  
  	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_APL),

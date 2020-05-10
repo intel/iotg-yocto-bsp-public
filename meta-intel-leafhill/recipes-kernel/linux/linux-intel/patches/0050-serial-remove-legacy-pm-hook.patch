@@ -1,4 +1,4 @@
-From 9bdd87c4a988c682fd80ffb132d752c584aa8961 Mon Sep 17 00:00:00 2001
+From 4610818958cef9381b903a84357450fee0d087ec Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Wed, 12 Oct 2016 19:23:29 +0300
 Subject: [PATCH] serial: *: remove legacy ->pm() hook
@@ -27,7 +27,7 @@ Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
  drivers/tty/serial/omap-serial.c      | 25 ------------------------
  drivers/tty/serial/pch_uart.c         |  1 -
  drivers/tty/serial/pxa.c              | 13 -------------
- drivers/tty/serial/qcom_geni_serial.c | 27 +-------------------------
+ drivers/tty/serial/qcom_geni_serial.c | 28 +--------------------------
  drivers/tty/serial/sa1100.c           |  1 -
  drivers/tty/serial/samsung.c          | 34 ---------------------------------
  drivers/tty/serial/sc16is7xx.c        |  7 -------
@@ -42,7 +42,7 @@ Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
  drivers/tty/serial/xilinx_uartps.c    | 15 ---------------
  drivers/tty/serial/zs.c               | 20 -------------------
  include/linux/serial_8250.h           |  2 --
- 28 files changed, 2 insertions(+), 444 deletions(-)
+ 28 files changed, 2 insertions(+), 445 deletions(-)
 
 diff --git a/arch/arm/mach-sa1100/assabet.c b/arch/arm/mach-sa1100/assabet.c
 index 575ec08..b8e1ce8 100644
@@ -118,7 +118,7 @@ index 1454d9f..c5cbb8c 100644
  
  static struct plat_serial8250_port au1x00_uart_data[][4] __initdata = {
 diff --git a/drivers/tty/serial/8250/8250_core.c b/drivers/tty/serial/8250/8250_core.c
-index b1b8bbc..a3c4684 100644
+index dec7427..e0f6bd8 100644
 --- a/drivers/tty/serial/8250/8250_core.c
 +++ b/drivers/tty/serial/8250/8250_core.c
 @@ -837,7 +837,6 @@ static int serial8250_probe(struct platform_device *dev)
@@ -231,7 +231,7 @@ index e7e61e8..8f61b8b 100644
  	.release_port	= serial8250_release_port,
  	.request_port	= serial8250_request_port,
 diff --git a/drivers/tty/serial/atmel_serial.c b/drivers/tty/serial/atmel_serial.c
-index dd8949e..be665ff 100644
+index f34520e..067ecff 100644
 --- a/drivers/tty/serial/atmel_serial.c
 +++ b/drivers/tty/serial/atmel_serial.c
 @@ -1986,41 +1986,6 @@ static void atmel_shutdown(struct uart_port *port)
@@ -276,7 +276,7 @@ index dd8949e..be665ff 100644
   * Change the port parameters
   */
  static void atmel_set_termios(struct uart_port *port, struct ktermios *termios,
-@@ -2350,7 +2315,6 @@ static void atmel_poll_put_char(struct uart_port *port, unsigned char ch)
+@@ -2351,7 +2316,6 @@ static void atmel_poll_put_char(struct uart_port *port, unsigned char ch)
  	.request_port	= atmel_request_port,
  	.config_port	= atmel_config_port,
  	.verify_port	= atmel_verify_port,
@@ -355,10 +355,10 @@ index 3a75ee0..264d066 100644
  	.release_port	= mpc52xx_uart_release_port,
  	.request_port	= mpc52xx_uart_request_port,
 diff --git a/drivers/tty/serial/msm_serial.c b/drivers/tty/serial/msm_serial.c
-index 310bbae..b1ad1ae 100644
+index 4caeca6..f43a9a5 100644
 --- a/drivers/tty/serial/msm_serial.c
 +++ b/drivers/tty/serial/msm_serial.c
-@@ -1386,25 +1386,6 @@ static int msm_verify_port(struct uart_port *port, struct serial_struct *ser)
+@@ -1390,25 +1390,6 @@ static int msm_verify_port(struct uart_port *port, struct serial_struct *ser)
  	return 0;
  }
  
@@ -384,7 +384,7 @@ index 310bbae..b1ad1ae 100644
  #ifdef CONFIG_CONSOLE_POLL
  static int msm_poll_get_char_single(struct uart_port *port)
  {
-@@ -1524,7 +1505,6 @@ static void msm_poll_put_char(struct uart_port *port, unsigned char c)
+@@ -1528,7 +1509,6 @@ static void msm_poll_put_char(struct uart_port *port, unsigned char c)
  	.request_port = msm_request_port,
  	.config_port = msm_config_port,
  	.verify_port = msm_verify_port,
@@ -436,10 +436,10 @@ index 6420ae5..b5abeaa 100644
  	.release_port	= serial_omap_release_port,
  	.request_port	= serial_omap_request_port,
 diff --git a/drivers/tty/serial/pch_uart.c b/drivers/tty/serial/pch_uart.c
-index cb85002..56b8475 100644
+index 3245cdb..468e421 100644
 --- a/drivers/tty/serial/pch_uart.c
 +++ b/drivers/tty/serial/pch_uart.c
-@@ -1599,7 +1599,6 @@ static void pch_uart_put_poll_char(struct uart_port *port,
+@@ -1602,7 +1602,6 @@ static void pch_uart_put_poll_char(struct uart_port *port,
  	.startup = pch_uart_startup,
  	.shutdown = pch_uart_shutdown,
  	.set_termios = pch_uart_set_termios,
@@ -479,10 +479,10 @@ index 4932b67..a63ea2a 100644
  	.release_port	= serial_pxa_release_port,
  	.request_port	= serial_pxa_request_port,
 diff --git a/drivers/tty/serial/qcom_geni_serial.c b/drivers/tty/serial/qcom_geni_serial.c
-index 5b96df4..996b2c8 100644
+index b3f7d1a..af50406 100644
 --- a/drivers/tty/serial/qcom_geni_serial.c
 +++ b/drivers/tty/serial/qcom_geni_serial.c
-@@ -1198,21 +1198,6 @@ static void console_unregister(struct uart_driver *drv)
+@@ -1216,22 +1216,6 @@ static void console_unregister(struct uart_driver *drv)
  	.nr =  GENI_UART_PORTS,
  };
  
@@ -491,10 +491,11 @@ index 5b96df4..996b2c8 100644
 -{
 -	struct qcom_geni_serial_port *port = to_dev_port(uport, uport);
 -
+-	/* If we've never been called, treat it as off */
+-	if (old_state == UART_PM_STATE_UNDEFINED)
+-		old_state = UART_PM_STATE_OFF;
+-
 -	if (new_state == UART_PM_STATE_ON && old_state == UART_PM_STATE_OFF)
--		geni_se_resources_on(&port->se);
--	else if (!uart_console(uport) && (new_state == UART_PM_STATE_ON &&
--				old_state == UART_PM_STATE_UNDEFINED))
 -		geni_se_resources_on(&port->se);
 -	else if (new_state == UART_PM_STATE_OFF &&
 -			old_state == UART_PM_STATE_ON)
@@ -504,7 +505,7 @@ index 5b96df4..996b2c8 100644
  static const struct uart_ops qcom_geni_console_pops = {
  	.tx_empty = qcom_geni_serial_tx_empty,
  	.stop_tx = qcom_geni_serial_stop_tx,
-@@ -1230,7 +1215,6 @@ static void qcom_geni_serial_pm(struct uart_port *uport,
+@@ -1249,7 +1233,6 @@ static void qcom_geni_serial_pm(struct uart_port *uport,
  	.poll_get_char	= qcom_geni_serial_get_char,
  	.poll_put_char	= qcom_geni_serial_poll_put_char,
  #endif
@@ -512,7 +513,7 @@ index 5b96df4..996b2c8 100644
  };
  
  static const struct uart_ops qcom_geni_uart_pops = {
-@@ -1246,7 +1230,6 @@ static void qcom_geni_serial_pm(struct uart_port *uport,
+@@ -1265,7 +1248,6 @@ static void qcom_geni_serial_pm(struct uart_port *uport,
  	.type = qcom_geni_serial_get_type,
  	.set_mctrl = qcom_geni_serial_set_mctrl,
  	.get_mctrl = qcom_geni_serial_get_mctrl,
@@ -520,7 +521,7 @@ index 5b96df4..996b2c8 100644
  };
  
  static int qcom_geni_serial_probe(struct platform_device *pdev)
-@@ -1332,16 +1315,8 @@ static int __maybe_unused qcom_geni_serial_sys_suspend_noirq(struct device *dev)
+@@ -1351,16 +1333,8 @@ static int __maybe_unused qcom_geni_serial_sys_suspend_noirq(struct device *dev)
  	struct qcom_geni_serial_port *port = dev_get_drvdata(dev);
  	struct uart_port *uport = &port->uport;
  
@@ -551,7 +552,7 @@ index a399772b..647e629 100644
  	 * FIXME: fns->set_wake is unused - this should be called from
  	 * the suspend() callback if device_may_wakeup(dev)) is set.
 diff --git a/drivers/tty/serial/samsung.c b/drivers/tty/serial/samsung.c
-index c6058b5..0d5da40 100644
+index 2a49b6d..329ef7f 100644
 --- a/drivers/tty/serial/samsung.c
 +++ b/drivers/tty/serial/samsung.c
 @@ -1101,39 +1101,6 @@ static int s3c64xx_serial_startup(struct uart_port *port)
@@ -603,10 +604,10 @@ index c6058b5..0d5da40 100644
  	.get_mctrl	= s3c24xx_serial_get_mctrl,
  	.set_mctrl	= s3c24xx_serial_set_mctrl,
 diff --git a/drivers/tty/serial/sc16is7xx.c b/drivers/tty/serial/sc16is7xx.c
-index 372cc7f..b4248e2 100644
+index ebea4a9..4487aed 100644
 --- a/drivers/tty/serial/sc16is7xx.c
 +++ b/drivers/tty/serial/sc16is7xx.c
-@@ -1066,12 +1066,6 @@ static int sc16is7xx_verify_port(struct uart_port *port,
+@@ -1093,12 +1093,6 @@ static int sc16is7xx_verify_port(struct uart_port *port,
  	return 0;
  }
  
@@ -619,7 +620,7 @@ index 372cc7f..b4248e2 100644
  static void sc16is7xx_null_void(struct uart_port *port)
  {
  	/* Do nothing */
-@@ -1093,7 +1087,6 @@ static void sc16is7xx_null_void(struct uart_port *port)
+@@ -1120,7 +1114,6 @@ static void sc16is7xx_null_void(struct uart_port *port)
  	.release_port	= sc16is7xx_null_void,
  	.config_port	= sc16is7xx_config_port,
  	.verify_port	= sc16is7xx_verify_port,
@@ -663,7 +664,7 @@ index 1b4008d..e4ae426 100644
  	.release_port	= serial_txx9_release_port,
  	.request_port	= serial_txx9_request_port,
 diff --git a/drivers/tty/serial/sh-sci.c b/drivers/tty/serial/sh-sci.c
-index 5550289..9a4a315 100644
+index 9e1a6af..11682da 100644
 --- a/drivers/tty/serial/sh-sci.c
 +++ b/drivers/tty/serial/sh-sci.c
 @@ -2620,21 +2620,6 @@ static void sci_set_termios(struct uart_port *port, struct ktermios *termios,
@@ -783,10 +784,10 @@ index 7971997c..9401978 100644
  	.poll_get_char = asc_get_poll_char,
  	.poll_put_char = asc_put_poll_char,
 diff --git a/drivers/tty/serial/stm32-usart.c b/drivers/tty/serial/stm32-usart.c
-index e8d7a7b..1535157 100644
+index bce4ac1..d0e09f7 100644
 --- a/drivers/tty/serial/stm32-usart.c
 +++ b/drivers/tty/serial/stm32-usart.c
-@@ -754,28 +754,6 @@ static void stm32_config_port(struct uart_port *port, int flags)
+@@ -795,28 +795,6 @@ static void stm32_config_port(struct uart_port *port, int flags)
  	return -EINVAL;
  }
  
@@ -815,7 +816,7 @@ index e8d7a7b..1535157 100644
  static const struct uart_ops stm32_uart_ops = {
  	.tx_empty	= stm32_tx_empty,
  	.set_mctrl	= stm32_set_mctrl,
-@@ -789,7 +767,6 @@ static void stm32_pm(struct uart_port *port, unsigned int state,
+@@ -830,7 +808,6 @@ static void stm32_pm(struct uart_port *port, unsigned int state,
  	.startup	= stm32_startup,
  	.shutdown	= stm32_shutdown,
  	.set_termios	= stm32_set_termios,
@@ -899,10 +900,10 @@ index 6d106e3..06f1ae8 100644
  	.release_port	= siu_release_port,
  	.request_port	= siu_request_port,
 diff --git a/drivers/tty/serial/xilinx_uartps.c b/drivers/tty/serial/xilinx_uartps.c
-index 77efa0a..4ec4c89 100644
+index 31950a3..a753c0e 100644
 --- a/drivers/tty/serial/xilinx_uartps.c
 +++ b/drivers/tty/serial/xilinx_uartps.c
-@@ -1067,20 +1067,6 @@ static void cdns_uart_poll_put_char(struct uart_port *port, unsigned char c)
+@@ -1072,20 +1072,6 @@ static void cdns_uart_poll_put_char(struct uart_port *port, unsigned char c)
  }
  #endif
  
@@ -923,7 +924,7 @@ index 77efa0a..4ec4c89 100644
  static const struct uart_ops cdns_uart_ops = {
  	.set_mctrl	= cdns_uart_set_mctrl,
  	.get_mctrl	= cdns_uart_get_mctrl,
-@@ -1092,7 +1078,6 @@ static void cdns_uart_pm(struct uart_port *port, unsigned int state,
+@@ -1097,7 +1083,6 @@ static void cdns_uart_pm(struct uart_port *port, unsigned int state,
  	.set_termios	= cdns_uart_set_termios,
  	.startup	= cdns_uart_startup,
  	.shutdown	= cdns_uart_shutdown,
@@ -977,7 +978,7 @@ index b03d3e4..120b46b 100644
  	if (options)
  		uart_parse_options(options, &baud, &parity, &bits, &flow);
 diff --git a/include/linux/serial_8250.h b/include/linux/serial_8250.h
-index 33e4ee4..3d0be37 100644
+index 8b1b114..64ee141 100644
 --- a/include/linux/serial_8250.h
 +++ b/include/linux/serial_8250.h
 @@ -40,8 +40,6 @@ struct plat_serial8250_port {

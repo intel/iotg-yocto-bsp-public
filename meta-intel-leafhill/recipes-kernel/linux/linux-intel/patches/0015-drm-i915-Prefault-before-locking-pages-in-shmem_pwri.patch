@@ -1,4 +1,4 @@
-From d258ce4e4374d36d7faa762b4b8a2fbc8da2cdbc Mon Sep 17 00:00:00 2001
+From 34735e567aff8b04c5c0b1967474361b572acad0 Mon Sep 17 00:00:00 2001
 From: Chris Wilson <chris@chris-wilson.co.uk>
 Date: Tue, 1 Oct 2019 15:27:02 -0700
 Subject: [PATCH] drm/i915: Prefault before locking pages in shmem_pwrite
@@ -54,7 +54,7 @@ If the user passes in a pointer to a GGTT mmaping of the same buffer
  1 file changed, 24 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/i915_gem.c b/drivers/gpu/drm/i915/i915_gem.c
-index 4f7fbc0..03cf193 100644
+index 5b3e455..1d24501 100644
 --- a/drivers/gpu/drm/i915/i915_gem.c
 +++ b/drivers/gpu/drm/i915/i915_gem.c
 @@ -46,7 +46,6 @@
@@ -65,7 +65,7 @@ index 4f7fbc0..03cf193 100644
  #if IS_ENABLED(CONFIG_DRM_I915_MEMTRACK)
  #include <linux/pid.h>
  #include <linux/async.h>
-@@ -3797,7 +3796,11 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
+@@ -3805,7 +3804,11 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
  	u64 remain, offset;
  	unsigned int pg;
  
@@ -78,7 +78,7 @@ index 4f7fbc0..03cf193 100644
  	 * can prepopulate the shmemfs filp efficiently using a write into
  	 * the pagecache. We avoid the penalty of instantiating all the
  	 * pages, important if the user is just writing to a few and never
-@@ -3811,7 +3814,8 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
+@@ -3819,7 +3822,8 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
  	if (obj->mm.madv != I915_MADV_WILLNEED)
  		return -EFAULT;
  
@@ -88,7 +88,7 @@ index 4f7fbc0..03cf193 100644
  	 * in the CPU domain. The pages will be clflushed as required before
  	 * use, and we can freely write into the pages directly. If userspace
  	 * races pwrite with any other operation; corruption will ensue -
-@@ -3827,20 +3831,32 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
+@@ -3835,20 +3839,32 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
  		struct page *page;
  		void *data, *vaddr;
  		int err;
@@ -124,7 +124,7 @@ index 4f7fbc0..03cf193 100644
  
  		err = pagecache_write_end(obj->base.filp, mapping,
  					  offset, len, len - unwritten,
-@@ -3848,8 +3864,9 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
+@@ -3856,8 +3872,9 @@ void *i915_gem_object_pin_map(struct drm_i915_gem_object *obj,
  		if (err < 0)
  			return err;
  

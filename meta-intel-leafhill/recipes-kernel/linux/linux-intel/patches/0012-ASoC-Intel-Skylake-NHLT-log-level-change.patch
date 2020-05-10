@@ -1,4 +1,4 @@
-From 2b7af19d144c24c75d97b995068da0b1a624d04e Mon Sep 17 00:00:00 2001
+From f45e22e0150e68a7bdaba34574e60e1ce168fb7e Mon Sep 17 00:00:00 2001
 From: Bartlomiej Horiszny <bartlomiejx.horiszny@intel.com>
 Date: Mon, 13 May 2019 14:19:48 +0200
 Subject: [PATCH] ASoC: Intel: Skylake: NHLT log level change

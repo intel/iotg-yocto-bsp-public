@@ -1,4 +1,4 @@
-From eb71217beff25a7896c0a49bd7e698fee7130ed6 Mon Sep 17 00:00:00 2001
+From 341b372b8b0e26660d648f992544bbc6f7afc673 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 17:24:10 +0800
 Subject: [PATCH] igb: Do not disconnect netdevice from system during runtime
@@ -17,10 +17,10 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 25 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index e012ec2..3ba97a3 100644
+index 2fd568f..36f694e 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -2165,11 +2165,15 @@ void igb_down(struct igb_adapter *adapter)
+@@ -2166,11 +2166,15 @@ void igb_down(struct igb_adapter *adapter)
  	struct e1000_hw *hw = &adapter->hw;
  	u32 tctl, rctl;
  	int i;
@@ -38,7 +38,7 @@ index e012ec2..3ba97a3 100644
  
  	/* disable receives in the hardware */
  	rctl = rd32(E1000_RCTL);
-@@ -2178,8 +2182,14 @@ void igb_down(struct igb_adapter *adapter)
+@@ -2179,8 +2183,14 @@ void igb_down(struct igb_adapter *adapter)
  
  	igb_nfc_filter_exit(adapter);
  
@@ -55,7 +55,7 @@ index e012ec2..3ba97a3 100644
  
  	/* disable transmits in the hardware */
  	tctl = rd32(E1000_TCTL);
-@@ -2191,7 +2201,11 @@ void igb_down(struct igb_adapter *adapter)
+@@ -2192,7 +2202,11 @@ void igb_down(struct igb_adapter *adapter)
  
  	igb_irq_disable(adapter);
  
@@ -68,7 +68,7 @@ index e012ec2..3ba97a3 100644
  
  	for (i = 0; i < adapter->num_q_vectors; i++) {
  		if (adapter->q_vector[i]) {
-@@ -8769,7 +8783,12 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
+@@ -8770,7 +8784,12 @@ static int __igb_shutdown(struct pci_dev *pdev, bool *enable_wake,
  	bool wake;
  
  	rtnl_lock();

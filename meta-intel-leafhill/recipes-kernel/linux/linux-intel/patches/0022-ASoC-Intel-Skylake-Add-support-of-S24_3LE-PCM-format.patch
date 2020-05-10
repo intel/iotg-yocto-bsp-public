@@ -1,4 +1,4 @@
-From 79861d0d00ace202ebb9cc3933d4ab61d1d2bb20 Mon Sep 17 00:00:00 2001
+From d8e9f5c322580e2caf151629cc0340ef2455f783 Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Thu, 21 Sep 2017 09:52:34 +0800
 Subject: [PATCH] ASoC: Intel: Skylake: Add support of S24_3LE PCM formats for

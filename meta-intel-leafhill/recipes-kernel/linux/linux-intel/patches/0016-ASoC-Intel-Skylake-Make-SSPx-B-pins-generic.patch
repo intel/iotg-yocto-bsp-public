@@ -1,4 +1,4 @@
-From 81bd1b2ee9da803c0adf3f78fc561689e514049e Mon Sep 17 00:00:00 2001
+From 634c0ebb9a29960b0a4f550cdcf4df1eec7afbb7 Mon Sep 17 00:00:00 2001
 From: Craig Kewley <craigx.kewley@intel.com>
 Date: Thu, 5 Apr 2018 12:02:39 +0100
 Subject: [PATCH] ASoC: Intel: Skylake: Make SSPx-B pins generic

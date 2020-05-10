@@ -1,4 +1,4 @@
-From dcebf2a4e134506afc784026c6f361a1e489b307 Mon Sep 17 00:00:00 2001
+From 5450dcb217af84997cc5df6af81f942e5afec777 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Mon, 30 Sep 2019 15:47:06 -0700
 Subject: [PATCH] drm/i915/gen9+: Add support for pipe background color
@@ -51,10 +51,10 @@ index 7258798..05ba731 100644
  		seq_printf(m, "\tunderrun reporting: cpu=%s pch=%s \n",
  			   yesno(!crtc->cpu_fifo_underrun_disabled),
 diff --git a/drivers/gpu/drm/i915/i915_reg.h b/drivers/gpu/drm/i915/i915_reg.h
-index b1a5479..1cc9677 100644
+index 637aed8..f295109 100644
 --- a/drivers/gpu/drm/i915/i915_reg.h
 +++ b/drivers/gpu/drm/i915/i915_reg.h
-@@ -5685,6 +5685,12 @@ enum {
+@@ -5691,6 +5691,12 @@ enum {
  #define   PIPEMISC_DITHER_TYPE_SP	(0 << 2)
  #define PIPEMISC(pipe)			_MMIO_PIPE2(pipe, _PIPE_MISC_A)
  

@@ -1,4 +1,4 @@
-From f7105eac0f175744f0366afa858f247c39cbd06b Mon Sep 17 00:00:00 2001
+From 9e9e8b95ec84141291dbab6a23702f6c5f7c41de Mon Sep 17 00:00:00 2001
 From: Weifeng Voon <weifeng.voon@intel.com>
 Date: Thu, 5 Oct 2017 13:05:10 +0800
 Subject: [PATCH] spi: pxa2xx: Auto switch between PIO and DMA with
@@ -37,7 +37,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  3 files changed, 5 insertions(+)
 
 diff --git a/drivers/spi/spi-pxa2xx.c b/drivers/spi/spi-pxa2xx.c
-index f413338..9a91770 100644
+index 5253881..deadbe3 100644
 --- a/drivers/spi/spi-pxa2xx.c
 +++ b/drivers/spi/spi-pxa2xx.c
 @@ -1004,6 +1004,7 @@ static int pxa2xx_spi_transfer_one(struct spi_controller *master,

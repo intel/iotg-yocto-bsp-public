@@ -1,4 +1,4 @@
-From ff4dbb9e552adb8cda2229d86e9b7e1c53f29524 Mon Sep 17 00:00:00 2001
+From 6aeae353fbaed321ab78762f913513af9bb20cbc Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Wed, 16 Nov 2016 18:44:07 +0200
 Subject: [PATCH] serial: 8250_port: Remove calls to runtime PM

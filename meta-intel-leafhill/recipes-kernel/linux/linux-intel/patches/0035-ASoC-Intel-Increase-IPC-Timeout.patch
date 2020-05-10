@@ -1,4 +1,4 @@
-From 4ef613445e3f6212742d5ab9a8e964b543fa5fd4 Mon Sep 17 00:00:00 2001
+From a596dadbc2288c1aa1fd574ecf4c685cfc4b3579 Mon Sep 17 00:00:00 2001
 From: Pawel Dogiel <pawelx.dogiel@intel.com>
 Date: Mon, 28 Jan 2019 14:18:35 +0100
 Subject: [PATCH] ASoC: Intel: Increase IPC Timeout

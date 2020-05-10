@@ -1,4 +1,4 @@
-From a7a63bfdecef9ae9785acb3675a46633233482c8 Mon Sep 17 00:00:00 2001
+From 66761028fac56389974db4ae7403473193132679 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 16:24:14 +0800
 Subject: [PATCH] igb: Initialize runtime PM and schedule first suspend
@@ -29,10 +29,10 @@ index ca54e26..4acf1e3 100644
  #define IGB_START_ITR		648 /* ~6000 ints/sec */
  #define IGB_4K_ITR		980
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index ab76a5f..e012ec2 100644
+index 36db874..2fd568f 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -3472,6 +3472,11 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+@@ -3473,6 +3473,11 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
  	dev_pm_set_driver_flags(&pdev->dev, DPM_FLAG_NEVER_SKIP);
  
  	pm_runtime_put_noidle(&pdev->dev);
@@ -44,7 +44,7 @@ index ab76a5f..e012ec2 100644
  	return 0;
  
  err_register:
-@@ -3986,8 +3991,11 @@ static int __igb_open(struct net_device *netdev, bool resuming)
+@@ -3987,8 +3992,11 @@ static int __igb_open(struct net_device *netdev, bool resuming)
  
  	netif_tx_start_all_queues(netdev);
  

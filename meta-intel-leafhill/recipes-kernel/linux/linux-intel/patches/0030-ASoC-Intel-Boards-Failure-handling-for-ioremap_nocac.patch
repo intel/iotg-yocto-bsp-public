@@ -1,4 +1,4 @@
-From 65f4d18a9e3fd2869ef43d12694977b755b7009b Mon Sep 17 00:00:00 2001
+From 12e4ce4936d930331ccbcee9798a0b1b0865454d Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Mon, 5 Aug 2019 14:06:26 +0800
 Subject: [PATCH] ASoC: Intel: Boards: Failure handling for ioremap_nocache
