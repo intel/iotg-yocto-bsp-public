@@ -1,19 +1,18 @@
-From f8912747f3df628f248fac593362980fddcfb4f6 Mon Sep 17 00:00:00 2001
-From: Chong Yi Chai <chong.yi.chai@intel.com>
-Date: Wed, 4 Sep 2019 19:06:11 +0800
+From 12b2e23da31d74eb5251e76ed76ef70f989c02b0 Mon Sep 17 00:00:00 2001
+From: Siddharth Ajit Waikar <siddharth.ajitx.waikar@intel.com>
+Date: Thu, 5 Mar 2020 01:55:18 +0800
 Subject: [PATCH] msdk plugin ranking is set to higher ranking
 
-Signed-off-by: Jak Jailani, Nor Syahira <nor.syahira.jak.jailani@intel.com>
-Signed-off-by: Chong Yi Chai <chong.yi.chai@intel.com>
+Signed-off-by: Siddharth Waikar <siddharth.ajitx.waikar@intel.com>
 ---
  sys/msdk/gstmsdk.c | 26 +++++++++++++-------------
  1 file changed, 13 insertions(+), 13 deletions(-)
 
 diff --git a/sys/msdk/gstmsdk.c b/sys/msdk/gstmsdk.c
-index 1047ebb..52ae7b8 100644
+index fb92a6a..cb253df 100644
 --- a/sys/msdk/gstmsdk.c
 +++ b/sys/msdk/gstmsdk.c
-@@ -102,44 +102,44 @@ plugin_init (GstPlugin * plugin)
+@@ -104,44 +104,44 @@ plugin_init (GstPlugin * plugin)
    if (!msdk_is_available ())
      return FALSE;
  
@@ -53,10 +52,6 @@ index 1047ebb..52ae7b8 100644
 +  ret = gst_element_register (plugin, "msdkvp8dec", GST_RANK_PRIMARY + 3,
        GST_TYPE_MSDKVP8DEC);
  
--  ret = gst_element_register (plugin, "msdkvp8enc", GST_RANK_NONE,
-+  ret = gst_element_register (plugin, "msdkvp8enc", GST_RANK_PRIMARY + 3,
-       GST_TYPE_MSDKVP8ENC);
- 
 -  ret = gst_element_register (plugin, "msdkvc1dec", GST_RANK_NONE,
 +  ret = gst_element_register (plugin, "msdkvc1dec", GST_RANK_PRIMARY + 3,
        GST_TYPE_MSDKVC1DEC);
@@ -65,12 +60,16 @@ index 1047ebb..52ae7b8 100644
 +  ret = gst_element_register (plugin, "msdkvp9dec", GST_RANK_PRIMARY + 3,
        GST_TYPE_MSDKVP9DEC);
  #endif
- 
+ #ifdef USE_MSDK_VP9_ENC
+-  ret = gst_element_register (plugin, "msdkvp9enc", GST_RANK_NONE,
++  ret = gst_element_register (plugin, "msdkvp9enc", GST_RANK_PRIMARY + 3,
+       GST_TYPE_MSDKVP9ENC);
+ #endif
 -  ret = gst_element_register (plugin, "msdkvpp", GST_RANK_NONE,
 +  ret = gst_element_register (plugin, "msdkvpp", GST_RANK_PRIMARY + 3,
        GST_TYPE_MSDKVPP);
  
    return ret;
 -- 
-2.22.0
+2.7.4
 
