@@ -348,6 +348,6 @@ CONF_VERSION = "1"
 
 # Enable the security flags as per SDL 4.0 requirement
 require conf/distro/include/security_flags.inc
-SECURITY_CFLAGS = "-fstack-protector-strong -pie -fpie -D_FORTIFY_SOURCE=2 -O2 -Wformat -Wformat-security"
+SECURITY_CFLAGS = "-fstack-protector-strong -pie -fpie -fPIC -D_FORTIFY_SOURCE=2 -O2 -Wformat -Wformat-security"
 SECURITY_NO_PIE_CFLAGS = "-fstack-protector-strong -D_FORTIFY_SOURCE=2 -O2 -Wformat -Wformat-security"
 SECURITY_LDFLAGS = "-Wl,-z,relro,-z,now,-z,noexecstack"
