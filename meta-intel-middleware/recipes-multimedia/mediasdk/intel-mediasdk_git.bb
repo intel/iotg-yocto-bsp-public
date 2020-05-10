@@ -23,7 +23,7 @@ PACKAGECONFIG[vtune]	= "-DENABLE_OPENCL=ON, -DENABLE_OPENCL=OFF, "
 PACKAGECONFIG[wayland]	= "-DENABLE_WAYLAND=ON, -DENABLE_WAYLAND=OFF, wayland wayland-native"
 
 SRC_URI = " \
-            git://github.com/Intel-Media-SDK/MediaSDK.git;protocol=https;branch=${BPN}-19.2;lfs=0 \
+            git://github.com/Intel-Media-SDK/MediaSDK.git;protocol=https;branch=${BPN}-19.2 \
             file://0001-H264dec-reset-DPB-size-if-needed.patch \
             file://0001-Allow-a-larger-surface-for-mpeg2-jpeg-encoding-1562.patch \
             "
