@@ -1,0 +1,126 @@
+From 955ea8859fa57ebb543db5981d3a03168a0bcf36 Mon Sep 17 00:00:00 2001
+From: Chen Meng J <meng.j.chen@intel.com>
+Date: Wed, 22 Jan 2020 15:52:44 +0800
+Subject: [PATCH] media: mcp4725: add suffix for subdev name
+
+Message for Open Source:
+i2c bus id and slave addr would potenially change,
+so use suffix char for fixed name.
+
+Message for Internal:
+i2c bus id and slave addr would potenially change,
+so use suffix char for fixed name.
+
+Change-Id: Ifb71b1ef06cfb918bc7668a79a4ffef628c8eac8
+Signed-off-by: Chen Meng J <meng.j.chen@intel.com>
+---
+ drivers/media/i2c/mcp4725.c                     |  7 ++++---
+ drivers/media/platform/intel/ipu4-bxt-p-pdata.c | 17 ++++++++++++++---
+ include/media/mcp4725.h                         | 14 ++++++++++++++
+ 3 files changed, 32 insertions(+), 6 deletions(-)
+ create mode 100644 include/media/mcp4725.h
+
+diff --git a/drivers/media/i2c/mcp4725.c b/drivers/media/i2c/mcp4725.c
+index 591ceed..8305ac4 100644
+--- a/drivers/media/i2c/mcp4725.c
++++ b/drivers/media/i2c/mcp4725.c
+@@ -9,8 +9,8 @@
+ #include <media/v4l2-ctrls.h>
+ #include <media/v4l2-device.h>
+ #include <media/v4l2-event.h>
++#include <media/mcp4725.h>
+ 
+-#define MCP4725_NAME		"vcm-mcp4725"
+ #define MCP4725_MAX_FOCUS_POS	4095
+ /*
+  * This sets the minimum granularity for the focus positions.
+@@ -32,6 +32,7 @@
+ struct mcp4725_device {
+ 	struct v4l2_ctrl_handler ctrls_vcm;
+ 	struct v4l2_subdev sd;
++	struct mcp4725_platformdata *pdata;
+ 	u16 current_val;
+ };
+ 
+@@ -181,10 +182,10 @@ static int mcp4725_probe(struct i2c_client *client,
+ 				V4L2_SUBDEV_FL_HAS_EVENTS;
+ 	mcp4725_dev->sd.internal_ops = &mcp4725_int_ops;
+ 
++	mcp4725_dev->pdata = client->dev.platform_data;
+ 	snprintf(mcp4725_dev->sd.name,
+ 		sizeof(mcp4725_dev->sd.name),
+-		MCP4725_NAME " %d-%4.4x", i2c_adapter_id(client->adapter),
+-		client->addr);
++		MCP4725_NAME " %c", mcp4725_dev->pdata->suffix);
+ 
+ 	rval = mcp4725_init_controls(mcp4725_dev);
+ 	if (rval) {
+diff --git a/drivers/media/platform/intel/ipu4-bxt-p-pdata.c b/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
+index 1d7f05a..5dd448e 100644
+--- a/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
++++ b/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
+@@ -12,6 +12,7 @@
+ #include <media/ti964.h>
+ #include <media/ti960.h>
+ #include <media/max9286.h>
++#include <media/mcp4725.h>
+ #include "ipu.h"
+ 
+ #define GPIO_BASE		422
+@@ -224,20 +225,30 @@
+ 
+ #ifdef CONFIG_INTEL_IPU4_IMX274
+ 
++struct mcp4725_platformdata vcm_mcp4725_pdata = {
++	.suffix = 'a',
++};
++
+ static struct ipu_isys_subdev_info vcm_mcp4725_common_sd = {
+ 	.i2c = {
+ 		.board_info = {
+-			I2C_BOARD_INFO("vcm-mcp4725", 0x60),
++			I2C_BOARD_INFO(MCP4725_NAME, 0x60),
++			.platform_data = &vcm_mcp4725_pdata,
+ 		},
+ 		.i2c_adapter_id = 2,
+ 		.i2c_adapter_bdf = "0000:00:16.2",
+-	}
++	},
++};
++
++struct mcp4725_platformdata vcm_mcp4725_b_pdata = {
++	.suffix = 'b',
+ };
+ 
+ static struct ipu_isys_subdev_info vcm_mcp4725_b_common_sd = {
+ 	.i2c = {
+ 		.board_info = {
+-			I2C_BOARD_INFO("vcm-mcp4725", 0x60),
++			I2C_BOARD_INFO(MCP4725_NAME, 0x60),
++			.platform_data = &vcm_mcp4725_b_pdata,
+ 		},
+ 		.i2c_adapter_id = 4,
+ 		.i2c_adapter_bdf = "0000:00:17.0",
+diff --git a/include/media/mcp4725.h b/include/media/mcp4725.h
+new file mode 100644
+index 00000000..22762ea
+--- /dev/null
++++ b/include/media/mcp4725.h
+@@ -0,0 +1,14 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright (C) 2018 Intel Corporation */
++
++#ifndef MCP4725_H
++#define MCP4725_H
++
++#include <linux/i2c.h>
++
++#define MCP4725_NAME		"vcm-mcp4725"
++
++struct mcp4725_platformdata {
++	const char suffix;
++};
++#endif
+-- 
+1.9.1
+

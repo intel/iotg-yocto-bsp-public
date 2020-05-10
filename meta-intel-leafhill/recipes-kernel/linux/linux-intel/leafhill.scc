@@ -86,7 +86,9 @@ patch patches/0017-drm-i915-gen9-Add-support-for-pipe-background-color.patch
 patch patches/0018-drm-i915-Add-background-color-hardware-readout-and-s.patch
 patch patches/0019-drm-i915-splash-Add-support-for-a-splash-screen-imag.patch
 patch patches/0020-drm-i915-splash-Support-multiple-connector-splash-im.patch
-patch patches/0021-Add-IOTG-kernel-identifier.patch
+patch patches/0021-drm-i915-Avoid-use-after-free-in-reporting-create.si.patch
+patch patches/0022-drm-i915-Skip-CPU-synchronisation-on-dmabuf-attachme.patch
+patch patches/0023-Add-IOTG-kernel-identifier.patch
 
 # AUDIO
 patch patches/0001-ASoC-Intel-Skylake-Add-wm8731-machine-driver.patch
@@ -124,6 +126,15 @@ patch patches/0032-ASoC-Intel-boards-Add-pm-ops-for-bxtp_ivi_generic-ma.patch
 patch patches/0033-ASoC-Intel-boards-Add-pm-ops-for-bxtp_ivi_rse-machin.patch
 patch patches/0034-ASoC-Intel-boards-Add-pm-ops-for-bxtp_ivi_hu-machine.patch
 patch patches/0035-ASoC-Intel-Increase-IPC-Timeout.patch
+
+# IPU
+patch patches/0001-media-i2c-Kconfig-and-Makefile-for-mcp4725.patch
+patch patches/0002-media-intel-ipu4-add-mcp4725-driver.patch
+patch patches/0003-media-intel-ipu4-pdata-for-mcp4725.patch
+patch patches/0004-Update-IPU-FW-version.patch
+patch patches/0005-media-intel-ipu4-specify-sensor-i2c-bus-based-on-BDF.patch
+patch patches/0006-media-mcp4725-add-suffix-for-subdev-name.patch
+patch patches/0007-isys-psys-package-lib2600b0-for-commit-id-b1f4caf.patch
 
 
 # Kernel configuration

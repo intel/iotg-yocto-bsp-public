@@ -1,0 +1,51 @@
+From 9bd6ff5345ec1fdb2c7b85b99bfd2b1947353207 Mon Sep 17 00:00:00 2001
+From: Chris Wilson <chris@chris-wilson.co.uk>
+Date: Tue, 25 Feb 2020 13:04:08 -0800
+Subject: [PATCH] drm/i915: Skip CPU synchronisation on dmabuf attachments
+
+(Backported from drm-tip on 2/25/2020)
+dma-bufs are device coherent, with explicit CPU synchronisation provided
+via the begin/end cpu access ioctls. As the coherency of the dma-buf is
+explicitly defined to be under user control, flushing any caches on
+attach/detach of the dma-buf is additional work that doesn't aide the
+user in the slightest.
+
+Signed-off-by: Dongwon Kim <dongwon.kim@intel.com>
+Suggested-by: Lucas Stach <l.stach@pengutronix.de>
+Signed-off-by: Chris Wilson <chris@chris-wilson.co.uk>
+Acked-by: Dongwon Kim <dongwon.kim@intel.com>
+Link: https://patchwork.freedesktop.org/patch/msgid/20171130180702.29357-1-chris@chris-wilson.co.uk
+Signed-off-by: Bob Paauwe <bob.j.paauwe@intel.com>
+---
+ drivers/gpu/drm/i915/i915_gem_dmabuf.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/gpu/drm/i915/i915_gem_dmabuf.c b/drivers/gpu/drm/i915/i915_gem_dmabuf.c
+index 82e2ca1..83d891e 100644
+--- a/drivers/gpu/drm/i915/i915_gem_dmabuf.c
++++ b/drivers/gpu/drm/i915/i915_gem_dmabuf.c
+@@ -67,7 +67,9 @@ static struct sg_table *i915_gem_map_dma_buf(struct dma_buf_attachment *attachme
+ 		src = sg_next(src);
+ 	}
+ 
+-	if (!dma_map_sg(attachment->dev, st->sgl, st->nents, dir)) {
++	if (!dma_map_sg_attrs(attachment->dev,
++			      st->sgl, st->nents, dir,
++			      DMA_ATTR_SKIP_CPU_SYNC)) {
+ 		ret = -ENOMEM;
+ 		goto err_free_sg;
+ 	}
+@@ -90,7 +92,9 @@ static void i915_gem_unmap_dma_buf(struct dma_buf_attachment *attachment,
+ {
+ 	struct drm_i915_gem_object *obj = dma_buf_to_obj(attachment->dmabuf);
+ 
+-	dma_unmap_sg(attachment->dev, sg->sgl, sg->nents, dir);
++	dma_unmap_sg_attrs(attachment->dev,
++			   sg->sgl, sg->nents, dir,
++			   DMA_ATTR_SKIP_CPU_SYNC);
+ 	sg_free_table(sg);
+ 	kfree(sg);
+ 
+-- 
+1.9.1
+

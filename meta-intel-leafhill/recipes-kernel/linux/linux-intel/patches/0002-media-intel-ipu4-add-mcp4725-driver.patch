@@ -1,0 +1,372 @@
+From 4738007b45c8bfe48b14cf5931810d900d04ec47 Mon Sep 17 00:00:00 2001
+From: Chen Meng J <meng.j.chen@intel.com>
+Date: Mon, 13 Jan 2020 14:09:44 +0800
+Subject: [PATCH] media: intel-ipu4: add mcp4725 driver
+
+Message for Open Source:
+add mcp4725 driver.
+
+Message for Internal:
+add mcp4725 driver.
+
+Change-Id: I8a79903b76a5c89c7c469a17e1bc3583e0367640
+Signed-off-by: Chen Meng J <meng.j.chen@intel.com>
+---
+ drivers/media/i2c/mcp4725.c | 345 ++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 345 insertions(+)
+ create mode 100644 drivers/media/i2c/mcp4725.c
+
+diff --git a/drivers/media/i2c/mcp4725.c b/drivers/media/i2c/mcp4725.c
+new file mode 100644
+index 00000000..591ceed
+--- /dev/null
++++ b/drivers/media/i2c/mcp4725.c
+@@ -0,0 +1,345 @@
++// SPDX-License-Identifier: GPL-2.0
++// Copyright (C) 2018 Intel Corporation
++
++#include <linux/acpi.h>
++#include <linux/delay.h>
++#include <linux/i2c.h>
++#include <linux/module.h>
++#include <linux/pm_runtime.h>
++#include <media/v4l2-ctrls.h>
++#include <media/v4l2-device.h>
++#include <media/v4l2-event.h>
++
++#define MCP4725_NAME		"vcm-mcp4725"
++#define MCP4725_MAX_FOCUS_POS	4095
++/*
++ * This sets the minimum granularity for the focus positions.
++ * A value of 1 gives maximum accuracy for a desired focus position
++ */
++#define MCP4725_FOCUS_STEPS	1
++/*
++ * This acts as the minimum granularity of lens movement.
++ * Keep this value power of 2, so the control steps can be
++ * uniformly adjusted for gradual lens movement, with desired
++ * number of control steps.
++ */
++#define MCP4725_CTRL_STEPS	64
++#define MCP4725_CTRL_DELAY_US	1000
++
++#define MCP4725_MODE_STANDBY	0x1 // 1 = 1kO, 2 = 100kO, 3 = 500kO
++
++/* mcp4725 device structure */
++struct mcp4725_device {
++	struct v4l2_ctrl_handler ctrls_vcm;
++	struct v4l2_subdev sd;
++	u16 current_val;
++};
++
++static inline struct mcp4725_device *to_mcp4725_vcm(struct v4l2_ctrl *ctrl)
++{
++	return container_of(ctrl->handler, struct mcp4725_device, ctrls_vcm);
++
++}
++
++static inline struct mcp4725_device *sd_to_mcp4725_vcm(struct v4l2_subdev *subdev)
++{
++	return container_of(subdev, struct mcp4725_device, sd);
++}
++
++static int mcp4725_i2c_write(struct mcp4725_device *mcp4725,
++	u16 data, bool suspend)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(&mcp4725->sd);
++	int ret;
++	u8 buf[2];
++
++	if (suspend) {
++		buf[0] = (MCP4725_MODE_STANDBY) << 4;
++		buf[1] = 0;
++	} else {
++		buf[0] = (data >> 8) & 0xf;
++		buf[1] = data & 0xff;
++	}
++	dev_dbg(mcp4725->sd.dev, "%s %02X%02X %d %d", __func__, buf[0], buf[1], suspend, data);
++	ret = i2c_master_send(client, (const char *)buf, 2);
++	if (ret < 0) {
++		dev_err(mcp4725->sd.dev, "%s ret %d", __func__, ret);
++		return ret;
++	}
++	if (ret != 2) {
++		dev_err(mcp4725->sd.dev, "%s ret -EIO", __func__);
++		return -EIO;
++	}
++	dev_dbg(mcp4725->sd.dev, "%s ret success", __func__);
++
++	return 0;
++}
++
++static int mcp4725_set_ctrl(struct v4l2_ctrl *ctrl)
++{
++	struct mcp4725_device *dev_vcm = to_mcp4725_vcm(ctrl);
++
++	dev_dbg(dev_vcm->sd.dev, "%s: %d", __func__, ctrl->val);
++
++	if (ctrl->id == V4L2_CID_FOCUS_ABSOLUTE) {
++		if (mcp4725_i2c_write(dev_vcm, ctrl->val, false) == 0) {
++			dev_vcm->current_val = ctrl->val;
++			return 0;
++		}
++	}
++
++	dev_err(dev_vcm->sd.dev, "%s -EINVAL", __func__);
++	return -EINVAL;
++}
++
++static const struct v4l2_ctrl_ops mcp4725_vcm_ctrl_ops = {
++	.s_ctrl = mcp4725_set_ctrl,
++};
++
++static int mcp4725_open(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
++{
++	int rval;
++
++	rval = pm_runtime_get_sync(sd->dev);
++	if (rval < 0) {
++		pm_runtime_put_noidle(sd->dev);
++		dev_err(sd->dev, "%s %d", __func__, rval);
++		return rval;
++	}
++
++	dev_dbg(sd->dev, "%s success", __func__);
++	return 0;
++}
++
++static int mcp4725_close(struct v4l2_subdev *sd, struct v4l2_subdev_fh *fh)
++{
++	pm_runtime_put(sd->dev);
++
++	dev_dbg(sd->dev, "%s", __func__);
++	return 0;
++}
++
++static const struct v4l2_subdev_internal_ops mcp4725_int_ops = {
++	.open = mcp4725_open,
++	.close = mcp4725_close,
++};
++
++static const struct v4l2_subdev_core_ops mcp4725_subdev_core_ops = {
++	.subscribe_event = v4l2_ctrl_subdev_subscribe_event,
++	.unsubscribe_event = v4l2_event_subdev_unsubscribe,
++};
++
++static const struct v4l2_subdev_ops mcp4725_ops = {
++	.core = &mcp4725_subdev_core_ops,
++};
++
++static void mcp4725_subdev_cleanup(struct mcp4725_device *mcp4725_dev)
++{
++	dev_dbg(mcp4725_dev->sd.dev, "%s", __func__);
++	v4l2_async_unregister_subdev(&mcp4725_dev->sd);
++	v4l2_ctrl_handler_free(&mcp4725_dev->ctrls_vcm);
++	media_entity_cleanup(&mcp4725_dev->sd.entity);
++}
++
++static int mcp4725_init_controls(struct mcp4725_device *dev_vcm)
++{
++	struct v4l2_ctrl_handler *hdl = &dev_vcm->ctrls_vcm;
++	const struct v4l2_ctrl_ops *ops = &mcp4725_vcm_ctrl_ops;
++
++	dev_dbg(dev_vcm->sd.dev, "%s", __func__);
++
++	v4l2_ctrl_handler_init(hdl, 1);
++
++	v4l2_ctrl_new_std(hdl, ops, V4L2_CID_FOCUS_ABSOLUTE,
++			  0, MCP4725_MAX_FOCUS_POS, MCP4725_FOCUS_STEPS, 0);
++
++	if (hdl->error) {
++		dev_err(dev_vcm->sd.dev, "%s fail 0x%X", __func__, hdl->error);
++		dev_err(dev_vcm->sd.dev, "%s fail error: 0x%x\n",
++			__func__, hdl->error);
++	}
++	dev_vcm->sd.ctrl_handler = hdl;
++	dev_dbg(dev_vcm->sd.dev, "%s success 0x%X", __func__, hdl->error);
++	return hdl->error;
++}
++
++static int mcp4725_probe(struct i2c_client *client,
++			const struct i2c_device_id *devid)
++{
++	struct mcp4725_device *mcp4725_dev;
++	int rval;
++
++	dev_dbg(&client->dev, "%s", __func__);
++
++	mcp4725_dev = devm_kzalloc(&client->dev, sizeof(*mcp4725_dev),
++				  GFP_KERNEL);
++	if (mcp4725_dev == NULL)
++		return -ENOMEM;
++
++	v4l2_i2c_subdev_init(&mcp4725_dev->sd, client, &mcp4725_ops);
++	mcp4725_dev->sd.flags |= V4L2_SUBDEV_FL_HAS_DEVNODE |
++				V4L2_SUBDEV_FL_HAS_EVENTS;
++	mcp4725_dev->sd.internal_ops = &mcp4725_int_ops;
++
++	snprintf(mcp4725_dev->sd.name,
++		sizeof(mcp4725_dev->sd.name),
++		MCP4725_NAME " %d-%4.4x", i2c_adapter_id(client->adapter),
++		client->addr);
++
++	rval = mcp4725_init_controls(mcp4725_dev);
++	if (rval) {
++		dev_err(mcp4725_dev->sd.dev,
++			"%s mcp4725_init_controls %d", __func__, rval);
++		goto err_cleanup;
++	}
++
++	rval = media_entity_pads_init(&mcp4725_dev->sd.entity, 0, NULL);
++	if (rval < 0) {
++		dev_err(mcp4725_dev->sd.dev,
++			"%s media_entity_pads_init %d", __func__, rval);
++		goto err_cleanup;
++	}
++
++	mcp4725_dev->sd.entity.function = MEDIA_ENT_F_LENS;
++
++	rval = v4l2_async_register_subdev(&mcp4725_dev->sd);
++	if (rval < 0) {
++		dev_err(mcp4725_dev->sd.dev,
++			"%s v4l2_async_register_subdev %d", __func__, rval);
++		goto err_cleanup;
++	}
++
++	pm_runtime_set_active(&client->dev);
++	pm_runtime_enable(&client->dev);
++	pm_runtime_idle(&client->dev);
++
++	dev_info(mcp4725_dev->sd.dev, "%s success", __func__);
++	return 0;
++
++err_cleanup:
++	mcp4725_subdev_cleanup(mcp4725_dev);
++	dev_err(mcp4725_dev->sd.dev, "Probe failed: %d\n", rval);
++	return rval;
++}
++
++static int mcp4725_remove(struct i2c_client *client)
++{
++	struct v4l2_subdev *sd = i2c_get_clientdata(client);
++	struct mcp4725_device *mcp4725_dev = sd_to_mcp4725_vcm(sd);
++
++	dev_dbg(sd->dev, "%s", __func__);
++	pm_runtime_disable(&client->dev);
++	mcp4725_subdev_cleanup(mcp4725_dev);
++
++	return 0;
++}
++
++/*
++ * This function sets the vcm position, so it consumes least current
++ * The lens position is gradually moved in units of MCP4725_CTRL_STEPS,
++ * to make the movements smoothly.
++ */
++static int __maybe_unused mcp4725_vcm_suspend(struct device *dev)
++{
++
++	struct i2c_client *client = to_i2c_client(dev);
++	struct v4l2_subdev *sd = i2c_get_clientdata(client);
++	struct mcp4725_device *mcp4725_dev = sd_to_mcp4725_vcm(sd);
++	int ret, val;
++
++	dev_dbg(dev, "%s", __func__);
++
++	for (val = mcp4725_dev->current_val & ~(MCP4725_CTRL_STEPS - 1);
++	     val >= MCP4725_CTRL_STEPS; val -= MCP4725_CTRL_STEPS) {
++		ret = mcp4725_i2c_write(mcp4725_dev, val, false);
++		if (ret)
++			dev_err_once(dev, "%s I2C failure: %d\n", __func__, ret);
++		usleep_range(MCP4725_CTRL_DELAY_US, MCP4725_CTRL_DELAY_US + 10);
++	}
++
++	ret = mcp4725_i2c_write(mcp4725_dev, 0, false);
++	if (ret) {
++		dev_err(dev, "%s I2C failure: %d\n", __func__, ret);
++		return ret;
++	}
++	dev_dbg(dev, "%s success", __func__);
++	return ret;
++}
++
++/*
++ * This function sets the vcm position to the value set by the user
++ * through v4l2_ctrl_ops s_ctrl handler
++ * The lens position is gradually moved in units of MCP4725_CTRL_STEPS,
++ * to make the movements smoothly.
++ */
++static int  __maybe_unused mcp4725_vcm_resume(struct device *dev)
++{
++	struct i2c_client *client = to_i2c_client(dev);
++	struct v4l2_subdev *sd = i2c_get_clientdata(client);
++	struct mcp4725_device *mcp4725_dev = sd_to_mcp4725_vcm(sd);
++	int ret, val;
++
++	for (val = mcp4725_dev->current_val % MCP4725_CTRL_STEPS;
++	     val <= mcp4725_dev->current_val - MCP4725_CTRL_STEPS;
++	     val += MCP4725_CTRL_STEPS) {
++		ret = mcp4725_i2c_write(mcp4725_dev, val, false);
++		if (ret) {
++			dev_err_ratelimited(dev, "%s I2C failure: %d\n",
++						__func__, ret);
++		}
++		usleep_range(MCP4725_CTRL_DELAY_US, MCP4725_CTRL_DELAY_US + 10);
++	}
++
++	ret = mcp4725_i2c_write(mcp4725_dev,
++		mcp4725_dev->current_val, false);
++	if (ret) {
++		dev_err(dev, "%s I2C failure: %d\n", __func__, ret);
++		return ret;
++	}
++	dev_dbg(dev, "%s success", __func__);
++	return 0;
++}
++
++#ifdef CONFIG_ACPI
++static const struct acpi_device_id mcp4725_acpi_match[] = {
++	{"MCP4725", 0},
++	{},
++};
++MODULE_DEVICE_TABLE(acpi, mcp4725_acpi_match);
++#endif
++
++static const struct i2c_device_id mcp4725_id_table[] = {
++	{MCP4725_NAME, 0},
++	{}
++};
++
++MODULE_DEVICE_TABLE(i2c, mcp4725_id_table);
++
++static const struct of_device_id mcp4725_of_table[] = {
++	{ .compatible = "vcm-mcp4725" },
++	{ "" }
++};
++MODULE_DEVICE_TABLE(of, mcp4725_of_table);
++
++static const struct dev_pm_ops mcp4725_pm_ops = {
++	SET_SYSTEM_SLEEP_PM_OPS(mcp4725_vcm_suspend, mcp4725_vcm_resume)
++	SET_RUNTIME_PM_OPS(mcp4725_vcm_suspend, mcp4725_vcm_resume, NULL)
++};
++
++static struct i2c_driver mcp4725_i2c_driver = {
++	.driver = {
++		.name = MCP4725_NAME,
++		.pm = &mcp4725_pm_ops,
++		.acpi_match_table = ACPI_PTR(mcp4725_acpi_match),
++		.of_match_table = mcp4725_of_table,
++	},
++	.probe = mcp4725_probe,
++	.remove = mcp4725_remove,
++	.id_table = mcp4725_id_table,
++};
++
++module_i2c_driver(mcp4725_i2c_driver);
++
++MODULE_AUTHOR("Tianshu Qiu <tian.shu.qiu@intel.com>");
++MODULE_DESCRIPTION("MCP4725 VCM driver");
++MODULE_LICENSE("GPL v2");
+-- 
+1.9.1
+

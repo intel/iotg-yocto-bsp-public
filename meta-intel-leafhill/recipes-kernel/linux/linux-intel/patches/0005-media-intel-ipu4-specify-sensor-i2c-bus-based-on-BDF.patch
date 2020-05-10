@@ -1,0 +1,157 @@
+From 307b9e67a7ee8f56fb6ab0bdb61ad4ec9f3d7cfe Mon Sep 17 00:00:00 2001
+From: khaiwenn <khai.wen.ng@intel.com>
+Date: Wed, 1 Apr 2020 11:07:08 +0800
+Subject: [PATCH] media: intel-ipu4: specify sensor i2c bus based on BDF
+
+	Message for Open Source:
+	Since i2c adapter id is dynamic, we use adapter PCI BDF
+	to associate sensor to adapter.
+
+	Message for Internal:
+	[Issue/Feature] None
+	[Root Cause/Changes] None
+
+	Change-Id: Iba1f94f902008b035b44ec50b1437252f02956ca
+	Signed-off-by: Chang Ying <ying.chang@intel.com>
+	Signed-off-by: Chen Meng J <meng.j.chen@intel.com>
+
+Signed-off-by: khaiwenn <khai.wen.ng@intel.com>
+---
+ drivers/media/pci/intel/ipu-buttress.c          | 16 ++++++++++++++--
+ drivers/media/pci/intel/ipu-buttress.h          |  2 +-
+ drivers/media/pci/intel/ipu-isys.c              |  4 +++-
+ drivers/media/platform/intel/ipu4-bxt-p-pdata.c | 15 +++++++++++++++
+ include/media/ipu-isys.h                        |  1 +
+ 5 files changed, 34 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu-buttress.c b/drivers/media/pci/intel/ipu-buttress.c
+index 9a1ade0..634e8e9 100644
+--- a/drivers/media/pci/intel/ipu-buttress.c
++++ b/drivers/media/pci/intel/ipu-buttress.c
+@@ -1282,12 +1282,24 @@ struct clk_dynamic {
+  * @adapter_id: hardware i2c adapter id, this was fixed in platform data
+  * return: i2c bus id registered in system
+  */
+-int ipu_get_i2c_bus_id(int adapter_id)
++int ipu_get_i2c_bus_id(int adapter_id, char *adapter_bdf, int bdf_len)
+ {
+ 	struct i2c_adapter *adapter;
+ 	char name[32];
+ 	int i = 0;
+ 
++	if (adapter_bdf) {
++		while ((adapter = i2c_get_adapter(i)) != NULL) {
++			struct device *parent = adapter->dev.parent;
++			struct device *pp = parent->parent;
++
++			if (pp && !strncmp(adapter_bdf, dev_name(pp), bdf_len))
++				return i;
++			i++;
++		}
++	}
++
++	i = 0;
+ 	snprintf(name, sizeof(name), "i2c_designware.%d", adapter_id);
+ 	while ((adapter = i2c_get_adapter(i)) != NULL) {
+ 		struct device *parent = adapter->dev.parent;
+@@ -1390,7 +1402,7 @@ static int ipu_buttress_clk_init(struct ipu_device *isp)
+ 		char *dev_id = kstrdup(clkmap->clkdev_data.dev_id, GFP_KERNEL);
+ 		int adapter_id = clkmap->clkdev_data.dev_id[0] - '0';
+ 		char *addr = strpbrk(clkmap->clkdev_data.dev_id, "-");
+-		int bus_id = ipu_get_i2c_bus_id(adapter_id);
++		int bus_id = ipu_get_i2c_bus_id(adapter_id, NULL, 0);
+ 
+ 		snprintf(dev_id, PAGE_SIZE, "%d-%s", bus_id, addr + 1);
+ #endif
+diff --git a/drivers/media/pci/intel/ipu-buttress.h b/drivers/media/pci/intel/ipu-buttress.h
+index f798881..8fbd400 100644
+--- a/drivers/media/pci/intel/ipu-buttress.h
++++ b/drivers/media/pci/intel/ipu-buttress.h
+@@ -133,6 +133,6 @@ void ipu_buttress_csi_port_config(struct ipu_device *isp,
+ int ipu_buttress_psys_freq_get(void *data, u64 *val);
+ int ipu_buttress_isys_freq_get(void *data, u64 *val);
+ #ifdef I2C_DYNAMIC
+-int ipu_get_i2c_bus_id(int adapter_id);
++int ipu_get_i2c_bus_id(int adapter_id, char *adapter_bdf, int bdf_len);
+ #endif /* I2C_DYNAMIC */
+ #endif /* IPU_BUTTRESS_H */
+diff --git a/drivers/media/pci/intel/ipu-isys.c b/drivers/media/pci/intel/ipu-isys.c
+index 6c2745a..8a287e9 100644
+--- a/drivers/media/pci/intel/ipu-isys.c
++++ b/drivers/media/pci/intel/ipu-isys.c
+@@ -378,7 +378,9 @@ static int isys_register_ext_subdev(struct ipu_isys *isys,
+ 	int bus;
+ 
+ #ifdef I2C_DYNAMIC
+-	bus = ipu_get_i2c_bus_id(sd_info->i2c.i2c_adapter_id);
++	bus = ipu_get_i2c_bus_id(sd_info->i2c.i2c_adapter_id,
++			sd_info->i2c.i2c_adapter_bdf,
++			sizeof(sd_info->i2c.i2c_adapter_bdf));
+ 	if (bus < 0) {
+ 		dev_err(&isys->adev->dev, "Failed to find adapter!");
+ 		return -ENOENT;
+diff --git a/drivers/media/platform/intel/ipu4-bxt-p-pdata.c b/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
+index 93a3810..1d7f05a 100644
+--- a/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
++++ b/drivers/media/platform/intel/ipu4-bxt-p-pdata.c
+@@ -230,9 +230,21 @@
+ 			I2C_BOARD_INFO("vcm-mcp4725", 0x60),
+ 		},
+ 		.i2c_adapter_id = 2,
++		.i2c_adapter_bdf = "0000:00:16.2",
+ 	}
+ };
+ 
++static struct ipu_isys_subdev_info vcm_mcp4725_b_common_sd = {
++	.i2c = {
++		.board_info = {
++			I2C_BOARD_INFO("vcm-mcp4725", 0x60),
++		},
++		.i2c_adapter_id = 4,
++		.i2c_adapter_bdf = "0000:00:17.0",
++	}
++};
++
++
+ #define IMX274_LANES		4
+ #define IMX274_I2C_ADDRESS	0x1a
+ 
+@@ -259,6 +271,7 @@
+ 			.platform_data = &imx274_pdata
+ 		},
+ 		.i2c_adapter_id = 2,
++		.i2c_adapter_bdf = "0000:00:16.2",
+ 	}
+ };
+ 
+@@ -285,6 +298,7 @@
+ 			.platform_data = &imx274_b_pdata
+ 		},
+ 		.i2c_adapter_id = 4,
++		.i2c_adapter_bdf = "0000:00:17.0",
+ 	}
+ };
+ #endif
+@@ -1665,6 +1679,7 @@
+ 		&imx274_crl_sd,
+ 		&imx274_b_crl_sd,
+ 		&vcm_mcp4725_common_sd,
++		&vcm_mcp4725_b_common_sd,
+ #endif
+ #ifdef CONFIG_INTEL_IPU4_IMX290
+ 		&imx290_crl_sd,
+diff --git a/include/media/ipu-isys.h b/include/media/ipu-isys.h
+index b2acb94..b6f7e8d 100644
+--- a/include/media/ipu-isys.h
++++ b/include/media/ipu-isys.h
+@@ -17,6 +17,7 @@ struct ipu_isys_csi2_config {
+ struct ipu_isys_subdev_i2c_info {
+ 	struct i2c_board_info board_info;
+ 	int i2c_adapter_id;
++	char i2c_adapter_bdf[32];
+ };
+ 
+ struct ipu_isys_subdev_info {
+-- 
+1.9.1
+

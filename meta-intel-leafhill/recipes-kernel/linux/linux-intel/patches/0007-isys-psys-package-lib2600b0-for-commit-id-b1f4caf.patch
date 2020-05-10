@@ -1,0 +1,50 @@
+From dc08aa60ffd8d46585a0bc827c9f08b7e9f67040 Mon Sep 17 00:00:00 2001
+From: icg_intg <icg_intg@intel.com>
+Date: Wed, 26 Feb 2020 17:45:19 +0800
+Subject: [PATCH] isys & psys package lib2600b0 for commit-id b1f4caf
+
+FW_Manifest_ID: 170e069687e5490caa7c6868ad7d9d49dabac0de
+
+FW_Build_Branch: stable_iot_mr4_pv_r1_20180817
+
+FW_Build_Topic: auto_merge_queue
+
+library version: commit-id b1f4caf
+
+FW Bundle patch number of this release :  458123
+
+FW tag : scci_stable_iot_mr4_pv_r1_20180817_20200115_1700
+
+Change-Id: If9de917d7091a8d29642ccb4befaa937218e0b6d
+Depends-on: Ic341b750fa07b58de6cae31f7e345175bc3eaded
+Depends-on: I4030011a7d2c639a4a1cbe17682006ad7e966695
+Depends-on: I09cac3ed1e72df4ade7974dd77e5e03a09132c1e
+Signed-off-by: icg_intg <icg_intg@intel.com>
+---
+ drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h           | 2 +-
+ .../lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h        | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+index 50ec8e9..f12e2d3 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20181107
++#define IA_CSS_FW_PKG_RELEASE  0x20200115
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+index 50ec8e9..f12e2d3 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20181107
++#define IA_CSS_FW_PKG_RELEASE  0x20200115
+-- 
+1.9.1
+
