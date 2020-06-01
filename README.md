@@ -4,7 +4,7 @@ tarballed and released in the github for individual recipes is under the LICENSE
 stated in the associated recipe (.bb file) unless otherwise stated.
 License information for any other recipes is either explicitly stated or defaults to GPL version 2.
 
-The use of this Intel Atom E3900 BSP with Linux Kernel is licensed under [SOFTWARE LIMITED LICENSE AGREEMENT](https://github.com/01org/iotg-yocto-bsp-public/blob/e3900/master/Intel%20Software%20License_15Oct15.pdf)
+The use of this Intel Atom E3900 BSP with Linux Kernel is licensed under [SOFTWARE LIMITED LICENSE AGREEMENT](https://github.com/intel/iotg-yocto-bsp-public/blob/e3900/master/Intel%20Software%20License_15Oct15.pdf)
 
 # About Intel Atom E3900 Yocto BSP
 This Intel Atom E3900 BSP contains the following essential components for building a custom embedded Linux image.
@@ -20,25 +20,25 @@ Minimum host system configuration for Yocto BSP build:
 - High speed network connectivity
 
 IMPORTANT: To enable Yocto BSP build, you will need to setup and enable SSH keys on your host machine.
-See the [Setting up Guide](https://github.com/01org/iotg-yocto-bsp-public/wiki/SSH-Setup-Guide-for-New-Users) for more details.
+See the [Setting up Guide](https://github.com/intel/iotg-yocto-bsp-public/wiki/SSH-Setup-Guide-for-New-Users) for more details.
 
 ## Getting Started with Yocto BSP for Intel Atom E3900 SoC
 - Make sure you have setup SSH connection to GitHub for recipe to pull Linux kernel.
 - Download this Yocto BSP from GitHub via SSH or HTTPS to your host machine.
-   <br> - HTTPS directly from https://github.com/01org/iotg-yocto-bsp-public.git by selecting the appropriate branch/release version, e.g. e3900/master, from the top left menu; or
+   <br> - HTTPS directly from https://github.com/intel/iotg-yocto-bsp-public.git by selecting the appropriate branch/release version, e.g. e3900/master, from the top left menu; or
    <br> - SSH using following command (release_version, e.g. e3900/master)
 ```
-      git clone https://github.com/01org/iotg-yocto-bsp-public.git -b e3900/master
+      git clone https://github.com/intel/iotg-yocto-bsp-public.git -b e3900/master
 ```
 - This git tree will maintained as single product branch. In order to get code base from previous release, you need to checkout to the specific tag.
 
    <br> - For Intel Atom E3900 Maintenance Release Version 4:
 ```
-      git checkout MR4-B-01
+      git checkout MR4-B-02
 ```
    <br> - For Intel Atom E3900 Maintenance Release Version 5:
 ```
-      git checkout MR5-B-01
+      git checkout MR5-B-02
 ```
 - After checking out one of the release tags, you will noticed that you are in 'detached HEAD' state. You can now create a local git branch to host the code.
 ```
@@ -79,8 +79,8 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
 	- check for required software dependencies (this is only performed for Linux Ubuntu 14.04)
 	- test python, network, gitconfig and git proxy
 	- Prepare sources
-	- download Linux kernel v4.19.80 from Intel Linux Kernel from github.
-	- combolayer downloads Poky Warrior v2.7.1 and other meta layers based on setup/combolayer.conf
+	- download Linux kernel v4.19.106 from Intel Linux Kernel from github.
+	- combolayer downloads Poky Warrior v2.7.2 and other meta layers based on setup/combolayer.conf
 	- setup bblayers for bitbake build
 	- setup local.conf for bitbake build
 	- prepare environment for bitbake build
