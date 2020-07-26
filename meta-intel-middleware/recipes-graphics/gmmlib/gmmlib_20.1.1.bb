@@ -10,14 +10,16 @@ SRC_URI = " \
             git://github.com/intel/gmmlib.git;protocol=https \
             "
 
-SRCREV = "bda1dcff730bd503062421c17fe51a9a107538b9"
-
-PV = "19.3.2+git${SRCPV}"
+SRCREV = "09324e1fe8129b66bdf6b16ed533d56ce654eaa4"
 
 S = "${WORKDIR}/git"
+
+COMPATIBLE_HOST_x86-x32 = "null"
 
 UPSTREAM_CHECK_GITTAGREGEX = "^intel-gmmlib-(?P<pver>(\d+(\.\d+)+))$"
 
 inherit pkgconfig cmake
 
 EXTRA_OECMAKE += "-DRUN_TEST_SUITE=OFF"
+
+BBCLASSEXTEND = "native nativesdk"

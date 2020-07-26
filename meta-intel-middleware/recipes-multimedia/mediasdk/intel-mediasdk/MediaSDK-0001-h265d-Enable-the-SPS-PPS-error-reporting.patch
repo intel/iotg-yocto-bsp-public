@@ -1,0 +1,142 @@
+From 43219c298ccc500dd8d780ce5655d46ac1ff9e82 Mon Sep 17 00:00:00 2001
+From: "Ung, Teng En" <teng.en.ung@intel.com>
+Date: Mon, 30 Mar 2020 13:40:39 +0000
+Subject: [PATCH] [h265d] Enable the SPS/PPS error reporting
+
+Issue:N/A
+Test:sample_decode with mfxExtDecodeErrorReport
+
+Signed-off-by: Ung, Teng En <teng.en.ung@intel.com>
+---
+ .../decode/h265/src/mfx_h265_dec_decode.cpp   | 10 +++++
+ .../codec/h265_dec/src/umc_h265_mfx_utils.cpp |  7 ++++
+ .../h265_dec/src/umc_h265_task_supplier.cpp   | 39 ++++++++++++++++++-
+ 3 files changed, 55 insertions(+), 1 deletion(-)
+
+diff --git a/_studio/mfx_lib/decode/h265/src/mfx_h265_dec_decode.cpp b/_studio/mfx_lib/decode/h265/src/mfx_h265_dec_decode.cpp
+index ee6cbd56..6a8afe33 100644
+--- a/_studio/mfx_lib/decode/h265/src/mfx_h265_dec_decode.cpp
++++ b/_studio/mfx_lib/decode/h265/src/mfx_h265_dec_decode.cpp
+@@ -1084,6 +1084,16 @@ mfxStatus VideoDECODEH265::DecodeFrameCheck(mfxBitstream *bs, mfxFrameSurface1 *
+ 
+         MFXMediaDataAdapter src(bs);
+ 
++#if (MFX_VERSION >= 1025)
++        mfxExtBuffer* extbuf = (bs) ? GetExtendedBuffer(bs->ExtParam, bs->NumExtParam, MFX_EXTBUFF_DECODE_ERROR_REPORT) : NULL;
++
++        if (extbuf)
++        {
++            ((mfxExtDecodeErrorReport *)extbuf)->ErrorTypes = 0;
++            src.SetExtBuffer(extbuf);
++        }
++#endif
++
+         for (;;)
+         {
+             if (m_FrameAllocator->FindFreeSurface() == -1)
+diff --git a/_studio/shared/umc/codec/h265_dec/src/umc_h265_mfx_utils.cpp b/_studio/shared/umc/codec/h265_dec/src/umc_h265_mfx_utils.cpp
+index 1342bf61..c9f5b803 100644
+--- a/_studio/shared/umc/codec/h265_dec/src/umc_h265_mfx_utils.cpp
++++ b/_studio/shared/umc/codec/h265_dec/src/umc_h265_mfx_utils.cpp
+@@ -488,6 +488,13 @@ UMC::Status HeadersAnalyzer::DecodeHeader(UMC::MediaData * data, mfxBitstream *b
+     H265SeqParamSet* first_sps = 0;
+     notifier0<H265SeqParamSet> sps_guard(&H265Slice::DecrementReference);
+ 
++#if (MFX_VERSION >= 1025)
++    mfxExtBuffer* extbuf = (bs) ? GetExtendedBuffer(bs->ExtParam, bs->NumExtParam, MFX_EXTBUFF_DECODE_ERROR_REPORT) : NULL;
++
++    if (extbuf)
++        data->SetAuxInfo(extbuf, extbuf->BufferSz, extbuf->BufferId);
++#endif
++
+     UMC::Status umcRes = UMC::UMC_ERR_NOT_ENOUGH_DATA;
+     for ( ; data->GetDataSize() > 3; )
+     {
+diff --git a/_studio/shared/umc/codec/h265_dec/src/umc_h265_task_supplier.cpp b/_studio/shared/umc/codec/h265_dec/src/umc_h265_task_supplier.cpp
+index 77c7ac49..1f83fc89 100755
+--- a/_studio/shared/umc/codec/h265_dec/src/umc_h265_task_supplier.cpp
++++ b/_studio/shared/umc/codec/h265_dec/src/umc_h265_task_supplier.cpp
+@@ -47,6 +47,18 @@
+ namespace UMC_HEVC_DECODER
+ {
+ 
++#if (MFX_VERSION >= 1025)
++inline void SetDecodeErrorTypes(NalUnitType nalUnit, mfxExtDecodeErrorReport *pDecodeErrorReport)
++{
++    switch (nalUnit)
++    {
++        case NAL_UT_SPS: pDecodeErrorReport->ErrorTypes |= MFX_ERROR_SPS; break;
++        case NAL_UT_PPS: pDecodeErrorReport->ErrorTypes |= MFX_ERROR_PPS; break;
++        default: break;
++    };
++}
++#endif
++
+ const uint32_t levelIndexArray[] = {
+     H265_LEVEL_1,
+     H265_LEVEL_2,
+@@ -1637,6 +1649,11 @@ UMC::Status TaskSupplier_H265::ProcessNalUnit(UMC::MediaDataEx *nalUnit)
+     UMC::MediaDataEx::_MediaDataEx* pMediaDataEx = nalUnit->GetExData();
+     NalUnitType unitType = (NalUnitType)pMediaDataEx->values[pMediaDataEx->index];
+ 
++#if (MFX_VERSION >= 1025)
++    UMC::MediaData::AuxInfo* aux = (nalUnit) ? nalUnit->GetAuxInfo(MFX_EXTBUFF_DECODE_ERROR_REPORT) : NULL;
++    mfxExtDecodeErrorReport* pDecodeErrorReport = (aux) ? reinterpret_cast<mfxExtDecodeErrorReport*>(aux->ptr) : NULL;
++#endif
++
+     switch(unitType)
+     {
+     case NAL_UT_CODED_SLICE_TRAIL_R:
+@@ -1661,6 +1678,11 @@ UMC::Status TaskSupplier_H265::ProcessNalUnit(UMC::MediaDataEx *nalUnit)
+     case NAL_UT_SPS:
+     case NAL_UT_PPS:
+         umcRes = DecodeHeaders(nalUnit);
++#if (MFX_VERSION >= 1025)
++        if (pDecodeErrorReport && umcRes == UMC::UMC_ERR_INVALID_STREAM)
++            SetDecodeErrorTypes(unitType, pDecodeErrorReport);
++#endif
++
+         break;
+ 
+     case NAL_UT_SEI:
+@@ -1702,6 +1724,11 @@ UMC::Status TaskSupplier_H265::AddOneFrame(UMC::MediaData * pSource)
+ 
+         UMC::MediaDataEx::_MediaDataEx* pMediaDataEx = nalUnit->GetExData();
+ 
++#if (MFX_VERSION >= 1025)
++    UMC::MediaData::AuxInfo* aux = (pSource) ? pSource->GetAuxInfo(MFX_EXTBUFF_DECODE_ERROR_REPORT) : NULL;
++        mfxExtDecodeErrorReport* pDecodeErrorReport = (aux) ? reinterpret_cast<mfxExtDecodeErrorReport*>(aux->ptr) : NULL;
++#endif
++
+         for (int32_t i = 0; i < (int32_t)pMediaDataEx->count; i++, pMediaDataEx->index ++)
+         {
+             if (m_checkCRAInsideResetProcess)
+@@ -1754,7 +1781,13 @@ UMC::Status TaskSupplier_H265::AddOneFrame(UMC::MediaData * pSource)
+                 case NAL_UT_VPS:
+                 case NAL_UT_SPS:
+                 case NAL_UT_PPS:
+-                    DecodeHeaders(nalUnit);
++                    {
++                        UMC::Status sts = DecodeHeaders(nalUnit);
++#if (MFX_VERSION >= 1025)
++                        if (pDecodeErrorReport && sts == UMC::UMC_ERR_INVALID_STREAM)
++                            SetDecodeErrorTypes((NalUnitType)pMediaDataEx->values[i], pDecodeErrorReport);
++#endif
++                    }
+                     break;
+ 
+                 default:
+@@ -1821,6 +1854,10 @@ UMC::Status TaskSupplier_H265::AddOneFrame(UMC::MediaData * pSource)
+                             moveToSpsOffset = pSource->GetDataSize() + size + 3;
+                             continue;
+                         }
++#if (MFX_VERSION >= 1025)
++                        if (pDecodeErrorReport && umsRes == UMC::UMC_ERR_INVALID_STREAM)
++                            SetDecodeErrorTypes(nut, pDecodeErrorReport);
++#endif
+ 
+                         return umsRes;
+                     }
+-- 
+2.20.1
+
