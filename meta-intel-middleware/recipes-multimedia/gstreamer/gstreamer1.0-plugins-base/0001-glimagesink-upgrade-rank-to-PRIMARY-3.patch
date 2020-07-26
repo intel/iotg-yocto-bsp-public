@@ -1,0 +1,28 @@
+From e9cd549899106c6fa0dc0d4ce8ccf36d7929d396 Mon Sep 17 00:00:00 2001
+From: Lim Siew Hoon <siew.hoon.lim@intel.com>
+Date: Tue, 12 May 2020 02:10:40 +0800
+Subject: [PATCH] glimagesink: upgrade rank to PRIMARY + 3.
+
+We are using for gst-msdk plugins for dmabuf rendering.
+
+Signed-off-by: Lim Siew Hoon <siew.hoon.lim@intel.com>
+---
+ ext/gl/gstopengl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/ext/gl/gstopengl.c b/ext/gl/gstopengl.c
+index 302e8452c..ceb3151ab 100644
+--- a/ext/gl/gstopengl.c
++++ b/ext/gl/gstopengl.c
+@@ -127,7 +127,7 @@ plugin_init (GstPlugin * plugin)
+ #endif
+ 
+   if (!gst_element_register (plugin, "glimagesink",
+-          GST_RANK_SECONDARY, gst_gl_image_sink_bin_get_type ())) {
++          GST_RANK_PRIMARY + 3, gst_gl_image_sink_bin_get_type ())) {
+     return FALSE;
+   }
+ 
+-- 
+2.20.4
+

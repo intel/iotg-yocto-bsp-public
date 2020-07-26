@@ -1,4 +1,4 @@
-From bec38a0c2e2958927c42b2f9ae939969b7c4a326 Mon Sep 17 00:00:00 2001
+From 8735427febe82590b47a7eae5cb2a9442e3771b8 Mon Sep 17 00:00:00 2001
 From: Carlos Rafael Giani <crg7475@mailbox.org>
 Date: Tue, 21 May 2019 14:01:11 +0200
 Subject: [PATCH] viv-fb: Make sure config.h is included
@@ -28,5 +28,5 @@ index 05e1f6229..96ce5e685 100644
  
  #ifdef BUILDING_GST_GL
 -- 
-2.17.1
+2.20.4
 

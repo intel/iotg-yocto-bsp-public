@@ -2,8 +2,9 @@ require gstreamer1.0-plugins-common.inc
 
 SRC_URI = " \
             gitsm://github.com/GStreamer/gst-plugins-good.git;protocol=https \
+            file://0001-Fix-for-Qt-build-issue-with-sysroot-on-latest-compil.patch \
             "
-SRCREV = "42e7864e90ce40059efc192e375ada9dada15701"
+SRCREV = "03ac058183791ec301ee8b45840e4e38b6dcf929"
 
 S = "${WORKDIR}/git"
 

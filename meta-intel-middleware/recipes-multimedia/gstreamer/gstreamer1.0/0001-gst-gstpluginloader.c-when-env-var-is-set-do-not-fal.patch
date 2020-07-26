@@ -1,4 +1,4 @@
-From a1d7c582392c8bc87fa9411af77b20e011944357 Mon Sep 17 00:00:00 2001
+From 06fb6f46eda6d58c168af1b737fdd6f908e17008 Mon Sep 17 00:00:00 2001
 From: Alexander Kanavin <alex.kanavin@gmail.com>
 Date: Thu, 25 Jan 2018 17:55:02 +0200
 Subject: [PATCH] gst/gstpluginloader.c: when env var is set do not fall
@@ -16,10 +16,10 @@ Signed-off-by: Alexander Kanavin <alex.kanavin@gmail.com>
  1 file changed, 1 insertion(+), 3 deletions(-)
 
 diff --git a/gst/gstpluginloader.c b/gst/gstpluginloader.c
-index 430829d..3a75731 100644
+index d1e404d98..2e00c3c97 100644
 --- a/gst/gstpluginloader.c
 +++ b/gst/gstpluginloader.c
-@@ -471,9 +471,7 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
+@@ -475,9 +475,7 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
      helper_bin = g_strdup (env);
      res = gst_plugin_loader_try_helper (loader, helper_bin);
      g_free (helper_bin);
@@ -31,5 +31,5 @@ index 430829d..3a75731 100644
  
  #ifdef G_OS_WIN32
 -- 
-2.15.1
+2.20.4
 

@@ -11,7 +11,7 @@ LIC_FILES_CHKSUM = "file://COPYING.LIB;md5=4fbd65380cdd255951079008b364516c"
 SRC_URI = "gitsm://github.com/GStreamer/gstreamer-vaapi.git;protocol=https \
            file://0001-vaapsink-downgrade-to-marginal.patch \
            "
-SRCREV = "566af572afc2a91d58d24cc8630b462c86903d7e" 
+SRCREV = "41bf465196836158b8eb797c055093315f1bf9bd"
 
 S = "${WORKDIR}/git"
 

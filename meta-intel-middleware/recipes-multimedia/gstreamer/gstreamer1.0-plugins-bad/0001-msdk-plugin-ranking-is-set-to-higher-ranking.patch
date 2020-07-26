@@ -1,4 +1,4 @@
-From 12b2e23da31d74eb5251e76ed76ef70f989c02b0 Mon Sep 17 00:00:00 2001
+From 878a8c26c29f060c82d5bf568ad96407ed3593f8 Mon Sep 17 00:00:00 2001
 From: Siddharth Ajit Waikar <siddharth.ajitx.waikar@intel.com>
 Date: Thu, 5 Mar 2020 01:55:18 +0800
 Subject: [PATCH] msdk plugin ranking is set to higher ranking
@@ -9,7 +9,7 @@ Signed-off-by: Siddharth Waikar <siddharth.ajitx.waikar@intel.com>
  1 file changed, 13 insertions(+), 13 deletions(-)
 
 diff --git a/sys/msdk/gstmsdk.c b/sys/msdk/gstmsdk.c
-index fb92a6a..cb253df 100644
+index fb92a6abb..cb253df87 100644
 --- a/sys/msdk/gstmsdk.c
 +++ b/sys/msdk/gstmsdk.c
 @@ -104,44 +104,44 @@ plugin_init (GstPlugin * plugin)
@@ -71,5 +71,5 @@ index fb92a6a..cb253df 100644
  
    return ret;
 -- 
-2.7.4
+2.20.4
 

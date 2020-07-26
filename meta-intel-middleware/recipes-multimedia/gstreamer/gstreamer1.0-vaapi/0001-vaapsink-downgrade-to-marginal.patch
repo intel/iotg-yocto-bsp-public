@@ -1,4 +1,4 @@
-From 0c28cf7bfa90f8947833722cddf23d513490c6c3 Mon Sep 17 00:00:00 2001
+From 5025bfeede6a4f5a2a4d52b466c681982e8d5edb Mon Sep 17 00:00:00 2001
 From: Anuj Mittal <anuj.mittal@intel.com>
 Date: Wed, 28 Nov 2018 15:08:48 +0800
 Subject: [PATCH] vaapsink: downgrade to marginal
@@ -21,10 +21,10 @@ Signed-off-by: Anuj Mittal <anuj.mittal@intel.com>
  1 file changed, 1 insertion(+), 5 deletions(-)
 
 diff --git a/gst/vaapi/gstvaapi.c b/gst/vaapi/gstvaapi.c
-index 9a82454..4d94f2b 100644
+index 2a34ae62..853e1e95 100644
 --- a/gst/vaapi/gstvaapi.c
 +++ b/gst/vaapi/gstvaapi.c
-@@ -195,7 +195,6 @@ plugin_init (GstPlugin * plugin)
+@@ -184,7 +184,6 @@ plugin_init (GstPlugin * plugin)
  {
    GstVaapiDisplay *display;
    GArray *decoders;
@@ -32,7 +32,7 @@ index 9a82454..4d94f2b 100644
  
    plugin_add_dependencies (plugin);
  
-@@ -220,10 +219,7 @@ plugin_init (GstPlugin * plugin)
+@@ -212,10 +211,7 @@ plugin_init (GstPlugin * plugin)
    gst_element_register (plugin, "vaapidecodebin",
        GST_RANK_PRIMARY + 2, GST_TYPE_VAAPI_DECODE_BIN);
  
@@ -44,3 +44,6 @@ index 9a82454..4d94f2b 100644
  
  #if USE_ENCODERS
    gst_vaapiencode_register (plugin, display);
+-- 
+2.20.4
+

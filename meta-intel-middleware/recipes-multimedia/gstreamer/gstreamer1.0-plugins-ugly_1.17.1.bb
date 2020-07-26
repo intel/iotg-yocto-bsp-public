@@ -8,7 +8,7 @@ LICENSE_FLAGS = "commercial"
 
 SRC_URI = "gitsm://github.com/GStreamer/gst-plugins-ugly.git;protocol=https"
 
-SRCREV = "9273903286b0fe7a9d8a5279c44a5e149e55ff24"
+SRCREV = "7952fb8ea24acd7408f41786209e18eed9830b25"
 
 S = "${WORKDIR}/git"
 

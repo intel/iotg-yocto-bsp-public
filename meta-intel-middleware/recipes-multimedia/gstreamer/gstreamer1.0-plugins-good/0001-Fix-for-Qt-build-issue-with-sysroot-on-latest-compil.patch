@@ -1,0 +1,44 @@
+From 91808130113029c7c4403d3369153cd4d911c579 Mon Sep 17 00:00:00 2001
+From: "Ung, Teng En" <teng.en.ung@intel.com>
+Date: Wed, 10 Jun 2020 13:45:50 +0000
+Subject: [PATCH] Fix for Qt build issue with sysroot on latest compiler.
+
+For latest compiler, will need to add "=" or "$SYSROOT" with
+--sysroot option to append the sysroot path.
+
+Signed-off-by: Ung, Teng En <teng.en.ung@intel.com>
+---
+ ext/qt/meson.build | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/ext/qt/meson.build b/ext/qt/meson.build
+index c86e86a55..8cd47f7a8 100644
+--- a/ext/qt/meson.build
++++ b/ext/qt/meson.build
+@@ -75,9 +75,9 @@ if not have_qpa_include
+     qpa_include_path = join_paths(qt_include_dir, 'QtGui', qt_version, 'QtGui')
+     if cxx.has_header('qpa/qplatformnativeinterface.h',
+             dependencies : qt5core_dep,
+-            args : '-I' + qpa_include_path)
++            args : '-I=' + qpa_include_path)
+       qt_defines += '-DHAVE_QT_QPA_HEADER'
+-      qt_defines += '-I' + qpa_include_path
++      qt_defines += '-I=' + qpa_include_path
+       have_qpa_include = true
+       message('Found QPA header using pkg-config')
+     endif
+@@ -90,9 +90,9 @@ if not have_qpa_include
+     qt_include_dir = run_command(qmake, '-query', 'QT_INSTALL_HEADERS').stdout().strip()
+     qpa_include_path = join_paths(qt_include_dir, 'QtGui', qt_version, 'QtGui')
+     if cxx.has_header('qpa/qplatformnativeinterface.h',
+-            args : '-I' + qpa_include_path)
++            args : '-I=' + qpa_include_path)
+       qt_defines += '-DHAVE_QT_QPA_HEADER'
+-      qt_defines += '-I' + qpa_include_path
++      qt_defines += '-I=' + qpa_include_path
+       have_qpa_include = true
+       message('Found QPA header using qmake')
+     endif
+-- 
+2.20.4
+

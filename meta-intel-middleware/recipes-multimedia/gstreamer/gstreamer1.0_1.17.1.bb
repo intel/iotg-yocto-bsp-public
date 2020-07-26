@@ -22,7 +22,7 @@ SRC_URI = " \
     file://0004-meson-Add-option-for-installed-tests.patch \
 "
 
-SRCREV = "0bf31fb1d8215d0811c8daf8841d504df1a02183"
+SRCREV = "7113aa3b70b93926ac72ea106e711ddcdd2fe101"
 
 PACKAGECONFIG ??= "${@bb.utils.contains('PTEST_ENABLED', '1', 'tests', '', d)} \
                    check \

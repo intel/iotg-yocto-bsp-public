@@ -4,9 +4,12 @@ SRC_URI = " \
     gitsm://github.com/GStreamer/gst-plugins-bad;protocol=https \
     file://0001-msdk-plugin-ranking-is-set-to-higher-ranking.patch \
     file://opencv-resolve-missing-opencv-data-dir-in-yocto-buil.patch \
+    file://0001-msdkdec-allow-sub-class-to-add-extra-parameters-for-.patch \
+    file://0002-msdkh264dec-report-error-to-user.patch \
+    file://0003-msdkh265dec-Add-support-for-error-report-too.patch \
 "
 
-SRCREV = "a06ddd182d94f759d9b40fb1684b4b6bb6748a21"
+SRCREV = "88ace3befbc7f5acd188205facd9ca720c776851"
 
 S = "${WORKDIR}/git"
 

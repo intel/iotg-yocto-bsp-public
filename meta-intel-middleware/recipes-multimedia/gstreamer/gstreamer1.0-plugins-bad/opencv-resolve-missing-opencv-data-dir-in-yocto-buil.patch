@@ -1,4 +1,4 @@
-From f41caae14b618ab815ede3c408e7482b00316e3e Mon Sep 17 00:00:00 2001
+From 7a9f9a8221611c6bf6613e7f4febb92f8a5561e8 Mon Sep 17 00:00:00 2001
 From: Andrey Zhizhikin <andrey.z@gmail.com>
 Date: Mon, 27 Jan 2020 10:22:35 +0000
 Subject: [PATCH] opencv: resolve missing opencv data dir in yocto build
@@ -16,7 +16,7 @@ Signed-off-by: Andrey Zhizhikin <andrey.z@gmail.com>
  1 file changed, 4 insertions(+), 3 deletions(-)
 
 diff --git a/ext/opencv/meson.build b/ext/opencv/meson.build
-index f38b55dfe..a26403482 100644
+index 8434628e5..8c0fecb82 100644
 --- a/ext/opencv/meson.build
 +++ b/ext/opencv/meson.build
 @@ -78,20 +78,21 @@ else
@@ -45,5 +45,5 @@ index f38b55dfe..a26403482 100644
          gstopencv_cargs += '-DOPENCV_PATH_NAME="opencv4"'
        else
 -- 
-2.17.1
+2.20.4
 

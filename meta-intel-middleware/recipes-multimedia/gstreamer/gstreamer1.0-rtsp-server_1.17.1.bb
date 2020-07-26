@@ -10,7 +10,7 @@ PNREAL = "gst-rtsp-server"
 
 SRC_URI = "gitsm://github.com/GStreamer/gst-rtsp-server.git;protocol=https"
 
-SRCREV = "8d4a9f37e506929808106b361dc6af02ee8d1984"
+SRCREV = "f9f649ea6a08720015f2af1adbb39921abf6a61e"
 
 S = "${WORKDIR}/git"
 

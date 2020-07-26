@@ -8,9 +8,9 @@ SRC_URI = " \
             file://get-caps-from-src-pad-when-query-caps.patch \
             file://0003-ssaparse-enhance-SSA-text-lines-parsing.patch \
             file://0005-viv-fb-Make-sure-config.h-is-included.patch \
-            file://0009-glimagesink-Downrank-to-marginal.patch \
+            file://0001-glimagesink-upgrade-rank-to-PRIMARY-3.patch \
             "
-SRCREV = "a12f161724835b263d20475dfb074065141eed69"
+SRCREV = "82a58f567f758140d7f50aad521ec8e04b3823a6"
 
 S = "${WORKDIR}/git"
 

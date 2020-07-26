@@ -4,12 +4,11 @@ SECTION = "multimedia"
 
 LICENSE = "GPLv2+ & LGPLv2+ & ( (GPLv2+ & LGPLv2.1+) | (GPLv3+ & LGPLv3+) )"
 LICENSE_FLAGS = "commercial"
-LIC_FILES_CHKSUM = "file://COPYING;md5=b234ee4d69f5fce4486a80fdaf4a4263 \
-                    file://COPYING.LIB;md5=6762ed442b3822387a51c92d928ead0d \
+LIC_FILES_CHKSUM = "file://COPYING;md5=6762ed442b3822387a51c92d928ead0d \
                     file://ext/libav/gstav.h;beginline=1;endline=18;md5=a752c35267d8276fd9ca3db6994fca9c"
 
 SRC_URI = "gitsm://github.com/GStreamer/gst-libav.git;protocol=https"
-SRCREV = "5a9f3d4bf1a31bd1eba7c86419fc5d1a328694a1"
+SRCREV = "7b73a97f36b70bd4bb8c1396be37f5e35587ca9f"
 
 S = "${WORKDIR}/git"
 
