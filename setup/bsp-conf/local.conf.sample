@@ -136,8 +136,8 @@ IMAGE_INSTALL_append = " kernel-modules"
 # Install HDCP
 IMAGE_INSTALL_append = " hdcp"
 
-# Enable opencl ICL Loader opencl headers and hlhpp
-IMAGE_INSTALL_append = " opencl-icd-loader opencl-headers-dev opencl-clhpp-dev"
+# Install opencl-headers and opencl-clhpp
+IMAGE_INSTALL_append = " opencl-headers-dev opencl-clhpp-dev"
 ALLOW_EMPTY_opencl-headers_pn-opencl-headers = "1"
 
 # Install open source media driver
