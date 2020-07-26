@@ -87,6 +87,9 @@ PACKAGECONFIG_append_pn-gstreamer1.0-plugins-good = " vpx"
 # Enable msdk on gstreamer1.0-plugins-bad
 PACKAGECONFIG_append_pn-gstreamer1.0-plugins-bad = " msdk"
 
+# Enable opengl support for gstreamer plugins base
+PACKAGECONFIG_append_pn-gstreamer1.0-plugins-base = "${@bb.utils.filter('DISTRO_FEATURES', 'opengl', d)}"
+
 # Multi-libraries support is now "ON"
 # Please uncomment the 4 lines below to enable multilib support.
 require conf/multilib.conf
