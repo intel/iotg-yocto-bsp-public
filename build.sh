@@ -16,7 +16,7 @@ apply_kernel_patch () {
 	cd meta-intel-leafhill/recipes-kernel/linux/linux-intel
 
 	git add --all .
-	git commit -s -m "meta-intel: linux-intel_4.19: update kernel patch for Apollo Lake BSP"
+	git commit -s -m "meta-intel: linux-intel_${KVER}: update kernel patch for Apollo Lake BSP"
 
 	cd ${cur_dir}
 }
