@@ -73,6 +73,11 @@ WKS_FILE = "systemd-bootdisk-microcode-custom.wks.in"
 PREFERRED_PROVIDER_jpeg = "jpeg"
 PREFERRED_PROVIDER_jpeg-native = "jpeg-native"
 
+# Preferred version for tpm2 packages
+PREFERRED_VERSION_tpm2-tools = "4.1%"
+PREFERRED_VERSION_tpm2-tss = "2.3%"
+PREFERRED_VERSION_tpm2-abrmd = "2.3%"
+
 # Enable xserver-xorg
 IMAGE_INSTALL_append = " xserver-xorg"
 
@@ -102,15 +107,12 @@ CORE_IMAGE_EXTRA_INSTALL += "wayland weston weston-examples"
 # Install mesa glxinfo
 IMAGE_INSTALL_append = " mesa-glxinfo"
 
-# Set preferred version for tpm
-PREFERRED_VERSION_tpm2-tss = "2%"
-
 # Install TPM2.0-TSS in image
 IMAGE_INSTALL_append = " libtss2-mu libtss2-mu-dev libtss2-mu-staticdev libtss2-tcti-device libtss2-tcti-device-dev libtss2-tcti-device-staticdev"
 IMAGE_INSTALL_append = " libtss2-tcti-mssim libtss2-tcti-mssim-dev libtss2-tcti-mssim-staticdev libtss2 libtss2-dev libtss2-staticdev"
 
 # Install tpm2-abrmd in image
-IMAGE_INSTALL_append = " tpm2-abrmd"
+IMAGE_INSTALL_append = " tpm2-abrmd tpm2-tss tpm2-tools"
 
 # Install MRAA and its dependencies in image
 IMAGE_INSTALL_append = " nodejs swig mraa"
