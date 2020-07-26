@@ -38,7 +38,7 @@ See the [Setting up Guide](https://github.com/intel/iotg-yocto-bsp-public/wiki/S
 ```
    <br> - For Intel Atom E3900 Maintenance Release Version 5:
 ```
-      git checkout MR5-B-02
+      git checkout MR5-B-03
 ```
 - After checking out one of the release tags, you will noticed that you are in 'detached HEAD' state. You can now create a local git branch to host the code.
 ```
@@ -79,8 +79,8 @@ If this is your first build, just run the setup.sh script from your iotg-yocto-b
 	- check for required software dependencies (this is only performed for Linux Ubuntu 14.04)
 	- test python, network, gitconfig and git proxy
 	- Prepare sources
-	- download Linux kernel v4.19.106 from Intel Linux Kernel from github.
-	- combolayer downloads Poky Warrior v2.7.2 and other meta layers based on setup/combolayer.conf
+	- download Linux kernel v4.19.130 from Intel Linux Kernel from github.
+	- combolayer downloads Poky Warrior v2.7.4 and other meta layers based on setup/combolayer.conf
 	- setup bblayers for bitbake build
 	- setup local.conf for bitbake build
 	- prepare environment for bitbake build
