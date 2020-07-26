@@ -120,8 +120,8 @@ IMAGE_INSTALL_append = " nodejs swig mraa"
 # Install USB-modeswitch and USB-modeswitch-data in image
 IMAGE_INSTALL_append = " usb-modeswitch usb-modeswitch-data"
 
-# Install JHI
-IMAGE_INSTALL_append = " jhi"
+# Install JHI and jhi-test
+IMAGE_INSTALL_append = " jhi jhi-test"
 
 # Install IQV driver
 IMAGE_INSTALL_append = " iqvlinux"
