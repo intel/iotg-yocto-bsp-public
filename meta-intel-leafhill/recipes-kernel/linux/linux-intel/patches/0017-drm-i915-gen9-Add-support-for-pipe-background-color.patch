@@ -1,4 +1,4 @@
-From 5450dcb217af84997cc5df6af81f942e5afec777 Mon Sep 17 00:00:00 2001
+From fa2ff486600cfb8f53780ed0a67d7d92b60fbe87 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Mon, 30 Sep 2019 15:47:06 -0700
 Subject: [PATCH] drm/i915/gen9+: Add support for pipe background color
@@ -68,10 +68,10 @@ index 637aed8..f295109 100644
  #define   PIPEB_LINE_COMPARE_INT_EN		(1 << 29)
  #define   PIPEB_HLINE_INT_EN			(1 << 28)
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index 0d834f0..ec17e0e 100644
+index 3420c9a..8dac1d2 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
-@@ -3907,6 +3907,37 @@ static void intel_update_pipe_config(const struct intel_crtc_state *old_crtc_sta
+@@ -3913,6 +3913,37 @@ static void intel_update_pipe_config(const struct intel_crtc_state *old_crtc_sta
  	}
  }
  
@@ -109,7 +109,7 @@ index 0d834f0..ec17e0e 100644
  static void intel_fdi_normal_train(struct intel_crtc *crtc)
  {
  	struct drm_device *dev = crtc->base.dev;
-@@ -10789,6 +10820,9 @@ static int intel_crtc_atomic_check(struct drm_crtc *crtc,
+@@ -10795,6 +10826,9 @@ static int intel_crtc_atomic_check(struct drm_crtc *crtc,
  							 pipe_config);
  	}
  
@@ -119,7 +119,7 @@ index 0d834f0..ec17e0e 100644
  	if (HAS_IPS(dev_priv))
  		pipe_config->ips_enabled = hsw_compute_ips_config(pipe_config);
  
-@@ -13370,6 +13404,9 @@ static void intel_begin_crtc_commit(struct drm_crtc *crtc,
+@@ -13376,6 +13410,9 @@ static void intel_begin_crtc_commit(struct drm_crtc *crtc,
  	/* Perform vblank evasion around commit operation */
  	intel_pipe_update_start(intel_cstate);
  
@@ -129,7 +129,7 @@ index 0d834f0..ec17e0e 100644
  	if (modeset)
  		goto out;
  
-@@ -14307,6 +14344,9 @@ static int intel_crtc_init(struct drm_i915_private *dev_priv, enum pipe pipe)
+@@ -14313,6 +14350,9 @@ static int intel_crtc_init(struct drm_i915_private *dev_priv, enum pipe pipe)
  
  	WARN_ON(drm_crtc_index(&intel_crtc->base) != intel_crtc->pipe);
  

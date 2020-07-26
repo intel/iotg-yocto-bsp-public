@@ -1,4 +1,4 @@
-From e41cbf5b2ab48c912af09e5e871c7fb7be1e49ca Mon Sep 17 00:00:00 2001
+From e61d989838d732b4b059a2a900bfe2c0461722e7 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 16 Nov 2016 12:54:20 +0800
 Subject: [PATCH] igb: Adding runtime PM support to various netdev ops

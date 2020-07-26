@@ -1,4 +1,4 @@
-From 3fdf33d10bcec2be85ab695f0ea7b4568f9e0cec Mon Sep 17 00:00:00 2001
+From 8725bd069247a9f4d6fc83e0ac050daf34466063 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Micha=C5=82=20Winiarski?= <michal.winiarski@intel.com>
 Date: Tue, 26 Mar 2019 18:02:18 +0100
 Subject: [PATCH] drm/i915: Update size upon return from GEM_CREATE

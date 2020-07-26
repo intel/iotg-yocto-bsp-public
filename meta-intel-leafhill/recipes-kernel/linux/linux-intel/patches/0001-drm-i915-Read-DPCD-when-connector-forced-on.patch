@@ -1,4 +1,4 @@
-From 416251db7dcf09e9066c8f17cbb1191b1bec2872 Mon Sep 17 00:00:00 2001
+From b2a1b0a749c4599d7508c559bfac602145e08a05 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Fri, 1 Apr 2016 09:20:46 -0700
 Subject: [PATCH] drm/i915: Read DPCD when connector forced on.
@@ -20,7 +20,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/intel_dp.c b/drivers/gpu/drm/i915/intel_dp.c
-index 735592a..215f0fa 100644
+index 9474585..63e0028 100644
 --- a/drivers/gpu/drm/i915/intel_dp.c
 +++ b/drivers/gpu/drm/i915/intel_dp.c
 @@ -4855,6 +4855,8 @@ bool intel_digital_port_connected(struct intel_encoder *encoder)

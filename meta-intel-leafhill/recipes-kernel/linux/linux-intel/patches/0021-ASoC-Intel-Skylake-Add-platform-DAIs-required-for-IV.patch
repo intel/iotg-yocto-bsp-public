@@ -1,4 +1,4 @@
-From a016b80cd2cfcd59f39c0fa5a4ec44d11b132066 Mon Sep 17 00:00:00 2001
+From 93d4f3d839145bb69949b2a1975563f5042144ee Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Sun, 7 Jul 2019 15:06:48 +0800
 Subject: [PATCH] ASoC: Intel: Skylake: Add platform DAIs required for IVI

@@ -1,0 +1,37 @@
+From fe682e4f4b018962553b4f4483acf186b6d62d15 Mon Sep 17 00:00:00 2001
+From: Lee <eliot.lee@intel.com>
+Date: Tue, 5 May 2020 18:13:36 -0700
+Subject: [PATCH] media: imx274: set min fll for 60fps
+
+Message for Open Source:
+set min fll of 1932x1094 12 bit for 60fps
+
+Message for Internal:
+set min fll of 1932x1094 12 bit for 60fps
+
+Test Platform:
+APL
+
+Change-Id: I7636353250a818ef69b078d32629fa0ef2641a40
+Signed-off-by: Lee <eliot.lee@intel.com>
+Signed-off-by: Chen Meng J <meng.j.chen@intel.com>
+---
+ drivers/media/i2c/crlmodule/crl_imx274_configuration.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/media/i2c/crlmodule/crl_imx274_configuration.h b/drivers/media/i2c/crlmodule/crl_imx274_configuration.h
+index 6ec84fb..806d6f1 100644
+--- a/drivers/media/i2c/crlmodule/crl_imx274_configuration.h
++++ b/drivers/media/i2c/crlmodule/crl_imx274_configuration.h
+@@ -798,7 +798,7 @@
+ 		.width = 1932,
+ 		.height = 1094,
+ 		.min_llp = 493, /* 01EDh */
+-		.min_fll = 4868, /* default 30fps */
++		.min_fll = 2432, /* default 60fps */
+ 		.comp_items = 0,
+ 		.ctrl_data = 0,
+ 		.mode_regs_items = ARRAY_SIZE(
+-- 
+1.9.1
+

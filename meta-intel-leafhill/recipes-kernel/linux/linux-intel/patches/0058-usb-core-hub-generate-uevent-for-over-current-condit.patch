@@ -1,4 +1,4 @@
-From aabcc24e66dafbaca0a55e85e3b11b5f9f27d33c Mon Sep 17 00:00:00 2001
+From 178450f6999c2ef7dfadb4862682f4253e6dd9ae Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Tue, 19 Jul 2016 16:16:01 +0800
 Subject: [PATCH] usb: core: hub: generate uevent for over current condition
@@ -46,10 +46,10 @@ index 4d75d9a..8a7005b 100644
 +	  over current condition on USB ports and ports coming to
 +	  normal state after over current condition is over.
 diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
-index 6ab4ca1..c9fdfb43 100644
+index fa28f23..4c8a757 100644
 --- a/drivers/usb/core/hub.c
 +++ b/drivers/usb/core/hub.c
-@@ -5179,6 +5179,16 @@ static void hub_port_connect_change(struct usb_hub *hub, int port1,
+@@ -5204,6 +5204,16 @@ static void hub_port_connect_change(struct usb_hub *hub, int port1,
  	usb_lock_port(port_dev);
  }
  
@@ -66,7 +66,7 @@ index 6ab4ca1..c9fdfb43 100644
  static void port_event(struct usb_hub *hub, int port1)
  		__must_hold(&port_dev->status_lock)
  {
-@@ -5224,13 +5234,42 @@ static void port_event(struct usb_hub *hub, int port1)
+@@ -5249,13 +5259,42 @@ static void port_event(struct usb_hub *hub, int port1)
  
  		dev_dbg(&port_dev->dev, "over-current change #%u\n",
  			port_dev->over_current_count);

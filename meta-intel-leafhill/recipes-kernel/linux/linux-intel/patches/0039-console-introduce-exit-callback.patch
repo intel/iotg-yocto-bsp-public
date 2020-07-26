@@ -1,4 +1,4 @@
-From 82210fcab0fc0d87ccac6bca51a4c49a8c159c3b Mon Sep 17 00:00:00 2001
+From 048e5aeb3f40d4b8fd8236da6ed40f6735d5989a Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Wed, 23 Nov 2016 17:04:16 +0200
 Subject: [PATCH] console: introduce ->exit() callback

@@ -1,4 +1,4 @@
-From bf9a65b90c18d99a87d24505b7686a14b4775bae Mon Sep 17 00:00:00 2001
+From 98f373bc73cb5532daed28cc9c0b8d16993f0f4a Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Wed, 16 Nov 2016 19:38:22 +0200
 Subject: [PATCH] serial: core: add support of runtime PM

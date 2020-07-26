@@ -1,4 +1,4 @@
-From ef91ff3089c2b7703dae21fd074a45ead079cfb2 Mon Sep 17 00:00:00 2001
+From f2ae9adff70995fa86e3662006f0fd4474fa99ce Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 17:39:41 +0800
 Subject: [PATCH] igb: During runtime resume do not reinitialize the net device

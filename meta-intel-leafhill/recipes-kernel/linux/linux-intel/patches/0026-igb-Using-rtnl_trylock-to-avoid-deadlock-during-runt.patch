@@ -1,4 +1,4 @@
-From 4e67051cebd4780bde0b4c4c45c225dc77f1df34 Mon Sep 17 00:00:00 2001
+From 0c0ec75bdb6da57644e6c0ef05c1f4c143d230da Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Thu, 29 Dec 2016 11:37:47 +0800
 Subject: [PATCH] igb: Using rtnl_trylock to avoid deadlock during runtime

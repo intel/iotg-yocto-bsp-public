@@ -1,4 +1,4 @@
-From 852d5ea4a758a89c0e0c3c4e4fbcca25ef1b3f73 Mon Sep 17 00:00:00 2001
+From 3b54237c43498ca96b9e7557a6f7d0f95d1acfd2 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Wed, 18 Jan 2017 14:02:16 -0800
 Subject: [PATCH] drm/i915/gen9: Turbo Frequency Mode control (v4).
@@ -96,7 +96,7 @@ index 98a1472..d301e4c 100644
  void intel_cleanup_gt_powersave(struct drm_i915_private *dev_priv);
  void intel_sanitize_gt_powersave(struct drm_i915_private *dev_priv);
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 7390dea..969efb5 100644
+index de44435..df9cc7c 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
 @@ -37,6 +37,9 @@
@@ -109,7 +109,7 @@ index 7390dea..969efb5 100644
  /**
   * DOC: RC6
   *
-@@ -6728,6 +6731,10 @@ static int gen6_set_rps(struct drm_i915_private *dev_priv, u8 val)
+@@ -6732,6 +6735,10 @@ static int gen6_set_rps(struct drm_i915_private *dev_priv, u8 val)
  {
  	struct intel_rps *rps = &dev_priv->gt_pm.rps;
  
@@ -120,7 +120,7 @@ index 7390dea..969efb5 100644
  	/* min/max delay may still have been modified so be sure to
  	 * write the limits value.
  	 */
-@@ -8384,6 +8391,137 @@ void intel_gpu_ips_teardown(void)
+@@ -8388,6 +8395,137 @@ void intel_gpu_ips_teardown(void)
  	spin_unlock_irq(&mchdev_lock);
  }
  

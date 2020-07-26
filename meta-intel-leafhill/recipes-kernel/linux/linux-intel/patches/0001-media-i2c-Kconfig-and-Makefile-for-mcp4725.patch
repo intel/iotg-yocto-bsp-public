@@ -1,4 +1,4 @@
-From 8ccc017d81a631280575332bc3a010f0360cbae3 Mon Sep 17 00:00:00 2001
+From e2d819aeaec4c0c32bc80efb297ec0682f2062a3 Mon Sep 17 00:00:00 2001
 From: Chen Meng J <meng.j.chen@intel.com>
 Date: Tue, 14 Jan 2020 11:26:02 +0800
 Subject: [PATCH] media: i2c: Kconfig and Makefile for mcp4725

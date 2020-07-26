@@ -1,4 +1,4 @@
-From 9277610d8cbee03b80de0e2cf32764d28c648cc2 Mon Sep 17 00:00:00 2001
+From 584df75d821d3f8769a7f95f9df26a614fde2d83 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Thu, 29 Dec 2016 11:40:59 +0800
 Subject: [PATCH] igb: Handling of igb_get_stats64 when called in suspended

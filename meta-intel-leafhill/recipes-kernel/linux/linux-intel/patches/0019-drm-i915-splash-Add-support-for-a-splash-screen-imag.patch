@@ -1,4 +1,4 @@
-From 893826ab0360c687d57f8222346720118f5ec8b0 Mon Sep 17 00:00:00 2001
+From 590bd5ca437b6c5e2289b1ed583ca3ed72942f76 Mon Sep 17 00:00:00 2001
 From: James Xiong <james.xiong@intel.com>
 Date: Fri, 16 Dec 2016 14:37:12 -0800
 Subject: [PATCH] drm/i915/splash: Add support for a splash screen image. (v10)
@@ -44,8 +44,8 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  drivers/gpu/drm/i915/i915_gem_splash.c       | 136 ++++++++++++++++++
  drivers/gpu/drm/i915/i915_params.c           |   4 +
  drivers/gpu/drm/i915/i915_params.h           |   1 +
- drivers/gpu/drm/i915/intel_initial_modeset.c | 202 ++++++++++++++++++++++++++-
- 6 files changed, 358 insertions(+), 7 deletions(-)
+ drivers/gpu/drm/i915/intel_initial_modeset.c | 204 +++++++++++++++++++++++++--
+ 6 files changed, 358 insertions(+), 9 deletions(-)
  create mode 100644 drivers/gpu/drm/i915/i915_gem_splash.c
 
 diff --git a/drivers/gpu/drm/i915/Makefile b/drivers/gpu/drm/i915/Makefile
@@ -249,12 +249,12 @@ index 00000000..4e6add7
 +	return obj;
 +}
 diff --git a/drivers/gpu/drm/i915/i915_params.c b/drivers/gpu/drm/i915/i915_params.c
-index c588edb..f435279 100644
+index 537be08..26989a1 100644
 --- a/drivers/gpu/drm/i915/i915_params.c
 +++ b/drivers/gpu/drm/i915/i915_params.c
-@@ -261,6 +261,10 @@ struct i915_params i915_modparams __read_mostly = {
- i915_param_named(enable_conformance_check, bool, 0400,
- 	"To toggle the GVT guest conformance feature(default:true)");
+@@ -264,6 +264,10 @@ struct i915_params i915_modparams __read_mostly = {
+ i915_param_named_unsafe(enable_hp_work, bool, 0400,
+ 	"To enable active the high-performance mode during vGPU busy(default:false)");
  
 +i915_param_named(splash, charp, 0400,
 +		 "Load a splash screen binary image for a specific display."
@@ -264,7 +264,7 @@ index c588edb..f435279 100644
  					 const char *name,
  					 const char *type,
 diff --git a/drivers/gpu/drm/i915/i915_params.h b/drivers/gpu/drm/i915/i915_params.h
-index 9df42e8..147540a 100644
+index a2cb95d..4450dfe 100644
 --- a/drivers/gpu/drm/i915/i915_params.h
 +++ b/drivers/gpu/drm/i915/i915_params.h
 @@ -51,6 +51,7 @@
@@ -276,7 +276,7 @@ index 9df42e8..147540a 100644
  	param(int, edp_vswing, 0) \
  	param(int, reset, 2) \
 diff --git a/drivers/gpu/drm/i915/intel_initial_modeset.c b/drivers/gpu/drm/i915/intel_initial_modeset.c
-index 222c6b6..60ffdb6 100644
+index 4f9b1cf..a3592ed 100644
 --- a/drivers/gpu/drm/i915/intel_initial_modeset.c
 +++ b/drivers/gpu/drm/i915/intel_initial_modeset.c
 @@ -38,6 +38,7 @@
@@ -287,7 +287,7 @@ index 222c6b6..60ffdb6 100644
  #include "intel_drv.h"
  #include "i915_drv.h"
  
-@@ -114,6 +115,123 @@ static bool attach_crtc(struct drm_device *dev, struct drm_encoder *encoder,
+@@ -119,6 +120,123 @@ static bool attach_crtc(struct drm_device *dev, struct drm_encoder *encoder,
  	return false;
  }
  
@@ -411,7 +411,7 @@ index 222c6b6..60ffdb6 100644
  static struct drm_display_mode *get_modeline(struct drm_i915_private *dev_priv,
  					     struct drm_connector *connector,
  					     int width, int height)
-@@ -208,11 +326,44 @@ static int update_connector_state(struct drm_atomic_state *state,
+@@ -213,11 +331,44 @@ static int update_connector_state(struct drm_atomic_state *state,
  	return 0;
  }
  
@@ -458,7 +458,7 @@ index 222c6b6..60ffdb6 100644
  {
  	struct drm_crtc *crtc;
  	int ret;
-@@ -231,6 +382,13 @@ static int update_atomic_state(struct drm_device *dev,
+@@ -236,6 +387,13 @@ static int update_atomic_state(struct drm_device *dev,
  	if (ret)
  		return ret;
  
@@ -472,7 +472,7 @@ index 222c6b6..60ffdb6 100644
  	return 0;
  }
  
-@@ -277,16 +435,30 @@ static void modeset_config_fn(struct work_struct *work)
+@@ -282,16 +440,30 @@ static void modeset_config_fn(struct work_struct *work)
  	struct drm_modeset_acquire_ctx ctx;
  	struct drm_plane *plane;
  	int ret;
@@ -503,7 +503,7 @@ index 222c6b6..60ffdb6 100644
  		if (use_connector(connector)) {
  			encoder = get_encoder(connector);
  			if (!encoder)
-@@ -301,6 +473,10 @@ static void modeset_config_fn(struct work_struct *work)
+@@ -306,6 +478,10 @@ static void modeset_config_fn(struct work_struct *work)
  				WARN_ON(connector->index >= 20);
  				connector_mode[connector->index] = mode;
  			}
@@ -514,7 +514,7 @@ index 222c6b6..60ffdb6 100644
  		}
  	}
  	drm_connector_list_iter_end(&conn_iter);
-@@ -309,14 +485,13 @@ static void modeset_config_fn(struct work_struct *work)
+@@ -314,16 +490,13 @@ static void modeset_config_fn(struct work_struct *work)
  		/* Try to detect attached connectors */
  		drm_connector_list_iter_begin(dev, &conn_iter);
  		drm_for_each_connector_iter(connector, &conn_iter) {
@@ -527,11 +527,13 @@ index 222c6b6..60ffdb6 100644
  			else if (connector->helper_private && connector->helper_private->detect_ctx)
  				connector->status = connector->helper_private->detect_ctx(connector,
  									    NULL, true);
+-			else
+-				connector->status = connector_status_connected;
 -			drm_modeset_unlock(&dev->mode_config.connection_mutex);
  
  			if (connector->status == connector_status_connected) {
  				encoder = get_encoder(connector);
-@@ -332,6 +507,10 @@ static void modeset_config_fn(struct work_struct *work)
+@@ -339,6 +512,10 @@ static void modeset_config_fn(struct work_struct *work)
  					WARN_ON(connector->index >= 20);
  					connector_mode[connector->index] = mode;
  				}
@@ -542,7 +544,7 @@ index 222c6b6..60ffdb6 100644
  			}
  		}
  		drm_connector_list_iter_end(&conn_iter);
-@@ -369,8 +548,9 @@ static void modeset_config_fn(struct work_struct *work)
+@@ -376,8 +553,9 @@ static void modeset_config_fn(struct work_struct *work)
  	drm_connector_list_iter_begin(dev, &conn_iter);
  	drm_for_each_connector_iter(connector, &conn_iter) {
  		if (connector_mode[connector->index]) {
@@ -554,7 +556,7 @@ index 222c6b6..60ffdb6 100644
  			if (ret)
  				goto fail;
  		}
-@@ -448,7 +628,15 @@ static void initial_mode_destroy(struct drm_device *dev)
+@@ -455,7 +633,15 @@ static void initial_mode_destroy(struct drm_device *dev)
  void intel_initial_mode_config_fini(struct drm_device *dev)
  {
  	struct drm_i915_private *dev_priv = to_i915(dev);

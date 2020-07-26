@@ -1,4 +1,4 @@
-From 7ba00fb9df8d60d9178048725ca5a26eb8f23589 Mon Sep 17 00:00:00 2001
+From 18a14242ab0917929bef7c5dd2f309dd591f2b8d Mon Sep 17 00:00:00 2001
 From: Even Xu <even.xu@intel.com>
 Date: Fri, 23 Dec 2016 09:22:26 +0800
 Subject: [PATCH] hid: intel-ish-hid: use helper function to access client

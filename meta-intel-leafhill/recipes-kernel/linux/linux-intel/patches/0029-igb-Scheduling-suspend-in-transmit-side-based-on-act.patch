@@ -1,4 +1,4 @@
-From d10cd22c52f9a9d2e25511b0d3511c1b2a5ea09a Mon Sep 17 00:00:00 2001
+From c544410a03c602e578e444fa1e3d904fc9412c17 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 16 Nov 2016 09:38:05 +0800
 Subject: [PATCH] igb: Scheduling suspend in transmit side based on activity

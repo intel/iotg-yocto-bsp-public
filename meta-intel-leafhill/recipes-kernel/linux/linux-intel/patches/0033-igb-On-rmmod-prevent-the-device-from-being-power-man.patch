@@ -1,4 +1,4 @@
-From a3d574ff3654c030a9ca658ab6099db46d912767 Mon Sep 17 00:00:00 2001
+From 02692a12f923df0a4ca4cd02a7230ffee2e8fe60 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 20 Dec 2016 13:16:25 +0800
 Subject: [PATCH] igb: On rmmod prevent the device from being power managed at

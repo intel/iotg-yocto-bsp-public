@@ -1,4 +1,4 @@
-From f44f366becbc7cf1bff1c61f8d4a763fe84f2915 Mon Sep 17 00:00:00 2001
+From 96a946cc1998d0c65d72d261c0c529da583366a3 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Tue, 24 Jan 2017 15:40:35 -0800
 Subject: [PATCH] drm/i915: Add turbo status to debugfs (v3)

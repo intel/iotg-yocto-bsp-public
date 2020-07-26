@@ -1,4 +1,4 @@
-From 420fb946010f48f64f652741d45118cce1a33e1a Mon Sep 17 00:00:00 2001
+From 61229270e057cf5ccdf6a9041833e453b92a6177 Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Mon, 12 Sep 2016 20:40:33 +0300
 Subject: [PATCH] serial: 8250_port: remove legacy PM code
@@ -11,7 +11,7 @@ Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
  1 file changed, 12 deletions(-)
 
 diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
-index 79e0a72..e7e61e8 100644
+index 31f5d62..e14924e 100644
 --- a/drivers/tty/serial/8250/8250_port.c
 +++ b/drivers/tty/serial/8250/8250_port.c
 @@ -583,16 +583,12 @@ void serial8250_clear_and_reinit_fifos(struct uart_8250_port *p)

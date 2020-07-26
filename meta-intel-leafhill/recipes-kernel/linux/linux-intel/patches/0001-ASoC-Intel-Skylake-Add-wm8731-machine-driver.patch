@@ -1,4 +1,4 @@
-From 0c82dd892356717212464bb6b90383d24b8c4ebc Mon Sep 17 00:00:00 2001
+From 908753dbd368e3ea31947df09e63f7d3d97062d7 Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Mon, 4 Jul 2016 17:25:12 +0800
 Subject: [PATCH] ASoC: Intel: Skylake: Add wm8731 machine driver
@@ -33,7 +33,7 @@ Conflicts:
  create mode 100644 sound/soc/intel/boards/apli_lhcrb_wm8731.c
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index a6be3c4..d04f776 100644
+index 23e99f2..2e8451a 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
 @@ -13652,6 +13652,11 @@ F:	Documentation/sound/soc/

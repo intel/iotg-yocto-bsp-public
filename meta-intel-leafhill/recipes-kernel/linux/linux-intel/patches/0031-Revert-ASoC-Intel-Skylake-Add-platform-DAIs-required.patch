@@ -1,4 +1,4 @@
-From 6b176a4bd32746953a12b60d1bf4ff539654b054 Mon Sep 17 00:00:00 2001
+From bb80a5f9d0d4b966f756abb2686205d55d84fef8 Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Wed, 25 Sep 2019 13:20:08 +0800
 Subject: [PATCH] Revert "ASoC: Intel: Skylake: Add platform DAIs required for

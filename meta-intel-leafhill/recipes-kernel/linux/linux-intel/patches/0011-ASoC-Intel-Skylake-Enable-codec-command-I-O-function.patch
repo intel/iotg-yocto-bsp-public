@@ -1,4 +1,4 @@
-From 4e43de8b7b625f5edf00c98c62689ae63bc7d95e Mon Sep 17 00:00:00 2001
+From 7a3e2f5bfd95770551d628df1526c952c7379f9a Mon Sep 17 00:00:00 2001
 From: "Bozek, DominikX" <dominikx.bozek@intel.com>
 Date: Tue, 12 Mar 2019 15:15:27 +0100
 Subject: [PATCH] ASoC: Intel: Skylake: Enable codec command I/O functionality
@@ -13,10 +13,10 @@ Signed-off-by: Dominik Bozek <dominikx.bozek@intel.com>
  1 file changed, 2 insertions(+)
 
 diff --git a/sound/soc/intel/skylake/skl.c b/sound/soc/intel/skylake/skl.c
-index e12b253..be64796 100644
+index d60d10c..d6577ba 100644
 --- a/sound/soc/intel/skylake/skl.c
 +++ b/sound/soc/intel/skylake/skl.c
-@@ -902,6 +902,8 @@ static void skl_probe_work(struct work_struct *work)
+@@ -916,6 +916,8 @@ static void skl_probe_work(struct work_struct *work)
  	}
  
  	/* configure PM */

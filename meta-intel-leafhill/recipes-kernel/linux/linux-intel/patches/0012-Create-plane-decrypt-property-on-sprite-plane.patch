@@ -1,4 +1,4 @@
-From 2b7164ed3622058742f019453163a0df4a7325c5 Mon Sep 17 00:00:00 2001
+From 77be06623fab9b03521995368f439db46f94e3c5 Mon Sep 17 00:00:00 2001
 From: Marvin Dares <marvin.dares@intel.com>
 Date: Tue, 27 Nov 2018 04:52:12 +0800
 Subject: [PATCH] Create plane decrypt property on sprite plane
@@ -12,10 +12,10 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 2 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/intel_sprite.c b/drivers/gpu/drm/i915/intel_sprite.c
-index b388a6b..bea90f9 100644
+index 2d69914..9984ddb 100644
 --- a/drivers/gpu/drm/i915/intel_sprite.c
 +++ b/drivers/gpu/drm/i915/intel_sprite.c
-@@ -1747,6 +1747,8 @@ struct intel_plane *
+@@ -1759,6 +1759,8 @@ struct intel_plane *
  					   DRM_MODE_ROTATE_0,
  					   supported_rotations);
  

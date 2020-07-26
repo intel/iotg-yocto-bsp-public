@@ -1,4 +1,4 @@
-From 65a561ba9f4229150ccec3f3d28a24db88722c45 Mon Sep 17 00:00:00 2001
+From bdbdfd51257652fb1787c37ac71074656c57eed7 Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:04:32 +0100
 Subject: [PATCH] intel_pstate: Disable write access to no_turbo sysfs
@@ -14,7 +14,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 7 insertions(+)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 584e3b5..265362f 100644
+index 93d3eed..a884891 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -58,6 +58,8 @@

@@ -1,4 +1,4 @@
-From a6ced404907cbd5d3f36ee25f9a8e231d8b287a1 Mon Sep 17 00:00:00 2001
+From 0552cb3f41de9434991bf01d151b258b7db327cd Mon Sep 17 00:00:00 2001
 From: CraigX Kewley <craigx.kewley@intel.com>
 Date: Wed, 22 Feb 2017 11:45:45 +0000
 Subject: [PATCH] ASoC: Intel: Skylake: Add extra platform DAIs

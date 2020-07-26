@@ -1,4 +1,4 @@
-From 5922224765bd0b1b1f40f48a51ce9ee74f411367 Mon Sep 17 00:00:00 2001
+From 9753953a18829d882f7b4c69e3adf585361af3f0 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 6 Dec 2016 11:18:21 +0800
 Subject: [PATCH] igb: Make igb_runtime_idle to autosuspend irregardless of

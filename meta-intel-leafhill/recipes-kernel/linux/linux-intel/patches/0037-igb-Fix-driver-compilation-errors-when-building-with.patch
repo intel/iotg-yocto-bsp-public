@@ -1,4 +1,4 @@
-From 35dfc08d84d72fabeae2832e5b67e3681e867dc3 Mon Sep 17 00:00:00 2001
+From 8ce6ea3354a6f83d9dc526f8a1806cb020574b89 Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Fri, 24 Mar 2017 09:37:08 +0800
 Subject: [PATCH] igb: Fix driver compilation errors when building without

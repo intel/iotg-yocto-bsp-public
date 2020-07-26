@@ -1,4 +1,4 @@
-From 9e1a3392fe34d383cf41c48c44a2298570cd7b9d Mon Sep 17 00:00:00 2001
+From e131492a3266b8371386750dab322f7a98b18c2a Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Fri, 22 Apr 2016 16:43:26 -0700
 Subject: [PATCH] drm/i915/splash: Support multiple connector/splash images.
@@ -59,10 +59,10 @@ index eb1bdc2..982eb12 100644
  	struct drm_property *broadcast_rgb_property;
  	struct drm_property *force_audio_property;
 diff --git a/drivers/gpu/drm/i915/intel_initial_modeset.c b/drivers/gpu/drm/i915/intel_initial_modeset.c
-index 60ffdb6..eb23597 100644
+index a3592ed..e783e15 100644
 --- a/drivers/gpu/drm/i915/intel_initial_modeset.c
 +++ b/drivers/gpu/drm/i915/intel_initial_modeset.c
-@@ -138,100 +138,152 @@ static bool attach_crtc(struct drm_device *dev, struct drm_encoder *encoder,
+@@ -143,100 +143,152 @@ static bool attach_crtc(struct drm_device *dev, struct drm_encoder *encoder,
  	return fb;
  }
  
@@ -276,7 +276,7 @@ index 60ffdb6..eb23597 100644
  static struct drm_display_mode *get_modeline(struct drm_i915_private *dev_priv,
  					     struct drm_connector *connector,
  					     int width, int height)
-@@ -329,8 +381,7 @@ static int update_connector_state(struct drm_atomic_state *state,
+@@ -334,8 +386,7 @@ static int update_connector_state(struct drm_atomic_state *state,
  static int update_primary_plane_state(struct drm_atomic_state *state,
  				      struct splash_screen_info *splash_info,
  				      struct drm_crtc *crtc,
@@ -286,7 +286,7 @@ index 60ffdb6..eb23597 100644
  {
  	int hdisplay, vdisplay;
  	struct drm_plane_state *primary_state;
-@@ -341,7 +392,7 @@ static int update_primary_plane_state(struct drm_atomic_state *state,
+@@ -346,7 +397,7 @@ static int update_primary_plane_state(struct drm_atomic_state *state,
  	if (ret)
  		return ret;
  	drm_mode_get_hv_timing(mode, &hdisplay, &vdisplay);
@@ -295,7 +295,7 @@ index 60ffdb6..eb23597 100644
  
  	primary_state->crtc_x = splash_info->crtc_x;
  	primary_state->crtc_y = splash_info->crtc_y;
-@@ -354,19 +405,39 @@ static int update_primary_plane_state(struct drm_atomic_state *state,
+@@ -359,19 +410,39 @@ static int update_primary_plane_state(struct drm_atomic_state *state,
  	primary_state->src_y = 0 << 16;
  	primary_state->src_w = splash_info->width << 16;
  	primary_state->src_h = splash_info->height << 16;
@@ -339,7 +339,7 @@ index 60ffdb6..eb23597 100644
  
  	if (get_encoder(connector))
  		crtc = get_encoder(connector)->crtc;
-@@ -383,11 +454,17 @@ static int update_atomic_state(struct drm_device *dev,
+@@ -388,11 +459,17 @@ static int update_atomic_state(struct drm_device *dev,
  		return ret;
  
  	/* set up primary plane if a splash screen is requested */
@@ -362,7 +362,7 @@ index 60ffdb6..eb23597 100644
  	}
  	return 0;
  }
-@@ -435,30 +512,22 @@ static void modeset_config_fn(struct work_struct *work)
+@@ -440,30 +517,22 @@ static void modeset_config_fn(struct work_struct *work)
  	struct drm_modeset_acquire_ctx ctx;
  	struct drm_plane *plane;
  	int ret;
@@ -395,7 +395,7 @@ index 60ffdb6..eb23597 100644
  		if (use_connector(connector)) {
  			encoder = get_encoder(connector);
  			if (!encoder)
-@@ -473,10 +542,6 @@ static void modeset_config_fn(struct work_struct *work)
+@@ -478,10 +547,6 @@ static void modeset_config_fn(struct work_struct *work)
  				WARN_ON(connector->index >= 20);
  				connector_mode[connector->index] = mode;
  			}
@@ -406,7 +406,7 @@ index 60ffdb6..eb23597 100644
  		}
  	}
  	drm_connector_list_iter_end(&conn_iter);
-@@ -485,7 +550,6 @@ static void modeset_config_fn(struct work_struct *work)
+@@ -490,7 +555,6 @@ static void modeset_config_fn(struct work_struct *work)
  		/* Try to detect attached connectors */
  		drm_connector_list_iter_begin(dev, &conn_iter);
  		drm_for_each_connector_iter(connector, &conn_iter) {
@@ -414,7 +414,7 @@ index 60ffdb6..eb23597 100644
  			if (connector->funcs && connector->funcs->detect)
  				connector->status = connector->funcs->detect(connector,
  									     true);
-@@ -507,10 +571,6 @@ static void modeset_config_fn(struct work_struct *work)
+@@ -512,10 +576,6 @@ static void modeset_config_fn(struct work_struct *work)
  					WARN_ON(connector->index >= 20);
  					connector_mode[connector->index] = mode;
  				}
@@ -425,7 +425,7 @@ index 60ffdb6..eb23597 100644
  			}
  		}
  		drm_connector_list_iter_end(&conn_iter);
-@@ -548,9 +608,8 @@ static void modeset_config_fn(struct work_struct *work)
+@@ -553,9 +613,8 @@ static void modeset_config_fn(struct work_struct *work)
  	drm_connector_list_iter_begin(dev, &conn_iter);
  	drm_for_each_connector_iter(connector, &conn_iter) {
  		if (connector_mode[connector->index]) {
@@ -437,7 +437,7 @@ index 60ffdb6..eb23597 100644
  			if (ret)
  				goto fail;
  		}
-@@ -628,15 +687,19 @@ static void initial_mode_destroy(struct drm_device *dev)
+@@ -633,15 +692,19 @@ static void initial_mode_destroy(struct drm_device *dev)
  void intel_initial_mode_config_fini(struct drm_device *dev)
  {
  	struct drm_i915_private *dev_priv = to_i915(dev);

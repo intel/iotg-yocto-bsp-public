@@ -1,4 +1,4 @@
-From 07f8001c2fb714d1df087707836d70c2a6471d9d Mon Sep 17 00:00:00 2001
+From 8fa133acabc1da95a39b9d60e41a1e3380e95f8c Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Tue, 11 Oct 2016 18:33:54 +0300
 Subject: [PATCH] serial: 8250_port: factor out serial8250_do_restore_context()
@@ -14,11 +14,11 @@ Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
  2 files changed, 47 insertions(+), 23 deletions(-)
 
 diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
-index 14b007e..9a47256 100644
+index c33dc53..941cd3c 100644
 --- a/drivers/tty/serial/8250/8250_port.c
 +++ b/drivers/tty/serial/8250/8250_port.c
-@@ -2636,6 +2636,42 @@ static unsigned int serial8250_get_baud_rate(struct uart_port *port,
- 				  port->uartclk);
+@@ -2642,6 +2642,42 @@ static unsigned int serial8250_get_baud_rate(struct uart_port *port,
+ 				  (port->uartclk + tolerance) / 16);
  }
  
 +void serial8250_do_restore_context(struct uart_port *port)
@@ -60,7 +60,7 @@ index 14b007e..9a47256 100644
  void
  serial8250_do_set_termios(struct uart_port *port, struct ktermios *termios,
  			  struct ktermios *old)
-@@ -2664,6 +2700,9 @@ static unsigned int serial8250_get_baud_rate(struct uart_port *port,
+@@ -2670,6 +2706,9 @@ static unsigned int serial8250_get_baud_rate(struct uart_port *port,
  	spin_lock_irqsave(&port->lock, flags);
  
  	up->lcr = cval;					/* Save computed LCR */
@@ -70,7 +70,7 @@ index 14b007e..9a47256 100644
  
  	if (up->capabilities & UART_CAP_FIFO && port->fifosize > 1) {
  		/* NOTE: If fifo_bug is not set, a user can set RX_trigger. */
-@@ -2729,8 +2768,6 @@ static unsigned int serial8250_get_baud_rate(struct uart_port *port,
+@@ -2735,8 +2774,6 @@ static unsigned int serial8250_get_baud_rate(struct uart_port *port,
  	if (up->capabilities & UART_CAP_RTOIE)
  		up->ier |= UART_IER_RTOIE;
  
@@ -79,7 +79,7 @@ index 14b007e..9a47256 100644
  	if (up->capabilities & UART_CAP_EFR) {
  		unsigned char efr = 0;
  		/*
-@@ -2741,30 +2778,12 @@ static unsigned int serial8250_get_baud_rate(struct uart_port *port,
+@@ -2747,30 +2784,12 @@ static unsigned int serial8250_get_baud_rate(struct uart_port *port,
  		if (termios->c_cflag & CRTSCTS)
  			efr |= UART_EFR_CTS;
  

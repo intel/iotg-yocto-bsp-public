@@ -1,4 +1,4 @@
-From ee81a61d3a01a1d69c4f3f19a98dde2e2d76e3b3 Mon Sep 17 00:00:00 2001
+From f3c8aee6f3702503f35ac90a0d27ff35fda44d3f Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Fri, 24 May 2019 10:46:52 +0800
 Subject: [PATCH] cpufreq: intel_tfm_gov: convert to use kobj_attribute

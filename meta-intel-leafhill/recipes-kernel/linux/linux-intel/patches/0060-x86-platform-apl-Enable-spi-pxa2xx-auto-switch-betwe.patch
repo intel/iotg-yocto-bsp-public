@@ -1,4 +1,4 @@
-From fd42cbcb4ae5d46d0fbfe117393383e8f8ef773e Mon Sep 17 00:00:00 2001
+From 7ba0b76f12e9eecc0cadc15d17806bc2a22e20c1 Mon Sep 17 00:00:00 2001
 From: Sachin Mokashi <sachinx.mokashi@intel.com>
 Date: Thu, 5 Oct 2017 13:28:07 +0800
 Subject: [PATCH] x86/platform/apl: Enable spi-pxa2xx auto switch between PIO

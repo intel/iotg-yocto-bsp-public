@@ -1,4 +1,4 @@
-From 31bd61f60dc569170611057dd458e263bd510d9c Mon Sep 17 00:00:00 2001
+From 8084c17949e60b42fd685ee3bc851933e79cbada Mon Sep 17 00:00:00 2001
 From: Cezary Rojewski <cezary.rojewski@intel.com>
 Date: Thu, 20 Sep 2018 11:23:31 +0200
 Subject: [PATCH] ASoC: Intel: Skylake: Provide tplg_name module param
@@ -28,7 +28,7 @@ index 805c7c1..a36fdee 100644
  		ret = request_firmware(&fw, "dfw_sst.bin", bus->dev);
  		if (ret < 0) {
 diff --git a/sound/soc/intel/skylake/skl.c b/sound/soc/intel/skylake/skl.c
-index c16ad3b..e12b253 100644
+index 396fc48..d60d10c 100644
 --- a/sound/soc/intel/skylake/skl.c
 +++ b/sound/soc/intel/skylake/skl.c
 @@ -39,6 +39,10 @@
@@ -42,7 +42,7 @@ index c16ad3b..e12b253 100644
  #if !IS_ENABLED(CONFIG_SND_SOC_INTEL_CNL_FPGA)
  static struct skl_machine_pdata skl_dmic_data;
  #endif
-@@ -1051,7 +1055,11 @@ static int skl_probe(struct pci_dev *pci,
+@@ -1065,7 +1069,11 @@ static int skl_probe(struct pci_dev *pci,
  	if (err < 0)
  		goto out_nhlt_free;
  

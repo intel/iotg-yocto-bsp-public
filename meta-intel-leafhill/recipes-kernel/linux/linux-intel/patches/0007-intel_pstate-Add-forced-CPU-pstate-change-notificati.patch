@@ -1,4 +1,4 @@
-From 1d147b318bd883f4a9dfca9557339f738367d4c8 Mon Sep 17 00:00:00 2001
+From 0624733796ce6f8fda9dc1ecd87cf036ab4af60f Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:11:48 +0100
 Subject: [PATCH] intel_pstate: Add forced CPU pstate change notification
@@ -13,7 +13,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 265362f..fd4b25e9 100644
+index a884891..6f6ecf6 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -56,6 +56,9 @@

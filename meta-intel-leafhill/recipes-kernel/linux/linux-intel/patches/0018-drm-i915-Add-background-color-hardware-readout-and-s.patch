@@ -1,4 +1,4 @@
-From 8a29fa4f47b1dda0e8277476648bdb81cced25e7 Mon Sep 17 00:00:00 2001
+From dc6564e21e3a09a369c20294058d938ac13bb445 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Mon, 30 Sep 2019 15:47:07 -0700
 Subject: [PATCH] drm/i915: Add background color hardware readout and state
@@ -24,10 +24,10 @@ Reviewed-by: Ville Syrjälä <ville.syrjala@linux.intel.com>
  1 file changed, 31 insertions(+)
 
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index ec17e0e..16f5a4a 100644
+index 8dac1d2..0232b02 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
-@@ -9589,6 +9589,7 @@ static bool haswell_get_pipe_config(struct intel_crtc *crtc,
+@@ -9595,6 +9595,7 @@ static bool haswell_get_pipe_config(struct intel_crtc *crtc,
  	struct drm_i915_private *dev_priv = to_i915(crtc->base.dev);
  	enum intel_display_power_domain power_domain;
  	u64 power_domain_mask;
@@ -35,7 +35,7 @@ index ec17e0e..16f5a4a 100644
  	bool active;
  
  	intel_crtc_init_scalers(crtc, pipe_config);
-@@ -9668,6 +9669,15 @@ static bool haswell_get_pipe_config(struct intel_crtc *crtc,
+@@ -9674,6 +9675,15 @@ static bool haswell_get_pipe_config(struct intel_crtc *crtc,
  		pipe_config->pixel_multiplier = 1;
  	}
  
@@ -51,7 +51,7 @@ index ec17e0e..16f5a4a 100644
  out:
  	for_each_power_domain(power_domain, power_domain_mask)
  		intel_display_power_put(dev_priv, power_domain);
-@@ -11093,6 +11103,9 @@ static void intel_dump_pipe_config(struct intel_crtc *crtc,
+@@ -11099,6 +11109,9 @@ static void intel_dump_pipe_config(struct intel_crtc *crtc,
  				      drm_rect_width(&state->base.dst),
  				      drm_rect_height(&state->base.dst));
  	}
@@ -61,7 +61,7 @@ index ec17e0e..16f5a4a 100644
  }
  
  static bool check_digital_port_conflicts(struct drm_atomic_state *state)
-@@ -11437,6 +11450,16 @@ static void __printf(3, 4)
+@@ -11443,6 +11456,16 @@ static void __printf(3, 4)
  	} \
  } while (0)
  
@@ -78,7 +78,7 @@ index ec17e0e..16f5a4a 100644
  #define PIPE_CONF_CHECK_I(name) do { \
  	if (current_config->name != pipe_config->name) { \
  		pipe_config_err(adjust, __stringify(name), \
-@@ -11688,6 +11711,14 @@ static void __printf(3, 4)
+@@ -11694,6 +11717,14 @@ static void __printf(3, 4)
  
  	PIPE_CONF_CHECK_I(min_voltage_level);
  

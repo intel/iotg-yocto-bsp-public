@@ -1,4 +1,4 @@
-From 955ea8859fa57ebb543db5981d3a03168a0bcf36 Mon Sep 17 00:00:00 2001
+From 54225b031ed2bb2b26b59eaabe3cc09d2e645058 Mon Sep 17 00:00:00 2001
 From: Chen Meng J <meng.j.chen@intel.com>
 Date: Wed, 22 Jan 2020 15:52:44 +0800
 Subject: [PATCH] media: mcp4725: add suffix for subdev name

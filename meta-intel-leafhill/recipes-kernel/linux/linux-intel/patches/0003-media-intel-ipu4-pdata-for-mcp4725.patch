@@ -1,4 +1,4 @@
-From 5daf81f0045a2d20775e3bc6d5d3db637290bc73 Mon Sep 17 00:00:00 2001
+From e4d3b07e31a08591b6b1c7d4b43bc3ff61bceca4 Mon Sep 17 00:00:00 2001
 From: Chen Meng J <meng.j.chen@intel.com>
 Date: Mon, 13 Jan 2020 14:16:38 +0800
 Subject: [PATCH] media: intel-ipu4: pdata for mcp4725

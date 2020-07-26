@@ -1,4 +1,4 @@
-From 2001595d05e972136f998d77cbccca9881c714bf Mon Sep 17 00:00:00 2001
+From bc87e9005071c07f161f8225aa8d7d0a1381412c Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 27 Sep 2017 14:01:17 +0800
 Subject: [PATCH] Schedule suspend after finish the processing of received

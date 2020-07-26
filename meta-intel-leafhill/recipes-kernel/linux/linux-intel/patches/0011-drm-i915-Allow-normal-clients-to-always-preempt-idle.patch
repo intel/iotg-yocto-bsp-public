@@ -1,4 +1,4 @@
-From dccad2998bccc024ae2f93cc3ba7e3a03bb3c73d Mon Sep 17 00:00:00 2001
+From ee2c9ce2806631362ebce6a8f923f16dee575ad3 Mon Sep 17 00:00:00 2001
 From: Chris Wilson <chris@chris-wilson.co.uk>
 Date: Mon, 4 Feb 2019 08:41:05 +0000
 Subject: [PATCH] drm/i915: Allow normal clients to always preempt idle

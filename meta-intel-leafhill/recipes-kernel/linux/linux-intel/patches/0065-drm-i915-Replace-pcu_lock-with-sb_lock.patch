@@ -1,4 +1,4 @@
-From 9e3a00658552468cca8f6befc4433147e4f072b5 Mon Sep 17 00:00:00 2001
+From dccc2674662685d2b58fffe6fcf6d7d9408d6f47 Mon Sep 17 00:00:00 2001
 From: Chris Wilson <chris@chris-wilson.co.uk>
 Date: Fri, 26 Apr 2019 09:17:21 +0100
 Subject: [PATCH] drm/i915: Replace pcu_lock with sb_lock
@@ -35,10 +35,10 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  11 files changed, 91 insertions(+), 187 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/gvt/scheduler.c b/drivers/gpu/drm/i915/gvt/scheduler.c
-index b5aa2cb..546cafb 100644
+index ba96f2b..800e15c4 100644
 --- a/drivers/gpu/drm/i915/gvt/scheduler.c
 +++ b/drivers/gpu/drm/i915/gvt/scheduler.c
-@@ -270,15 +270,16 @@ static void active_hp_work(struct work_struct *work)
+@@ -268,15 +268,16 @@ static void active_hp_work(struct work_struct *work)
  	struct intel_gvt *gvt =
  		container_of(work, struct intel_gvt, active_hp_work);
  	struct drm_i915_private *dev_priv = gvt->dev_priv;
@@ -160,7 +160,7 @@ index 740dae1..6f8a687 100644
  	struct intel_gen6_power_mgmt gt_pm;
  
 diff --git a/drivers/gpu/drm/i915/i915_irq.c b/drivers/gpu/drm/i915/i915_irq.c
-index 5e0e9f1..0cf6740 100644
+index 8bf13da..a23eefd 100644
 --- a/drivers/gpu/drm/i915/i915_irq.c
 +++ b/drivers/gpu/drm/i915/i915_irq.c
 @@ -1323,7 +1323,7 @@ static void gen6_pm_rps_work(struct work_struct *work)
@@ -449,10 +449,10 @@ index 7b4906e..8170a0e 100644
  	intel_update_cdclk(dev_priv);
  
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index b62645c..3c384a1 100644
+index 4182221..eb4871b 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
-@@ -5092,10 +5092,8 @@ void hsw_enable_ips(const struct intel_crtc_state *crtc_state)
+@@ -5098,10 +5098,8 @@ void hsw_enable_ips(const struct intel_crtc_state *crtc_state)
  	WARN_ON(!(crtc_state->active_planes & ~BIT(PLANE_CURSOR)));
  
  	if (IS_BROADWELL(dev_priv)) {
@@ -463,7 +463,7 @@ index b62645c..3c384a1 100644
  		/* Quoting Art Runyan: "its not safe to expect any particular
  		 * value in IPS_CTL bit 31 after enabling IPS through the
  		 * mailbox." Moreover, the mailbox may return a bogus state,
-@@ -5125,9 +5123,7 @@ void hsw_disable_ips(const struct intel_crtc_state *crtc_state)
+@@ -5131,9 +5129,7 @@ void hsw_disable_ips(const struct intel_crtc_state *crtc_state)
  		return;
  
  	if (IS_BROADWELL(dev_priv)) {
@@ -473,7 +473,7 @@ index b62645c..3c384a1 100644
  		/*
  		 * Wait for PCODE to finish disabling IPS. The BSpec specified
  		 * 42ms timeout value leads to occasional timeouts so use 100ms
-@@ -9088,11 +9084,9 @@ static uint32_t hsw_read_dcomp(struct drm_i915_private *dev_priv)
+@@ -9094,11 +9090,9 @@ static uint32_t hsw_read_dcomp(struct drm_i915_private *dev_priv)
  static void hsw_write_dcomp(struct drm_i915_private *dev_priv, uint32_t val)
  {
  	if (IS_HASWELL(dev_priv)) {
@@ -501,7 +501,7 @@ index d9869b6..9d641bb 100644
  			DRM_ERROR("Failed to initiate HDCP key load (%d)\n",
  			          ret);
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 9762948c..3d4d940 100644
+index aaf156c..4e1942c 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
 @@ -328,8 +328,6 @@ static void chv_set_memory_dvfs(struct drm_i915_private *dev_priv, bool enable)
@@ -592,7 +592,7 @@ index 9762948c..3d4d940 100644
  	/*
  	 * Some skl systems, pre-release machines in particular,
  	 * don't actually have an SAGV.
-@@ -6167,8 +6150,6 @@ void vlv_wm_get_hw_state(struct drm_device *dev)
+@@ -6171,8 +6154,6 @@ void vlv_wm_get_hw_state(struct drm_device *dev)
  	wm->level = VLV_WM_LEVEL_PM2;
  
  	if (IS_CHERRYVIEW(dev_priv)) {
@@ -601,7 +601,7 @@ index 9762948c..3d4d940 100644
  		val = vlv_punit_read(dev_priv, PUNIT_REG_DSPFREQ);
  		if (val & DSP_MAXFIFO_PM5_ENABLE)
  			wm->level = VLV_WM_LEVEL_PM5;
-@@ -6196,8 +6177,6 @@ void vlv_wm_get_hw_state(struct drm_device *dev)
+@@ -6200,8 +6181,6 @@ void vlv_wm_get_hw_state(struct drm_device *dev)
  			if ((val & FORCE_DDR_HIGH_FREQ) == 0)
  				wm->level = VLV_WM_LEVEL_DDR_DVFS;
  		}
@@ -610,7 +610,7 @@ index 9762948c..3d4d940 100644
  	}
  
  	for_each_intel_crtc(dev, crtc) {
-@@ -6836,7 +6815,7 @@ void gen6_rps_busy(struct drm_i915_private *dev_priv)
+@@ -6840,7 +6819,7 @@ void gen6_rps_busy(struct drm_i915_private *dev_priv)
  {
  	struct intel_rps *rps = &dev_priv->gt_pm.rps;
  
@@ -619,7 +619,7 @@ index 9762948c..3d4d940 100644
  	if (rps->enabled) {
  		u8 freq;
  
-@@ -6859,7 +6838,7 @@ void gen6_rps_busy(struct drm_i915_private *dev_priv)
+@@ -6863,7 +6842,7 @@ void gen6_rps_busy(struct drm_i915_private *dev_priv)
  					rps->max_freq_softlimit)))
  			DRM_DEBUG_DRIVER("Failed to set idle frequency\n");
  	}
@@ -628,7 +628,7 @@ index 9762948c..3d4d940 100644
  }
  
  void gen6_rps_idle(struct drm_i915_private *dev_priv)
-@@ -6873,7 +6852,7 @@ void gen6_rps_idle(struct drm_i915_private *dev_priv)
+@@ -6877,7 +6856,7 @@ void gen6_rps_idle(struct drm_i915_private *dev_priv)
  	 */
  	gen6_disable_rps_interrupts(dev_priv);
  
@@ -637,7 +637,7 @@ index 9762948c..3d4d940 100644
  	if (rps->enabled) {
  		if (IS_VALLEYVIEW(dev_priv) || IS_CHERRYVIEW(dev_priv))
  			vlv_set_rps_idle(dev_priv);
-@@ -6883,7 +6862,7 @@ void gen6_rps_idle(struct drm_i915_private *dev_priv)
+@@ -6887,7 +6866,7 @@ void gen6_rps_idle(struct drm_i915_private *dev_priv)
  		I915_WRITE(GEN6_PMINTRMSK,
  			   gen6_sanitize_rps_pm_mask(dev_priv, ~0));
  	}
@@ -646,7 +646,7 @@ index 9762948c..3d4d940 100644
  }
  
  void gen6_rps_boost(struct i915_request *rq,
-@@ -6924,7 +6903,7 @@ int intel_set_rps(struct drm_i915_private *dev_priv, u8 val)
+@@ -6928,7 +6907,7 @@ int intel_set_rps(struct drm_i915_private *dev_priv, u8 val)
  	struct intel_rps *rps = &dev_priv->gt_pm.rps;
  	int err;
  
@@ -655,7 +655,7 @@ index 9762948c..3d4d940 100644
  	GEM_BUG_ON(val > rps->max_freq);
  	GEM_BUG_ON(val < rps->min_freq);
  
-@@ -7423,7 +7402,7 @@ static void gen6_update_ring_freq(struct drm_i915_private *dev_priv)
+@@ -7427,7 +7406,7 @@ static void gen6_update_ring_freq(struct drm_i915_private *dev_priv)
  	unsigned int max_gpu_freq, min_gpu_freq;
  	struct cpufreq_policy *policy;
  
@@ -664,7 +664,7 @@ index 9762948c..3d4d940 100644
  
  	if (rps->max_freq <= rps->min_freq)
  		return;
-@@ -8720,8 +8699,6 @@ void intel_init_gt_powersave(struct drm_i915_private *dev_priv)
+@@ -8724,8 +8703,6 @@ void intel_init_gt_powersave(struct drm_i915_private *dev_priv)
  		intel_runtime_pm_get(dev_priv);
  	}
  
@@ -673,7 +673,7 @@ index 9762948c..3d4d940 100644
  	i915_rc6_ctx_wa_init(dev_priv);
  
  	/* Initialize RPS limits (for userspace) */
-@@ -8761,8 +8738,8 @@ void intel_init_gt_powersave(struct drm_i915_private *dev_priv)
+@@ -8765,8 +8742,8 @@ void intel_init_gt_powersave(struct drm_i915_private *dev_priv)
  
  	/* Finally allow us to boost to max by default */
  	rps->boost_freq = rps->max_freq;
@@ -684,7 +684,7 @@ index 9762948c..3d4d940 100644
  }
  
  void intel_cleanup_gt_powersave(struct drm_i915_private *dev_priv)
-@@ -8806,7 +8783,7 @@ void intel_sanitize_gt_powersave(struct drm_i915_private *dev_priv)
+@@ -8810,7 +8787,7 @@ void intel_sanitize_gt_powersave(struct drm_i915_private *dev_priv)
  
  static inline void intel_disable_llc_pstate(struct drm_i915_private *i915)
  {
@@ -693,7 +693,7 @@ index 9762948c..3d4d940 100644
  
  	if (!i915->gt_pm.llc_pstate.enabled)
  		return;
-@@ -8818,7 +8795,7 @@ static inline void intel_disable_llc_pstate(struct drm_i915_private *i915)
+@@ -8822,7 +8799,7 @@ static inline void intel_disable_llc_pstate(struct drm_i915_private *i915)
  
  static void __intel_disable_rc6(struct drm_i915_private *dev_priv)
  {
@@ -702,7 +702,7 @@ index 9762948c..3d4d940 100644
  
  	if (!dev_priv->gt_pm.rc6.enabled)
  		return;
-@@ -8837,14 +8814,14 @@ static void __intel_disable_rc6(struct drm_i915_private *dev_priv)
+@@ -8841,14 +8818,14 @@ static void __intel_disable_rc6(struct drm_i915_private *dev_priv)
  
  static void intel_disable_rc6(struct drm_i915_private *dev_priv)
  {
@@ -720,7 +720,7 @@ index 9762948c..3d4d940 100644
  
  	if (!dev_priv->gt_pm.rps.enabled)
  		return;
-@@ -8865,19 +8842,19 @@ static void intel_disable_rps(struct drm_i915_private *dev_priv)
+@@ -8869,19 +8846,19 @@ static void intel_disable_rps(struct drm_i915_private *dev_priv)
  
  void intel_disable_gt_powersave(struct drm_i915_private *dev_priv)
  {
@@ -743,7 +743,7 @@ index 9762948c..3d4d940 100644
  
  	if (i915->gt_pm.llc_pstate.enabled)
  		return;
-@@ -8889,7 +8866,7 @@ static inline void intel_enable_llc_pstate(struct drm_i915_private *i915)
+@@ -8893,7 +8870,7 @@ static inline void intel_enable_llc_pstate(struct drm_i915_private *i915)
  
  static void intel_enable_rc6(struct drm_i915_private *dev_priv)
  {
@@ -752,7 +752,7 @@ index 9762948c..3d4d940 100644
  
  	if (dev_priv->gt_pm.rc6.enabled)
  		return;
-@@ -8915,7 +8892,7 @@ static void intel_enable_rps(struct drm_i915_private *dev_priv)
+@@ -8919,7 +8896,7 @@ static void intel_enable_rps(struct drm_i915_private *dev_priv)
  {
  	struct intel_rps *rps = &dev_priv->gt_pm.rps;
  
@@ -761,7 +761,7 @@ index 9762948c..3d4d940 100644
  
  	if (rps->enabled)
  		return;
-@@ -8950,7 +8927,7 @@ void intel_enable_gt_powersave(struct drm_i915_private *dev_priv)
+@@ -8954,7 +8931,7 @@ void intel_enable_gt_powersave(struct drm_i915_private *dev_priv)
  	if (intel_vgpu_active(dev_priv))
  		return;
  
@@ -770,7 +770,7 @@ index 9762948c..3d4d940 100644
  
  	if (HAS_RC6(dev_priv))
  		intel_enable_rc6(dev_priv);
-@@ -8958,7 +8935,7 @@ void intel_enable_gt_powersave(struct drm_i915_private *dev_priv)
+@@ -8962,7 +8939,7 @@ void intel_enable_gt_powersave(struct drm_i915_private *dev_priv)
  	if (HAS_LLC(dev_priv))
  		intel_enable_llc_pstate(dev_priv);
  
@@ -779,7 +779,7 @@ index 9762948c..3d4d940 100644
  }
  
  static void ibx_init_clock_gating(struct drm_i915_private *dev_priv)
-@@ -9972,22 +9949,20 @@ static inline int gen7_check_mailbox_status(struct drm_i915_private *dev_priv)
+@@ -9976,22 +9953,20 @@ static inline int gen7_check_mailbox_status(struct drm_i915_private *dev_priv)
  	}
  }
  
@@ -806,7 +806,7 @@ index 9762948c..3d4d940 100644
  
  	I915_WRITE_FW(GEN6_PCODE_DATA, *val);
  	I915_WRITE_FW(GEN6_PCODE_DATA1, 0);
-@@ -9995,11 +9970,8 @@ int sandybridge_pcode_read(struct drm_i915_private *dev_priv, u32 mbox, u32 *val
+@@ -9999,11 +9974,8 @@ int sandybridge_pcode_read(struct drm_i915_private *dev_priv, u32 mbox, u32 *val
  
  	if (__intel_wait_for_register_fw(dev_priv,
  					 GEN6_PCODE_MAILBOX, GEN6_PCODE_READY, 0,
@@ -819,7 +819,7 @@ index 9762948c..3d4d940 100644
  
  	*val = I915_READ_FW(GEN6_PCODE_DATA);
  	I915_WRITE_FW(GEN6_PCODE_DATA, 0);
-@@ -10009,33 +9981,40 @@ int sandybridge_pcode_read(struct drm_i915_private *dev_priv, u32 mbox, u32 *val
+@@ -10013,33 +9985,40 @@ int sandybridge_pcode_read(struct drm_i915_private *dev_priv, u32 mbox, u32 *val
  	else
  		status = gen6_check_mailbox_status(dev_priv);
  
@@ -871,7 +871,7 @@ index 9762948c..3d4d940 100644
  
  	I915_WRITE_FW(GEN6_PCODE_DATA, val);
  	I915_WRITE_FW(GEN6_PCODE_DATA1, 0);
-@@ -10044,11 +10023,8 @@ int sandybridge_pcode_write_timeout(struct drm_i915_private *dev_priv,
+@@ -10048,11 +10027,8 @@ int sandybridge_pcode_write_timeout(struct drm_i915_private *dev_priv,
  	if (__intel_wait_for_register_fw(dev_priv,
  					 GEN6_PCODE_MAILBOX, GEN6_PCODE_READY, 0,
  					 fast_timeout_us, slow_timeout_ms,
@@ -884,7 +884,7 @@ index 9762948c..3d4d940 100644
  
  	I915_WRITE_FW(GEN6_PCODE_DATA, 0);
  
-@@ -10057,13 +10033,28 @@ int sandybridge_pcode_write_timeout(struct drm_i915_private *dev_priv,
+@@ -10061,13 +10037,28 @@ int sandybridge_pcode_write_timeout(struct drm_i915_private *dev_priv,
  	else
  		status = gen6_check_mailbox_status(dev_priv);
  
@@ -915,7 +915,7 @@ index 9762948c..3d4d940 100644
  }
  
  static bool skl_pcode_try_request(struct drm_i915_private *dev_priv, u32 mbox,
-@@ -10072,7 +10063,7 @@ static bool skl_pcode_try_request(struct drm_i915_private *dev_priv, u32 mbox,
+@@ -10076,7 +10067,7 @@ static bool skl_pcode_try_request(struct drm_i915_private *dev_priv, u32 mbox,
  {
  	u32 val = request;
  
@@ -924,7 +924,7 @@ index 9762948c..3d4d940 100644
  
  	return *status || ((val & reply_mask) == reply);
  }
-@@ -10102,7 +10093,7 @@ int skl_pcode_request(struct drm_i915_private *dev_priv, u32 mbox, u32 request,
+@@ -10106,7 +10097,7 @@ int skl_pcode_request(struct drm_i915_private *dev_priv, u32 mbox, u32 request,
  	u32 status;
  	int ret;
  
@@ -933,7 +933,7 @@ index 9762948c..3d4d940 100644
  
  #define COND skl_pcode_try_request(dev_priv, mbox, request, reply_mask, reply, \
  				   &status)
-@@ -10138,6 +10129,7 @@ int skl_pcode_request(struct drm_i915_private *dev_priv, u32 mbox, u32 request,
+@@ -10142,6 +10133,7 @@ int skl_pcode_request(struct drm_i915_private *dev_priv, u32 mbox, u32 request,
  	preempt_enable();
  
  out:
@@ -941,7 +941,7 @@ index 9762948c..3d4d940 100644
  	return ret ? ret : status;
  #undef COND
  }
-@@ -10207,7 +10199,7 @@ int intel_freq_opcode(struct drm_i915_private *dev_priv, int val)
+@@ -10211,7 +10203,7 @@ int intel_freq_opcode(struct drm_i915_private *dev_priv, int val)
  
  void intel_pm_setup(struct drm_i915_private *dev_priv)
  {

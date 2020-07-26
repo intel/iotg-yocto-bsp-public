@@ -1,0 +1,95 @@
+From d3b04f7a8b7cb54362b825c6e54c8e28a66fd09a Mon Sep 17 00:00:00 2001
+From: Chen Meng J <meng.j.chen@intel.com>
+Date: Mon, 27 Apr 2020 22:44:14 +0800
+Subject: [PATCH] media: mcp4725: probe device by i2c read
+
+Message for Open Source:
+probe device by i2c read.
+won't register v4l2 subdev if mcp4725 doesn't exist.
+
+Message for Internal:
+probe device by i2c read.
+won't register v4l2 subdev if mcp4725 doesn't exist.
+
+Test Platform:
+APL
+
+Tracked-On: #H1507917333
+Change-Id: If87522eade5c57d1e6716acaba081dc95b3c6b3d
+Signed-off-by: Chen Meng J <meng.j.chen@intel.com>
+---
+ drivers/media/i2c/mcp4725.c | 37 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/drivers/media/i2c/mcp4725.c b/drivers/media/i2c/mcp4725.c
+index 8305ac4..2fc6368 100644
+--- a/drivers/media/i2c/mcp4725.c
++++ b/drivers/media/i2c/mcp4725.c
+@@ -47,6 +47,30 @@ static inline struct mcp4725_device *sd_to_mcp4725_vcm(struct v4l2_subdev *subde
+ 	return container_of(subdev, struct mcp4725_device, sd);
+ }
+ 
++static int mcp4725_i2c_read(struct mcp4725_device *mcp4725,
++	u16 *data, u8 *powerdown)
++{
++	struct i2c_client *client = v4l2_get_subdevdata(&mcp4725->sd);
++	int ret;
++	u8 buf[3];
++
++	ret = i2c_master_recv(client, buf, 3);
++	if (ret < 0) {
++		dev_err(mcp4725->sd.dev, "%s ret %d", __func__, ret);
++		return ret;
++	}
++	if (ret != 3) {
++		dev_err(mcp4725->sd.dev, "%s ret -EIO", __func__);
++		return -EIO;
++	}
++	dev_dbg(mcp4725->sd.dev, "%s ret success", __func__);
++
++	*powerdown = buf[0];
++	*data = (buf[1] << 4) | (buf[2] >> 4);
++
++	return 0;
++}
++
+ static int mcp4725_i2c_write(struct mcp4725_device *mcp4725,
+ 	u16 data, bool suspend)
+ {
+@@ -169,6 +193,8 @@ static int mcp4725_probe(struct i2c_client *client,
+ {
+ 	struct mcp4725_device *mcp4725_dev;
+ 	int rval;
++	u16 data;
++	u8 powerdown;
+ 
+ 	dev_dbg(&client->dev, "%s", __func__);
+ 
+@@ -187,6 +213,13 @@ static int mcp4725_probe(struct i2c_client *client,
+ 		sizeof(mcp4725_dev->sd.name),
+ 		MCP4725_NAME " %c", mcp4725_dev->pdata->suffix);
+ 
++	rval = mcp4725_i2c_read(mcp4725_dev, &data, &powerdown);
++	if (rval) {
++		dev_err(mcp4725_dev->sd.dev,
++			"%s mcp4725_i2c_read %d", __func__, rval);
++		goto err_no_device;
++	}
++
+ 	rval = mcp4725_init_controls(mcp4725_dev);
+ 	if (rval) {
+ 		dev_err(mcp4725_dev->sd.dev,
+@@ -221,6 +254,10 @@ static int mcp4725_probe(struct i2c_client *client,
+ 	mcp4725_subdev_cleanup(mcp4725_dev);
+ 	dev_err(mcp4725_dev->sd.dev, "Probe failed: %d\n", rval);
+ 	return rval;
++
++err_no_device:
++	devm_kfree(&client->dev, mcp4725_dev);
++	return rval;
+ }
+ 
+ static int mcp4725_remove(struct i2c_client *client)
+-- 
+1.9.1
+

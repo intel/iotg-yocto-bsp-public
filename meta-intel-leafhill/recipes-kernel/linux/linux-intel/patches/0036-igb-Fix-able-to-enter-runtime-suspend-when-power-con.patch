@@ -1,4 +1,4 @@
-From 18dce61a9b88c7c0079c931e5903c26072df5f08 Mon Sep 17 00:00:00 2001
+From 4dc3b8cc242ad61d1d35e2ff7c9219a798d2c6c2 Mon Sep 17 00:00:00 2001
 From: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
 Date: Wed, 22 Feb 2017 14:07:15 +0800
 Subject: [PATCH] igb: Fix able to enter runtime suspend when power/control is

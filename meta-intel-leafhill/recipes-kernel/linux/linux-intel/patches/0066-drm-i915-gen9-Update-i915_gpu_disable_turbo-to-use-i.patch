@@ -1,4 +1,4 @@
-From 4fbbc875c7022ad7c809272c0044230eaeaa3085 Mon Sep 17 00:00:00 2001
+From f1359395fb19dab72519d3d3511ea23a2302e160 Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Tue, 8 Oct 2019 15:00:32 +0800
 Subject: [PATCH] drm/i915/gen9: Update i915_gpu_disable_turbo() to use
@@ -12,10 +12,10 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_pm.c b/drivers/gpu/drm/i915/intel_pm.c
-index 3d4d940..4a41070 100644
+index 4e1942c..9f07f3f 100644
 --- a/drivers/gpu/drm/i915/intel_pm.c
 +++ b/drivers/gpu/drm/i915/intel_pm.c
-@@ -8440,11 +8440,11 @@ bool i915_gpu_disable_turbo(void)
+@@ -8444,11 +8444,11 @@ bool i915_gpu_disable_turbo(void)
  	/* If the current freq > rp1, clamp it down */
  	if (rps->cur_freq > rps->rp1_freq) {
  		intel_runtime_pm_get(i915_tfm_dev);

@@ -1,4 +1,4 @@
-From 341b372b8b0e26660d648f992544bbc6f7afc673 Mon Sep 17 00:00:00 2001
+From e0a5efa356ab121a71e04098aadaa06fb383794f Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 17:24:10 +0800
 Subject: [PATCH] igb: Do not disconnect netdevice from system during runtime

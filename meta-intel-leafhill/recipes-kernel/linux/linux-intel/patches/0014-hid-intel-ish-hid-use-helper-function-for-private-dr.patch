@@ -1,4 +1,4 @@
-From 3ec6c63dde5f55b32043189befbb829f328a1cc6 Mon Sep 17 00:00:00 2001
+From 07ec11178ee99b02a4d3cd1ad56e10d5ef0e34fb Mon Sep 17 00:00:00 2001
 From: Even Xu <even.xu@intel.com>
 Date: Fri, 23 Dec 2016 09:22:24 +0800
 Subject: [PATCH] hid: intel-ish-hid: use helper function for private driver

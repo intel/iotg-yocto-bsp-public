@@ -1,4 +1,4 @@
-From ce0be089b84cdf0d075aa664b24805f9f77f5388 Mon Sep 17 00:00:00 2001
+From e8658fffaeb089e432acc8c5c862a16615660e49 Mon Sep 17 00:00:00 2001
 From: Vitaly Wool <vwool@dev.rtsoft.ru>
 Date: Thu, 30 Jun 2016 07:06:52 +0000
 Subject: [PATCH] libata: enable atapi_an by default
@@ -15,10 +15,10 @@ Signed-off-by: Lim Key Seong <key.seong.lim@intel.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index b45b6f7..3c4cfe9 100644
+index 6b372fa..8cddb04 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
-@@ -167,7 +167,7 @@ struct ata_force_ent {
+@@ -166,7 +166,7 @@ struct ata_force_ent {
  module_param_named(allow_tpm, libata_allow_tpm, int, 0444);
  MODULE_PARM_DESC(allow_tpm, "Permit the use of TPM commands (0=off [default], 1=on)");
  

@@ -1,4 +1,4 @@
-From bafa58d7afe1cda6505e11c32cf43e662f423905 Mon Sep 17 00:00:00 2001
+From c9b5ea3d5ff4413d2129a748f07da38492246cd6 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Wed, 16 May 2018 14:46:40 -0700
 Subject: [PATCH] drm/i915: Enable NV12 on E0+ steppings
@@ -13,7 +13,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  1 file changed, 8 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_display.c b/drivers/gpu/drm/i915/intel_display.c
-index b62645c..bfde598 100644
+index 4182221..8bf92f9 100644
 --- a/drivers/gpu/drm/i915/intel_display.c
 +++ b/drivers/gpu/drm/i915/intel_display.c
 @@ -511,7 +511,7 @@ static void intel_update_czclk(struct drm_i915_private *dev_priv)
@@ -34,7 +34,7 @@ index b62645c..bfde598 100644
  		return;
  
  	if (enable)
-@@ -5266,7 +5266,7 @@ static bool needs_nv12_wa(struct drm_i915_private *dev_priv,
+@@ -5272,7 +5272,7 @@ static bool needs_nv12_wa(struct drm_i915_private *dev_priv,
  	if (!crtc_state->nv12_planes)
  		return false;
  
@@ -43,7 +43,7 @@ index b62645c..bfde598 100644
  		return false;
  
  	if ((INTEL_GEN(dev_priv) == 9 && !IS_GEMINILAKE(dev_priv)) ||
-@@ -13730,7 +13730,8 @@ bool skl_plane_has_planar(struct drm_i915_private *dev_priv,
+@@ -13736,7 +13736,8 @@ bool skl_plane_has_planar(struct drm_i915_private *dev_priv,
  			  enum pipe pipe, enum plane_id plane_id)
  {
  	if (plane_id == PLANE_PRIMARY) {
@@ -53,7 +53,7 @@ index b62645c..bfde598 100644
  			return false;
  		else if ((INTEL_GEN(dev_priv) == 9 && pipe == PIPE_C) &&
  			 !IS_GEMINILAKE(dev_priv))
-@@ -13743,7 +13744,8 @@ bool skl_plane_has_planar(struct drm_i915_private *dev_priv,
+@@ -13749,7 +13750,8 @@ bool skl_plane_has_planar(struct drm_i915_private *dev_priv,
  				return false;
  		} else {
  			if (plane_id != PLANE_SPRITE0 || pipe == PIPE_C ||
@@ -63,7 +63,7 @@ index b62645c..bfde598 100644
  				return false;
  		}
  	}
-@@ -14898,7 +14900,7 @@ static int intel_framebuffer_init(struct intel_framebuffer *intel_fb,
+@@ -14904,7 +14906,7 @@ static int intel_framebuffer_init(struct intel_framebuffer *intel_fb,
  		break;
  	case DRM_FORMAT_NV12:
  		if (INTEL_GEN(dev_priv) < 9 || IS_SKYLAKE(dev_priv) ||

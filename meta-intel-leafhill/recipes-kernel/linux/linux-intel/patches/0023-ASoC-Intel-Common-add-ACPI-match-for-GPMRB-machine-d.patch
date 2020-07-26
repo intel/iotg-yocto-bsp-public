@@ -1,4 +1,4 @@
-From 9b72efde6193c89bb6111705b1212c6a04761e71 Mon Sep 17 00:00:00 2001
+From 396fba9866aa7ac65ffaf8cd14544b08856687ef Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Tue, 18 Sep 2018 18:05:28 +0800
 Subject: [PATCH] ASoC: Intel: Common: add ACPI match for GPMRB machine driver

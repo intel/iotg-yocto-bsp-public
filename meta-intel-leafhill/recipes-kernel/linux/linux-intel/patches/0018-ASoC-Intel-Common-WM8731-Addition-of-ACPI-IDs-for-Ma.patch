@@ -1,4 +1,4 @@
-From 1bfec33adff46919f41e18367d358dc7087180c0 Mon Sep 17 00:00:00 2001
+From 5e0064681276ee4ead0ad2e913b58d2819629b86 Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Sun, 21 Jul 2019 23:19:30 +0800
 Subject: [PATCH] ASoC: Intel: Common: WM8731 Addition of ACPI IDs for Machine

@@ -1,4 +1,4 @@
-From 7fc6823b3b341df9e6d9cccecbd9ab8f1929eee9 Mon Sep 17 00:00:00 2001
+From 7c108874a28caa17eda12e953e8045f30c600425 Mon Sep 17 00:00:00 2001
 From: Markus Schweikhardt <markus.schweikhardt@intel.com>
 Date: Thu, 19 Nov 2015 06:51:46 +0100
 Subject: [PATCH] ASoC: Intel: Boards: Add consolidated GP-MRB Machine Driver

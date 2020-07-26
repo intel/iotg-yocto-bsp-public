@@ -1,4 +1,4 @@
-From ecb99b13301aac8ee812f58dd8125579b4c71878 Mon Sep 17 00:00:00 2001
+From 59bfd5e40f07dae1d85505d0359253977aa0ad62 Mon Sep 17 00:00:00 2001
 From: Vitaly Wool <vwool@dev.rtsoft.ru>
 Date: Thu, 30 Jun 2016 07:06:53 +0000
 Subject: [PATCH] scsi_lib: add extended information to MEDIA_CHANGE
@@ -105,7 +105,7 @@ index c501fb5..cfd7d4e 100644
  	case SDEV_EVT_INQUIRY_CHANGE_REPORTED:
  		scsi_rescan_device(&sdev->sdev_gendev);
 diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index d0389b2..33e57ee 100644
+index 5be3d6b..6880172 100644
 --- a/drivers/scsi/sr.c
 +++ b/drivers/scsi/sr.c
 @@ -760,6 +760,7 @@ static int sr_probe(struct device *dev)

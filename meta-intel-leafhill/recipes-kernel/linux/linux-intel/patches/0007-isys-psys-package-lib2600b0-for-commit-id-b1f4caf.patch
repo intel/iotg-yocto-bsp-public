@@ -1,4 +1,4 @@
-From dc08aa60ffd8d46585a0bc827c9f08b7e9f67040 Mon Sep 17 00:00:00 2001
+From b539a5bfd136de8a132da29d6d6c3e28778b7169 Mon Sep 17 00:00:00 2001
 From: icg_intg <icg_intg@intel.com>
 Date: Wed, 26 Feb 2020 17:45:19 +0800
 Subject: [PATCH] isys & psys package lib2600b0 for commit-id b1f4caf

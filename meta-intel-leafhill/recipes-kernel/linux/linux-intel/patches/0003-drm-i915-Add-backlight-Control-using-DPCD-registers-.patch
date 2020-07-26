@@ -1,4 +1,4 @@
-From 6cb602d16260d97095a3752dfccf0c03e44b9be7 Mon Sep 17 00:00:00 2001
+From dc5acc8c81b7af71ebe137aca33ef8cff023699f Mon Sep 17 00:00:00 2001
 From: Yetunde Adebisi <yetundex.adebisi@intel.com>
 Date: Tue, 5 Apr 2016 13:56:01 +0100
 Subject: [PATCH] drm/i915: Add backlight Control using DPCD registers for DP
@@ -22,7 +22,7 @@ Signed-off-by: Matt Roper <matthew.d.roper@intel.com>
  4 files changed, 61 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/gpu/drm/i915/intel_dp.c b/drivers/gpu/drm/i915/intel_dp.c
-index 215f0fa..ffbea61 100644
+index 63e0028..9406989 100644
 --- a/drivers/gpu/drm/i915/intel_dp.c
 +++ b/drivers/gpu/drm/i915/intel_dp.c
 @@ -6066,6 +6066,34 @@ void intel_edp_drrs_flush(struct drm_i915_private *dev_priv,
@@ -60,7 +60,7 @@ index 215f0fa..ffbea61 100644
  static bool intel_edp_init_connector(struct intel_dp *intel_dp,
  				     struct intel_connector *intel_connector)
  {
-@@ -6307,6 +6335,7 @@ static void intel_dp_modeset_retry_work_fn(struct work_struct *work)
+@@ -6304,6 +6332,7 @@ static void intel_dp_modeset_retry_work_fn(struct work_struct *work)
  		goto fail;
  	}
  

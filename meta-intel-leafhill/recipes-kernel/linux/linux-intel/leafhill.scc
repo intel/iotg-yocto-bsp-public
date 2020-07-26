@@ -126,6 +126,7 @@ patch patches/0032-ASoC-Intel-boards-Add-pm-ops-for-bxtp_ivi_generic-ma.patch
 patch patches/0033-ASoC-Intel-boards-Add-pm-ops-for-bxtp_ivi_rse-machin.patch
 patch patches/0034-ASoC-Intel-boards-Add-pm-ops-for-bxtp_ivi_hu-machine.patch
 patch patches/0035-ASoC-Intel-Increase-IPC-Timeout.patch
+patch patches/0036-Resolved-rebase-Merge-issues-and-build-issues.patch
 
 # IPU
 patch patches/0001-media-i2c-Kconfig-and-Makefile-for-mcp4725.patch
@@ -135,6 +136,8 @@ patch patches/0004-Update-IPU-FW-version.patch
 patch patches/0005-media-intel-ipu4-specify-sensor-i2c-bus-based-on-BDF.patch
 patch patches/0006-media-mcp4725-add-suffix-for-subdev-name.patch
 patch patches/0007-isys-psys-package-lib2600b0-for-commit-id-b1f4caf.patch
+patch patches/0008-media-mcp4725-probe-device-by-i2c-read.patch
+patch patches/0009-media-imx274-set-min-fll-for-60fps.patch
 
 
 # Kernel configuration

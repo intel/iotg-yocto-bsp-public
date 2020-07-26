@@ -1,4 +1,4 @@
-From eb56eb6adcdba75a59758e6758ebc49dfe126b4c Mon Sep 17 00:00:00 2001
+From f1bbcb67d75aa510767690ae5d990b3da141a5d8 Mon Sep 17 00:00:00 2001
 From: Even Xu <even.xu@intel.com>
 Date: Fri, 23 Dec 2016 09:22:28 +0800
 Subject: [PATCH] hid: intel-ish-hid: use helper function to search client id

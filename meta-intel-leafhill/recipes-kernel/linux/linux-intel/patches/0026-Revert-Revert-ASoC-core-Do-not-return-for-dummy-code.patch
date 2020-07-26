@@ -1,4 +1,4 @@
-From 4c785794d8e2a8e4f38d07d925335a2ec32abfc8 Mon Sep 17 00:00:00 2001
+From 8be60659847ff08fdada575acffd7dd89a296acb Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Sun, 7 Jul 2019 18:09:53 +0800
 Subject: [PATCH] Revert "Revert "ASoC: core: Do not return for dummy codec in
@@ -10,7 +10,7 @@ This reverts commit 6c42c5998cbbec1d82cbf38668dca82a94d2f7b5.
  1 file changed, 3 insertions(+), 4 deletions(-)
 
 diff --git a/sound/soc/soc-core.c b/sound/soc/soc-core.c
-index 51f2e21..84c3640 100644
+index fd0ca16..222f228 100644
 --- a/sound/soc/soc-core.c
 +++ b/sound/soc/soc-core.c
 @@ -1242,11 +1242,10 @@ static int soc_probe_component(struct snd_soc_card *card,
