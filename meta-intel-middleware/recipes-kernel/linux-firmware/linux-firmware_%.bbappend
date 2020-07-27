@@ -4,13 +4,9 @@ SRC_URI += "file://brcmfmac43241b4-sdio.txt \
         file://0001-linux-firmware-i915-HuC-firmware-for-Broxton-v1.7.patch \
            "
 
-LIC_FILES_CHKSUM_remove = " file://WHENCE;md5=b6e44adf71bc37e5f26ebfe5a08b5490 \
-                            file://LICENCE.Marvell;md5=9ddea1734a4baf3c78d845151f42a37a \
-"
+LIC_FILES_CHKSUM_remove = " file://WHENCE;md5=37a01e379219d1e06dbccfa90a8fc0ad "
 
-LIC_FILES_CHKSUM_append = " file://WHENCE;md5=65bc4f1f5e8de5ff9f359172594c2605 \
-                            file://LICENCE.Marvell;md5=28b6ed8bd04ba105af6e4dcd6e997772 \
-"
+LIC_FILES_CHKSUM_append = " file://WHENCE;md5=65bc4f1f5e8de5ff9f359172594c2605 "
 
 RDEPENDS_${PN} += " python"
 
