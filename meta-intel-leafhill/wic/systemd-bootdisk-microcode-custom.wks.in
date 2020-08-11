@@ -10,4 +10,4 @@ part / --source rootfs --ondisk sda --fstype=ext4 --label platform --align 1024 
 
 part swap --ondisk sda --size 44 --label swap1 --fstype=swap --use-uuid
 
-bootloader --ptable gpt --timeout=5 --append="{APPEND}"
+bootloader --ptable gpt --timeout=5 --append=" ${APPEND}"
