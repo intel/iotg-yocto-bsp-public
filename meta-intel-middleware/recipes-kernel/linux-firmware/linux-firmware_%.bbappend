@@ -6,7 +6,11 @@ SRC_URI += "file://brcmfmac43241b4-sdio.txt \
 
 LIC_FILES_CHKSUM_remove = " file://WHENCE;md5=37a01e379219d1e06dbccfa90a8fc0ad "
 
-LIC_FILES_CHKSUM_append = " file://WHENCE;md5=65bc4f1f5e8de5ff9f359172594c2605 "
+LIC_FILES_CHKSUM_append = " file://WHENCE;md5=fa36af6d4cbceba6e639ff5615fcb1d5 "
+
+LIC_FILES_CHKSUM_remove = " file://LICENSE.amdgpu;md5=ab515ef6495ab5c5a3b08ab2db62df11 "
+
+LIC_FILES_CHKSUM_append = " file://LICENSE.amdgpu;md5=d357524f5099e2a3db3c1838921c593f "
 
 RDEPENDS_${PN} += " python"
 
@@ -21,4 +25,4 @@ do_install_append() {
         cp ${WORKDIR}/brcmfmac43241b4-sdio.txt ${D}/lib/firmware/brcm/
 }
 
-SRCREV = "84a7ca591a1b3c9b7a0253af44e227586d02ddd7"
+SRCREV = "3d3a06f720856cb897a8541951edd0b8f6f54a98"
