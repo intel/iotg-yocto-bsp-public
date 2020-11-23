@@ -1,6 +1,6 @@
 diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/configure.ac libdrm/configure.ac
---- upstream_libdrm/configure.ac	2020-07-19 16:30:58.996603878 +0000
-+++ libdrm/configure.ac	2020-07-19 16:30:39.436605026 +0000
+--- upstream_libdrm/configure.ac	2020-10-30 10:10:54.883878218 +0000
++++ libdrm/configure.ac	2020-10-30 10:10:25.703879930 +0000
 @@ -37,7 +37,7 @@
  XORG_WITH_XSLTPROC
  XORG_MANPAGE_SECTIONS
@@ -11,8 +11,8 @@ diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/configure.ac l
  # Enable quiet compiles on automake 1.11.
  m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/include/drm/i915_drm.h libdrm/include/drm/i915_drm.h
---- upstream_libdrm/include/drm/i915_drm.h	2020-07-19 16:30:59.000603878 +0000
-+++ libdrm/include/drm/i915_drm.h	2020-07-19 16:30:39.440605025 +0000
+--- upstream_libdrm/include/drm/i915_drm.h	2020-10-30 10:10:54.887878218 +0000
++++ libdrm/include/drm/i915_drm.h	2020-10-30 10:10:25.711879929 +0000
 @@ -1470,6 +1470,7 @@
  #define   I915_CONTEXT_MAX_USER_PRIORITY	1023 /* inclusive */
  #define   I915_CONTEXT_DEFAULT_PRIORITY		0
@@ -22,8 +22,8 @@ diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/include/drm/i9
  	 * When using the following param, value should be a pointer to
  	 * drm_i915_gem_context_param_sseu.
 diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/intel/intel_bufmgr.c libdrm/intel/intel_bufmgr.c
---- upstream_libdrm/intel/intel_bufmgr.c	2020-07-19 16:30:59.000603878 +0000
-+++ libdrm/intel/intel_bufmgr.c	2020-07-19 16:30:39.444605025 +0000
+--- upstream_libdrm/intel/intel_bufmgr.c	2020-10-30 10:10:54.891878218 +0000
++++ libdrm/intel/intel_bufmgr.c	2020-10-30 10:10:25.711879929 +0000
 @@ -196,6 +196,18 @@
  }
  
@@ -44,8 +44,8 @@ diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/intel/intel_bu
  			drm_intel_bo *target_bo, uint32_t target_offset,
  			uint32_t read_domains, uint32_t write_domain)
 diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/intel/intel_bufmgr_gem.c libdrm/intel/intel_bufmgr_gem.c
---- upstream_libdrm/intel/intel_bufmgr_gem.c	2020-07-19 16:30:59.004603878 +0000
-+++ libdrm/intel/intel_bufmgr_gem.c	2020-07-19 16:30:39.444605025 +0000
+--- upstream_libdrm/intel/intel_bufmgr_gem.c	2020-10-30 10:10:54.891878218 +0000
++++ libdrm/intel/intel_bufmgr_gem.c	2020-10-30 10:10:25.715879929 +0000
 @@ -146,6 +146,7 @@
  	unsigned int no_exec : 1;
  	unsigned int has_vebox : 1;
@@ -393,8 +393,8 @@ diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/intel/intel_bu
  	bufmgr_gem->bufmgr.bo_pin = drm_intel_gem_bo_pin;
  	bufmgr_gem->bufmgr.bo_unpin = drm_intel_gem_bo_unpin;
 diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/intel/intel_bufmgr.h libdrm/intel/intel_bufmgr.h
---- upstream_libdrm/intel/intel_bufmgr.h	2020-07-19 16:30:59.000603878 +0000
-+++ libdrm/intel/intel_bufmgr.h	2020-07-19 16:30:39.444605025 +0000
+--- upstream_libdrm/intel/intel_bufmgr.h	2020-10-30 10:10:54.891878218 +0000
++++ libdrm/intel/intel_bufmgr.h	2020-10-30 10:10:25.711879929 +0000
 @@ -151,6 +151,10 @@
  int drm_intel_bo_emit_reloc(drm_intel_bo *bo, uint32_t offset,
  			    drm_intel_bo *target_bo, uint32_t target_offset,
@@ -417,8 +417,8 @@ diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/intel/intel_bu
  #define HAVE_DRM_INTEL_GEM_BO_DISABLE_IMPLICIT_SYNC 1
  int drm_intel_bufmgr_gem_can_disable_implicit_sync(drm_intel_bufmgr *bufmgr);
 diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/intel/intel_bufmgr_priv.h libdrm/intel/intel_bufmgr_priv.h
---- upstream_libdrm/intel/intel_bufmgr_priv.h	2020-07-19 16:30:59.004603878 +0000
-+++ libdrm/intel/intel_bufmgr_priv.h	2020-07-19 16:30:39.444605025 +0000
+--- upstream_libdrm/intel/intel_bufmgr_priv.h	2020-10-30 10:10:54.891878218 +0000
++++ libdrm/intel/intel_bufmgr_priv.h	2020-10-30 10:10:25.715879929 +0000
 @@ -188,6 +188,10 @@
  	int (*bo_emit_reloc) (drm_intel_bo *bo, uint32_t offset,
  			      drm_intel_bo *target_bo, uint32_t target_offset,
@@ -431,8 +431,8 @@ diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/intel/intel_bu
  				   drm_intel_bo *target_bo,
  				   uint32_t target_offset,
 diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/tests/util/pattern.c libdrm/tests/util/pattern.c
---- upstream_libdrm/tests/util/pattern.c	2020-07-19 16:30:59.020603877 +0000
-+++ libdrm/tests/util/pattern.c	2020-07-19 16:30:39.460605024 +0000
+--- upstream_libdrm/tests/util/pattern.c	2020-10-30 10:10:54.907878217 +0000
++++ libdrm/tests/util/pattern.c	2020-10-30 10:10:25.727879929 +0000
 @@ -643,7 +643,7 @@
  		printf("Error: gamma too small: %d < %d\n", size, 7 + 7 + 8);
  		return;
@@ -443,8 +443,8 @@ diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/tests/util/pat
  #define FILL_COLOR(idx, r, g, b) \
  	lut[idx].red = (r) << 8; \
 diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/xf86drm.c libdrm/xf86drm.c
---- upstream_libdrm/xf86drm.c	2020-07-19 16:30:59.020603877 +0000
-+++ libdrm/xf86drm.c	2020-07-19 16:30:39.460605024 +0000
+--- upstream_libdrm/xf86drm.c	2020-10-30 10:10:54.907878217 +0000
++++ libdrm/xf86drm.c	2020-10-30 10:10:25.731879928 +0000
 @@ -71,16 +71,6 @@
  
  #include "util_math.h"
@@ -682,8 +682,8 @@ diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/xf86drm.c libd
        return NULL;
  
 diff -x .git -x .gitignore -Naur --no-dereference upstream_libdrm/xf86drm.h libdrm/xf86drm.h
---- upstream_libdrm/xf86drm.h	2020-07-19 16:30:59.020603877 +0000
-+++ libdrm/xf86drm.h	2020-07-19 16:30:39.460605024 +0000
+--- upstream_libdrm/xf86drm.h	2020-10-30 10:10:54.907878217 +0000
++++ libdrm/xf86drm.h	2020-10-30 10:10:25.731879928 +0000
 @@ -78,17 +78,29 @@
  
  #ifdef __OpenBSD__
