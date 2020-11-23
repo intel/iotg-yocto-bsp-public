@@ -1,0 +1,113 @@
+From a2b06f37776ae2539448d0366a602826f439d8bc Mon Sep 17 00:00:00 2001
+From: Xu Guangxin <guangxin.xu@intel.com>
+Date: Mon, 3 Aug 2020 15:29:08 +0800
+Subject: [PATCH 1/2] msdkvpp: refact, put input and output surface in diffrent
+ list
+
+---
+ sys/msdk/gstmsdkvpp.c | 41 ++++++++++++++++++++++++++++++-----------
+ sys/msdk/gstmsdkvpp.h |  3 ++-
+ 2 files changed, 32 insertions(+), 12 deletions(-)
+
+diff --git a/sys/msdk/gstmsdkvpp.c b/sys/msdk/gstmsdkvpp.c
+index eab267768..8d78520a8 100644
+--- a/sys/msdk/gstmsdkvpp.c
++++ b/sys/msdk/gstmsdkvpp.c
+@@ -188,12 +188,11 @@ free_msdk_surface (gpointer p)
+ }
+ 
+ static void
+-release_msdk_surface (GstMsdkVPP * thiz, MsdkSurface * surface)
++release_msdk_surface (GstMsdkVPP * thiz, MsdkSurface * surface, GList ** list)
+ {
+   if (surface->surface) {
+     if (surface->surface->Data.Locked) {
+-      thiz->locked_msdk_surfaces =
+-          g_list_append (thiz->locked_msdk_surfaces, surface);
++      *list = g_list_append (*list, surface);
+     } else {
+       free_msdk_surface (surface);
+     }
+@@ -201,28 +200,48 @@ release_msdk_surface (GstMsdkVPP * thiz, MsdkSurface * surface)
+ }
+ 
+ static void
+-free_unlocked_msdk_surfaces (GstMsdkVPP * thiz)
++release_in_surface (GstMsdkVPP * thiz, MsdkSurface * surface)
++{
++  release_msdk_surface (thiz, surface, &thiz->locked_in_surfaces);
++}
++
++static void
++release_out_surface (GstMsdkVPP * thiz, MsdkSurface * surface)
++{
++  release_msdk_surface (thiz, surface, &thiz->locked_out_surfaces);
++}
++
++static void
++free_unlocked_msdk_surfaces_from_list (GstMsdkVPP * thiz, GList ** list)
+ {
+   GList *l;
+   MsdkSurface *surface;
+ 
+-  for (l = thiz->locked_msdk_surfaces; l;) {
++  for (l = *list; l;) {
+     GList *next = l->next;
+     surface = l->data;
+     if (surface->surface->Data.Locked == 0) {
+       free_msdk_surface (surface);
+-      thiz->locked_msdk_surfaces =
+-          g_list_delete_link (thiz->locked_msdk_surfaces, l);
++      *list = g_list_delete_link (*list, l);
+     }
+     l = next;
+   }
+ }
+ 
++static void
++free_unlocked_msdk_surfaces (GstMsdkVPP * thiz)
++{
++  free_unlocked_msdk_surfaces_from_list (thiz, &thiz->locked_in_surfaces);
++  free_unlocked_msdk_surfaces_from_list (thiz, &thiz->locked_out_surfaces);
++}
++
+ static void
+ free_all_msdk_surfaces (GstMsdkVPP * thiz)
+ {
+-  g_list_free_full (thiz->locked_msdk_surfaces, free_msdk_surface);
+-  thiz->locked_msdk_surfaces = NULL;
++  g_list_free_full (thiz->locked_in_surfaces, free_msdk_surface);
++  thiz->locked_in_surfaces = NULL;
++  g_list_free_full (thiz->locked_out_surfaces, free_msdk_surface);
++  thiz->locked_out_surfaces = NULL;
+ }
+ 
+ static void
+@@ -925,8 +944,8 @@ error_push_buffer:
+       gst_flow_get_name (ret));
+ 
+ transform_end:
+-  release_msdk_surface (thiz, in_surface);
+-  release_msdk_surface (thiz, out_surface);
++  release_in_surface (thiz, in_surface);
++  release_out_surface (thiz, out_surface);
+ 
+   return ret;
+ }
+diff --git a/sys/msdk/gstmsdkvpp.h b/sys/msdk/gstmsdkvpp.h
+index 859ea58eb..de96177d8 100644
+--- a/sys/msdk/gstmsdkvpp.h
++++ b/sys/msdk/gstmsdkvpp.h
+@@ -144,7 +144,8 @@ struct _GstMsdkVPP
+   guint num_extra_params;
+ 
+   mfxFrameAllocRequest request[2];
+-  GList* locked_msdk_surfaces;
++  GList* locked_in_surfaces;
++  GList* locked_out_surfaces;
+ };
+ 
+ struct _GstMsdkVPPClass
+-- 
+2.20.4
+

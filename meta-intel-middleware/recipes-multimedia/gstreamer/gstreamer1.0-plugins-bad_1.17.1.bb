@@ -7,6 +7,8 @@ SRC_URI = " \
     file://0001-msdkdec-allow-sub-class-to-add-extra-parameters-for-.patch \
     file://0002-msdkh264dec-report-error-to-user.patch \
     file://0003-msdkh265dec-Add-support-for-error-report-too.patch \
+    file://0001-msdkvpp-refact-put-input-and-output-surface-in-diffr.patch \
+    file://0002-msdkvpp-do-not-hold-too-many-input-buffers-in-locked.patch \
 "
 
 SRCREV = "88ace3befbc7f5acd188205facd9ca720c776851"
