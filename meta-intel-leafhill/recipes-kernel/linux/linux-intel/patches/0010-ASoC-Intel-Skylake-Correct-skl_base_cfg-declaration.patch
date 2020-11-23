@@ -1,4 +1,4 @@
-From 6c0ee11d83aad5011a9f3d6fca5a3d36731aa3a0 Mon Sep 17 00:00:00 2001
+From 7d3109f7065a11fc81fe5698ec4274dc840cfc60 Mon Sep 17 00:00:00 2001
 From: Cezary Rojewski <cezary.rojewski@intel.com>
 Date: Sun, 27 Jan 2019 20:40:01 +0100
 Subject: [PATCH] ASoC: Intel: Skylake: Correct skl_base_cfg declaration.

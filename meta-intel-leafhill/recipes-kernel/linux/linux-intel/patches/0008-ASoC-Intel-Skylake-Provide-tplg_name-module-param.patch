@@ -1,4 +1,4 @@
-From 8084c17949e60b42fd685ee3bc851933e79cbada Mon Sep 17 00:00:00 2001
+From 33e7ca4eed5df8d6419fda922466f7ffdab1d458 Mon Sep 17 00:00:00 2001
 From: Cezary Rojewski <cezary.rojewski@intel.com>
 Date: Thu, 20 Sep 2018 11:23:31 +0200
 Subject: [PATCH] ASoC: Intel: Skylake: Provide tplg_name module param

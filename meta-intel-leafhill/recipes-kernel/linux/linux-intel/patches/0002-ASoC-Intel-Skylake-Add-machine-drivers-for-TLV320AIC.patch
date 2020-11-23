@@ -1,4 +1,4 @@
-From b242ba4244241febde0cf24edcc32cad92251d76 Mon Sep 17 00:00:00 2001
+From c66240143f7428c4fedf6a3fd2c9ad04a37504aa Mon Sep 17 00:00:00 2001
 From: "SengKai,Tan" <seng.kai.tan@intel.com>
 Date: Mon, 4 Jul 2016 17:34:05 +0800
 Subject: [PATCH] ASoC: Intel: Skylake: Add machine drivers for TLV320AIC3107
@@ -51,10 +51,10 @@ Conflicts:
  create mode 100644 sound/soc/intel/boards/apli_lhcrb_aic3107S.c
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 2e8451a..fdea149 100644
+index e13f3e2..2aa8edb 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -13657,6 +13657,13 @@ M:	Tan, Seng Kai <seng.kai.tan@intel.com>
+@@ -13666,6 +13666,13 @@ M:	Tan, Seng Kai <seng.kai.tan@intel.com>
  S:	Maintained
  F:	sound/soc/intel/boards/apli_lhcrb_wm8731.c
  

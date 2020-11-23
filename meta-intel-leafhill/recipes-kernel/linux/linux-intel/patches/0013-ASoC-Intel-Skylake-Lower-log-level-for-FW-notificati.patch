@@ -1,4 +1,4 @@
-From 8b3f2f72f20cdb028c0e32e0dc129bb1fab4bcb3 Mon Sep 17 00:00:00 2001
+From bfcd689c745b5884091ae839255b6360cfabca8c Mon Sep 17 00:00:00 2001
 From: Piotr Maziarz <piotrx.maziarz@intel.com>
 Date: Wed, 15 May 2019 13:19:22 +0200
 Subject: [PATCH] ASoC: Intel: Skylake: Lower log level for FW notifications

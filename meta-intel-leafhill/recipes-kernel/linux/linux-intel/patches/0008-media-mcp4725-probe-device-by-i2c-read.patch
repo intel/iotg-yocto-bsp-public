@@ -1,4 +1,4 @@
-From d3b04f7a8b7cb54362b825c6e54c8e28a66fd09a Mon Sep 17 00:00:00 2001
+From d54c0d81b62489f2ec6b83cbec06e3f79407212a Mon Sep 17 00:00:00 2001
 From: Chen Meng J <meng.j.chen@intel.com>
 Date: Mon, 27 Apr 2020 22:44:14 +0800
 Subject: [PATCH] media: mcp4725: probe device by i2c read

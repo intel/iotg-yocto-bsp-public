@@ -1,4 +1,4 @@
-From 597406e437c199e2343f5563c9b6706786d18d7b Mon Sep 17 00:00:00 2001
+From 6eda4a3e773cc820f843140c1df295d79254da4a Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:01:42 +0100
 Subject: [PATCH] intel_pstate: Add turbo enable/disable for CPU
@@ -13,7 +13,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 39 insertions(+)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index e7b3d4e..5cf2af7 100644
+index 864a7e8..c5a3837 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -720,6 +720,7 @@ static void intel_pstate_get_hwp_max(unsigned int cpu, int *phy_max,

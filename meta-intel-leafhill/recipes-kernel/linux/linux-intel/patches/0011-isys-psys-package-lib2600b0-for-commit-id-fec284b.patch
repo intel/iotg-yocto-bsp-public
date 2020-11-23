@@ -1,0 +1,120 @@
+From 3d33001a54ba2b64d6fe1d21c6f4134a3b51874a Mon Sep 17 00:00:00 2001
+From: icg_intg <icg_intg@intel.com>
+Date: Thu, 24 Sep 2020 10:04:17 +0800
+Subject: [PATCH] isys & psys package lib2600b0 for commit-id fec284b
+
+FW_Manifest_ID: 8542cf1a382d47178b676db56e952f7cdabac0de
+
+FW_Build_Branch: stable_iot_mr5_dss_20190902
+
+FW_Build_Topic: auto_merge_queue
+
+library version: commit-id fec284b
+
+FW Bundle patch number of this release :  515075
+
+FW tag : scci_stable_iot_mr5_dss_20190902_20200923_1132
+
+Change-Id: I144dfb15c986c3c6bf860e64f950236dc723fab2
+Depends-On: I3cd284f113ba85afd3d7a7fd3fdce7bcf8fd7002
+Depends-On: Icbca73ff517245e0a96e45f02388c3ac5465b0d1
+Depends-On: Ib42e21a531874b9b4647bc87c4761a2a1005beb2
+Tracked-On: #H1308011487
+Signed-off-by: icg_intg <icg_intg@intel.com>
+Signed-off-by: lijuncax <lijunx.cai@intel.com>
+---
+ .../pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h      |  2 +-
+ .../intel/ipu4/ipu4-css/lib2600/support/print_support.h  | 16 ++++++++++++++++
+ .../lib/DSS_V2_program_group/ia_css_fw_pkg_release.h     |  2 +-
+ .../ipu4-css/lib2600psys/lib/support/print_support.h     | 16 ++++++++++++++++
+ 4 files changed, 34 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+index 1889b8c..c570220 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20200915
++#define IA_CSS_FW_PKG_RELEASE  0x20200922
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600/support/print_support.h b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600/support/print_support.h
+index 43126c8..bcad3a0 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600/support/print_support.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600/support/print_support.h
+@@ -77,12 +77,28 @@
+ 
+ #define PRINT_HELPER(prefix, format, ...) printf(prefix format "%s", __VA_ARGS__)
+ 
++/** WA_1507432540 - Limit prints to PERROR only
++ * Workaround to avoid flooding host with prints.
++ */
++#ifdef HOST_LOGLEVEL_ERROR_ONLY
++
++/* The trailing "" allows the edge case of printing single string */
++#define PWARN(...)
++#define PRINT(...)
++#define PERROR(...) PRINT_HELPER("error: ", __VA_ARGS__, "")
++#define PDEBUG(...)
++
++#else
++
+ /* The trailing "" allows the edge case of printing single string */
+ #define PWARN(...)  PRINT_HELPER("warning: ", __VA_ARGS__, "")
+ #define PRINT(...)  PRINT_HELPER("", __VA_ARGS__, "")
+ #define PERROR(...) PRINT_HELPER("error: ", __VA_ARGS__, "")
+ #define PDEBUG(...) PRINT_HELPER("debug: ", __VA_ARGS__, "")
+ 
++#endif
++
++
+ #define PRINTSTRING(str) PRINT(str)
+ 
+ #endif
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+index 1889b8c..c570220 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/DSS_V2_program_group/ia_css_fw_pkg_release.h
+@@ -11,4 +11,4 @@
+ * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+ * more details.
+ */
+-#define IA_CSS_FW_PKG_RELEASE  0x20200915
++#define IA_CSS_FW_PKG_RELEASE  0x20200922
+diff --git a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/support/print_support.h b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/support/print_support.h
+index 43126c8..bcad3a0 100644
+--- a/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/support/print_support.h
++++ b/drivers/media/pci/intel/ipu4/ipu4-css/lib2600psys/lib/support/print_support.h
+@@ -77,12 +77,28 @@
+ 
+ #define PRINT_HELPER(prefix, format, ...) printf(prefix format "%s", __VA_ARGS__)
+ 
++/** WA_1507432540 - Limit prints to PERROR only
++ * Workaround to avoid flooding host with prints.
++ */
++#ifdef HOST_LOGLEVEL_ERROR_ONLY
++
++/* The trailing "" allows the edge case of printing single string */
++#define PWARN(...)
++#define PRINT(...)
++#define PERROR(...) PRINT_HELPER("error: ", __VA_ARGS__, "")
++#define PDEBUG(...)
++
++#else
++
+ /* The trailing "" allows the edge case of printing single string */
+ #define PWARN(...)  PRINT_HELPER("warning: ", __VA_ARGS__, "")
+ #define PRINT(...)  PRINT_HELPER("", __VA_ARGS__, "")
+ #define PERROR(...) PRINT_HELPER("error: ", __VA_ARGS__, "")
+ #define PDEBUG(...) PRINT_HELPER("debug: ", __VA_ARGS__, "")
+ 
++#endif
++
++
+ #define PRINTSTRING(str) PRINT(str)
+ 
+ #endif
+-- 
+1.9.1
+

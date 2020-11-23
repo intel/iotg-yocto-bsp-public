@@ -1,4 +1,4 @@
-From f73f90bfef7c50c3ebdb3e0cab7c17a2f90642c8 Mon Sep 17 00:00:00 2001
+From 568221de9f757c1ceed5edd45fc9533c8c2cf7d0 Mon Sep 17 00:00:00 2001
 From: Szymon Mielczarek <szymonx.mielczarek@intel.com>
 Date: Mon, 27 May 2019 13:27:55 +0200
 Subject: [PATCH] ASoC: Intel: Skylake: Prepare host DMA when pipe already in

@@ -1,4 +1,4 @@
-From 584df75d821d3f8769a7f95f9df26a614fde2d83 Mon Sep 17 00:00:00 2001
+From 336f911bb2c684a515ba839961c5d776d8b33360 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Thu, 29 Dec 2016 11:40:59 +0800
 Subject: [PATCH] igb: Handling of igb_get_stats64 when called in suspended
@@ -16,10 +16,10 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 12 insertions(+)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 1f641cd..fc832d7 100644
+index 141c386..0587017 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -6273,11 +6273,23 @@ static void igb_get_stats64(struct net_device *netdev,
+@@ -6282,11 +6282,23 @@ static void igb_get_stats64(struct net_device *netdev,
  			    struct rtnl_link_stats64 *stats)
  {
  	struct igb_adapter *adapter = netdev_priv(netdev);

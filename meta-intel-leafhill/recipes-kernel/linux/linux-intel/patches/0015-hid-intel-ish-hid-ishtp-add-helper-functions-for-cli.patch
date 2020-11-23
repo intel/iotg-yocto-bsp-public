@@ -1,4 +1,4 @@
-From 569d15f5532c32f701aaaaa6760cd00b4ae25f5e Mon Sep 17 00:00:00 2001
+From 7cfa5443dd427cc8907eb8c8e09402982172394c Mon Sep 17 00:00:00 2001
 From: Even Xu <even.xu@intel.com>
 Date: Fri, 23 Dec 2016 09:22:25 +0800
 Subject: [PATCH] hid: intel-ish-hid: ishtp: add helper functions for client

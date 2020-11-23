@@ -1,4 +1,4 @@
-From 15b023ce73bd26650965b03388d041f982673756 Mon Sep 17 00:00:00 2001
+From 4dce3dc614b0b6b896137583c4d4c1e8b5de0831 Mon Sep 17 00:00:00 2001
 From: Chris Wilson <chris@chris-wilson.co.uk>
 Date: Tue, 25 Feb 2020 13:04:08 -0800
 Subject: [PATCH] drm/i915: Skip CPU synchronisation on dmabuf attachments

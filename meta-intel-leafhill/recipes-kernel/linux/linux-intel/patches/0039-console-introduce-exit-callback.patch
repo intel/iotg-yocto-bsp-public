@@ -1,4 +1,4 @@
-From 048e5aeb3f40d4b8fd8236da6ed40f6735d5989a Mon Sep 17 00:00:00 2001
+From 5b6d25f10067f51575b26128dbe05c5c7451b752 Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Wed, 23 Nov 2016 17:04:16 +0200
 Subject: [PATCH] console: introduce ->exit() callback
@@ -27,10 +27,10 @@ index ec9bdb3..34034b6 100644
  	short	flags;
  	short	index;
 diff --git a/kernel/printk/printk.c b/kernel/printk/printk.c
-index 7a2fdc09..2a033af 100644
+index cf272ab..3be2644 100644
 --- a/kernel/printk/printk.c
 +++ b/kernel/printk/printk.c
-@@ -2797,6 +2797,9 @@ int unregister_console(struct console *console)
+@@ -2828,6 +2828,9 @@ int unregister_console(struct console *console)
  	if (console_drivers != NULL && console->flags & CON_CONSDEV)
  		console_drivers->flags |= CON_CONSDEV;
  

@@ -1,4 +1,4 @@
-From a670ffa25c731c97c60475a6fbd517932c467710 Mon Sep 17 00:00:00 2001
+From a948ddf221ee9ce3c7e2766db577b8f42551abaf Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Thu, 25 Oct 2018 17:56:20 +0800
 Subject: [PATCH] ASoC: Intel: Skylake: Implement FW recovery mechanism when

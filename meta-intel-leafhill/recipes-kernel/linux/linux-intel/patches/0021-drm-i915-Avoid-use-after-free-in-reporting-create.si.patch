@@ -1,4 +1,4 @@
-From a468e47e94d576d5732c02841e2a8cbe6038b051 Mon Sep 17 00:00:00 2001
+From 55d9f42166bb5aa2f0e0124b40c5ba434f59b21f Mon Sep 17 00:00:00 2001
 From: Chris Wilson <chris@chris-wilson.co.uk>
 Date: Wed, 17 Apr 2019 14:25:07 +0100
 Subject: [PATCH] drm/i915: Avoid use-after-free in reporting create.size

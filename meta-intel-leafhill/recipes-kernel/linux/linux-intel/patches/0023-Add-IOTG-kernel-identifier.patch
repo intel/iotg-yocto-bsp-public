@@ -1,4 +1,4 @@
-From f21fb637d477eab0a5d0a00032abe74cd8b028d5 Mon Sep 17 00:00:00 2001
+From 6a508248218cfb68190cbac9892ff96d83d0540f Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Mon, 17 Jun 2019 14:54:17 -0700
 Subject: [PATCH] Add IOTG kernel identifier

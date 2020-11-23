@@ -1,4 +1,4 @@
-From dccc2674662685d2b58fffe6fcf6d7d9408d6f47 Mon Sep 17 00:00:00 2001
+From bb39f7c2d6a5c72eaa150cc7cde1d74331df55a9 Mon Sep 17 00:00:00 2001
 From: Chris Wilson <chris@chris-wilson.co.uk>
 Date: Fri, 26 Apr 2019 09:17:21 +0100
 Subject: [PATCH] drm/i915: Replace pcu_lock with sb_lock

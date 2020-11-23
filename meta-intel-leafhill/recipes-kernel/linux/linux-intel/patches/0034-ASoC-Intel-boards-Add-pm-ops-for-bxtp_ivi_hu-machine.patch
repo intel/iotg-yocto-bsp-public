@@ -1,4 +1,4 @@
-From cd46b5037a6937538971cbaa1940b525779001ee Mon Sep 17 00:00:00 2001
+From 84bc9bd9609794a39c9bbc091601bb06f5f5cbf4 Mon Sep 17 00:00:00 2001
 From: Szymon Mielczarek <szymonx.mielczarek@linux.intel.com>
 Date: Mon, 23 Sep 2019 14:03:02 +0200
 Subject: [PATCH] ASoC: Intel: boards: Add pm ops for bxtp_ivi_hu machine

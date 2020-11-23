@@ -1,4 +1,4 @@
-From f4fa624678b93e42e8f16f204a77082a7d200d2f Mon Sep 17 00:00:00 2001
+From 000e8de6223db170777768f2675127721a35b7f0 Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Sun, 28 Jul 2019 16:23:42 +0800
 Subject: [PATCH] Revert "ASoC: Intel: Skylake: BXT: read FwStatus and

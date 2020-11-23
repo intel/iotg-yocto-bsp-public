@@ -1,4 +1,4 @@
-From 44d88cac8706b98cd07eab8aa60092a0779326b9 Mon Sep 17 00:00:00 2001
+From 432fafdb132e2306483080a263ab0034ccb0a0e2 Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Mon, 15 Apr 2019 17:30:41 +0800
 Subject: [PATCH] ASoC: Intel: Boards: Enable Resume on for TI Codec

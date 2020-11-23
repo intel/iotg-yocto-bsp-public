@@ -1,4 +1,4 @@
-From b96794e49ce9a1c4cc97ceed90c6ff0beaaa4d32 Mon Sep 17 00:00:00 2001
+From a16937d68d3425609f1e39db36721aff99ecedf0 Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Sun, 7 Jul 2019 23:12:48 +0800
 Subject: [PATCH] ASoC: Intel: Skylake: Enabling Platform and FE dai for GPMRB

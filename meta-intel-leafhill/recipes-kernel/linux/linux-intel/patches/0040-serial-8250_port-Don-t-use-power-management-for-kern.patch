@@ -1,4 +1,4 @@
-From 798d377fe05bf347e976438d0d8653db4207d9c0 Mon Sep 17 00:00:00 2001
+From b6aeb61b15676b947b1b216ea81ee5c1aa78ae45 Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Thu, 17 Nov 2016 13:12:45 +0200
 Subject: [PATCH] serial: 8250_port: Don't use power management for kernel
@@ -27,7 +27,7 @@ Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
  3 files changed, 26 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/tty/serial/8250/8250_core.c b/drivers/tty/serial/8250/8250_core.c
-index b9567ef..861ad5f 100644
+index d2df7d7..3c0a578 100644
 --- a/drivers/tty/serial/8250/8250_core.c
 +++ b/drivers/tty/serial/8250/8250_core.c
 @@ -611,6 +611,14 @@ static int univ8250_console_setup(struct console *co, char *options)
@@ -54,10 +54,10 @@ index b9567ef..861ad5f 100644
  	.flags		= CON_PRINTBUFFER | CON_ANYTIME,
  	.index		= -1,
 diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
-index ab2d98b..a5b3dad 100644
+index 6d2e07f..cf1cf70 100644
 --- a/drivers/tty/serial/8250/8250_port.c
 +++ b/drivers/tty/serial/8250/8250_port.c
-@@ -3231,6 +3231,9 @@ static void serial8250_console_restore(struct uart_8250_port *up)
+@@ -3248,6 +3248,9 @@ static void serial8250_console_restore(struct uart_8250_port *up)
   *	any possible real use of the port...
   *
   *	The console_lock must be held when we get here.
@@ -67,7 +67,7 @@ index ab2d98b..a5b3dad 100644
   */
  void serial8250_console_write(struct uart_8250_port *up, const char *s,
  			      unsigned int count)
-@@ -3242,8 +3245,6 @@ void serial8250_console_write(struct uart_8250_port *up, const char *s,
+@@ -3259,8 +3262,6 @@ void serial8250_console_write(struct uart_8250_port *up, const char *s,
  
  	touch_nmi_watchdog();
  
@@ -76,7 +76,7 @@ index ab2d98b..a5b3dad 100644
  	if (port->sysrq)
  		locked = 0;
  	else if (oops_in_progress)
-@@ -3288,7 +3289,6 @@ void serial8250_console_write(struct uart_8250_port *up, const char *s,
+@@ -3305,7 +3306,6 @@ void serial8250_console_write(struct uart_8250_port *up, const char *s,
  
  	if (locked)
  		spin_unlock_irqrestore(&port->lock, flags);
@@ -84,7 +84,7 @@ index ab2d98b..a5b3dad 100644
  }
  
  static unsigned int probe_baud(struct uart_port *port)
-@@ -3312,6 +3312,7 @@ int serial8250_console_setup(struct uart_port *port, char *options, bool probe)
+@@ -3329,6 +3329,7 @@ int serial8250_console_setup(struct uart_port *port, char *options, bool probe)
  	int bits = 8;
  	int parity = 'n';
  	int flow = 'n';
@@ -92,7 +92,7 @@ index ab2d98b..a5b3dad 100644
  
  	if (!port->iobase && !port->membase)
  		return -ENODEV;
-@@ -3321,7 +3322,18 @@ int serial8250_console_setup(struct uart_port *port, char *options, bool probe)
+@@ -3338,7 +3339,18 @@ int serial8250_console_setup(struct uart_port *port, char *options, bool probe)
  	else if (probe)
  		baud = probe_baud(port);
  

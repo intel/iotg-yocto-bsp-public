@@ -1,4 +1,4 @@
-From dc5acc8c81b7af71ebe137aca33ef8cff023699f Mon Sep 17 00:00:00 2001
+From f653260dd16a9af21e4501ac262dcf69e488683a Mon Sep 17 00:00:00 2001
 From: Yetunde Adebisi <yetundex.adebisi@intel.com>
 Date: Tue, 5 Apr 2016 13:56:01 +0100
 Subject: [PATCH] drm/i915: Add backlight Control using DPCD registers for DP

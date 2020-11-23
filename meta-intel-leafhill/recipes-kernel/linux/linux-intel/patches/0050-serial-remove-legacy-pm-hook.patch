@@ -1,4 +1,4 @@
-From e2dbaaeac856df4243c108d3f04255a1f774844d Mon Sep 17 00:00:00 2001
+From 4b789db27d5dab07918b542e589ea6e371e6c2fe Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Wed, 12 Oct 2016 19:23:29 +0300
 Subject: [PATCH] serial: *: remove legacy ->pm() hook
@@ -118,7 +118,7 @@ index 1454d9f..c5cbb8c 100644
  
  static struct plat_serial8250_port au1x00_uart_data[][4] __initdata = {
 diff --git a/drivers/tty/serial/8250/8250_core.c b/drivers/tty/serial/8250/8250_core.c
-index 861ad5f..c08de21 100644
+index 3c0a578..f92e922 100644
 --- a/drivers/tty/serial/8250/8250_core.c
 +++ b/drivers/tty/serial/8250/8250_core.c
 @@ -836,7 +836,6 @@ static int serial8250_probe(struct platform_device *dev)
@@ -130,10 +130,10 @@ index 861ad5f..c08de21 100644
  		uart.port.irqflags	|= irqflag;
  		ret = serial8250_register_8250_port(&uart);
 diff --git a/drivers/tty/serial/8250/8250_mtk.c b/drivers/tty/serial/8250/8250_mtk.c
-index c3f933d..a17f692 100644
+index 159169a..a2bc989 100644
 --- a/drivers/tty/serial/8250/8250_mtk.c
 +++ b/drivers/tty/serial/8250/8250_mtk.c
-@@ -131,18 +131,6 @@ static int __maybe_unused mtk8250_runtime_resume(struct device *dev)
+@@ -149,18 +149,6 @@ static int __maybe_unused mtk8250_runtime_resume(struct device *dev)
  	return 0;
  }
  
@@ -152,7 +152,7 @@ index c3f933d..a17f692 100644
  static int mtk8250_probe_of(struct platform_device *pdev, struct uart_port *p,
  			   struct mtk8250_data *data)
  {
-@@ -197,7 +185,6 @@ static int mtk8250_probe(struct platform_device *pdev)
+@@ -215,7 +203,6 @@ static int mtk8250_probe(struct platform_device *pdev)
  	spin_lock_init(&uart.port.lock);
  	uart.port.mapbase = regs->start;
  	uart.port.irq = irq->start;
@@ -161,7 +161,7 @@ index c3f933d..a17f692 100644
  	uart.port.flags = UPF_BOOT_AUTOCONF | UPF_FIXED_PORT;
  	uart.port.dev = &pdev->dev;
 diff --git a/drivers/tty/serial/8250/8250_omap.c b/drivers/tty/serial/8250/8250_omap.c
-index a019286..e2fbacb 100644
+index cbd006f..b3828d6 100644
 --- a/drivers/tty/serial/8250/8250_omap.c
 +++ b/drivers/tty/serial/8250/8250_omap.c
 @@ -485,28 +485,6 @@ static void omap_8250_set_termios(struct uart_port *port,
@@ -193,7 +193,7 @@ index a019286..e2fbacb 100644
  static void omap_serial_fill_features_erratas(struct uart_8250_port *up,
  					      struct omap8250_priv *priv)
  {
-@@ -1183,7 +1161,6 @@ static int omap8250_probe(struct platform_device *pdev)
+@@ -1185,7 +1163,6 @@ static int omap8250_probe(struct platform_device *pdev)
  #endif
  	up.port.set_termios = omap_8250_set_termios;
  	up.port.set_mctrl = omap8250_set_mctrl;
@@ -202,10 +202,10 @@ index a019286..e2fbacb 100644
  	up.port.shutdown = omap_8250_shutdown;
  	up.port.throttle = omap_8250_throttle;
 diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
-index e14924e..685857b 100644
+index de40eef..61d76c5d 100644
 --- a/drivers/tty/serial/8250/8250_port.c
 +++ b/drivers/tty/serial/8250/8250_port.c
-@@ -2799,16 +2799,6 @@ void serial8250_do_pm(struct uart_port *port, unsigned int state,
+@@ -2816,16 +2816,6 @@ void serial8250_do_pm(struct uart_port *port, unsigned int state,
  }
  EXPORT_SYMBOL(serial8250_do_pm);
  
@@ -222,7 +222,7 @@ index e14924e..685857b 100644
  static unsigned int serial8250_port_size(struct uart_8250_port *pt)
  {
  	if (pt->port.mapsize)
-@@ -3120,7 +3110,6 @@ static const char *serial8250_type(struct uart_port *port)
+@@ -3137,7 +3127,6 @@ static const char *serial8250_type(struct uart_port *port)
  	.shutdown	= serial8250_shutdown,
  	.set_termios	= serial8250_set_termios,
  	.set_ldisc	= serial8250_set_ldisc,
@@ -479,7 +479,7 @@ index 4932b67..a63ea2a 100644
  	.release_port	= serial_pxa_release_port,
  	.request_port	= serial_pxa_request_port,
 diff --git a/drivers/tty/serial/qcom_geni_serial.c b/drivers/tty/serial/qcom_geni_serial.c
-index 0d405cc..6b5f91c 100644
+index cd0768c..cf8b083 100644
 --- a/drivers/tty/serial/qcom_geni_serial.c
 +++ b/drivers/tty/serial/qcom_geni_serial.c
 @@ -1190,22 +1190,6 @@ static void console_unregister(struct uart_driver *drv)
@@ -552,7 +552,7 @@ index a399772b..647e629 100644
  	 * FIXME: fns->set_wake is unused - this should be called from
  	 * the suspend() callback if device_may_wakeup(dev)) is set.
 diff --git a/drivers/tty/serial/samsung.c b/drivers/tty/serial/samsung.c
-index 2a49b6d..329ef7f 100644
+index 1528a7b..8f0be67 100644
 --- a/drivers/tty/serial/samsung.c
 +++ b/drivers/tty/serial/samsung.c
 @@ -1101,39 +1101,6 @@ static int s3c64xx_serial_startup(struct uart_port *port)
@@ -900,7 +900,7 @@ index 6d106e3..06f1ae8 100644
  	.release_port	= siu_release_port,
  	.request_port	= siu_request_port,
 diff --git a/drivers/tty/serial/xilinx_uartps.c b/drivers/tty/serial/xilinx_uartps.c
-index 31950a3..a753c0e 100644
+index 23f9b0c..0bb6a55 100644
 --- a/drivers/tty/serial/xilinx_uartps.c
 +++ b/drivers/tty/serial/xilinx_uartps.c
 @@ -1072,20 +1072,6 @@ static void cdns_uart_poll_put_char(struct uart_port *port, unsigned char c)

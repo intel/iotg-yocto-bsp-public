@@ -1,4 +1,4 @@
-From 4e82a3b658e5be5376fd88450147e99bca8f48f1 Mon Sep 17 00:00:00 2001
+From 9f948d8b597d9b26a5bc5a89535f1ada7e903c17 Mon Sep 17 00:00:00 2001
 From: Even Xu <even.xu@intel.com>
 Date: Mon, 26 Dec 2016 15:06:52 +0800
 Subject: [PATCH] misc: intel-ish-clients: Fix reset hang while client

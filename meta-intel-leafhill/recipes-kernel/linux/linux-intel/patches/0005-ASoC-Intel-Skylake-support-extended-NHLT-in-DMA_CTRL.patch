@@ -1,4 +1,4 @@
-From 552abae84efd6646f714b7ead5766011630e7ece Mon Sep 17 00:00:00 2001
+From ee27b315906493ca4a1d1c2d267abc1fb567d14a Mon Sep 17 00:00:00 2001
 From: Dominik Bozek <dominikx.bozek@intel.com>
 Date: Tue, 17 Jul 2018 11:20:43 +0200
 Subject: [PATCH] ASoC: Intel: Skylake: support extended NHLT in DMA_CTRL_ID

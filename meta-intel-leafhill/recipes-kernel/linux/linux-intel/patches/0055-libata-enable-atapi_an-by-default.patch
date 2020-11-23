@@ -1,4 +1,4 @@
-From e8658fffaeb089e432acc8c5c862a16615660e49 Mon Sep 17 00:00:00 2001
+From fb34176a9e3ea60904c1ffdf964c1cb9f6b5c26a Mon Sep 17 00:00:00 2001
 From: Vitaly Wool <vwool@dev.rtsoft.ru>
 Date: Thu, 30 Jun 2016 07:06:52 +0000
 Subject: [PATCH] libata: enable atapi_an by default
@@ -15,7 +15,7 @@ Signed-off-by: Lim Key Seong <key.seong.lim@intel.com>
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 6b372fa..8cddb04 100644
+index db1d86a..9e662c8e 100644
 --- a/drivers/ata/libata-core.c
 +++ b/drivers/ata/libata-core.c
 @@ -166,7 +166,7 @@ struct ata_force_ent {

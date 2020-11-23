@@ -1,4 +1,4 @@
-From 39fb5bc9cb55937e5a4e93222b314967c55bc1ea Mon Sep 17 00:00:00 2001
+From 9e1a7f20edf8e9216ccd121deb6438812d89d5a8 Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Mon, 12 Sep 2016 13:55:22 +0300
 Subject: [PATCH] serial: 8250_port: properly handle runtime PM in IRQ
@@ -13,10 +13,10 @@ Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
  1 file changed, 9 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/tty/serial/8250/8250_port.c b/drivers/tty/serial/8250/8250_port.c
-index 2da697a..c33dc53 100644
+index 823a118..2ae7205 100644
 --- a/drivers/tty/serial/8250/8250_port.c
 +++ b/drivers/tty/serial/8250/8250_port.c
-@@ -1884,17 +1884,19 @@ int serial8250_handle_irq(struct uart_port *port, unsigned int iir)
+@@ -1898,17 +1898,19 @@ int serial8250_handle_irq(struct uart_port *port, unsigned int iir)
  
  static int serial8250_default_handle_irq(struct uart_port *port)
  {

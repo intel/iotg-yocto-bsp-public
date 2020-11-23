@@ -1,4 +1,4 @@
-From 59bfd5e40f07dae1d85505d0359253977aa0ad62 Mon Sep 17 00:00:00 2001
+From 98c4ffc48b0a9f92c7f2c8d3d4570685a3c87d37 Mon Sep 17 00:00:00 2001
 From: Vitaly Wool <vwool@dev.rtsoft.ru>
 Date: Thu, 30 Jun 2016 07:06:53 +0000
 Subject: [PATCH] scsi_lib: add extended information to MEDIA_CHANGE

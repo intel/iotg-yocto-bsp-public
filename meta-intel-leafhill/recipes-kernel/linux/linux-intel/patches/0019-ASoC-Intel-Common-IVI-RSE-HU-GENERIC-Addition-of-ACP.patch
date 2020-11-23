@@ -1,4 +1,4 @@
-From 0e7de408798953968931ed98194a4937c259a2ee Mon Sep 17 00:00:00 2001
+From 7bf5a81dfb104652abd3cfc60d1b0679db9a7a94 Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Sun, 21 Jul 2019 23:37:10 +0800
 Subject: [PATCH] ASoC: Intel: Common: IVI(RSE,HU,GENERIC) Addition of ACPI IDs

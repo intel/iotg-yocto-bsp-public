@@ -1,4 +1,4 @@
-From 2662d31438a5b8970c82a2d7443ea2058d2502f9 Mon Sep 17 00:00:00 2001
+From c9d1ecc56f941e0a85e31caf84f49bd4a85b128a Mon Sep 17 00:00:00 2001
 From: Weifeng Voon <weifeng.voon@intel.com>
 Date: Thu, 5 Oct 2017 13:05:10 +0800
 Subject: [PATCH] spi: pxa2xx: Auto switch between PIO and DMA with

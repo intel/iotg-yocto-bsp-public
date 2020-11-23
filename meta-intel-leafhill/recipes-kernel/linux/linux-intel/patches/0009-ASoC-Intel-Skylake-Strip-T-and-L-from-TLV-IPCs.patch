@@ -1,4 +1,4 @@
-From ef9c491535155ed45a099cfe3f4a5686b8571cfe Mon Sep 17 00:00:00 2001
+From 17ef324c70f2e66de6e97edd9834e2c40145284a Mon Sep 17 00:00:00 2001
 From: KamilX Lulko <kamilx.lulko@intel.com>
 Date: Mon, 21 Jan 2019 18:47:41 +0100
 Subject: [PATCH] ASoC: Intel: Skylake: Strip T and L from TLV IPCs

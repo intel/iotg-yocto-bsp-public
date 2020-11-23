@@ -1,4 +1,4 @@
-From c1200e359fc66b01bb319fcad51cb5ce54dcc6f4 Mon Sep 17 00:00:00 2001
+From 81e2900f27db1b0b484c326f5c3dc2432ac1ee00 Mon Sep 17 00:00:00 2001
 From: Even Xu <even.xu@intel.com>
 Date: Fri, 23 Dec 2016 09:22:23 +0800
 Subject: [PATCH] hid: intel-ish-hid: ishtp: add helper function for driver

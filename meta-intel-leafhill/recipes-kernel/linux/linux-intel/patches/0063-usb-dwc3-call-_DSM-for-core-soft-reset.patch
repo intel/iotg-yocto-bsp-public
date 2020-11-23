@@ -1,4 +1,4 @@
-From b373dad4c985cc0da762f7b3b69c5ca0d101fac7 Mon Sep 17 00:00:00 2001
+From fd2cdc65767e18ba30b0bedae227dcb2a65d802c Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Wed, 11 Jan 2017 14:15:31 +0800
 Subject: [PATCH] usb: dwc3: call _DSM for core soft reset
@@ -103,7 +103,7 @@ index d6968b9..ccc998a 100644
  
  #define INCRX_BURST_MODE 0
 diff --git a/drivers/usb/dwc3/dwc3-pci.c b/drivers/usb/dwc3/dwc3-pci.c
-index b2fd505..c3ad355 100644
+index 389ec4c..b92cd3e 100644
 --- a/drivers/usb/dwc3/dwc3-pci.c
 +++ b/drivers/usb/dwc3/dwc3-pci.c
 @@ -110,6 +110,13 @@ static int dwc3_byt_enable_ulpi_refclock(struct pci_dev *pci)
@@ -130,7 +130,7 @@ index b2fd505..c3ad355 100644
  			guid_parse(PCI_INTEL_BXT_DSM_GUID, &dwc->guid);
  			dwc->has_dsm_for_pm = true;
  		}
-@@ -328,7 +336,7 @@ static void dwc3_pci_remove(struct pci_dev *pci)
+@@ -330,7 +338,7 @@ static void dwc3_pci_remove(struct pci_dev *pci)
  	  (kernel_ulong_t) &dwc3_pci_intel_properties, },
  
  	{ PCI_VDEVICE(INTEL, PCI_DEVICE_ID_INTEL_APL),

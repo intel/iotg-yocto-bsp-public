@@ -1,4 +1,4 @@
-From f1359395fb19dab72519d3d3511ea23a2302e160 Mon Sep 17 00:00:00 2001
+From 5079a253bcf3c4d243073b2885e883f64f454777 Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Tue, 8 Oct 2019 15:00:32 +0800
 Subject: [PATCH] drm/i915/gen9: Update i915_gpu_disable_turbo() to use

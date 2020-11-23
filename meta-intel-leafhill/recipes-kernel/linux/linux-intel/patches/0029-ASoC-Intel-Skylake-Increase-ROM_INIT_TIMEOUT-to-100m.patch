@@ -1,4 +1,4 @@
-From 2e1d8fc5fa0690c6bdcadc4eae03d6c0706a998a Mon Sep 17 00:00:00 2001
+From 973b008d4e84b2cb2904e6d07d4314a4c530af7e Mon Sep 17 00:00:00 2001
 From: adam wulw <adam.wulw@intel.com>
 Date: Thu, 21 Feb 2019 12:26:40 +0100
 Subject: [PATCH] ASoC: Intel: Skylake: Increase ROM_INIT_TIMEOUT to 100ms

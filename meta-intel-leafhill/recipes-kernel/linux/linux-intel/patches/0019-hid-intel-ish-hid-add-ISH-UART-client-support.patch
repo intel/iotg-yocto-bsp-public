@@ -1,4 +1,4 @@
-From 6298d6185dc9977a7cc9a49af6ba88c489d4e46d Mon Sep 17 00:00:00 2001
+From 9b461f23035d8f9c12381c29554c89b5a240dc37 Mon Sep 17 00:00:00 2001
 From: Even Xu <even.xu@intel.com>
 Date: Mon, 4 Dec 2017 06:22:12 -0800
 Subject: [PATCH] hid: intel-ish-hid: add ISH UART client support

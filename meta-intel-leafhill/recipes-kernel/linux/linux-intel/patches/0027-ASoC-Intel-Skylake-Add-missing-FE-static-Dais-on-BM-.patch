@@ -1,4 +1,4 @@
-From d48b19fbfbda630f6701b9c43217a4e98947c96f Mon Sep 17 00:00:00 2001
+From 0d8ffc70aa9e5be1d21d48fd56c9ec16022014de Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Wed, 10 Jul 2019 10:12:10 +0800
 Subject: [PATCH] ASoC: Intel: Skylake: Add missing FE static Dais on BM and

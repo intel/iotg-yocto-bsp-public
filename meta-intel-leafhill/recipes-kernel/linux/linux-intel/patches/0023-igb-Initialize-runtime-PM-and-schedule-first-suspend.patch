@@ -1,4 +1,4 @@
-From 83b8566916f75480746b829acd5f518c9f24f55c Mon Sep 17 00:00:00 2001
+From d66ca3b11b3dd4baa5358a1a68b405da12954d08 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 16:24:14 +0800
 Subject: [PATCH] igb: Initialize runtime PM and schedule first suspend
@@ -29,7 +29,7 @@ index ca54e26..4acf1e3 100644
  #define IGB_START_ITR		648 /* ~6000 ints/sec */
  #define IGB_4K_ITR		980
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 36db874..2fd568f 100644
+index d85eb80..1f6f424 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
 @@ -3473,6 +3473,11 @@ static int igb_probe(struct pci_dev *pdev, const struct pci_device_id *ent)

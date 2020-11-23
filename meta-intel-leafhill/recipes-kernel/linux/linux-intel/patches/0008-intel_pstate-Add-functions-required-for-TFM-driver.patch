@@ -1,4 +1,4 @@
-From 05dde1d7fb9abae27b75659eae6bf0941e102110 Mon Sep 17 00:00:00 2001
+From a04624f4a89bcd98a50eb5b70aa6c4a57f8489b7 Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:16:12 +0100
 Subject: [PATCH] intel_pstate: Add functions required for TFM driver
@@ -19,7 +19,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 49 insertions(+)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 6f6ecf6..089b69a 100644
+index 569670e..9b03d59 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -878,6 +878,55 @@ int pstate_cpu_disable_turbo_usage(void)

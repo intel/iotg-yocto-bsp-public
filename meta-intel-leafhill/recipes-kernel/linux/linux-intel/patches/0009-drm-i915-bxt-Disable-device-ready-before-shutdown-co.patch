@@ -1,4 +1,4 @@
-From 7c5fc2f7e6d690a3595097fbbca395b34f52ebf4 Mon Sep 17 00:00:00 2001
+From b96241a0722d74507a5fbf954aa8a3f07c1d9509 Mon Sep 17 00:00:00 2001
 From: Uma Shankar <uma.shankar@intel.com>
 Date: Tue, 20 Dec 2016 10:24:29 -0800
 Subject: [PATCH] drm/i915/bxt: Disable device ready before shutdown command

@@ -1,4 +1,4 @@
-From b2a1b0a749c4599d7508c559bfac602145e08a05 Mon Sep 17 00:00:00 2001
+From d4284f3dcc54f3ebe5b3752448d8f2efd7df8832 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Fri, 1 Apr 2016 09:20:46 -0700
 Subject: [PATCH] drm/i915: Read DPCD when connector forced on.

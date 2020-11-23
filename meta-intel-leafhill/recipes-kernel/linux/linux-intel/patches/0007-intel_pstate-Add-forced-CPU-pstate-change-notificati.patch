@@ -1,4 +1,4 @@
-From 0624733796ce6f8fda9dc1ecd87cf036ab4af60f Mon Sep 17 00:00:00 2001
+From 861d0502ddc248aaf3e95428751ce88ede11b96a Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:11:48 +0100
 Subject: [PATCH] intel_pstate: Add forced CPU pstate change notification
@@ -13,7 +13,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 17 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index a884891..6f6ecf6 100644
+index a40c3e7..569670e 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -56,6 +56,9 @@
@@ -55,7 +55,7 @@ index a884891..6f6ecf6 100644
  	trace_cpu_frequency(pstate * cpu->pstate.scaling, cpu->cpu);
  	cpu->pstate.current_pstate = pstate;
  	/*
-@@ -1742,11 +1753,16 @@ static int intel_pstate_prepare_request(struct cpudata *cpu, int pstate)
+@@ -1743,11 +1754,16 @@ static int intel_pstate_prepare_request(struct cpudata *cpu, int pstate)
  
  static void intel_pstate_update_pstate(struct cpudata *cpu, int pstate)
  {

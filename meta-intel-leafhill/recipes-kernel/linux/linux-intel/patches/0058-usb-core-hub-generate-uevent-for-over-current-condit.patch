@@ -1,4 +1,4 @@
-From 178450f6999c2ef7dfadb4862682f4253e6dd9ae Mon Sep 17 00:00:00 2001
+From 2afe9a1af20a241467d827ec275d07102f58d9f1 Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Tue, 19 Jul 2016 16:16:01 +0800
 Subject: [PATCH] usb: core: hub: generate uevent for over current condition

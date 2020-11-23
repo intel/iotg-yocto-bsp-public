@@ -1,4 +1,4 @@
-From f9639210c6ac9c7859dc5eda272cf44cdc3ee1c7 Mon Sep 17 00:00:00 2001
+From f46ab349ec311d833a7b2c7c170de6a8e14cd335 Mon Sep 17 00:00:00 2001
 From: Weifeng Voon <weifeng.voon@intel.com>
 Date: Sat, 23 Jul 2016 12:12:07 +0800
 Subject: [PATCH] x86/platform/apl: Enable board file for APL LPSS PCI mode

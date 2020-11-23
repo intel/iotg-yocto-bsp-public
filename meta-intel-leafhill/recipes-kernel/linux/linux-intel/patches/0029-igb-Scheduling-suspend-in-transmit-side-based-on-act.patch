@@ -1,4 +1,4 @@
-From c544410a03c602e578e444fa1e3d904fc9412c17 Mon Sep 17 00:00:00 2001
+From 4f8b3b377014d7a6b8df0a639210e329a33cc888 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Wed, 16 Nov 2016 09:38:05 +0800
 Subject: [PATCH] igb: Scheduling suspend in transmit side based on activity
@@ -44,7 +44,7 @@ index 4acf1e3..a4abf58 100644
  
  	/* structs defined in e1000_hw.h */
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 3514c42..583be49 100644
+index 1a74465..778eb64 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
 @@ -128,6 +128,7 @@ enum tx_queue_prio {
@@ -180,7 +180,7 @@ index 3514c42..583be49 100644
  }
  
  /**
-@@ -7846,11 +7888,15 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
+@@ -7855,11 +7897,15 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
  	unsigned int total_bytes = 0, total_packets = 0;
  	unsigned int budget = q_vector->tx.work_limit;
  	unsigned int i = tx_ring->next_to_clean;
@@ -196,7 +196,7 @@ index 3514c42..583be49 100644
  	tx_desc = IGB_TX_DESC(tx_ring, i);
  	i -= tx_ring->count;
  
-@@ -7892,6 +7938,7 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
+@@ -7901,6 +7947,7 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
  			tx_buffer++;
  			tx_desc++;
  			i++;
@@ -204,7 +204,7 @@ index 3514c42..583be49 100644
  			if (unlikely(!i)) {
  				i -= tx_ring->count;
  				tx_buffer = tx_ring->tx_buffer_info;
-@@ -7997,7 +8044,18 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
+@@ -8006,7 +8053,18 @@ static bool igb_clean_tx_irq(struct igb_q_vector *q_vector, int napi_budget)
  			u64_stats_update_end(&tx_ring->tx_syncp);
  		}
  	}
@@ -224,7 +224,7 @@ index 3514c42..583be49 100644
  	return !!budget;
  }
  
-@@ -9004,6 +9062,13 @@ static int __maybe_unused igb_runtime_idle(struct device *dev)
+@@ -9013,6 +9071,13 @@ static int __maybe_unused igb_runtime_idle(struct device *dev)
  
  static int __maybe_unused igb_runtime_suspend(struct device *dev)
  {

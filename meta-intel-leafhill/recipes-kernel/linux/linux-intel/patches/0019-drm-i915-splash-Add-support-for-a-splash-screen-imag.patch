@@ -1,4 +1,4 @@
-From 590bd5ca437b6c5e2289b1ed583ca3ed72942f76 Mon Sep 17 00:00:00 2001
+From 971274175958d5e40fe20d50a8c2891722ab5b31 Mon Sep 17 00:00:00 2001
 From: James Xiong <james.xiong@intel.com>
 Date: Fri, 16 Dec 2016 14:37:12 -0800
 Subject: [PATCH] drm/i915/splash: Add support for a splash screen image. (v10)

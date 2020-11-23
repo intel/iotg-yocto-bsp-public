@@ -1,4 +1,4 @@
-From 8beaf53ccdfa6c7272200eaf76cf9d681d44bd4a Mon Sep 17 00:00:00 2001
+From 48f73eeff6ba3cd6e5c718b9b724a2abc83e7838 Mon Sep 17 00:00:00 2001
 From: "Ooi, Joyce" <joyce.ooi@intel.com>
 Date: Wed, 21 Dec 2016 00:37:07 +0800
 Subject: [PATCH] misc: intel-ish-client: add intel ishtp clients driver

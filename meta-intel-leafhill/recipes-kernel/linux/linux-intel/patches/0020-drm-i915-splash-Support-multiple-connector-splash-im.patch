@@ -1,4 +1,4 @@
-From e131492a3266b8371386750dab322f7a98b18c2a Mon Sep 17 00:00:00 2001
+From ddd54e3928c451ec343ddb9555576fae0b8aef3f Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Fri, 22 Apr 2016 16:43:26 -0700
 Subject: [PATCH] drm/i915/splash: Support multiple connector/splash images.

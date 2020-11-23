@@ -1,4 +1,4 @@
-From 0c0ec75bdb6da57644e6c0ef05c1f4c143d230da Mon Sep 17 00:00:00 2001
+From ec362e366f2ad721a27b8839631df0dc34164ee5 Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Thu, 29 Dec 2016 11:37:47 +0800
 Subject: [PATCH] igb: Using rtnl_trylock to avoid deadlock during runtime
@@ -27,10 +27,10 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 17 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 14b5490..1f641cd 100644
+index 7454034..141c386 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -8900,6 +8900,7 @@ static int __maybe_unused igb_resume(struct device *dev)
+@@ -8909,6 +8909,7 @@ static int __maybe_unused igb_resume(struct device *dev)
  	struct igb_adapter *adapter = netdev_priv(netdev);
  	struct e1000_hw *hw = &adapter->hw;
  	u32 err, val;
@@ -38,7 +38,7 @@ index 14b5490..1f641cd 100644
  
  	pci_set_power_state(pdev, PCI_D0);
  	pci_restore_state(pdev);
-@@ -8936,14 +8937,24 @@ static int __maybe_unused igb_resume(struct device *dev)
+@@ -8945,14 +8946,24 @@ static int __maybe_unused igb_resume(struct device *dev)
  
  	wr32(E1000_WUS, ~0);
  

@@ -1,4 +1,4 @@
-From 0bf14e06385c3825079e64f0aaf8be08c7f673cc Mon Sep 17 00:00:00 2001
+From b8c7c9f6b669db890c839a92685903a99e113a71 Mon Sep 17 00:00:00 2001
 From: Bob Paauwe <bob.j.paauwe@intel.com>
 Date: Tue, 20 Dec 2016 10:24:21 -0800
 Subject: [PATCH] drm/i915/bxt: Bring MIPI out of reset

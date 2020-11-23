@@ -1,4 +1,4 @@
-From f2ae9adff70995fa86e3662006f0fd4474fa99ce Mon Sep 17 00:00:00 2001
+From f664556e68579c32ddf7ea4ec0455191f669ee5c Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 17:39:41 +0800
 Subject: [PATCH] igb: During runtime resume do not reinitialize the net device
@@ -18,7 +18,7 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 27 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 36f694e..14b5490 100644
+index 28a2da6..7454034 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
 @@ -3948,7 +3948,8 @@ static int __igb_open(struct net_device *netdev, bool resuming)
@@ -76,7 +76,7 @@ index 36f694e..14b5490 100644
  
  	/* schedule runtime suspend from open */
  	if (!resuming) {
-@@ -8955,7 +8966,11 @@ static int __maybe_unused igb_runtime_suspend(struct device *dev)
+@@ -8964,7 +8975,11 @@ static int __maybe_unused igb_runtime_suspend(struct device *dev)
  
  static int __maybe_unused igb_runtime_resume(struct device *dev)
  {

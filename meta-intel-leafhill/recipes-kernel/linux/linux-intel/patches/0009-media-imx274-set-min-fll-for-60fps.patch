@@ -1,4 +1,4 @@
-From fe682e4f4b018962553b4f4483acf186b6d62d15 Mon Sep 17 00:00:00 2001
+From 9253e82ad7e0bdb280b99a4c4a7c65917be39d98 Mon Sep 17 00:00:00 2001
 From: Lee <eliot.lee@intel.com>
 Date: Tue, 5 May 2020 18:13:36 -0700
 Subject: [PATCH] media: imx274: set min fll for 60fps

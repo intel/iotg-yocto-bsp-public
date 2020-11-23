@@ -1,4 +1,4 @@
-From 8be60659847ff08fdada575acffd7dd89a296acb Mon Sep 17 00:00:00 2001
+From 013ec116401c5696482c8f63094a8b7bf0569095 Mon Sep 17 00:00:00 2001
 From: Gaurav Vohra <gauravx.vohra@intel.com>
 Date: Sun, 7 Jul 2019 18:09:53 +0800
 Subject: [PATCH] Revert "Revert "ASoC: core: Do not return for dummy codec in

@@ -1,4 +1,4 @@
-From 9396ba17574746aab054beeffdcec37e7c2f5622 Mon Sep 17 00:00:00 2001
+From 5da6c23a13d5b9b39486f9402f9f163d2204935c Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 15 Nov 2016 18:23:30 +0800
 Subject: [PATCH] igb: Watchdog task changes for runtime pm based on activity
@@ -21,7 +21,7 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 29 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index fc832d7..3514c42 100644
+index 0587017..1a74465 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
 @@ -5290,14 +5290,27 @@ static void igb_watchdog_task(struct work_struct *work)

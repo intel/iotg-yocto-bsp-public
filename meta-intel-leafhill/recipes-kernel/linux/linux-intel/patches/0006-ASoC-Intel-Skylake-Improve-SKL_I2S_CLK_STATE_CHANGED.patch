@@ -1,4 +1,4 @@
-From 8500be531493270189551bcf42a3fd9d09f8b48a Mon Sep 17 00:00:00 2001
+From 7aa28ca4c87a32c4ad36c50b50cfc4352fcd6d99 Mon Sep 17 00:00:00 2001
 From: "Ho, Yu Xin" <yu.xin.ho@intel.com>
 Date: Tue, 23 Oct 2018 19:08:14 +0800
 Subject: [PATCH] ASoC: Intel: Skylake: Improve SKL_I2S_CLK_STATE_CHANGED

@@ -1,4 +1,4 @@
-From dc6564e21e3a09a369c20294058d938ac13bb445 Mon Sep 17 00:00:00 2001
+From e1e845f299f9b9379c247ef158238e29aa4d1c0a Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Mon, 30 Sep 2019 15:47:07 -0700
 Subject: [PATCH] drm/i915: Add background color hardware readout and state

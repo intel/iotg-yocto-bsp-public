@@ -1,4 +1,4 @@
-From ebb9fbb79eb7afe6d6428cc4d1fdbb3e0e754970 Mon Sep 17 00:00:00 2001
+From f5c461e274747e5f1020361816d6d666cd67aeee Mon Sep 17 00:00:00 2001
 From: "Tunik, Raman" <Raman_Tunik@mentor.com>
 Date: Tue, 14 Mar 2017 17:03:24 +0100
 Subject: [PATCH] intel_pstate: Add pstate notifier callback
@@ -13,7 +13,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 32 insertions(+)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 5cf2af7..93d3eed 100644
+index c5a3837..691caf9 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -29,6 +29,7 @@

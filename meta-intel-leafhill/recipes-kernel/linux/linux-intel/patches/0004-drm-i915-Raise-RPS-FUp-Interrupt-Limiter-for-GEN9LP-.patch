@@ -1,4 +1,4 @@
-From 294299fd68f911df423ee7cde93f535348e14509 Mon Sep 17 00:00:00 2001
+From cbd314400b68bd775be9549e51b370977e8f505c Mon Sep 17 00:00:00 2001
 From: Kai Chen <kai.chen@intel.com>
 Date: Fri, 14 Apr 2017 15:04:02 -0700
 Subject: [PATCH] drm/i915: Raise RPS FUp Interrupt Limiter for GEN9LP above

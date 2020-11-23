@@ -1,4 +1,4 @@
-From 4369e394bf7ed91e2d7627d7c7ea9f1c1d74be06 Mon Sep 17 00:00:00 2001
+From 191985cd1ea6d93a284ef6464a6a05f70df2eb5c Mon Sep 17 00:00:00 2001
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Date: Thu, 17 Nov 2016 12:36:27 +0200
 Subject: [PATCH] serial: 8250_dw: support serial console wakeup

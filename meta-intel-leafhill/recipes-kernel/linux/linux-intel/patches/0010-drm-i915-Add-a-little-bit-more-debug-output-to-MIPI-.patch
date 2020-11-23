@@ -1,4 +1,4 @@
-From 6c8c458a6e4774efeeae7cbc9dc0bdc8a4c945e9 Mon Sep 17 00:00:00 2001
+From ada0833ee4d64cb7882e8963e409b79febb18bda Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Thu, 23 Aug 2018 17:12:14 -0700
 Subject: [PATCH] drm/i915: Add a little bit more debug output to MIPI-DSI

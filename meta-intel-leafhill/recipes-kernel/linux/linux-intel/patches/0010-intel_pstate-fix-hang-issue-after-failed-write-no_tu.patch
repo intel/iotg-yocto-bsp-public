@@ -1,4 +1,4 @@
-From 8f236b46f65335427bd40accf9dcd53534e386ff Mon Sep 17 00:00:00 2001
+From 9daa09690aad020a093e3983a2626351d750d823 Mon Sep 17 00:00:00 2001
 From: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
 Date: Tue, 12 Feb 2019 09:49:51 +0800
 Subject: [PATCH] intel_pstate: fix hang issue after failed write no_turbo if
@@ -26,7 +26,7 @@ Signed-off-by: Wan Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/cpufreq/intel_pstate.c b/drivers/cpufreq/intel_pstate.c
-index 089b69a..4242435 100644
+index 9b03d59..adcb7e2 100644
 --- a/drivers/cpufreq/intel_pstate.c
 +++ b/drivers/cpufreq/intel_pstate.c
 @@ -1043,6 +1043,9 @@ static ssize_t store_no_turbo(struct kobject *a, struct kobj_attribute *b,

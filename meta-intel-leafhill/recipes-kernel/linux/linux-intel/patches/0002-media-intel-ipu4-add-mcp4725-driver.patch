@@ -1,4 +1,4 @@
-From 933bde212703d8a08013b9e543f1d34095a4213f Mon Sep 17 00:00:00 2001
+From 71fcc7cdc86e10b1fc2e765ab81e659d58d9d751 Mon Sep 17 00:00:00 2001
 From: Chen Meng J <meng.j.chen@intel.com>
 Date: Mon, 13 Jan 2020 14:09:44 +0800
 Subject: [PATCH] media: intel-ipu4: add mcp4725 driver

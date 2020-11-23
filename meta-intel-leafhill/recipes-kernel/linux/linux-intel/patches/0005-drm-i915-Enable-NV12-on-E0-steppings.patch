@@ -1,4 +1,4 @@
-From c9b5ea3d5ff4413d2129a748f07da38492246cd6 Mon Sep 17 00:00:00 2001
+From 52c0ffb30a00b224bb1df79698b4c17d9960a6a5 Mon Sep 17 00:00:00 2001
 From: Matt Roper <matthew.d.roper@intel.com>
 Date: Wed, 16 May 2018 14:46:40 -0700
 Subject: [PATCH] drm/i915: Enable NV12 on E0+ steppings

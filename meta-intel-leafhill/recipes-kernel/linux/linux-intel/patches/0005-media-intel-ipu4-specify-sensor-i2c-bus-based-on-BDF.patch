@@ -1,4 +1,4 @@
-From 2f5dae03e536fd1a9025e1fc6a5b0aa1311afa11 Mon Sep 17 00:00:00 2001
+From f2f7cd9fe3dc552654ffc26d17ad1033a78909f0 Mon Sep 17 00:00:00 2001
 From: khaiwenn <khai.wen.ng@intel.com>
 Date: Wed, 1 Apr 2020 11:07:08 +0800
 Subject: [PATCH] media: intel-ipu4: specify sensor i2c bus based on BDF

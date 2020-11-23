@@ -1,4 +1,4 @@
-From 9753953a18829d882f7b4c69e3adf585361af3f0 Mon Sep 17 00:00:00 2001
+From 60a07fc8d748a7a65ac5ff29d25c62c23d19621e Mon Sep 17 00:00:00 2001
 From: Jayasankar <jayasankarx.nara@intel.com>
 Date: Tue, 6 Dec 2016 11:18:21 +0800
 Subject: [PATCH] igb: Make igb_runtime_idle to autosuspend irregardless of
@@ -15,10 +15,10 @@ Reviewed-by: Vinod Kumar <vinod.kumarx.vinod.kumar@intel.com>
  1 file changed, 4 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/net/ethernet/intel/igb/igb_main.c b/drivers/net/ethernet/intel/igb/igb_main.c
-index 0670bb1..91daf91 100644
+index a65eb6f..ba432cb 100644
 --- a/drivers/net/ethernet/intel/igb/igb_main.c
 +++ b/drivers/net/ethernet/intel/igb/igb_main.c
-@@ -9172,13 +9172,10 @@ static int __maybe_unused igb_resume(struct device *dev)
+@@ -9181,13 +9181,10 @@ static int __maybe_unused igb_resume(struct device *dev)
  
  static int __maybe_unused igb_runtime_idle(struct device *dev)
  {
