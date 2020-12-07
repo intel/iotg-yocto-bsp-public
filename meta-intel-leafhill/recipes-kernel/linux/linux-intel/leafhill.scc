@@ -141,6 +141,39 @@ patch patches/0009-media-imx274-set-min-fll-for-60fps.patch
 patch patches/0010-isys-psys-package-lib2600b0-for-commit-id-ea31868.patch
 patch patches/0011-isys-psys-package-lib2600b0-for-commit-id-fec284b.patch
 
+# CVE Fixes
+# CVE-2020-0423
+patch patches/0001-binder-fix-UAF-when-releasing-todo-list.patch
+# CVE-2020-25705
+patch patches/0001-icmp-randomize-the-global-rate-limiter.patch
+# CVE-2020-27673
+patch patches/0001-xen-events-add-a-proper-barrier-to-2-level-uevent-un.patch
+# CVE-2020-27675
+patch patches/0001-xen-events-don-t-use-chip_data-for-legacy-IRQs.patch
+patch patches/0001-xen-events-avoid-removing-an-event-channel-while-han.patch
+# CVE-2019-19377
+patch patches/0001-btrfs-extent_io-Kill-the-forward-declaration-of-flus.patch
+patch patches/0001-btrfs-extent_io-Move-the-BUG_ON-in-flush_write_bio-o.patch
+patch patches/0001-Revert-btrfs-flush-write-bio-if-we-loop-in-extent_wr.patch
+patch patches/0001-btrfs-flush-write-bio-if-we-loop-in-extent_write_cac.patch
+patch patches/0001-btrfs-extent_io-Handle-errors-better-in-extent_write.patch
+patch patches/0001-btrfs-extent_io-Handle-errors-better-in-btree_write_.patch
+patch patches/0001-btrfs-extent_io-add-proper-error-handling-to-lock_ex.patch
+patch patches/0001-Btrfs-fix-unwritten-extent-buffers-and-hangs-on-futu.patch
+patch patches/0001-btrfs-Don-t-submit-any-btree-write-bio-if-the-fs-has.patch
+# CVE-2019-19770
+patch patches/0001-blktrace-fix-debugfs-use-after-free.patch
+# CVE-2020-28974
+patch patches/0001-vt-Disable-KD_FONT_OP_COPY.patch
+# CVE-2020-8694
+patch patches/0001-powercap-restrict-energy-meter-to-root-access.patch
+# CVE-2020-28941
+patch patches/0001-speakup-Do-not-let-the-line-discipline-be-used-sever.patch
+# CVE-2020-25704
+patch patches/0001-perf-core-Fix-a-memory-leak-in-perf_event_parse_addr.patch
+# CVE-2020-25656
+patch patches/0001-vt-keyboard-simplify-vt_kdgkbsent.patch
+patch patches/0001-vt-keyboard-extend-func_buf_lock-to-readers.patch
 
 # Kernel configuration
 kconf hardware leafhill.cfg

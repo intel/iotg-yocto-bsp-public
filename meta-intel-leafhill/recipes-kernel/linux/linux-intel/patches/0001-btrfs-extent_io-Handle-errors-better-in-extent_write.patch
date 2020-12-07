@@ -1,0 +1,94 @@
+From eeda803b77d6cc80c9f9dffcfc86cddc5a52c0fe Mon Sep 17 00:00:00 2001
+From: Qu Wenruo <wqu@suse.com>
+Date: Wed, 20 Mar 2019 14:27:42 +0800
+Subject: [PATCH] btrfs: extent_io: Handle errors better in
+ extent_write_full_page()
+
+commit 3065976b045f77a910809fa7699f99a1e7c0dbbb upstream.
+
+Since now flush_write_bio() could return error, kill the BUG_ON() first.
+Then don't call flush_write_bio() unconditionally, instead we check the
+return value from __extent_writepage() first.
+
+If __extent_writepage() fails, we do cleanup, and return error without
+submitting the possible corrupted or half-baked bio.
+
+If __extent_writepage() successes, then we call flush_write_bio() and
+return the result.
+
+Signed-off-by: Qu Wenruo <wqu@suse.com>
+Reviewed-by: David Sterba <dsterba@suse.com>
+Signed-off-by: David Sterba <dsterba@suse.com>
+Signed-off-by: Ben Hutchings <ben.hutchings@codethink.co.uk>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ fs/btrfs/extent_io.c | 24 +++++++++++++++++++++---
+ 1 file changed, 21 insertions(+), 3 deletions(-)
+
+diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
+index af41f407dee5..0aa7fbafa105 100644
+--- a/fs/btrfs/extent_io.c
++++ b/fs/btrfs/extent_io.c
+@@ -160,6 +160,16 @@ static int __must_check submit_one_bio(struct bio *bio, int mirror_num,
+ 	return blk_status_to_errno(ret);
+ }
+ 
++/* Cleanup unsubmitted bios */
++static void end_write_bio(struct extent_page_data *epd, int ret)
++{
++	if (epd->bio) {
++		epd->bio->bi_status = errno_to_blk_status(ret);
++		bio_endio(epd->bio);
++		epd->bio = NULL;
++	}
++}
++
+ /*
+  * Submit bio from extent page data via submit_one_bio
+  *
+@@ -3461,6 +3471,9 @@ static noinline_for_stack int __extent_writepage_io(struct inode *inode,
+  * records are inserted to lock ranges in the tree, and as dirty areas
+  * are found, they are marked writeback.  Then the lock bits are removed
+  * and the end_io handler clears the writeback ranges
++ *
++ * Return 0 if everything goes well.
++ * Return <0 for error.
+  */
+ static int __extent_writepage(struct page *page, struct writeback_control *wbc,
+ 			      struct extent_page_data *epd)
+@@ -3528,6 +3541,7 @@ static int __extent_writepage(struct page *page, struct writeback_control *wbc,
+ 		end_extent_writepage(page, ret, start, page_end);
+ 	}
+ 	unlock_page(page);
++	ASSERT(ret <= 0);
+ 	return ret;
+ 
+ done_unlocked:
+@@ -4067,7 +4081,6 @@ static int extent_write_cache_pages(struct address_space *mapping,
+ int extent_write_full_page(struct page *page, struct writeback_control *wbc)
+ {
+ 	int ret;
+-	int flush_ret;
+ 	struct extent_page_data epd = {
+ 		.bio = NULL,
+ 		.tree = &BTRFS_I(page->mapping->host)->io_tree,
+@@ -4076,9 +4089,14 @@ int extent_write_full_page(struct page *page, struct writeback_control *wbc)
+ 	};
+ 
+ 	ret = __extent_writepage(page, wbc, &epd);
++	ASSERT(ret <= 0);
++	if (ret < 0) {
++		end_write_bio(&epd, ret);
++		return ret;
++	}
+ 
+-	flush_ret = flush_write_bio(&epd);
+-	BUG_ON(flush_ret < 0);
++	ret = flush_write_bio(&epd);
++	ASSERT(ret <= 0);
+ 	return ret;
+ }
+ 
+-- 
+2.27.0
+

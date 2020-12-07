@@ -1,0 +1,58 @@
+From 22bb77c13fbeeef2e0d0a8506c4efdde41598d32 Mon Sep 17 00:00:00 2001
+From: Qu Wenruo <wqu@suse.com>
+Date: Wed, 20 Mar 2019 14:27:43 +0800
+Subject: [PATCH] btrfs: extent_io: Handle errors better in
+ btree_write_cache_pages()
+
+commit 2b952eea813b1f7e7d4b9782271acd91625b9bb9 upstream.
+
+In btree_write_cache_pages(), we can only get @ret <= 0.
+Add an ASSERT() for it just in case.
+
+Then instead of submitting the write bio even we got some error, check
+the return value first.
+If we have already hit some error, just clean up the corrupted or
+half-baked bio, and return error.
+
+If there is no error so far, then call flush_write_bio() and return the
+result.
+
+Signed-off-by: Qu Wenruo <wqu@suse.com>
+Reviewed-by: David Sterba <dsterba@suse.com>
+Signed-off-by: David Sterba <dsterba@suse.com>
+Signed-off-by: Ben Hutchings <ben.hutchings@codethink.co.uk>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ fs/btrfs/extent_io.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
+index 0aa7fbafa105..822515856ab0 100644
+--- a/fs/btrfs/extent_io.c
++++ b/fs/btrfs/extent_io.c
+@@ -3809,7 +3809,6 @@ int btree_write_cache_pages(struct address_space *mapping,
+ 		.sync_io = wbc->sync_mode == WB_SYNC_ALL,
+ 	};
+ 	int ret = 0;
+-	int flush_ret;
+ 	int done = 0;
+ 	int nr_to_write_done = 0;
+ 	struct pagevec pvec;
+@@ -3909,8 +3908,12 @@ int btree_write_cache_pages(struct address_space *mapping,
+ 		index = 0;
+ 		goto retry;
+ 	}
+-	flush_ret = flush_write_bio(&epd);
+-	BUG_ON(flush_ret < 0);
++	ASSERT(ret <= 0);
++	if (ret < 0) {
++		end_write_bio(&epd, ret);
++		return ret;
++	}
++	ret = flush_write_bio(&epd);
+ 	return ret;
+ }
+ 
+-- 
+2.27.0
+

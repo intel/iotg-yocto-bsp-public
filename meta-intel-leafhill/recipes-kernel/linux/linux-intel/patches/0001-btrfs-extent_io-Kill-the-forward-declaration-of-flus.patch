@@ -1,0 +1,117 @@
+From 7f2b9e8d42bd957332dc2af0ba6a77684fe32b1c Mon Sep 17 00:00:00 2001
+From: Qu Wenruo <wqu@suse.com>
+Date: Fri, 25 Jan 2019 13:09:15 +0800
+Subject: [PATCH] btrfs: extent_io: Kill the forward declaration of
+ flush_write_bio
+
+commit bb58eb9e167d087cc518f7a71c3c00f1671958da upstream.
+
+There is no need to forward declare flush_write_bio(), as it only
+depends on submit_one_bio().  Both of them are pretty small, just move
+them to kill the forward declaration.
+
+Reviewed-by: Nikolay Borisov <nborisov@suse.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Qu Wenruo <wqu@suse.com>
+Signed-off-by: David Sterba <dsterba@suse.com>
+[bwh: Cherry-picked for 4.19 to ease backporting later fixes]
+Signed-off-by: Ben Hutchings <ben.hutchings@codethink.co.uk>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ fs/btrfs/extent_io.c | 66 +++++++++++++++++++++-----------------------
+ 1 file changed, 32 insertions(+), 34 deletions(-)
+
+diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
+index 82d597b16152..128da03721d0 100644
+--- a/fs/btrfs/extent_io.c
++++ b/fs/btrfs/extent_io.c
+@@ -138,7 +138,38 @@ static int add_extent_changeset(struct extent_state *state, unsigned bits,
+ 	return ret;
+ }
+ 
+-static void flush_write_bio(struct extent_page_data *epd);
++static int __must_check submit_one_bio(struct bio *bio, int mirror_num,
++				       unsigned long bio_flags)
++{
++	blk_status_t ret = 0;
++	struct bio_vec *bvec = bio_last_bvec_all(bio);
++	struct page *page = bvec->bv_page;
++	struct extent_io_tree *tree = bio->bi_private;
++	u64 start;
++
++	start = page_offset(page) + bvec->bv_offset;
++
++	bio->bi_private = NULL;
++
++	if (tree->ops)
++		ret = tree->ops->submit_bio_hook(tree->private_data, bio,
++					   mirror_num, bio_flags, start);
++	else
++		btrfsic_submit_bio(bio);
++
++	return blk_status_to_errno(ret);
++}
++
++static void flush_write_bio(struct extent_page_data *epd)
++{
++	if (epd->bio) {
++		int ret;
++
++		ret = submit_one_bio(epd->bio, 0, 0);
++		BUG_ON(ret < 0); /* -ENOMEM */
++		epd->bio = NULL;
++	}
++}
+ 
+ int __init extent_io_init(void)
+ {
+@@ -2710,28 +2741,6 @@ struct bio *btrfs_bio_clone_partial(struct bio *orig, int offset, int size)
+ 	return bio;
+ }
+ 
+-static int __must_check submit_one_bio(struct bio *bio, int mirror_num,
+-				       unsigned long bio_flags)
+-{
+-	blk_status_t ret = 0;
+-	struct bio_vec *bvec = bio_last_bvec_all(bio);
+-	struct page *page = bvec->bv_page;
+-	struct extent_io_tree *tree = bio->bi_private;
+-	u64 start;
+-
+-	start = page_offset(page) + bvec->bv_offset;
+-
+-	bio->bi_private = NULL;
+-
+-	if (tree->ops)
+-		ret = tree->ops->submit_bio_hook(tree->private_data, bio,
+-					   mirror_num, bio_flags, start);
+-	else
+-		btrfsic_submit_bio(bio);
+-
+-	return blk_status_to_errno(ret);
+-}
+-
+ /*
+  * @opf:	bio REQ_OP_* and REQ_* flags as one value
+  * @tree:	tree so we can call our merge_bio hook
+@@ -4033,17 +4042,6 @@ static int extent_write_cache_pages(struct address_space *mapping,
+ 	return ret;
+ }
+ 
+-static void flush_write_bio(struct extent_page_data *epd)
+-{
+-	if (epd->bio) {
+-		int ret;
+-
+-		ret = submit_one_bio(epd->bio, 0, 0);
+-		BUG_ON(ret < 0); /* -ENOMEM */
+-		epd->bio = NULL;
+-	}
+-}
+-
+ int extent_write_full_page(struct page *page, struct writeback_control *wbc)
+ {
+ 	int ret;
+-- 
+2.27.0
+

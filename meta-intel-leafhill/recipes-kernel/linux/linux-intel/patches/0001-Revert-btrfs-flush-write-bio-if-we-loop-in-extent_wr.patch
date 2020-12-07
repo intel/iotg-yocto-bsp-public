@@ -1,0 +1,39 @@
+From aa38097b44153d7470ce8956ec4de8f1372390c6 Mon Sep 17 00:00:00 2001
+From: Ben Hutchings <ben.hutchings@codethink.co.uk>
+Date: Mon, 12 Oct 2020 23:18:11 +0100
+Subject: [PATCH] Revert "btrfs: flush write bio if we loop in
+ extent_write_cache_pages"
+
+This reverts commit 860473714cbe7fbedcf92bfe3eb6d69fae8c74ff.  That
+has an incorrect upstream commit reference, and was modified in a way
+that conflicts with some older fixes.  We can cleanly cherry-pick the
+upstream commit *after* those fixes.
+
+Signed-off-by: Ben Hutchings <ben.hutchings@codethink.co.uk>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+---
+ fs/btrfs/extent_io.c | 8 --------
+ 1 file changed, 8 deletions(-)
+
+diff --git a/fs/btrfs/extent_io.c b/fs/btrfs/extent_io.c
+index e6dab32e37f4..fa8bccca8f8c 100644
+--- a/fs/btrfs/extent_io.c
++++ b/fs/btrfs/extent_io.c
+@@ -4045,14 +4045,6 @@ static int extent_write_cache_pages(struct address_space *mapping,
+ 		 */
+ 		scanned = 1;
+ 		index = 0;
+-
+-		/*
+-		 * If we're looping we could run into a page that is locked by a
+-		 * writer and that writer could be waiting on writeback for a
+-		 * page in our current bio, and thus deadlock, so flush the
+-		 * write bio here.
+-		 */
+-		flush_write_bio(epd);
+ 		goto retry;
+ 	}
+ 
+-- 
+2.27.0
+
