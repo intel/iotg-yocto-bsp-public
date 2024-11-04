@@ -1,0 +1,7 @@
+# License
+All metadata is MIT licensed unless otherwise stated. Source code of packages
+tarballed and released in the github for individual recipes is under the LICENSE
+stated in the associated recipe (.bb file) unless otherwise stated.
+License information for any other recipes is either explicitly stated or defaults to GPL version 2.
+
+The use of this Intel Atom E3900 BSP with Linux Kernel is licensed under [SOFTWARE LIMITED LICENSE AGREEMENT](https://github.com/intel/iotg-yocto-bsp-public/blob/e3900/master/Intel%20Software%20License_15Oct15.pdf)
